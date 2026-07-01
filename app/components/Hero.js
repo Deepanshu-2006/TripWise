@@ -393,8 +393,8 @@ const Hero = () => {
                             ref={stage1Ref} 
                             className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none transition-all duration-300 ease-out"
                         >
-                            <p className="text-lg md:text-2xl font-bold tracking-wide text-brand-dark/95 px-7 py-3.5 bg-white/80 backdrop-blur-md rounded-full shadow-lg border border-white/50">
-                                Just tell us where you want to go...
+                            <p className="text-lg md:text-md font-bold text-[#fe7717] px-7 py-3.5 bg-[#1C1B1B] backdrop-blur-md rounded-full shadow-lg border border-white/50 translate-y-28 md:translate-y-26 font-mono ">
+                                JUST TELL US WHERE YOU WANT TO GO...
                             </p>
                         </div>
 
@@ -403,13 +403,16 @@ const Hero = () => {
                             ref={stage2Ref} 
                             className="absolute inset-x-0 bottom-12 md:bottom-20 flex flex-col items-center opacity-0 pointer-events-none transition-all duration-300 ease-out"
                         >
-                            <div className="flex items-center gap-3 px-5 py-3 bg-white/90 backdrop-blur-md rounded-full shadow-lg border border-white/80">
-                                <span className="flex h-2.5 w-2.5 relative">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-teal opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-teal"></span>
+                            <div className="flex items-center gap-4 px-7 py-3.5 bg-[#1C1B1B] backdrop-blur-md rounded-full shadow-lg border border-white/50 text-[#fe7717] font-mono text-lg md:text-md font-bold">
+                                <span className="flex h-4 w-4 md:h-5 md:w-5 relative shrink-0">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#fe7717] opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-4 w-4 md:h-5 md:w-5 bg-[#fe7717] animate-pulse"></span>
                                 </span>
-                                <span className="text-xs font-extrabold tracking-widest text-brand-teal uppercase animate-pulse">
-                                    Understanding your dream trip...
+                                <span className="uppercase tracking-wide select-none">
+                                    UNDERSTANDING YOUR DREAM TRIP
+                                    <span className="dot-blink">.</span>
+                                    <span className="dot-blink" style={{ animationDelay: '0.2s' }}>.</span>
+                                    <span className="dot-blink" style={{ animationDelay: '0.4s' }}>.</span>
                                 </span>
                             </div>
                         </div>
@@ -425,14 +428,14 @@ const Hero = () => {
                                         key={idx} 
                                         className="stage3-word inline-block mr-[0.25em] transition-all duration-300 ease-out"
                                         style={{
-                                            color: idx === 4 ? 'var(--brand-coral)' : 'inherit'
+                                            color: (idx === 1 || idx === 2) ? '#fe7717' : 'inherit'
                                         }}
                                     >
                                         {word}
                                     </span>
                                 ))}
                             </h2>
-                            <p className="stage3-sub text-lg md:text-xl font-medium text-brand-dark/80 transition-all duration-300 ease-out">
+                            <p className="uppercase stage3-sub text-[11px] md:text-xs font-bold text-[#fe7717] px-6 py-2.5 bg-[#1C1B1B] backdrop-blur-md rounded-full shadow-lg border border-white/20 font-mono tracking-[0.16em] transition-all duration-300 ease-out mt-6">
                                 From a single sentence to a full itinerary
                             </p>
                         </div>
@@ -440,7 +443,7 @@ const Hero = () => {
                         {/* STAGE 4: Map Reveal (Staggered words) */}
                         <div 
                             ref={stage4Ref} 
-                            className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none max-w-3xl transition-all duration-300 ease-out"
+                            className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none max-w-3xl transition-all duration-300 ease-out translate-x-6 md:translate-x-20"
                         >
                             <h2 className="text-4xl md:text-6xl font-extrabold text-brand-dark tracking-tight leading-[1.15]">
                                 {['Real', 'Places.', 'Real', 'Plans.', 'Built', 'in', 'Seconds.'].map((word, idx) => (
@@ -448,7 +451,7 @@ const Hero = () => {
                                         key={idx} 
                                         className="stage4-word inline-block mr-[0.25em] transition-all duration-300 ease-out"
                                         style={{
-                                            color: (idx === 0 || idx === 2 || idx === 6) ? 'var(--brand-teal)' : 'inherit'
+                                            color: (idx === 0 || idx === 2) ? '#fe7717' : (idx === 6) ? 'var(--brand-teal)' : 'inherit'
                                         }}
                                     >
                                         {word}
@@ -462,11 +465,11 @@ const Hero = () => {
                             ref={stage5Ref} 
                             className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none max-w-2xl transition-all duration-300 ease-out"
                         >
-                            <h2 className="stage5-heading text-3xl md:text-5xl font-extrabold text-brand-dark tracking-tight mb-8 transition-all duration-300 ease-out">
-                                Your Day-by-Day Itinerary, <br />
+                            <h2 className="stage5-heading text-4xl md:text-5xl font-extrabold text-brand-dark tracking-tight mb-8 transition-all duration-300 ease-out">
+                                Your <span className="text-[#fe7717]">Day-by-Day</span> Itinerary, <br />
                                 <span className="text-brand-coral">Auto-Generated</span>
                             </h2>
-                            <button className="stage5-cta pointer-events-auto px-8 py-4 bg-brand-coral hover:bg-brand-dark text-white font-extrabold text-lg rounded-full shadow-lg shadow-brand-coral/25 hover:shadow-brand-dark/25 transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer">
+                            <button className="stage5-cta pointer-events-auto px-8 py-4 bg-[#fe7717] hover:bg-brand-dark text-[#1C1B1B] font-extrabold text-lg rounded-full shadow-lg shadow-brand-coral/25 hover:shadow-brand-dark/25 transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer font-mono tracking-widest ">
                                 Plan My Trip →
                             </button>
                         </div>

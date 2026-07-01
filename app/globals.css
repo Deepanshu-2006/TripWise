@@ -27,6 +27,13 @@
 
   --font-sans: var(--font-montserrat), sans-serif;
   --font-serif: var(--font-playfair), serif;
+
+  --animate-dot-blink: dot-blink 1.4s infinite;
+
+  @keyframes dot-blink {
+    0%, 100% { opacity: 0.15; }
+    20% { opacity: 1; }
+  }
 }
 
 body {
@@ -58,4 +65,16 @@ body {
 .header-blur {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+}
+
+/* Ellipsis blinking animation */
+@keyframes dot-blink {
+  0% { opacity: 0.2; }
+  50% { opacity: 1; }
+  100% { opacity: 0.2; }
+}
+
+.dot-blink {
+  animation: dot-blink 1.4s infinite both;
+  display: inline-block;
 }

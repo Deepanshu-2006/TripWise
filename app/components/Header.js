@@ -1,76 +1,104 @@
-import React from 'react'
+'use client';
+
+import React, { useState, useEffect } from 'react'
 
 function Header() {
+    const [isScrolled, setIsScrolled] = useState(false)
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (window.scrollY > 20) {
+                setIsScrolled(true)
+            } else {
+                setIsScrolled(false)
+            }
+        }
+        window.addEventListener('scroll', handleScroll)
+        handleScroll()
+        return () => window.removeEventListener('scroll', handleScroll)
+    }, [])
+
     return (
-        <header className="sticky top-0 z-50 w-full bg-brand-sand/80 backdrop-blur-md border-b border-brand-dark/10 transition-all">
-            <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-                {/* Logo & Brand */}
-                <div className="flex items-center cursor-pointer group">
-                    <svg viewBox="0 0 640 220" xmlns="http://www.w3.org/2000/svg" className="h-24 w-auto object-contain transition-transform duration-300 group-hover:scale-105">
-                        <g transform="translate(30,28)">
-                            <path 
-                                d="M14 150 C 60 120, 90 95, 150 40"
-                                fill="none" 
-                                stroke="#5B7378" 
-                                strokeWidth="3"
-                                strokeDasharray="2 10" 
-                                strokeLinecap="round" 
-                            />
-                            <circle cx="14" cy="150" r="7" fill="#0F5257" />
-                            <g transform="translate(118,28) rotate(45)">
-                                <path 
-                                    d="M0 34 L8 0 L16 34 L34 44 L34 52 L16 46 L13 64 L21 70 L21 76 L8 70 L-5 76 L-5 70 L3 64 L0 46 L-18 52 L-18 44 Z"
-                                    fill="#FF6B4A" 
-                                />
-                            </g>
-                        </g>
-
-                        <text 
-                            x="245" 
-                            y="115" 
-                            fontFamily="'Helvetica Neue', Arial, sans-serif"
-                            fontWeight="800" 
-                            fontSize="64" 
-                            letterSpacing="-1" 
-                            fill="#16323A"
-                        >
-                            Trip<tspan fill="#FF6B4A">Wise</tspan>
-                        </text>
-
-                        <text 
-                            x="248" 
-                            y="148" 
-                            fontFamily="'Helvetica Neue', Arial, sans-serif"
-                            fontWeight="500" 
-                            fontSize="18" 
-                            letterSpacing="3" 
-                            fill="#5B7378"
-                        >
-                            AI TRIP PLANNER
-                        </text>
-                    </svg>
-                </div>
-
-                {/* Navigation Links */}
-                <nav className="hidden md:flex items-center gap-8">
-                    {['Destinations', 'AI Planner', 'My Trips', 'Community'].map((item) => (
+        <header className={`fixed left-0 right-0 z-50 transition-all duration-500 ease-in-out mx-auto backdrop-blur-md border border-white/10 rounded-full ${isScrolled
+                ? "top-2 max-w-4xl w-[calc(100%-4rem)] bg-[#0C0C0E]/95 shadow-2xl shadow-black/40"
+                : "top-4 max-w-7xl w-[calc(100%-2rem)] bg-[#0C0C0E]/90 shadow-xl shadow-black/20"
+            }`}>
+            <div className="px-6 flex items-center justify-between md:grid md:grid-cols-3 transition-all duration-500 ease-in-out h-15">
+                {/* Left Side: Destinations & AI Planner (Desktop) */}
+                <div className={`hidden md:flex items-center justify-start transition-all duration-500 ${isScrolled ? "gap-5" : "gap-8"
+                    }`}>
+                    {['Destinations', 'AI Planner'].map((item) => (
                         <a
                             key={item}
                             href={`#${item.toLowerCase().replace(' ', '-')}`}
-                            className="text-[15px] font-semibold text-brand-dark/80 hover:text-brand-coral transition-colors duration-200 relative py-2 nav-link-underline"
+                            className={`font-mono text-[11px] font-bold text-white/60 hover:text-[#fe7717] transition-all duration-500 relative py-2 nav-link-underline uppercase whitespace-nowrap ${isScrolled ? "tracking-widest" : "tracking-[0.16em]"
+                                }`}
                         >
                             {item}
                         </a>
                     ))}
-                </nav>
+                </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-4">
-                    <button className="px-5 py-2 text-[15px] font-semibold text-brand-dark/80 hover:text-brand-coral hover:bg-brand-coral/5 rounded-full transition-all duration-200">
-                        Login
-                    </button>
-                    <button className="px-6 py-2.5 text-[15px] font-bold text-white bg-brand-coral rounded-full hover:bg-brand-dark hover:shadow-lg hover:shadow-brand-coral/20 active:scale-95 transition-all duration-200">
-                        Sign Up
+                {/* Center: Logo (Centered on desktop, left on mobile) */}
+                <div className="flex items-center justify-start md:justify-center cursor-pointer group select-none">
+                    {/* Icon Part (Always visible, height stays constant h-16) */}
+                    <div className="h-16 w-16 shrink-0 flex items-center justify-center">
+                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 object-contain transition-transform duration-300 group-hover:scale-105">
+                            <path
+                                d="M24 170 C 70 135, 105 105, 168 42"
+                                fill="none"
+                                stroke="#8CA3A8"
+                                strokeWidth="4"
+                                strokeDasharray="3 12"
+                                strokeLinecap="round"
+                            />
+                            <circle cx="24" cy="170" r="9" fill="#0D9488" />
+                            <g transform="translate(136,28) rotate(45)">
+                                <path
+                                    d="M0 34 L8 0 L16 34 L34 44 L34 52 L16 46 L13 64 L21 70 L21 76 L8 70 L-5 76 L-5 70 L3 64 L0 46 L-18 52 L-18 44 Z"
+                                    fill="#fe7717"
+                                />
+                            </g>
+                        </svg>
+                    </div>
+
+                    {/* Text Part (Collapses horizontally on scroll) */}
+                    <div
+                        className="flex flex-col items-start transition-all duration-500 ease-in-out overflow-hidden"
+                        style={{
+                            width: isScrolled ? "0px" : "120px",
+                            opacity: isScrolled ? 0 : 1,
+                            marginLeft: isScrolled ? "0px" : "8px"
+                        }}
+                    >
+                        <span className="font-sans font-extrabold text-[22px] tracking-tight leading-none text-white select-none whitespace-nowrap">
+                            Trip<span className="text-[#fe7717]">Wise</span>
+                        </span>
+                        <span className="font-sans font-bold text-[8px] tracking-[0.2em] text-[#8CA3A8] select-none whitespace-nowrap mt-1 leading-none">
+                            AI TRIP PLANNER
+                        </span>
+                    </div>
+                </div>
+
+                {/* Right Side: My Trips, Community & Get Started */}
+                <div className={`flex items-center justify-end transition-all duration-500 ${isScrolled ? "gap-4" : "gap-6"
+                    }`}>
+                    <div className={`hidden md:flex items-center transition-all duration-500 mr-2 ${isScrolled ? "gap-5" : "gap-8"
+                        }`}>
+                        {['My Trips', 'Community'].map((item) => (
+                            <a
+                                key={item}
+                                href={`#${item.toLowerCase().replace(' ', '-')}`}
+                                className={`font-mono text-[11px] font-bold text-white/60 hover:text-[#fe7717] transition-all duration-500 relative py-2 nav-link-underline uppercase whitespace-nowrap ${isScrolled ? "tracking-widest" : "tracking-[0.16em]"
+                                    }`}
+                            >
+                                {item}
+                            </a>
+                        ))}
+                    </div>
+                    <button className="group inline-flex items-center bg-[#fe7717] hover:bg-[#4B4745] hover:text-[#fe7717] rounded-full pl-5 pr-2 py-1.5 transition-all duration-500 cursor-pointer border-none outline-none select-none shrink-0 shadow-md group-hover:rounded-2xl group-hover:text-[10px] hover:font-bold hover:scale-101">
+                        <span className="font-mono font-extrabold tracking-widest transition-all duration-500 mr-3 text-[10px]">GET STARTED</span>
+                        <span className="bg-[#16323A] group-hover:bg-[#fe7717] group-hover:text-white text-white rounded-full flex items-center justify-center font-extrabold transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:rotate-45 w-5 h-5 text-[9px]">»</span>
                     </button>
                 </div>
             </div>
