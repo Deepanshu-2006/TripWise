@@ -357,7 +357,7 @@ const Hero = () => {
     const loadingPercentage = Math.round((loadedCount / FRAME_COUNT) * 100);
 
     return (
-        <section ref={containerRef} className="relative w-full h-[750vh] bg-brand-sand">
+        <section ref={containerRef} id="hero-section" className="relative w-full h-[750vh] bg-brand-sand">
             {/* Sticky Viewport Container */}
             <div ref={stickyRef} className="sticky top-0 w-full h-screen overflow-hidden flex items-center justify-center">
                 {/* Background Frame Canvas (GPU Accelerated 60 FPS) */}

@@ -7,10 +7,21 @@ function Header() {
 
     useEffect(() => {
         const handleScroll = () => {
-            if (window.scrollY > 20) {
-                setIsScrolled(true)
+            const heroSec = document.getElementById('hero-section')
+            if (heroSec) {
+                // The scroll animation ends when the user reaches the end of the pinned section.
+                const pinDuration = heroSec.offsetHeight - window.innerHeight
+                if (window.scrollY >= pinDuration - 20) {
+                    setIsScrolled(true)
+                } else {
+                    setIsScrolled(false)
+                }
             } else {
-                setIsScrolled(false)
+                if (window.scrollY > 20) {
+                    setIsScrolled(true)
+                } else {
+                    setIsScrolled(false)
+                }
             }
         }
         window.addEventListener('scroll', handleScroll)
@@ -40,7 +51,7 @@ function Header() {
                 </div>
 
                 {/* Center: Logo (Centered on desktop, left on mobile) */}
-                <div className="flex items-center justify-start md:justify-center cursor-pointer group select-none">
+                <div className="header-logo flex items-center justify-start md:justify-center cursor-pointer group select-none">
                     {/* Icon Part (Always visible, height stays constant h-16) */}
                     <div className="h-16 w-16 shrink-0 flex items-center justify-center">
                         <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 object-contain transition-transform duration-300 group-hover:scale-105">
