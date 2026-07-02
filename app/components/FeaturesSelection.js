@@ -383,14 +383,12 @@ function FeaturesSelection() {
     const headerRef     = useRef(null);
     const scrollHintRef = useRef(null);
     const progressFillRef = useRef(null);
-    const canvasRef     = useRef(null); // canvas for particle explosions
     const stepDotRefs   = useRef([null, null, null, null]);
     const itemRefs      = useRef([null, null, null, null]);
     const cardRefs      = useRef([null, null, null, null]);
 
     // Active tab state updated dynamically onScroll or onClick
     const [activeTab, setActiveTab] = useState(0);
-    const particlesArray = useRef([]);
 
     // Custom Scroll Trigger trigger click-navigation function
     const navigateToPhase = (scrollProgress) => {
@@ -405,129 +403,7 @@ function FeaturesSelection() {
         });
     };
 
-    // Canvas particle system implementation
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        let animationId;
 
-        const resizeCanvas = () => {
-            canvas.width = canvas.parentElement.offsetWidth;
-            canvas.height = canvas.parentElement.offsetHeight;
-        };
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-
-        class Particle {
-            constructor(x, y, color) {
-                this.x = x;
-                this.y = y;
-                // Burst outwards and float upwards
-                this.vx = (Math.random() - 0.5) * 6;
-                this.vy = -Math.random() * 4 - 3;
-                this.size = Math.random() * 4.5 + 2;
-                this.alpha = 1;
-                this.color = color;
-                this.decay = Math.random() * 0.012 + 0.008;
-                this.gravity = 0.05; // gentle downwards bend
-            }
-            update() {
-                this.x += this.vx;
-                this.vy += this.gravity;
-                this.y += this.vy;
-                this.alpha -= this.decay;
-            }
-            draw(c) {
-                c.save();
-                c.globalAlpha = this.alpha;
-                c.shadowBlur = 12;
-                c.shadowColor = this.color;
-                c.fillStyle = this.color;
-                c.beginPath();
-                c.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                c.fill();
-                c.restore();
-            }
-        }
-
-        const handleAnimation = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Render and update active particles
-            for (let i = 0; i < particlesArray.current.length; i++) {
-                const p = particlesArray.current[i];
-                p.update();
-                p.draw(ctx);
-                if (p.alpha <= 0) {
-                    particlesArray.current.splice(i, 1);
-                    i--;
-                }
-            }
-
-            // Continuous micro ambient sparkle from suitcase mouth when active
-            if (Math.random() < 0.08) {
-                const suitcaseX = canvas.width / 2;
-                const suitcaseY = canvas.height / 2 + 30;
-                particlesArray.current.push(new Particle(
-                    suitcaseX + (Math.random() - 0.5) * 120,
-                    suitcaseY,
-                    Math.random() > 0.5 ? '#fe7717' : '#0D9488'
-                ));
-            }
-
-            animationId = requestAnimationFrame(handleAnimation);
-        };
-        handleAnimation();
-
-        return () => {
-            cancelAnimationFrame(animationId);
-            window.removeEventListener('resize', resizeCanvas);
-        };
-    }, []);
-
-    // Function to trigger particle explosions
-    const triggerExplosion = (color) => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2 + 10;
-        
-        // Spawn a ring/burst of colorful particles
-        for (let i = 0; i < 35; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const force = Math.random() * 5 + 3;
-            const p = {
-                x: centerX,
-                y: centerY,
-                vx: Math.cos(angle) * force,
-                vy: Math.sin(angle) * force - 2.5,
-                size: Math.random() * 5 + 2.5,
-                alpha: 1,
-                color: color,
-                decay: Math.random() * 0.016 + 0.009,
-                gravity: 0.06,
-                update() {
-                    this.x += this.vx;
-                    this.vy += this.gravity;
-                    this.y += this.vy;
-                    this.alpha -= this.decay;
-                },
-                draw(c) {
-                    c.save();
-                    c.globalAlpha = this.alpha;
-                    c.shadowBlur = 12;
-                    c.shadowColor = this.color;
-                    c.fillStyle = this.color;
-                    c.beginPath();
-                    c.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                    c.fill();
-                    c.restore();
-                }
-            };
-            particlesArray.current.push(p);
-        }
-    };
 
     useEffect(() => {
         if (!containerRef.current || !stickyRef.current) return;
@@ -583,7 +459,6 @@ function FeaturesSelection() {
                 rotateZ: features[0].tilt, rotateY: -6,
                 duration: 17, ease: 'back.out(1.5)',
             }, 15);
-            tl.call(() => triggerExplosion(features[0].color), null, 15);
             tl.to(cardRefs.current[0], { opacity: 1, x: 0, duration: 14, ease: 'power2.out' }, 20);
             tl.to(stepDotRefs.current[0], { scale: 1.6, opacity: 1, duration: 5 }, 15);
             tl.to(progressFillRef.current, { width: '28%', duration: 22 }, 13);
@@ -601,7 +476,6 @@ function FeaturesSelection() {
                 rotateZ: features[1].tilt, rotateY: 6,
                 duration: 17, ease: 'back.out(1.5)',
             }, 38);
-            tl.call(() => triggerExplosion(features[1].color), null, 38);
             tl.to(cardRefs.current[1], { opacity: 1, x: 0, duration: 14, ease: 'power2.out' }, 43);
             tl.to(stepDotRefs.current[1], { scale: 1.6, opacity: 1, duration: 5 }, 38);
             tl.to(progressFillRef.current, { width: '52%', duration: 22 }, 33);
@@ -618,7 +492,6 @@ function FeaturesSelection() {
                 rotateZ: features[2].tilt, rotateY: -6,
                 duration: 17, ease: 'back.out(1.5)',
             }, 58);
-            tl.call(() => triggerExplosion(features[2].color), null, 58);
             tl.to(cardRefs.current[2], { opacity: 1, x: 0, duration: 14, ease: 'power2.out' }, 63);
             tl.to(stepDotRefs.current[2], { scale: 1.6, opacity: 1, duration: 5 }, 58);
             tl.to(progressFillRef.current, { width: '76%', duration: 22 }, 53);
@@ -635,7 +508,6 @@ function FeaturesSelection() {
                 rotateZ: features[3].tilt, rotateY: 6,
                 duration: 17, ease: 'back.out(1.5)',
             }, 78);
-            tl.call(() => triggerExplosion(features[3].color), null, 78);
             tl.to(cardRefs.current[3], { opacity: 1, x: 0, duration: 14, ease: 'power2.out' }, 83);
             tl.to(stepDotRefs.current[3], { scale: 1.6, opacity: 1, duration: 5 }, 78);
             tl.to(progressFillRef.current, { width: '100%', duration: 27 }, 73);
@@ -683,8 +555,7 @@ function FeaturesSelection() {
 
             <div ref={stickyRef} className="sticky top-0 w-full h-screen overflow-hidden">
 
-                {/* ── Particle System Canvas ── */}
-                <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-30" />
+
 
                 {/* ── Deep ambient glow ── */}
                 <div className="absolute inset-0 pointer-events-none">
