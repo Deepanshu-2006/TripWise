@@ -11,7 +11,7 @@ const Hero = () => {
     const stickyRef = useRef(null);
     const canvasRef = useRef(null);
     const framesRef = useRef([]); // Will hold ImageBitmap or HTMLImageElement objects
-    
+
     // Smooth 60fps animation state
     const targetFrameIndexRef = useRef(0);
     const currentRenderedIndexRef = useRef(-1);
@@ -150,14 +150,14 @@ const Hero = () => {
                     opacity = 1.0 - (progress - 0.56) / 0.07;
                 }
             }
-            
+
             stage3Ref.current.style.opacity = opacity > 0.01 ? 1 : 0;
             stage3Ref.current.style.pointerEvents = opacity > 0.1 ? 'auto' : 'none';
 
             // Word-by-word reveal for Stage 3
             const words = stage3Ref.current.querySelectorAll('.stage3-word');
             const subLine = stage3Ref.current.querySelector('.stage3-sub');
-            
+
             words.forEach((word, idx) => {
                 // Stagger entrance based on progress inside the stage
                 const wordThresh = idx / words.length;
@@ -198,7 +198,7 @@ const Hero = () => {
                     opacity = 1.0 - (progress - 0.77) / 0.06;
                 }
             }
-            
+
             stage4Ref.current.style.opacity = opacity > 0.01 ? 1 : 0;
             stage4Ref.current.style.pointerEvents = opacity > 0.1 ? 'auto' : 'none';
 
@@ -223,7 +223,7 @@ const Hero = () => {
             if (progress >= 0.83) {
                 opacity = Math.min(1.0, (progress - 0.83) / 0.09);
             }
-            
+
             stage5Ref.current.style.opacity = opacity > 0.01 ? 1 : 0;
             stage5Ref.current.style.pointerEvents = opacity > 0.1 ? 'auto' : 'none';
 
@@ -328,11 +328,11 @@ const Hero = () => {
             canvas.height = window.innerHeight * dpr;
             canvas.style.width = `${window.innerWidth}px`;
             canvas.style.height = `${window.innerHeight}px`;
-            
+
             const ctx = canvas.getContext('2d');
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
-            
+
             if (currentRenderedIndexRef.current >= 0) {
                 drawFrame(currentRenderedIndexRef.current);
             } else {
@@ -394,28 +394,20 @@ const Hero = () => {
                 {/* Subtle Cinematic Vignette Overlay */}
                 <div className="absolute inset-0 bg-linear-to-t from-brand-sand via-transparent to-brand-sand/30 pointer-events-none z-1" />
 
-                {/* Loading Status Corner Pill */}
-                {loadedCount < FRAME_COUNT && (
-                    <div className="absolute top-24 right-6 z-50 bg-white/95 backdrop-blur-md px-4 py-2 rounded-full border border-brand-dark/10 flex items-center gap-2.5 shadow-md pointer-events-none">
-                        <div className="w-2 h-2 rounded-full bg-brand-coral animate-ping" />
-                        <span className="text-xs font-bold text-brand-dark">
-                            Loading visual sequence: {loadingPercentage}%
-                        </span>
-                    </div>
-                )}
+
 
                 {/* TEXT AND INTERACTIVE OVERLAYS (STAGED RENDER) */}
                 <div className="absolute inset-0 z-10 w-full h-full flex flex-col justify-between p-8 md:p-16 pointer-events-none select-none">
-                    
+
                     {/* Header alignment spacer */}
                     <div className="w-full h-20" />
 
                     {/* Main overlays stage */}
                     <div className="flex-1 flex flex-col items-center justify-center text-center max-w-4xl mx-auto w-full relative">
-                        
+
                         {/* STAGE 1: Phone Idle */}
-                        <div 
-                            ref={stage1Ref} 
+                        <div
+                            ref={stage1Ref}
                             className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none transition-all duration-300 ease-out"
                         >
                             <p className="text-lg md:text-md font-bold text-[#fe7717] px-7 py-3.5 bg-[#1C1B1B] backdrop-blur-md rounded-full shadow-lg border border-white/50 translate-y-28 md:translate-y-26 font-mono ">
@@ -424,8 +416,8 @@ const Hero = () => {
                         </div>
 
                         {/* STAGE 2: Typing/Thinking Assistant Line */}
-                        <div 
-                            ref={stage2Ref} 
+                        <div
+                            ref={stage2Ref}
                             className="absolute inset-x-0 bottom-12 md:bottom-20 flex flex-col items-center opacity-0 pointer-events-none transition-all duration-300 ease-out"
                         >
                             <div className="flex items-center gap-4 px-7 py-3.5 bg-[#1C1B1B] backdrop-blur-md rounded-full shadow-lg border border-white/50 text-[#fe7717] font-mono text-lg md:text-md font-bold">
@@ -443,60 +435,20 @@ const Hero = () => {
                         </div>
 
                         {/* PERSISTENT HERO HEADER & CTA OVERLAY (Visible during Stage 1 & 2) */}
-                        <div 
+                        <div
                             ref={persistentCtaRef}
                             className="absolute inset-0 flex flex-col justify-between items-center py-4 px-6 md:py-8 md:px-8 z-20 pointer-events-none opacity-0 transition-opacity duration-300 ease-out"
-                        >
-                            {/* Top text block: Big bold headline */}
-                            <div className="flex flex-col items-center text-center mt-2 max-w-xl">
-                                <h1 
-                                    className="text-3xl md:text-5xl font-extrabold text-brand-dark tracking-tight uppercase font-serif leading-[1.1] mb-2 select-none"
-                                    style={{
-                                        textShadow: '0 4px 20px rgba(255, 248, 245, 0.95), 0 2px 8px rgba(255, 248, 245, 0.9)'
-                                    }}
-                                >
-                                    AI Travel Planning, <br />
-                                    <span className="text-[#FF5B1D] normal-case italic font-serif font-normal">reimagined</span>
-                                </h1>
-                                <p 
-                                    className="text-[10px] md:text-xs text-brand-dark/70 font-medium max-w-sm tracking-wide font-sans leading-relaxed select-none"
-                                    style={{
-                                        textShadow: '0 2px 10px rgba(255, 248, 245, 0.9)'
-                                    }}
-                                >
-                                    Describe your dream trip in one sentence. Let AI design a custom route, schedule local stops, and sync flight statuses.
-                                </p>
-                            </div>
-
-                            {/* Bottom text block: Highlight CTA button */}
-                            <div className="flex flex-col items-center text-center mb-4 md:mb-8 gap-2.5">
-                                <button 
-                                    onClick={scrollToPlanner}
-                                    className="pointer-events-auto px-6 py-3.5 bg-[#FF5B1D] hover:bg-[#4B4745] text-white hover:text-[#FF5B1D] font-extrabold text-xs rounded-full shadow-lg shadow-orange-500/20 hover:shadow-brand-dark/25 transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer font-mono tracking-widest uppercase border border-orange-600/10"
-                                >
-                                    Build a Trip in 10 Seconds →
-                                </button>
-                                <div 
-                                    className="inline-flex items-center gap-1 text-[8px] font-mono font-bold text-brand-dark/40 tracking-wider uppercase select-none leading-none"
-                                    style={{
-                                        textShadow: '0 2px 6px rgba(255, 248, 245, 0.9)'
-                                    }}
-                                >
-                                    <span className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
-                                    Free to build · instant generation
-                                </div>
-                            </div>
-                        </div>
+                        />
 
                         {/* STAGE 3: Globe Spin-Up Hero Headline (Staggered words) */}
-                        <div 
-                            ref={stage3Ref} 
+                        <div
+                            ref={stage3Ref}
                             className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none max-w-2xl transition-all duration-300 ease-out"
                         >
                             <h2 className="text-4xl md:text-6xl font-extrabold text-brand-dark tracking-tight leading-[1.15] mb-4 select-none">
                                 {['Your', 'AI', 'Travel', 'Planner,', 'Reimagined.'].map((word, idx) => (
-                                    <span 
-                                        key={idx} 
+                                    <span
+                                        key={idx}
                                         className="stage3-word inline-block mr-[0.25em] transition-all duration-300 ease-out"
                                         style={{
                                             color: (idx === 1 || idx === 2) ? '#fe7717' : 'inherit',
@@ -513,14 +465,14 @@ const Hero = () => {
                         </div>
 
                         {/* STAGE 4: Map Reveal (Staggered words) */}
-                        <div 
-                            ref={stage4Ref} 
+                        <div
+                            ref={stage4Ref}
                             className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none max-w-3xl transition-all duration-300 ease-out translate-x-6 md:translate-x-20"
                         >
                             <h2 className="text-4xl md:text-6xl font-extrabold text-brand-dark tracking-tight leading-[1.15] select-none">
                                 {['Real', 'Places.', 'Real', 'Plans.', 'Built', 'in', 'Seconds.'].map((word, idx) => (
-                                    <span 
-                                        key={idx} 
+                                    <span
+                                        key={idx}
                                         className="stage4-word inline-block mr-[0.25em] transition-all duration-300 ease-out"
                                         style={{
                                             color: (idx === 0 || idx === 2) ? '#fe7717' : (idx === 6) ? 'var(--brand-teal)' : 'inherit',
@@ -534,11 +486,11 @@ const Hero = () => {
                         </div>
 
                         {/* STAGE 5: Itinerary Cards Stacking & CTA */}
-                        <div 
-                            ref={stage5Ref} 
+                        <div
+                            ref={stage5Ref}
                             className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none max-w-2xl transition-all duration-300 ease-out"
                         >
-                            <h2 
+                            <h2
                                 className="stage5-heading text-4xl md:text-5xl font-extrabold text-brand-dark tracking-tight mb-8 transition-all duration-300 ease-out select-none"
                                 style={{
                                     textShadow: '0 4px 20px rgba(255, 248, 245, 0.95), 0 2px 8px rgba(255, 248, 245, 0.9), 0 1px 2px rgba(255, 248, 245, 0.85)'
@@ -547,7 +499,7 @@ const Hero = () => {
                                 Your <span className="text-[#fe7717]">Day-by-Day</span> Itinerary, <br />
                                 <span className="text-brand-coral">Auto-Generated</span>
                             </h2>
-                            <button className="stage5-cta pointer-events-auto px-8 py-4 bg-[#fe7717] hover:bg-[#4B4745] text-[#1C1B1B] hover:text-[#fe7717] font-extrabold text-lg rounded-full shadow-lg shadow-brand-coral/25 hover:shadow-brand-dark/25 transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer font-mono tracking-widest ">
+                            <button className="stage5-cta pointer-events-auto px-8 py-4 bg-[#fe7717] hover:bg-[#4B4745] text-[#1C1B1B] hover:text-[#fe7717] font-extrabold text-lg rounded-full shadow-lg shadow-brand-coral/25 hover:shadow-brand-dark/25 transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer font-mono tracking-widest uppercase">
                                 Plan My Trip →
                             </button>
                         </div>
@@ -555,15 +507,7 @@ const Hero = () => {
                     </div>
 
                     {/* Bottom spacer */}
-                    <div className="w-full h-12 flex justify-center items-center">
-                        <div className="w-32 h-1 bg-brand-dark/10 rounded-full overflow-hidden">
-                            <div 
-                                ref={progressIndicatorRef}
-                                className="h-full bg-brand-teal transition-all duration-100"
-                                style={{ width: '0%' }}
-                            />
-                        </div>
-                    </div>
+                    <div className="w-full h-12 flex justify-center items-center" />
                 </div>
 
             </div>
