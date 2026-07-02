@@ -22,6 +22,7 @@ const Hero = () => {
     const stage3Ref = useRef(null);
     const stage4Ref = useRef(null);
     const stage5Ref = useRef(null);
+    const persistentCtaRef = useRef(null);
     const progressIndicatorRef = useRef(null);
 
     const [loadedCount, setLoadedCount] = useState(0);
@@ -83,6 +84,22 @@ const Hero = () => {
     // Animate stage overlays directly in DOM at 60fps to avoid React render lag
     const animateOverlays = (index) => {
         const progress = index / (FRAME_COUNT - 1);
+
+        // Persistent Stage 1 & 2 CTA overlay
+        if (persistentCtaRef.current) {
+            let opacity = 0;
+            if (progress < 0.38) {
+                if (progress < 0.05) {
+                    opacity = progress / 0.05;
+                } else if (progress < 0.32) {
+                    opacity = 1.0;
+                } else {
+                    opacity = 1.0 - (progress - 0.32) / 0.06;
+                }
+            }
+            persistentCtaRef.current.style.opacity = opacity > 0.01 ? opacity : 0;
+            persistentCtaRef.current.style.pointerEvents = opacity > 0.1 ? 'auto' : 'none';
+        }
 
         // Stage 1 (Phone Idle: 0.0 - 0.15 progress / frames 0 - 36)
         if (stage1Ref.current) {
@@ -232,6 +249,14 @@ const Hero = () => {
         // Update bottom progress bar indicator width
         if (progressIndicatorRef.current) {
             progressIndicatorRef.current.style.width = `${progress * 100}%`;
+        }
+    };
+
+    const scrollToPlanner = (e) => {
+        if (e) e.preventDefault();
+        const target = document.getElementById('ai-planner');
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     };
 
@@ -417,18 +442,65 @@ const Hero = () => {
                             </div>
                         </div>
 
+                        {/* PERSISTENT HERO HEADER & CTA OVERLAY (Visible during Stage 1 & 2) */}
+                        <div 
+                            ref={persistentCtaRef}
+                            className="absolute inset-0 flex flex-col justify-between items-center py-4 px-6 md:py-8 md:px-8 z-20 pointer-events-none opacity-0 transition-opacity duration-300 ease-out"
+                        >
+                            {/* Top text block: Big bold headline */}
+                            <div className="flex flex-col items-center text-center mt-2 max-w-xl">
+                                <h1 
+                                    className="text-3xl md:text-5xl font-extrabold text-brand-dark tracking-tight uppercase font-serif leading-[1.1] mb-2 select-none"
+                                    style={{
+                                        textShadow: '0 4px 20px rgba(255, 248, 245, 0.95), 0 2px 8px rgba(255, 248, 245, 0.9)'
+                                    }}
+                                >
+                                    AI Travel Planning, <br />
+                                    <span className="text-[#FF5B1D] normal-case italic font-serif font-normal">reimagined</span>
+                                </h1>
+                                <p 
+                                    className="text-[10px] md:text-xs text-brand-dark/70 font-medium max-w-sm tracking-wide font-sans leading-relaxed select-none"
+                                    style={{
+                                        textShadow: '0 2px 10px rgba(255, 248, 245, 0.9)'
+                                    }}
+                                >
+                                    Describe your dream trip in one sentence. Let AI design a custom route, schedule local stops, and sync flight statuses.
+                                </p>
+                            </div>
+
+                            {/* Bottom text block: Highlight CTA button */}
+                            <div className="flex flex-col items-center text-center mb-4 md:mb-8 gap-2.5">
+                                <button 
+                                    onClick={scrollToPlanner}
+                                    className="pointer-events-auto px-6 py-3.5 bg-[#FF5B1D] hover:bg-[#4B4745] text-white hover:text-[#FF5B1D] font-extrabold text-xs rounded-full shadow-lg shadow-orange-500/20 hover:shadow-brand-dark/25 transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer font-mono tracking-widest uppercase border border-orange-600/10"
+                                >
+                                    Build a Trip in 10 Seconds →
+                                </button>
+                                <div 
+                                    className="inline-flex items-center gap-1 text-[8px] font-mono font-bold text-brand-dark/40 tracking-wider uppercase select-none leading-none"
+                                    style={{
+                                        textShadow: '0 2px 6px rgba(255, 248, 245, 0.9)'
+                                    }}
+                                >
+                                    <span className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
+                                    Free to build · instant generation
+                                </div>
+                            </div>
+                        </div>
+
                         {/* STAGE 3: Globe Spin-Up Hero Headline (Staggered words) */}
                         <div 
                             ref={stage3Ref} 
                             className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none max-w-2xl transition-all duration-300 ease-out"
                         >
-                            <h2 className="text-4xl md:text-6xl font-extrabold text-brand-dark tracking-tight leading-[1.15] mb-4">
+                            <h2 className="text-4xl md:text-6xl font-extrabold text-brand-dark tracking-tight leading-[1.15] mb-4 select-none">
                                 {['Your', 'AI', 'Travel', 'Planner,', 'Reimagined.'].map((word, idx) => (
                                     <span 
                                         key={idx} 
                                         className="stage3-word inline-block mr-[0.25em] transition-all duration-300 ease-out"
                                         style={{
-                                            color: (idx === 1 || idx === 2) ? '#fe7717' : 'inherit'
+                                            color: (idx === 1 || idx === 2) ? '#fe7717' : 'inherit',
+                                            textShadow: '0 4px 20px rgba(255, 248, 245, 0.95), 0 2px 8px rgba(255, 248, 245, 0.9), 0 1px 2px rgba(255, 248, 245, 0.85)'
                                         }}
                                     >
                                         {word}
@@ -445,13 +517,14 @@ const Hero = () => {
                             ref={stage4Ref} 
                             className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none max-w-3xl transition-all duration-300 ease-out translate-x-6 md:translate-x-20"
                         >
-                            <h2 className="text-4xl md:text-6xl font-extrabold text-brand-dark tracking-tight leading-[1.15]">
+                            <h2 className="text-4xl md:text-6xl font-extrabold text-brand-dark tracking-tight leading-[1.15] select-none">
                                 {['Real', 'Places.', 'Real', 'Plans.', 'Built', 'in', 'Seconds.'].map((word, idx) => (
                                     <span 
                                         key={idx} 
                                         className="stage4-word inline-block mr-[0.25em] transition-all duration-300 ease-out"
                                         style={{
-                                            color: (idx === 0 || idx === 2) ? '#fe7717' : (idx === 6) ? 'var(--brand-teal)' : 'inherit'
+                                            color: (idx === 0 || idx === 2) ? '#fe7717' : (idx === 6) ? 'var(--brand-teal)' : 'inherit',
+                                            textShadow: '0 4px 20px rgba(255, 248, 245, 0.95), 0 2px 8px rgba(255, 248, 245, 0.9), 0 1px 2px rgba(255, 248, 245, 0.85)'
                                         }}
                                     >
                                         {word}
@@ -465,11 +538,16 @@ const Hero = () => {
                             ref={stage5Ref} 
                             className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none max-w-2xl transition-all duration-300 ease-out"
                         >
-                            <h2 className="stage5-heading text-4xl md:text-5xl font-extrabold text-brand-dark tracking-tight mb-8 transition-all duration-300 ease-out">
+                            <h2 
+                                className="stage5-heading text-4xl md:text-5xl font-extrabold text-brand-dark tracking-tight mb-8 transition-all duration-300 ease-out select-none"
+                                style={{
+                                    textShadow: '0 4px 20px rgba(255, 248, 245, 0.95), 0 2px 8px rgba(255, 248, 245, 0.9), 0 1px 2px rgba(255, 248, 245, 0.85)'
+                                }}
+                            >
                                 Your <span className="text-[#fe7717]">Day-by-Day</span> Itinerary, <br />
                                 <span className="text-brand-coral">Auto-Generated</span>
                             </h2>
-                            <button className="stage5-cta pointer-events-auto px-8 py-4 bg-[#fe7717] hover:bg-brand-dark text-[#1C1B1B] font-extrabold text-lg rounded-full shadow-lg shadow-brand-coral/25 hover:shadow-brand-dark/25 transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer font-mono tracking-widest ">
+                            <button className="stage5-cta pointer-events-auto px-8 py-4 bg-[#fe7717] hover:bg-[#4B4745] text-[#1C1B1B] hover:text-[#fe7717] font-extrabold text-lg rounded-full shadow-lg shadow-brand-coral/25 hover:shadow-brand-dark/25 transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer font-mono tracking-widest ">
                                 Plan My Trip →
                             </button>
                         </div>

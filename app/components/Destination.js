@@ -172,7 +172,7 @@ export default function Destination() {
     }, [isDragging]);
 
     return (
-        <section className="relative w-full flex flex-col items-center justify-center select-none font-sans py-12 md:py-16 px-4 md:px-8 border-t mt-5 border-brand-dark/5 bg-transparent animate-fade-in">
+        <section id="ai-planner" className="relative w-full flex flex-col items-center justify-center select-none font-sans py-12 md:py-16 px-4 md:px-8 border-t mt-5 border-brand-dark/5 bg-transparent animate-fade-in">
             {/* Embedded styles for alternate tab jitter, blinking typewriter cursor, slow sticky notes wobble, and clicking frantic cursor */}
             <style>{`
                 @keyframes tab-jitter {

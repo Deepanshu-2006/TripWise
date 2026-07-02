@@ -242,6 +242,10 @@ function FeaturesSelection() {
             title: "Smart Day-by-Day Scheduling",
             tagline: "Maps pin places; ChatGPT writes static lists. TripWise designs functional schedules.",
             desc: "Instead of a simple map pin or a long text response, we map out a realistic daily path optimized for walking distances, peak visiting hours, and logical transit routes.",
+            details: [
+                "Optimal walking sequence & duration estimates",
+                "Crowd density avoidance visit windows"
+            ],
             icon: (
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -261,6 +265,10 @@ function FeaturesSelection() {
             title: "Local Hidden Gems",
             tagline: "Ditch the tourist traps. Uncover secrets loved by locals.",
             desc: "Powered by hyper-local review parsing and crowd-sourced data, TripWise steers you away from overpriced tourist zones into authentic culinary spots and scenic detours.",
+            details: [
+                "Verified local-only eateries & views",
+                "Detours curated by local reviewers"
+            ],
             icon: (
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
@@ -271,6 +279,10 @@ function FeaturesSelection() {
             title: "Budget Optimization",
             tagline: "Set a budget limit. We optimize costs and plan details.",
             desc: "Real-time cost estimations based on category caps. We automatically recommend cheaper transport timings, cost-effective stays, and budget-friendly street-food spots.",
+            details: [
+                "Fare-saving flight & rail shift alerts",
+                "Automatic category-cap cost estimates"
+            ],
             icon: (
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
                     <line x1="12" y1="1" x2="12" y2="23" />
@@ -282,6 +294,10 @@ function FeaturesSelection() {
             title: "Real-Time Flight & Hotel Integration",
             tagline: "Live status updates and reservations directly in your itinerary.",
             desc: "Seamlessly link your flight status, hotel coordinates, and check-in times. Any delays will automatically trigger schedule re-routing suggestions.",
+            details: [
+                "Live flight boarding pass status tracking",
+                "Automated delay re-routing suggestions"
+            ],
             icon: (
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
                     <path d="M22 2L11 13" />
@@ -395,7 +411,7 @@ function FeaturesSelection() {
                                         }`}>
                                             {feature.icon}
                                         </div>
-                                        <div className="flex flex-col gap-0.5">
+                                        <div className="flex flex-col gap-0.5 flex-1 min-w-0">
                                             <h3 className={`text-base font-bold transition-colors duration-300 ${
                                                 isActive ? "text-brand-dark" : "text-brand-dark/80"
                                             }`}>
@@ -409,6 +425,24 @@ function FeaturesSelection() {
                                             <p className="text-xs text-secondary-text leading-relaxed mt-1">
                                                 {feature.desc}
                                             </p>
+
+                                            {/* Expanding active sub-details checkmark list */}
+                                            <div 
+                                                className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                                                    isActive ? 'max-h-[120px] opacity-100 mt-2.5' : 'max-h-0 opacity-0 pointer-events-none'
+                                                }`}
+                                            >
+                                                <div className="flex flex-col gap-1.5 border-t border-brand-dark/5 pt-2 flex-wrap">
+                                                    {feature.details.map((detail, dIdx) => (
+                                                        <div key={dIdx} className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-brand-dark/75">
+                                                            <svg className="w-3.5 h-3.5 text-[#fe7717] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                            <span>{detail}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 );
