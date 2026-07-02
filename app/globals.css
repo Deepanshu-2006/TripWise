@@ -25,6 +25,10 @@
   --color-surface-container: var(--surface-container);
   --color-secondary-text: var(--secondary-text);
 
+  --color-brand-teal: var(--primary-accent);
+  --color-brand-dark: var(--foreground);
+  --color-brand-coral: var(--surface-container);
+
   --font-sans: var(--font-montserrat), sans-serif;
   --font-serif: var(--font-playfair), serif;
 
@@ -77,4 +81,22 @@ body {
 .dot-blink {
   animation: dot-blink 1.4s infinite both;
   display: inline-block;
+}
+
+@keyframes flight-loop {
+  0% {
+    offset-distance: 0%;
+  }
+  100% {
+    offset-distance: 100%;
+  }
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-cursor {
+  animation: cursor-blink 0.8s infinite;
 }
