@@ -378,12 +378,16 @@ function FeaturesSelection() {
                                     <div
                                         key={idx}
                                         onClick={() => handleTabClick(idx)}
-                                        className={`feature-card p-4 rounded-xl cursor-pointer border-l-4 transition-all duration-300 flex items-start gap-4 ${
+                                        className={`feature-card relative overflow-hidden p-4 rounded-xl cursor-pointer transition-all duration-300 flex items-start gap-4 ${
                                             isActive 
-                                                ? "bg-white border-[#fe7717] shadow-lg shadow-brand-coral/5 scale-[1.01]" 
-                                                : "bg-transparent border-transparent hover:bg-white/40 hover:scale-[1.005]"
+                                                ? "bg-white shadow-lg shadow-brand-coral/5 scale-[1.01]" 
+                                                : "bg-transparent hover:bg-white/40 hover:scale-[1.005]"
                                         }`}
                                     >
+                                        {/* Perfect rounded left-side indicator border */}
+                                        {isActive && (
+                                            <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-[#fe7717]" />
+                                        )}
                                         <div className={`feature-icon p-2 rounded-lg shrink-0 transition-colors duration-300 ${
                                             isActive 
                                                 ? "bg-[#fe7717] text-white" 
@@ -412,8 +416,8 @@ function FeaturesSelection() {
                         </div>
 
                         {/* Right Column: Live Mock UI Preview */}
-                        <div className="preview-outer-container lg:col-span-7 flex items-center justify-center relative w-full h-120 max-h-[60vh]">
-                            <div className="w-full h-full bg-[#1C1B1B] border border-white/10 rounded-3xl p-6 md:p-8 flex flex-col relative overflow-hidden shadow-2xl">
+                        <div className="preview-outer-container lg:col-span-7 flex items-center justify-center relative w-full h-[480px] max-h-[60vh] rounded-3xl overflow-hidden">
+                            <div className="w-full h-full bg-[#1C1B1B] border border-white/15 rounded-3xl p-6 md:p-8 flex flex-col relative overflow-hidden shadow-2xl">
                                 
                                 {/* Inner Preview Window Shell */}
                                 <div className="flex items-center gap-1.5 border-b border-white/10 pb-4 mb-6">
@@ -613,9 +617,9 @@ function FeaturesSelection() {
                                                 
                                                 <div className="flex-1 flex items-center justify-center relative">
                                                     <div className="w-full border-t border-dashed border-brand-dark/20" />
-                                                    <div className="absolute bg-[#FFF8F5] px-2 text-[#fe7717]">
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4 transform rotate-90">
-                                                            <path d="M21 16V8a2 2 0 0 0-2-2h-5L9 2H7v4H4L2 8v2h2l5 4v4l-3 2v1h8v-1l-3-2v-4l5-4h2a2 2 0 0 1 2 2v8h2z" />
+                                                    <div className="absolute bg-[#FFF8F5] px-2 text-[#fe7717] flex items-center justify-center">
+                                                        <svg viewBox="-20 0 56 78" fill="currentColor" className="w-6 h-6 transform rotate-90">
+                                                            <path d="M0 34 L8 0 L16 34 L34 44 L34 52 L16 46 L13 64 L21 70 L21 76 L8 70 L-5 76 L-5 70 L3 64 L0 46 L-18 52 L-18 44 Z" />
                                                         </svg>
                                                     </div>
                                                 </div>

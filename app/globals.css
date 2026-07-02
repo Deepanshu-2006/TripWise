@@ -1,18 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  :root {
-    --background: #FFF8F5;
-    /* Surface: Warm Cream */
-    --foreground: #1C1B1B;
-    /* On-Surface: Deep Charcoal */
-    --primary-accent: #0D9488;
-    /* Primary Accent: Teal */
-    --surface-container: #fe7717;
-    /* Surface Container: Warm Sand */
-    --secondary-text: #4B4745;
-    /* Secondary Text: Slate Brown */
-  }
+  --background: #FFF8F5;
+  /* Surface: Warm Cream */
+  --foreground: #1C1B1B;
+  /* On-Surface: Deep Charcoal */
+  --primary-accent: #0D9488;
+  /* Primary Accent: Teal */
+  --surface-container: #fe7717;
+  /* Surface Container: Warm Sand */
+  --secondary-text: #4B4745;
+  /* Secondary Text: Slate Brown */
 }
 
 @theme inline {
