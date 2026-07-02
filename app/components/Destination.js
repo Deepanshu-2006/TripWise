@@ -17,6 +17,25 @@ export default function Destination() {
     // Typewriter state
     const [typedText, setTypedText] = useState("");
 
+    // Sync animated plane position with highlight state of itinerary cards D1, D2, D3
+    const [activeItineraryNode, setActiveItineraryNode] = useState(0);
+
+    useEffect(() => {
+        if (!isRevealed) return;
+        const startTime = Date.now();
+        const interval = setInterval(() => {
+            const elapsed = (Date.now() - startTime) % 4200;
+            if (elapsed < 1400) {
+                setActiveItineraryNode(0);
+            } else if (elapsed < 2800) {
+                setActiveItineraryNode(1);
+            } else {
+                setActiveItineraryNode(2);
+            }
+        }, 50);
+        return () => clearInterval(interval);
+    }, [isRevealed]);
+
     // Initial load animation: divider starts at 20%, pauses 600ms, then slides smoothly to 50% using spring deceleration
     useEffect(() => {
         setHeaderVisible(true);
@@ -238,11 +257,11 @@ export default function Destination() {
                     TripWise Experience
                 </div>
                 
-                <h2 className="text-3xl md:text-4xl font-bold text-brand-dark tracking-tight leading-none">
-                    Trip planning, <span className="relative inline-block text-[#FF5B1D] select-none">
+                <h2 className="text-3xl md:text-4xl font-bold text-brand-dark tracking-tight leading-none font-serif uppercase">
+                    Trip planning,  <span className="relative inline-block text-[#FF5B1D] select-none text-3xl md:text-4xl normal-case font-serif italic font-bold">
                         reimagined
-                        <svg className="absolute -bottom-1.5 left-0 w-full h-1.5 text-[#FF5B1D]/40" viewBox="0 0 100 10" preserveAspectRatio="none">
-                            <path d="M0,5 C30,9 70,2 100,6" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+                        <svg className="absolute -bottom-1 left-0 w-full h-1 text-[#FF5B1D]/560" viewBox="0 0 100 10" preserveAspectRatio="none">
+                            <path d="M0,5 C30,9 70,2 100,6" stroke="currentColor" strokeWidth="8" strokeLinecap="round" fill="none" />
                         </svg>
                     </span>
                 </h2>
@@ -255,7 +274,7 @@ export default function Destination() {
             {/* 500px Fixed Height Split Canvas */}
             <div
                 ref={containerRef}
-                className="relative w-full max-w-5xl h-[500px] rounded-3xl overflow-hidden border border-brand-dark/10 bg-transparent"
+                className="relative w-full max-w-5xl h-125 rounded-3xl overflow-hidden border border-brand-dark/10 bg-transparent"
             >
                 
                 {/* ========================================================
@@ -291,10 +310,10 @@ export default function Destination() {
                                 ].map((tab, idx) => (
                                     <div
                                         key={idx}
-                                        className={`px-2.5 py-1 rounded-t-[6px] font-mono text-[9px] font-bold border-t border-x leading-none shrink-0 truncate max-w-[85px] cursor-default flex items-center justify-between ${
+                                        className={`px-2.5 py-1 rounded-t-md font-mono text-[9px] font-bold border-t border-x leading-none shrink-0 truncate max-w-21.25 cursor-default flex items-center justify-between ${
                                             tab.active 
-                                                ? 'bg-white border-red-950/15 text-red-700 h-[24px]' 
-                                                : 'bg-[#402020] border-transparent text-red-200/50 h-[20px]'
+                                                ? 'bg-white border-red-950/15 text-red-700 h-6' 
+                                                : 'bg-[#402020] border-transparent text-red-200/50 h-5'
                                         } ${tab.jitter ? 'animate-tab-jitter' : ''}`}
                                     >
                                         <span>{tab.title}</span>
@@ -347,17 +366,17 @@ export default function Destination() {
 
                     {/* Three absolute Sticky Notes with frosted paper tapes */}
                     <div className="absolute top-[12%] right-[10%] w-24 h-24 bg-[#FEF08A] border border-yellow-300 shadow-md p-3 z-30 font-mono text-[9px] text-yellow-900 leading-tight select-none animate-wobble-yellow">
-                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-3.5 bg-white/20 border border-white/10 backdrop-blur-[1px] rotate-[-2deg]" />
+                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-3.5 bg-white/20 border border-white/10 backdrop-blur-[1px] -rotate-2" />
                         <span>check visa?? need photos</span>
                     </div>
 
                     <div className="absolute bottom-[20%] right-[6%] w-24 h-24 bg-[#FECDD3] border border-pink-300 shadow-md p-3 z-30 font-mono text-[9px] text-pink-900 leading-tight select-none animate-wobble-pink">
-                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-3.5 bg-white/20 border border-white/10 backdrop-blur-[1px] rotate-[3deg]" />
+                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-3.5 bg-white/20 border border-white/10 backdrop-blur-[1px] rotate-3" />
                         <span>hotel near colosseum?</span>
                     </div>
 
                     <div className="absolute bottom-[10%] left-[6%] w-24 h-24 bg-[#BFDBFE] border border-blue-300 shadow-md p-3 z-30 font-mono text-[9px] text-blue-900 leading-tight select-none animate-wobble-blue">
-                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-3.5 bg-white/20 border border-white/10 backdrop-blur-[1px] rotate-[-1deg]" />
+                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-3.5 bg-white/20 border border-white/10 backdrop-blur-[1px] -rotate-1" />
                         <span>budget ??? too much!!</span>
                     </div>
 
@@ -396,32 +415,32 @@ export default function Destination() {
                                     <span className="ml-0.5 inline-block w-1.5 h-3.5 bg-[#FF5B1D] animate-cursor-blink" />
                                 </p>
                             </div>
-                            <span className="text-[8px] font-mono font-bold text-white bg-[#FF5B1D] px-3 py-2 rounded-[6px] leading-none shrink-0 uppercase select-none shadow-sm">
+                            <span className="text-[10px] font-mono font-bold text-white bg-[#FF5B1D] px-3 py-2 rounded-md leading-none shrink-0 uppercase select-none shadow-sm">
                                 Generate
                             </span>
                         </div>
 
                         {/* 2. AI Status line - Cinematic Centered Divider with pulsing dot */}
                         <div className="w-full flex items-center justify-center gap-3.5 select-none shrink-0 py-1.5">
-                            <div className="flex-1 h-[1px] bg-brand-dark/10" />
+                            <div className="flex-1 h-px bg-brand-dark/10" />
                             <div className="flex items-center gap-2 shrink-0">
                                 <span className="w-2.5 h-2.5 rounded-full bg-[#FF5B1D] animate-dot-pulse shrink-0 shadow-[0_0_8px_rgba(255,91,29,0.8)]" />
                                 <span className="font-mono text-[10px] font-black text-[#FF5B1D] tracking-[0.2em] uppercase leading-none">
                                     AI building your itinerary
                                 </span>
                             </div>
-                            <div className="flex-1 h-[1px] bg-brand-dark/10" />
+                            <div className="flex-1 h-px bg-brand-dark/10" />
                         </div>
 
                         {/* 3. Three Itinerary day cards stacked with route strip timeline */}
                         <div className="relative flex flex-col gap-3 select-none shrink-0 pl-7">
                             
                             {/* Dotted Route Line Connector between day nodes */}
-                            <div className="absolute left-[11px] top-3.5 bottom-3.5 w-[2px] pointer-events-none z-0">
+                            <div className="absolute left-2.75 top-3.5 bottom-3.5 w-0.5 pointer-events-none z-0">
                                 <div className="w-full h-full border-l-2 border-dashed border-[#FF5B1D]/25" />
                                 {isRevealed && (
                                     <div 
-                                        className="absolute left-[-7px] top-[-8px] pointer-events-none"
+                                        className="absolute -left-1.75 -top-2 pointer-events-none"
                                         style={{
                                             animation: 'plane-flight-vertical 4.2s linear infinite',
                                         }}
@@ -468,39 +487,50 @@ export default function Destination() {
                                         </svg>
                                     )
                                 }
-                            ].map((card, idx) => (
-                                <div
-                                    key={idx}
-                                    className={`relative flex items-center justify-between transition-all duration-300 transform ${
-                                        isRevealed 
-                                            ? 'opacity-100 translate-y-0' 
-                                            : 'opacity-0 translate-y-4 pointer-events-none'
-                                    }`}
-                                    style={{
-                                        transitionDelay: isRevealed ? `${card.delay}ms` : '0ms'
-                                    }}
-                                >
-                                    {/* Left Node Badge (Aligned exactly over dotted line) */}
-                                    <div className="absolute left-[-28px] w-6 h-6 rounded bg-orange-500/15 flex items-center justify-center font-mono text-[9px] font-black text-[#FF5B1D] shrink-0 z-10 shadow-sm border border-[#FF5B1D]/20">
-                                        {card.d}
-                                    </div>
+                            ].map((card, idx) => {
+                                const isNodeActive = isRevealed && activeItineraryNode === idx;
+                                return (
+                                    <div
+                                        key={idx}
+                                        className={`relative flex items-center justify-between transition-all duration-300 transform ${
+                                            isRevealed 
+                                                ? 'opacity-100 translate-y-0' 
+                                                : 'opacity-0 translate-y-4 pointer-events-none'
+                                        }`}
+                                        style={{
+                                            transitionDelay: isRevealed ? `${card.delay}ms` : '0ms'
+                                        }}
+                                    >
+                                        {/* Left Node Badge (Aligned exactly over dotted line, highlights as plane passes) */}
+                                        <div className={`absolute -left-7 w-6 h-6 rounded flex items-center justify-center font-mono text-[9px] font-black shrink-0 z-10 shadow-sm transition-all duration-300 ${
+                                            isNodeActive
+                                                ? 'bg-[#FF5B1D] text-white border border-[#FF5B1D] scale-110 shadow-[0_0_8px_rgba(255,91,29,0.5)]'
+                                                : 'bg-orange-500/15 text-[#FF5B1D] border border-[#FF5B1D]/20'
+                                        }`}>
+                                            {card.d}
+                                        </div>
 
-                                    {/* Main Card */}
-                                    <div className="flex-1 bg-white border border-brand-dark/5 rounded-[10px] py-2.5 px-3.5 flex items-center justify-between shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:border-[#FF5B1D]/20 transition-all duration-300">
-                                        <div className="flex flex-col select-none">
-                                            <span className="text-[12px] font-semibold text-brand-dark leading-tight">{card.title}</span>
-                                            <span className="text-[10px] text-brand-dark/45 mt-1 leading-none flex items-center gap-1.5">
-                                                {card.icon}
-                                                <span>{card.sub}</span>
+                                        {/* Main Card (Highlights to simulate hover state as plane passes) */}
+                                        <div className={`flex-1 rounded-[10px] py-2.5 px-3.5 flex items-center justify-between transition-all duration-300 ${
+                                            isNodeActive
+                                                ? 'bg-orange-500/1.5 border border-[#FF5B1D]/25 -translate-y-0.5 shadow-md shadow-orange-500/5'
+                                                : 'bg-white border border-brand-dark/5 shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:border-[#FF5B1D]/20'
+                                        }`}>
+                                            <div className="flex flex-col select-none">
+                                                <span className={`text-[12px] text-brand-dark leading-tight transition-all duration-300 ${isNodeActive ? 'font-black' : 'font-semibold'}`}>{card.title}</span>
+                                                <span className="text-[10px] text-brand-dark/45 mt-1 leading-none flex items-center gap-1.5">
+                                                    {card.icon}
+                                                    <span>{card.sub}</span>
+                                                </span>
+                                            </div>
+                                            <span className="px-1.5 py-0.5 bg-green-500/10 text-green-600 rounded font-mono text-[7px] font-black tracking-widest leading-none uppercase flex items-center gap-1 select-none shrink-0 ml-2">
+                                                <span className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
+                                                Ready
                                             </span>
                                         </div>
-                                        <span className="px-1.5 py-0.5 bg-green-500/10 text-green-600 rounded font-mono text-[7px] font-black tracking-widest leading-none uppercase flex items-center gap-1 select-none shrink-0 ml-2">
-                                            <span className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
-                                            Ready
-                                        </span>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
 
                         {/* 4. Row of three equal stat boxes - Premium Dark treatment with icons above values */}
@@ -537,7 +567,7 @@ export default function Destination() {
                             ].map((stat, idx) => (
                                 <div
                                     key={idx}
-                                    className={`bg-[#141312] border border-white/10 rounded-[10px] py-3.5 px-2 flex flex-col justify-center items-center text-center hover:border-[#FF5B1D]/45 transition-all duration-300 hover:scale-[1.02] cursor-default transform ${
+                                    className={`bg-[#141312] border border-white/10 rounded-[10px] py-3.5 px-2 flex flex-col justify-center items-center text-center hover:border-[#FF5B1D]/45 transition-all duration-300 hover:scale-[1.02] cursor-default transform  ${
                                         isRevealed 
                                             ? 'opacity-100 translate-y-0' 
                                             : 'opacity-0 translate-y-4 pointer-events-none'
@@ -552,7 +582,7 @@ export default function Destination() {
                                     <span className="text-xl md:text-2xl font-black text-white font-mono leading-none tracking-tight">
                                         {stat.val}
                                     </span>
-                                    <span className="text-[7.5px] font-mono font-black text-white/40 uppercase tracking-[0.15em] mt-2.5 leading-none">
+                                    <span className="text-[7.5px] font-sans font-extrabold text-white/65 uppercase tracking-[0.15em] mt-2.5 leading-none">
                                         {stat.label}
                                     </span>
                                 </div>
@@ -571,7 +601,7 @@ export default function Destination() {
                     }}
                 >
                     {/* Visible 3px Divider Line */}
-                    <div className={`w-[3px] h-full transition-all duration-200 ${
+                    <div className={`w-0.75 h-full transition-all duration-200 ${
                         isDragging ? 'bg-[#FF5B1D] shadow-[0_0_12px_rgba(255,91,29,0.6)]' : 'bg-white'
                     }`} />
 

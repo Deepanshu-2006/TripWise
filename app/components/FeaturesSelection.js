@@ -386,7 +386,7 @@ function FeaturesSelection() {
                                     >
                                         {/* Perfect rounded left-side indicator border */}
                                         {isActive && (
-                                            <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-[#fe7717]" />
+                                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#fe7717]" />
                                         )}
                                         <div className={`feature-icon p-2 rounded-lg shrink-0 transition-colors duration-300 ${
                                             isActive 
@@ -416,7 +416,7 @@ function FeaturesSelection() {
                         </div>
 
                         {/* Right Column: Live Mock UI Preview */}
-                        <div className="preview-outer-container lg:col-span-7 flex items-center justify-center relative w-full h-[480px] max-h-[60vh] rounded-3xl overflow-hidden">
+                        <div className="preview-outer-container lg:col-span-7 flex items-center justify-center relative w-full h-120 max-h-[60vh] rounded-3xl overflow-hidden">
                             <div className="w-full h-full bg-[#1C1B1B] border border-white/15 rounded-3xl p-6 md:p-8 flex flex-col relative overflow-hidden shadow-2xl">
                                 
                                 {/* Inner Preview Window Shell */}
