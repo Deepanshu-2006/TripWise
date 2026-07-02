@@ -179,7 +179,7 @@ function CalendarIcon() {
 
 /* ─── Lid interior lining (velvet quilted silk) ──────────────────── */
 function SuitcaseLidInterior() {
-    const cols = 11, rows = 7;
+    const cols = 9, rows = 7;
     const dw = 29, dh = 16;
     const diamonds = [];
     for (let r = 0; r < rows; r++) {
@@ -190,10 +190,10 @@ function SuitcaseLidInterior() {
         }
     }
     return (
-        <svg width="320" height="138" viewBox="0 0 320 138" fill="none">
+        <svg width="260" height="138" viewBox="0 0 260 138" fill="none">
             {/* Velvet base */}
-            <rect width="320" height="138" rx="20" fill="#380E1A" />
-            <rect x="12" y="12" width="296" height="114" rx="14" fill="#4E1525" />
+            <rect width="260" height="138" rx="20" fill="#380E1A" />
+            <rect x="12" y="12" width="236" height="114" rx="14" fill="#4E1525" />
             {/* Quilted diamond pattern */}
             {diamonds.map(({ x, y, id }) => (
                 <polygon
@@ -210,16 +210,16 @@ function SuitcaseLidInterior() {
                 <circle key={`b-${id}`} cx={x + dw / 2} cy={y + dh / 2} r="1.6" fill="#B04060" opacity="0.5" />
             ))}
             {/* Stitched border */}
-            <rect x="16" y="16" width="288" height="106" rx="12" fill="none" stroke="#7A2840" strokeWidth="1" strokeDasharray="5 4" opacity="0.3" />
+            <rect x="16" y="16" width="228" height="106" rx="12" fill="none" stroke="#7A2840" strokeWidth="1" strokeDasharray="5 4" opacity="0.3" />
             {/* Document pocket */}
-            <rect x="110" y="28" width="100" height="60" rx="8" fill="#2E0A14" opacity="0.55" stroke="#7A2840" strokeWidth="1" strokeDasharray="4 3.5" />
-            <text x="160" y="60" fill="#9B3055" fontSize="7" fontFamily="monospace" fontWeight="bold" textAnchor="middle" opacity="0.7" letterSpacing="1">DOCUMENTS</text>
-            <line x1="118" y1="72" x2="202" y2="72" stroke="#7A2840" strokeWidth="0.7" opacity="0.4" strokeDasharray="3 2.5" />
-            <text x="160" y="82" fill="#7A2840" fontSize="5.5" fontFamily="monospace" textAnchor="middle" opacity="0.5">TripWise Co.</text>
+            <rect x="80" y="28" width="100" height="60" rx="8" fill="#2E0A14" opacity="0.55" stroke="#7A2840" strokeWidth="1" strokeDasharray="4 3.5" />
+            <text x="130" y="60" fill="#9B3055" fontSize="7" fontFamily="monospace" fontWeight="bold" textAnchor="middle" opacity="0.7" letterSpacing="1">DOCUMENTS</text>
+            <line x1="88" y1="72" x2="172" y2="72" stroke="#7A2840" strokeWidth="0.7" opacity="0.4" strokeDasharray="3 2.5" />
+            <text x="130" y="82" fill="#7A2840" fontSize="5.5" fontFamily="monospace" textAnchor="middle" opacity="0.5">TripWise Co.</text>
             {/* Elastic strap */}
-            <path d="M 45 105 Q 160 113 275 105" stroke="#7A2840" strokeWidth="2.5" fill="none" opacity="0.45" strokeLinecap="round" />
+            <path d="M 45 105 Q 130 113 215 105" stroke="#7A2840" strokeWidth="2.5" fill="none" opacity="0.45" strokeLinecap="round" />
             {/* Strap buckle */}
-            <rect x="152" y="103" width="16" height="10" rx="3" fill="#4E1525" stroke="#9B3055" strokeWidth="1" opacity="0.7" />
+            <rect x="122" y="103" width="16" height="10" rx="3" fill="#4E1525" stroke="#9B3055" strokeWidth="1" opacity="0.7" />
         </svg>
     );
 }
@@ -227,83 +227,83 @@ function SuitcaseLidInterior() {
 /* ─── Suitcase exterior components ──────────────────────────────── */
 function SuitcaseLid() {
     return (
-        <svg width="320" height="138" viewBox="0 0 320 138" fill="none">
-            <rect x="2" y="2" width="316" height="134" rx="20" fill="#8B5E3C" />
-            <rect x="2" y="2" width="316" height="134" rx="20" stroke="#6B4525" strokeWidth="2" />
-            <rect x="16" y="16" width="288" height="106" rx="14" fill="#9B6E4C" opacity="0.35" />
-            <line x1="2" y1="46" x2="318" y2="46" stroke="#6B4525" strokeWidth="0.7" opacity="0.22" />
-            <line x1="2" y1="92" x2="318" y2="92" stroke="#6B4525" strokeWidth="0.7" opacity="0.22" />
+        <svg width="260" height="138" viewBox="0 0 260 138" fill="none">
+            <rect x="2" y="2" width="256" height="134" rx="20" fill="#8B5E3C" />
+            <rect x="2" y="2" width="256" height="134" rx="20" stroke="#6B4525" strokeWidth="2" />
+            <rect x="16" y="16" width="228" height="106" rx="14" fill="#9B6E4C" opacity="0.35" />
+            <line x1="2" y1="46" x2="258" y2="46" stroke="#6B4525" strokeWidth="0.7" opacity="0.22" />
+            <line x1="2" y1="92" x2="258" y2="92" stroke="#6B4525" strokeWidth="0.7" opacity="0.22" />
             <path d="M16 16 L32 16 L32 32" stroke="#7A5030" strokeWidth="1.2" fill="none" strokeDasharray="3 2" opacity="0.45" />
-            <path d="M304 16 L288 16 L288 32" stroke="#7A5030" strokeWidth="1.2" fill="none" strokeDasharray="3 2" opacity="0.45" />
+            <path d="M244 16 L228 16 L228 32" stroke="#7A5030" strokeWidth="1.2" fill="none" strokeDasharray="3 2" opacity="0.45" />
             <path d="M16 122 L32 122 L32 106" stroke="#7A5030" strokeWidth="1.2" fill="none" strokeDasharray="3 2" opacity="0.45" />
-            <path d="M304 122 L288 122 L288 106" stroke="#7A5030" strokeWidth="1.2" fill="none" strokeDasharray="3 2" opacity="0.45" />
-            <rect x="128" y="0" width="64" height="20" rx="10" fill="#7A5030" />
-            <rect x="136" y="2" width="48" height="14" rx="7" fill="#5A3820" />
-            <path d="M141 10 Q160 -28 179 10" stroke="#3D2810" strokeWidth="5.5" fill="none" strokeLinecap="round" />
-            <path d="M141 10 Q160 -28 179 10" stroke="#9B6E4C" strokeWidth="3" fill="none" strokeLinecap="round" />
+            <path d="M244 122 L228 122 L228 106" stroke="#7A5030" strokeWidth="1.2" fill="none" strokeDasharray="3 2" opacity="0.45" />
+            <rect x="98" y="0" width="64" height="20" rx="10" fill="#7A5030" />
+            <rect x="106" y="2" width="48" height="14" rx="7" fill="#5A3820" />
+            <path d="M111 10 Q130 -28 149 10" stroke="#3D2810" strokeWidth="5.5" fill="none" strokeLinecap="round" />
+            <path d="M111 10 Q130 -28 149 10" stroke="#9B6E4C" strokeWidth="3" fill="none" strokeLinecap="round" />
             <rect className="suitcase-clasp-left" x="30" y="112" width="28" height="20" rx="5" fill="#C8A951" />
             <rect x="34" y="115" width="20" height="14" rx="3" fill="#8B7331" opacity="0.38" />
             <circle cx="44" cy="122" r="3.5" fill="#8B7331" />
-            <rect className="suitcase-clasp-right" x="262" y="112" width="28" height="20" rx="5" fill="#C8A951" />
-            <rect x="266" y="115" width="20" height="14" rx="3" fill="#8B7331" opacity="0.38" />
-            <circle cx="276" cy="122" r="3.5" fill="#8B7331" />
-            <rect x="138" y="110" width="44" height="24" rx="7" fill="#C8A951" />
-            <circle cx="160" cy="122" r="6.5" fill="#8B7331" />
-            <rect x="157" y="124" width="6" height="8" rx="2" fill="#5A4010" />
-            <circle cx="160" cy="121" r="2.2" fill="#C8A951" />
+            <rect className="suitcase-clasp-right" x="202" y="112" width="28" height="20" rx="5" fill="#C8A951" />
+            <rect x="206" y="115" width="20" height="14" rx="3" fill="#8B7331" opacity="0.38" />
+            <circle cx="216" cy="122" r="3.5" fill="#8B7331" />
+            <rect x="108" y="110" width="44" height="24" rx="7" fill="#C8A951" />
+            <circle cx="130" cy="122" r="6.5" fill="#8B7331" />
+            <rect x="127" y="124" width="6" height="8" rx="2" fill="#5A4010" />
+            <circle cx="130" cy="121" r="2.2" fill="#C8A951" />
         </svg>
     );
 }
 
 function SuitcaseBody() {
     return (
-        <svg width="320" height="190" viewBox="0 0 320 190" fill="none">
-            <rect x="2" y="0" width="316" height="186" rx="20" fill="#7A5030" />
-            <rect x="2" y="0" width="316" height="186" rx="20" stroke="#6B4525" strokeWidth="2" />
-            <rect x="2" y="0" width="316" height="12" fill="#4A2F15" opacity="0.35" />
-            <rect x="16" y="12" width="288" height="158" rx="14" fill="#8B5E3C" opacity="0.35" />
+        <svg width="260" height="190" viewBox="0 0 260 190" fill="none">
+            <rect x="2" y="0" width="256" height="186" rx="20" fill="#7A5030" />
+            <rect x="2" y="0" width="256" height="186" rx="20" stroke="#6B4525" strokeWidth="2" />
+            <rect x="2" y="0" width="256" height="12" fill="#4A2F15" opacity="0.35" />
+            <rect x="16" y="12" width="228" height="158" rx="14" fill="#8B5E3C" opacity="0.35" />
             
             {/* Added decorative travel items peeking from the body of the suitcase */}
             {/* Rolled Shirt / Fabric */}
-            <rect x="42" y="12" width="60" height="24" rx="8" fill="#0D9488" opacity="0.8" />
-            <line x1="42" y1="20" x2="102" y2="20" stroke="#0a6b62" strokeWidth="1" opacity="0.4" />
-            <line x1="42" y1="28" x2="102" y2="28" stroke="#0a6b62" strokeWidth="1" opacity="0.4" />
+            <rect x="32" y="12" width="55" height="24" rx="8" fill="#0D9488" opacity="0.8" />
+            <line x1="32" y1="20" x2="87" y2="20" stroke="#0a6b62" strokeWidth="1" opacity="0.4" />
+            <line x1="32" y1="28" x2="87" y2="28" stroke="#0a6b62" strokeWidth="1" opacity="0.4" />
             
             {/* Sunglasses sitting in the case */}
-            <path d="M 215 15 C 220 15, 225 22, 220 28 C 215 32, 208 30, 205 25" stroke="#1C1B1B" strokeWidth="2.5" fill="none" opacity="0.85" />
-            <path d="M 235 15 C 240 15, 245 22, 240 28 C 235 32, 228 30, 225 25" stroke="#1C1B1B" strokeWidth="2.5" fill="none" opacity="0.85" />
-            <line x1="220" y1="22" x2="225" y2="22" stroke="#1C1B1B" strokeWidth="1.5" opacity="0.85" />
+            <path d="M 160 15 C 165 15, 170 22, 165 28 C 160 32, 153 30, 150 25" stroke="#1C1B1B" strokeWidth="2.5" fill="none" opacity="0.85" />
+            <path d="M 180 15 C 185 15, 190 22, 185 28 C 180 32, 173 30, 170 25" stroke="#1C1B1B" strokeWidth="2.5" fill="none" opacity="0.85" />
+            <line x1="165" y1="22" x2="170" y2="22" stroke="#1C1B1B" strokeWidth="1.5" opacity="0.85" />
 
             {/* Map Corner */}
-            <path d="M 125 12 L 175 12 L 160 38 L 115 30 Z" fill="#EAD5C3" opacity="0.75" />
-            <path d="M 125 12 L 175 12 L 160 38 L 115 30 Z" fill="none" stroke="#D1B296" strokeWidth="0.8" opacity="0.75" />
+            <path d="M 90 12 L 140 12 L 125 38 L 80 30 Z" fill="#EAD5C3" opacity="0.75" />
+            <path d="M 90 12 L 140 12 L 125 38 L 80 30 Z" fill="none" stroke="#D1B296" strokeWidth="0.8" opacity="0.75" />
             
-            <line x1="2" y1="52" x2="318" y2="52" stroke="#6B4525" strokeWidth="0.7" opacity="0.22" />
-            <line x1="2" y1="108" x2="318" y2="108" stroke="#6B4525" strokeWidth="0.7" opacity="0.22" />
-            <line x1="2" y1="158" x2="318" y2="158" stroke="#6B4525" strokeWidth="0.7" opacity="0.22" />
+            <line x1="2" y1="52" x2="258" y2="52" stroke="#6B4525" strokeWidth="0.7" opacity="0.22" />
+            <line x1="2" y1="108" x2="258" y2="108" stroke="#6B4525" strokeWidth="0.7" opacity="0.22" />
+            <line x1="2" y1="158" x2="258" y2="158" stroke="#6B4525" strokeWidth="0.7" opacity="0.22" />
             <path d="M16 12 L32 12 L32 28" stroke="#7A5030" strokeWidth="1.2" fill="none" strokeDasharray="3 2" opacity="0.45" />
-            <path d="M304 12 L288 12 L288 28" stroke="#7A5030" strokeWidth="1.2" fill="none" strokeDasharray="3 2" opacity="0.45" />
+            <path d="M244 12 L228 12 L228 28" stroke="#7A5030" strokeWidth="1.2" fill="none" strokeDasharray="3 2" opacity="0.45" />
             <path d="M16 174 L32 174 L32 158" stroke="#7A5030" strokeWidth="1.2" fill="none" strokeDasharray="3 2" opacity="0.45" />
-            <path d="M304 174 L288 174 L288 158" stroke="#7A5030" strokeWidth="1.2" fill="none" strokeDasharray="3 2" opacity="0.45" />
+            <path d="M244 174 L228 174 L228 158" stroke="#7A5030" strokeWidth="1.2" fill="none" strokeDasharray="3 2" opacity="0.45" />
             <rect className="suitcase-lock-left" x="30" y="0" width="28" height="20" rx="5" fill="#C8A951" />
             <rect x="34" y="4" width="20" height="14" rx="3" fill="#8B7331" opacity="0.38" />
             <circle cx="44" cy="10" r="3.5" fill="#8B7331" />
-            <rect className="suitcase-lock-right" x="262" y="0" width="28" height="20" rx="5" fill="#C8A951" />
-            <rect x="266" y="4" width="20" height="14" rx="3" fill="#8B7331" opacity="0.38" />
-            <circle cx="276" cy="10" r="3.5" fill="#8B7331" />
-            <rect x="138" y="0" width="44" height="24" rx="7" fill="#C8A951" />
-            <circle cx="160" cy="12" r="6.5" fill="#8B7331" />
-            <rect x="157" y="14" width="6" height="8" rx="2" fill="#5A4010" />
-            <circle cx="160" cy="11" r="2.2" fill="#C8A951" />
-            <text x="160" y="97" fill="#FFF8F5" fontSize="11" fontFamily="monospace" fontWeight="bold" textAnchor="middle" opacity="0.1" letterSpacing="4">TRIPWISE</text>
+            <rect className="suitcase-lock-right" x="202" y="0" width="28" height="20" rx="5" fill="#C8A951" />
+            <rect x="206" y="4" width="20" height="14" rx="3" fill="#8B7331" opacity="0.38" />
+            <circle cx="216" cy="10" r="3.5" fill="#8B7331" />
+            <rect x="108" y="0" width="44" height="24" rx="7" fill="#C8A951" />
+            <circle cx="130" cy="12" r="6.5" fill="#8B7331" />
+            <rect x="127" y="14" width="6" height="8" rx="2" fill="#5A4010" />
+            <circle cx="130" cy="11" r="2.2" fill="#C8A951" />
+            <text x="130" y="97" fill="#FFF8F5" fontSize="11" fontFamily="monospace" fontWeight="bold" textAnchor="middle" opacity="0.1" letterSpacing="4">TRIPWISE</text>
             <ellipse cx="52" cy="184" rx="20" ry="9" fill="#2A1A0E" />
             <ellipse cx="52" cy="184" rx="15" ry="6.5" fill="#3A2A1A" />
             <circle cx="52" cy="184" r="4" fill="#1C1000" />
-            <ellipse cx="268" cy="184" rx="20" ry="9" fill="#2A1A0E" />
-            <ellipse cx="268" cy="184" rx="15" ry="6.5" fill="#3A2A1A" />
-            <circle cx="268" cy="184" r="4" fill="#1C1000" />
+            <ellipse cx="208" cy="184" rx="20" ry="9" fill="#2A1A0E" />
+            <ellipse cx="208" cy="184" rx="15" ry="6.5" fill="#3A2A1A" />
+            <circle cx="208" cy="184" r="4" fill="#1C1000" />
             <rect x="2" y="160" width="24" height="28" rx="5" fill="#C8A951" opacity="0.45" />
-            <rect x="294" y="160" width="24" height="28" rx="5" fill="#C8A951" opacity="0.45" />
+            <rect x="234" y="160" width="24" height="28" rx="5" fill="#C8A951" opacity="0.45" />
         </svg>
     );
 }
@@ -703,7 +703,7 @@ function FeaturesSelection() {
                         Beyond Map Pins &amp; Standard Prompts
                     </h2>
                     <p className="text-sm text-secondary-text mt-1.5 font-medium opacity-55">
-                        Scroll or select steps below to unpack details
+                        Scroll to unlock and explore details
                     </p>
                 </div>
 
@@ -857,8 +857,8 @@ function FeaturesSelection() {
                     </div>
                 </div>
 
-                {/* ── Scroll progress bar + interactive step dots ── */}
-                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-50" style={{ width: '290px' }}>
+                {/* ── Scroll progress bar + interactive step dots (Hidden visually to preserve GSAP bindings safely) ── */}
+                <div className="hidden absolute bottom-8 left-1/2 -translate-x-1/2 flex-col items-center gap-3 z-50" style={{ width: '290px' }}>
                     {/* Progress track */}
                     <div className="relative w-full h-0.75 rounded-full overflow-hidden" style={{ background: 'rgba(28,27,27,0.08)' }}>
                         <div
@@ -909,15 +909,15 @@ function FeaturesSelection() {
                     </div>
                 </div>
 
-                {/* ── Scroll hint ── */}
+                {/* ── Scroll hint: Scroll to Unlock ── */}
                 <div
                     ref={scrollHintRef}
-                    className="absolute bottom-24 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none"
+                    className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none"
                 >
-                    <span className="text-[9px] font-mono font-bold text-brand-dark/30 uppercase tracking-widest">
-                        Scroll to unpack
+                    <span className="text-[9px] font-mono font-bold text-brand-dark/30 uppercase tracking-[0.18em] select-none">
+                        Scroll to Unlock
                     </span>
-                    <div className="w-5 h-8 rounded-full border border-brand-dark/12 flex items-start justify-center pt-1.5">
+                    <div className="w-5 h-8 rounded-full border border-brand-dark/12 flex items-start justify-center pt-1.5 bg-[#FFF8F5]/60 backdrop-blur-xs">
                         <div className="w-1 h-2 rounded-full bg-brand-dark/20 animate-bounce" />
                     </div>
                 </div>
