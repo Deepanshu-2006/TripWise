@@ -265,18 +265,24 @@ function SuitcaseBody() {
             
             {/* Added decorative travel items peeking from the body of the suitcase */}
             {/* Rolled Shirt / Fabric */}
-            <rect x="32" y="12" width="55" height="24" rx="8" fill="#0D9488" opacity="0.8" />
-            <line x1="32" y1="20" x2="87" y2="20" stroke="#0a6b62" strokeWidth="1" opacity="0.4" />
-            <line x1="32" y1="28" x2="87" y2="28" stroke="#0a6b62" strokeWidth="1" opacity="0.4" />
+            <g className="peeking-item peeking-shirt">
+                <rect x="32" y="12" width="55" height="24" rx="8" fill="#0D9488" opacity="0.8" />
+                <line x1="32" y1="20" x2="87" y2="20" stroke="#0a6b62" strokeWidth="1" opacity="0.4" />
+                <line x1="32" y1="28" x2="87" y2="28" stroke="#0a6b62" strokeWidth="1" opacity="0.4" />
+            </g>
             
             {/* Sunglasses sitting in the case */}
-            <path d="M 160 15 C 165 15, 170 22, 165 28 C 160 32, 153 30, 150 25" stroke="#1C1B1B" strokeWidth="2.5" fill="none" opacity="0.85" />
-            <path d="M 180 15 C 185 15, 190 22, 185 28 C 180 32, 173 30, 170 25" stroke="#1C1B1B" strokeWidth="2.5" fill="none" opacity="0.85" />
-            <line x1="165" y1="22" x2="170" y2="22" stroke="#1C1B1B" strokeWidth="1.5" opacity="0.85" />
+            <g className="peeking-item peeking-sunglasses">
+                <path d="M 160 15 C 165 15, 170 22, 165 28 C 160 32, 153 30, 150 25" stroke="#1C1B1B" strokeWidth="2.5" fill="none" opacity="0.85" />
+                <path d="M 180 15 C 185 15, 190 22, 185 28 C 180 32, 173 30, 170 25" stroke="#1C1B1B" strokeWidth="2.5" fill="none" opacity="0.85" />
+                <line x1="165" y1="22" x2="170" y2="22" stroke="#1C1B1B" strokeWidth="1.5" opacity="0.85" />
+            </g>
 
             {/* Map Corner */}
-            <path d="M 90 12 L 140 12 L 125 38 L 80 30 Z" fill="#EAD5C3" opacity="0.75" />
-            <path d="M 90 12 L 140 12 L 125 38 L 80 30 Z" fill="none" stroke="#D1B296" strokeWidth="0.8" opacity="0.75" />
+            <g className="peeking-item peeking-map">
+                <path d="M 90 12 L 140 12 L 125 38 L 80 30 Z" fill="#EAD5C3" opacity="0.75" />
+                <path d="M 90 12 L 140 12 L 125 38 L 80 30 Z" fill="none" stroke="#D1B296" strokeWidth="0.8" opacity="0.75" />
+            </g>
             
             <line x1="2" y1="52" x2="258" y2="52" stroke="#6B4525" strokeWidth="0.7" opacity="0.22" />
             <line x1="2" y1="108" x2="258" y2="108" stroke="#6B4525" strokeWidth="0.7" opacity="0.22" />
@@ -413,8 +419,8 @@ function FeaturesSelection() {
             /* ── Initial states ─────────────────────────────────── */
             gsap.set(lidRef.current, { rotationX: 0 });
             gsap.set(interiorRef.current, { opacity: 0 });
-            gsap.set(suitcaseWrapRef.current, { scale: 0.82, opacity: 0, y: 40 });
-            gsap.set(shadowRef.current, { scaleX: 0.8, opacity: 0.2 });
+            gsap.set(suitcaseWrapRef.current, { scale: 0.82, opacity: 0, y: 40, rotateX: 5, rotateY: -3, transformStyle: 'preserve-3d' });
+            gsap.set(shadowRef.current, { scaleX: 0.8, scaleY: 0.8, y: 0, opacity: 0.2 });
             gsap.set(progressFillRef.current, { width: '0%' });
 
             itemRefs.current.forEach((el) => {
@@ -426,13 +432,14 @@ function FeaturesSelection() {
             stepDotRefs.current.forEach((el, i) => {
                 gsap.set(el, { scale: i === 0 ? 1.6 : 1, opacity: i === 0 ? 1 : 0.2 });
             });
+            gsap.set('.peeking-item', { y: 0, scaleY: 1, transformOrigin: 'center bottom' });
 
             /* ── Main scroll timeline ─────────────────────────── */
             const tl = gsap.timeline();
 
             /* PHASE 0-15: Suitcase glides in + Pop lock shake */
-            tl.to(suitcaseWrapRef.current, { scale: 1, opacity: 1, y: 0, duration: 15, ease: 'power3.out' }, 0);
-            tl.to(shadowRef.current, { scaleX: 1, opacity: 0.45, duration: 15, ease: 'power2.out' }, 0);
+            tl.to(suitcaseWrapRef.current, { scale: 1, opacity: 1, y: 0, rotateX: 0, rotateY: 0, duration: 15, ease: 'power3.out' }, 0);
+            tl.to(shadowRef.current, { scaleX: 1, scaleY: 1, opacity: 0.45, duration: 15, ease: 'power2.out' }, 0);
             
             // Pop locks latch wiggles
             tl.to(suitcaseWrapRef.current, { x: -5, duration: 0.8, ease: 'power1.inOut' }, 9.5)
@@ -446,18 +453,23 @@ function FeaturesSelection() {
             tl.to('.suitcase-clasp-left', { rotate: -15, y: -4, transformOrigin: 'top center', duration: 2, ease: 'back.out(2)' }, 11.5)
               .to('.suitcase-clasp-right', { rotate: 15, y: -4, transformOrigin: 'top center', duration: 2, ease: 'back.out(2)' }, 11.5);
 
+            // Jolt peeking items on lock pop
+            tl.to('.peeking-item', { y: -8, scaleY: 1.08, duration: 1.2, ease: 'elastic.out(1.2, 0.4)' }, 11.5)
+              .to('.peeking-item', { y: 0, scaleY: 1, duration: 1, ease: 'power2.out' }, 12.7);
+            
             tl.to(headerRef.current, { y: -26, opacity: 0, duration: 10, ease: 'power2.in' }, 7);
             tl.to(scrollHintRef.current, { opacity: 0, duration: 7, ease: 'power2.in' }, 5);
             tl.to(progressFillRef.current, { width: '6%', duration: 15 }, 0);
 
             /* PHASE 15-35: Lid cracks open (< 90°), calendar flies left */
             tl.to(lidRef.current, { rotationX: -58, duration: 22, ease: 'power2.inOut' }, 12);
-            tl.to(shadowRef.current, { scaleX: 1.2, opacity: 0.38, duration: 22 }, 12);
+            tl.to(shadowRef.current, { scaleX: 1.2, scaleY: 1.1, y: 5, opacity: 0.38, duration: 22 }, 12);
+            tl.to(suitcaseWrapRef.current, { rotateX: 12, rotateY: 2, duration: 22, ease: 'power2.inOut' }, 12);
             tl.to(itemRefs.current[0], {
-                y: -250, x: -130,
+                y: -190, x: -240,
                 opacity: 1, scale: 1,
                 rotateZ: features[0].tilt, rotateY: -6,
-                duration: 17, ease: 'back.out(1.5)',
+                duration: 19, ease: 'elastic.out(1.1, 0.75)',
             }, 15);
             tl.to(cardRefs.current[0], { opacity: 1, x: 0, duration: 14, ease: 'power2.out' }, 20);
             tl.to(stepDotRefs.current[0], { scale: 1.6, opacity: 1, duration: 5 }, 15);
@@ -469,12 +481,13 @@ function FeaturesSelection() {
             tl.to(stepDotRefs.current[0], { scale: 1, opacity: 0.2, duration: 5 }, 35);
             tl.to(lidRef.current, { rotationX: -92, duration: 22, ease: 'power2.inOut' }, 33);
             tl.to(interiorRef.current, { opacity: 1, duration: 9, ease: 'power2.out' }, 37);
-            tl.to(shadowRef.current, { scaleX: 1.35, opacity: 0.32, duration: 22 }, 33);
+            tl.to(shadowRef.current, { scaleX: 1.35, scaleY: 1.2, y: 8, opacity: 0.32, duration: 22 }, 33);
+            tl.to(suitcaseWrapRef.current, { rotateX: 16, rotateY: -2, duration: 22, ease: 'power2.inOut' }, 33);
             tl.to(itemRefs.current[1], {
-                y: -250, x: 130,
+                y: -190, x: 240,
                 opacity: 1, scale: 1,
                 rotateZ: features[1].tilt, rotateY: 6,
-                duration: 17, ease: 'back.out(1.5)',
+                duration: 19, ease: 'elastic.out(1.1, 0.75)',
             }, 38);
             tl.to(cardRefs.current[1], { opacity: 1, x: 0, duration: 14, ease: 'power2.out' }, 43);
             tl.to(stepDotRefs.current[1], { scale: 1.6, opacity: 1, duration: 5 }, 38);
@@ -485,12 +498,13 @@ function FeaturesSelection() {
             tl.to(cardRefs.current[1], { opacity: 0, x: 55, duration: 10, ease: 'power2.in' }, 55);
             tl.to(stepDotRefs.current[1], { scale: 1, opacity: 0.2, duration: 5 }, 55);
             tl.to(lidRef.current, { rotationX: -108, duration: 22, ease: 'power2.inOut' }, 53);
-            tl.to(shadowRef.current, { scaleX: 1.55, opacity: 0.28, duration: 22 }, 53);
+            tl.to(shadowRef.current, { scaleX: 1.55, scaleY: 1.25, y: 10, opacity: 0.28, duration: 22 }, 53);
+            tl.to(suitcaseWrapRef.current, { rotateX: 18, rotateY: 3, duration: 22, ease: 'power2.inOut' }, 53);
             tl.to(itemRefs.current[2], {
-                y: -250, x: -130,
+                y: -190, x: -240,
                 opacity: 1, scale: 1,
                 rotateZ: features[2].tilt, rotateY: -6,
-                duration: 17, ease: 'back.out(1.5)',
+                duration: 19, ease: 'elastic.out(1.1, 0.75)',
             }, 58);
             tl.to(cardRefs.current[2], { opacity: 1, x: 0, duration: 14, ease: 'power2.out' }, 63);
             tl.to(stepDotRefs.current[2], { scale: 1.6, opacity: 1, duration: 5 }, 58);
@@ -501,12 +515,13 @@ function FeaturesSelection() {
             tl.to(cardRefs.current[2], { opacity: 0, x: -55, duration: 10, ease: 'power2.in' }, 75);
             tl.to(stepDotRefs.current[2], { scale: 1, opacity: 0.2, duration: 5 }, 75);
             tl.to(lidRef.current, { rotationX: -120, duration: 25, ease: 'power1.inOut' }, 73);
-            tl.to(shadowRef.current, { scaleX: 1.7, opacity: 0.22, duration: 25 }, 73);
+            tl.to(shadowRef.current, { scaleX: 1.7, scaleY: 1.3, y: 6, opacity: 0.22, duration: 25 }, 73);
+            tl.to(suitcaseWrapRef.current, { rotateX: 14, rotateY: 0, duration: 25, ease: 'power1.inOut' }, 73);
             tl.to(itemRefs.current[3], {
-                y: -250, x: 130,
+                y: -190, x: 240,
                 opacity: 1, scale: 1,
                 rotateZ: features[3].tilt, rotateY: 6,
-                duration: 17, ease: 'back.out(1.5)',
+                duration: 19, ease: 'elastic.out(1.1, 0.75)',
             }, 78);
             tl.to(cardRefs.current[3], { opacity: 1, x: 0, duration: 14, ease: 'power2.out' }, 83);
             tl.to(stepDotRefs.current[3], { scale: 1.6, opacity: 1, duration: 5 }, 78);

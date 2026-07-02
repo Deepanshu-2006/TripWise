@@ -1,4 +1,4 @@
-import Destination from "./components/Comparison";
+import Destination from "./components/Destination";
 import FeaturesSelection from "./components/FeaturesSelection";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
