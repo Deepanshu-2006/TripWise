@@ -226,20 +226,24 @@ export default function Destination() {
                     headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
                 }`}
             >
-                {/* Micro badge */}
-                <span className="text-[10px] font-bold text-[#FF5B1D] tracking-[0.25em] uppercase mb-3 leading-none select-none">
-                    The TripWise Difference
-                </span>
+                {/* Spaced Micro-Badge */}
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-orange-500/10 text-[#FF5B1D] rounded-full font-mono text-[9px] font-black tracking-widest uppercase mb-3.5 shadow-sm border border-orange-500/5 select-none">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D] animate-pulse" />
+                    TripWise Experience
+                </div>
                 
-                <h2 className="text-3xl md:text-[32px] font-semibold text-brand-dark tracking-tight leading-none">
-                    Trip planning, <span className="text-[#FF5B1D] font-extrabold relative inline-block">reimagined</span>
+                <h2 className="text-3xl md:text-4xl font-bold text-brand-dark tracking-tight leading-none">
+                    Trip planning, <span className="relative inline-block text-[#FF5B1D] select-none">
+                        reimagined
+                        <svg className="absolute -bottom-1.5 left-0 w-full h-1.5 text-[#FF5B1D]/40" viewBox="0 0 100 10" preserveAspectRatio="none">
+                            <path d="M0,5 C30,9 70,2 100,6" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+                        </svg>
+                    </span>
                 </h2>
 
-                {/* Subtitle pill badge */}
-                <div className="inline-flex items-center gap-1.5 mt-3.5 px-3 py-1 bg-[#FF5B1D]/5 border border-[#FF5B1D]/10 text-[#FF5B1D] rounded-full text-xs font-semibold tracking-wide select-none shadow-sm">
-                    <span className="animate-pulse">↔</span>
-                    <span>Drag the slider to compare</span>
-                </div>
+                <p className="text-xs md:text-sm text-brand-dark/50 max-w-md mt-4 tracking-wide select-none leading-relaxed">
+                    Drag the slider to compare the chaotic manual way of planning a trip with the streamlined simplicity of TripWise AI.
+                </p>
             </div>
 
             {/* 500px Fixed Height Split Canvas */}
