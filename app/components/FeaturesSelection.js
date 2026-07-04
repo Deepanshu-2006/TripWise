@@ -1,546 +1,218 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-/* ─── Feature data ──────────────────────────────────────────────── */
-const features = [
-    {
-        title: 'Smart Day-by-Day Scheduling',
-        tagline: 'ACTIVE ITINERARY',
-        desc: 'We map out a realistic daily path optimized for walking distances, peak visiting hours, and logical transit routes.',
-        details: ['Optimal walking sequence & duration estimates', 'Crowd density avoidance visit windows'],
-        color: '#0D9488',
-        side: 'left',
-        item: 'calendar',
-        badge: '01',
-        tilt: -11,
-        scrollTarget: 0.25, // Scroll progress midpoint for click navigation
-    },
-    {
-        title: 'Real-Time Flight & Hotel Integration',
-        tagline: 'SYSTEM SYNC',
-        desc: 'Seamlessly link your flight status, hotel coordinates, and check-in times. Delays automatically trigger schedule re-routing.',
-        details: ['Live boarding pass status tracking', 'Automated delay re-routing suggestions'],
-        color: '#fe7717',
-        side: 'right',
-        item: 'boarding-pass',
-        badge: '02',
-        tilt: 10,
-        scrollTarget: 0.46,
-    },
-    {
-        title: 'Budget Optimization',
-        tagline: 'FINANCIAL FORECASTING',
-        desc: 'Real-time cost estimations based on category caps. We automatically recommend cheaper transport timings and cost-effective stays.',
-        details: ['Fare-saving flight & rail shift alerts', 'Category-cap automatic cost estimates'],
-        color: '#0D9488',
-        side: 'left',
-        item: 'wallet',
-        badge: '03',
-        tilt: -7,
-        scrollTarget: 0.66,
-    },
-    {
-        title: 'Local Hidden Gems',
-        tagline: 'REAL-TIME CURATION',
-        desc: 'Powered by hyper-local review parsing, TripWise steers you away from tourist traps into authentic culinary spots and scenic detours.',
-        details: ['Verified local-only eateries & views', 'Detours curated by local reviewers'],
-        color: '#fe7717',
-        side: 'right',
-        item: 'camera',
-        badge: '04',
-        tilt: 9,
-        scrollTarget: 0.88,
-    },
-];
-
-/* ─── SVG Item Components ────────────────────────────────────────── */
-
-function BoardingPass() {
-    return (
-        <svg width="158" height="90" viewBox="0 0 158 90" fill="none">
-            <rect width="158" height="90" rx="10" fill="#FFF8F5" />
-            <rect x="0.75" y="0.75" width="156.5" height="88.5" rx="9.25" stroke="#fe7717" strokeWidth="1.5" />
-            <rect width="158" height="26" rx="10" fill="#1C1B1B" />
-            <rect y="16" width="158" height="10" fill="#1C1B1B" />
-            <text x="10" y="17" fill="#fe7717" fontSize="7.5" fontFamily="monospace" fontWeight="bold" letterSpacing="1">BOARDING PASS</text>
-            <rect x="118" y="7" width="32" height="12" rx="6" fill="#22C55E" fillOpacity="0.2" />
-            <text x="134" y="16" fill="#22C55E" fontSize="6" fontFamily="monospace" fontWeight="bold" textAnchor="middle">ON TIME</text>
-            <text x="10" y="45" fill="#1C1B1B" fontSize="21" fontFamily="sans-serif" fontWeight="900" letterSpacing="-0.5">JFK</text>
-            <text x="10" y="54" fill="#4B4745" fontSize="6" fontFamily="monospace" fontWeight="bold">NEW YORK</text>
-            <line x1="64" y1="40" x2="90" y2="40" stroke="#fe7717" strokeWidth="1.5" strokeDasharray="3 2.5" />
-            <path d="M88 37 L94 40 L88 43" fill="#fe7717" />
-            <text x="148" y="45" fill="#1C1B1B" fontSize="21" fontFamily="sans-serif" fontWeight="900" letterSpacing="-0.5" textAnchor="end">FCO</text>
-            <text x="148" y="54" fill="#4B4745" fontSize="6" fontFamily="monospace" fontWeight="bold" textAnchor="end">ROME</text>
-            <circle cx="0" cy="62" r="7" fill="#FFF8F5" />
-            <circle cx="158" cy="62" r="7" fill="#FFF8F5" />
-            <line x1="7" y1="62" x2="151" y2="62" stroke="#1C1B1B" strokeWidth="1" strokeDasharray="4 3.5" opacity="0.15" />
-            <text x="10" y="74" fill="#4B4745" fontSize="5.5" fontFamily="monospace" fontWeight="bold">FLIGHT</text>
-            <text x="10" y="83" fill="#1C1B1B" fontSize="8.5" fontFamily="monospace" fontWeight="900">AZ-405</text>
-            <text x="72" y="74" fill="#4B4745" fontSize="5.5" fontFamily="monospace" fontWeight="bold">GATE</text>
-            <text x="72" y="83" fill="#1C1B1B" fontSize="8.5" fontFamily="monospace" fontWeight="900">G12</text>
-            <text x="133" y="74" fill="#4B4745" fontSize="5.5" fontFamily="monospace" fontWeight="bold" textAnchor="end">SEAT</text>
-            <text x="148" y="83" fill="#fe7717" fontSize="8.5" fontFamily="monospace" fontWeight="900" textAnchor="end">14A</text>
-        </svg>
-    );
-}
-
-function Wallet() {
-    return (
-        <svg width="130" height="85" viewBox="0 0 130 85" fill="none">
-            <defs>
-                <linearGradient id="walletGrad" x1="0" y1="0" x2="130" y2="85">
-                    <stop offset="0%" stopColor="#1a2e2c" />
-                    <stop offset="100%" stopColor="#1C1B1B" />
-                </linearGradient>
-            </defs>
-            <rect width="130" height="85" rx="13" fill="url(#walletGrad)" />
-            <rect x="0.75" y="0.75" width="128.5" height="83.5" rx="12.25" stroke="#0D9488" strokeWidth="1.5" />
-            <rect x="12" y="18" width="32" height="23" rx="4" fill="#C8A951" opacity="0.88" />
-            <line x1="12" y1="26" x2="44" y2="26" stroke="#8B7331" strokeWidth="0.8" opacity="0.55" />
-            <line x1="12" y1="32" x2="44" y2="32" stroke="#8B7331" strokeWidth="0.8" opacity="0.55" />
-            <line x1="23" y1="18" x2="23" y2="41" stroke="#8B7331" strokeWidth="0.8" opacity="0.55" />
-            <line x1="31" y1="18" x2="31" y2="41" stroke="#8B7331" strokeWidth="0.8" opacity="0.55" />
-            <path d="M96 24 Q106 29.5 96 35" stroke="#0D9488" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-            <path d="M99.5 19.5 Q115 29.5 99.5 39.5" stroke="#0D9488" strokeWidth="1.8" fill="none" strokeLinecap="round" opacity="0.45" />
-            <text x="12" y="60" fill="white" fontSize="9" fontFamily="monospace" letterSpacing="2.5" opacity="0.7">•••• ••••</text>
-            <text x="91" y="60" fill="white" fontSize="9" fontFamily="monospace" fontWeight="bold">4892</text>
-            <text x="12" y="76" fill="white" fontSize="6.5" fontFamily="monospace" opacity="0.45">TRIPWISE BUDGET</text>
-            <text x="118" y="76" fill="#0D9488" fontSize="6.5" fontFamily="monospace" fontWeight="bold" textAnchor="end">12/28</text>
-        </svg>
-    );
-}
-
-function VintageCamera() {
-    return (
-        <svg width="135" height="105" viewBox="0 0 135 105" fill="none">
-            <rect x="4" y="26" width="127" height="72" rx="14" fill="#5C4033" />
-            <rect x="4" y="26" width="127" height="72" rx="14" stroke="#7A5040" strokeWidth="1.5" />
-            <rect x="38" y="12" width="59" height="22" rx="8" fill="#5C4033" stroke="#7A5040" strokeWidth="1.5" />
-            <circle cx="67" cy="63" r="28" fill="#2A1A0E" />
-            <circle cx="67" cy="63" r="25.5" fill="#1C1000" stroke="#7A5040" strokeWidth="1.5" />
-            <circle cx="67" cy="63" r="19" fill="#0D1B2A" />
-            <circle cx="67" cy="63" r="14" fill="#162535" />
-            <circle cx="67" cy="63" r="8.5" fill="#0a1520" />
-            <circle cx="59" cy="55" r="4" fill="white" opacity="0.1" />
-            <circle cx="57" cy="53" r="2" fill="white" opacity="0.2" />
-            <rect x="44" y="16" width="19" height="13" rx="4" fill="#2A1A0E" stroke="#6B4433" strokeWidth="1" />
-            <rect x="84" y="16" width="12" height="9" rx="2.5" fill="#C8A951" opacity="0.82" />
-            <circle cx="108" cy="36" r="8.5" fill="#7A5040" />
-            <circle cx="108" cy="36" r="6" fill="#fe7717" />
-            <circle cx="108" cy="36" r="3" fill="#C8602A" />
-            <rect x="2" y="38" width="6" height="18" rx="3" fill="#4A3020" />
-            <rect x="127" y="38" width="6" height="18" rx="3" fill="#4A3020" />
-            <text x="108" y="82" fill="#7A5040" fontSize="5.5" fontFamily="serif" fontStyle="italic" textAnchor="middle" opacity="0.65">TripCam</text>
-        </svg>
-    );
-}
-
-function CalendarIcon() {
-    const weeks = [
-        [null, null, 1, 2, 3, 4, 5],
-        [6, 7, 8, 9, 10, 11, 12],
-        [13, 14, 15, 16, 17, 18, 19],
-        [20, 21, 22, 23, 24, 25, 26],
-    ];
-    return (
-        <svg width="118" height="118" viewBox="0 0 118 118" fill="none">
-            <rect width="118" height="118" rx="14" fill="white" />
-            <rect x="0.75" y="0.75" width="116.5" height="116.5" rx="13.25" stroke="#0D9488" strokeWidth="1.5" />
-            <rect width="118" height="33" rx="14" fill="#0D9488" />
-            <rect y="19" width="118" height="14" fill="#0D9488" />
-            <text x="59" y="21" fill="white" fontSize="11.5" fontFamily="monospace" fontWeight="bold" textAnchor="middle">JULY 2026</text>
-            <rect x="29" y="0" width="8" height="15" rx="4" fill="#1C1B1B" />
-            <rect x="81" y="0" width="8" height="15" rx="4" fill="#1C1B1B" />
-            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
-                <text key={i} x={10 + i * 15} y="50" fill="#4B4745" fontSize="7.5" fontFamily="monospace" fontWeight="bold" textAnchor="middle">{d}</text>
-            ))}
-            {weeks.map((week, wi) =>
-                week.map((day, di) => {
-                    if (!day) return null;
-                    const cx = 10 + di * 15;
-                    const cy = 64 + wi * 14;
-                    const isToday = day === 15;
-                    const hasDot = day === 8 || day === 22;
-                    return (
-                        <g key={`${wi}-${di}`}>
-                            {isToday && <circle cx={cx} cy={cy} r="9" fill="#0D9488" />}
-                            {hasDot && !isToday && <circle cx={cx} cy={cy + 6} r="2.5" fill="#fe7717" opacity="0.5" />}
-                            <text x={cx} y={cy + 3} fill={isToday ? 'white' : '#1C1B1B'} fontSize="8.5" fontFamily="monospace" fontWeight={isToday ? 'bold' : 'normal'} textAnchor="middle">{day}</text>
-                        </g>
-                    );
-                })
-            )}
-        </svg>
-    );
-}
-
-/* ─── Lid interior lining (velvet quilted silk) ──────────────────── */
-function SuitcaseLidInterior() {
-    const cols = 9, rows = 7;
-    const dw = 29, dh = 16;
-    const diamonds = [];
-    for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-            const x = c * dw + (r % 2 === 1 ? dw / 2 : 0);
-            const y = r * dh + 14;
-            diamonds.push({ x, y, id: `${r}-${c}` });
-        }
-    }
-    return (
-        <svg width="260" height="138" viewBox="0 0 260 138" fill="none">
-            {/* Velvet base */}
-            <rect width="260" height="138" rx="20" fill="#380E1A" />
-            <rect x="12" y="12" width="236" height="114" rx="14" fill="#4E1525" />
-            {/* Quilted diamond pattern */}
-            {diamonds.map(({ x, y, id }) => (
-                <polygon
-                    key={id}
-                    points={`${x + dw / 2},${y} ${x + dw},${y + dh / 2} ${x + dw / 2},${y + dh} ${x},${y + dh / 2}`}
-                    fill="none"
-                    stroke="#7A2840"
-                    strokeWidth="0.65"
-                    opacity="0.55"
-                />
-            ))}
-            {/* Tufting buttons */}
-            {diamonds.filter((_, i) => i % 2 === 0).map(({ x, y, id }) => (
-                <circle key={`b-${id}`} cx={x + dw / 2} cy={y + dh / 2} r="1.6" fill="#B04060" opacity="0.5" />
-            ))}
-            {/* Stitched border */}
-            <rect x="16" y="16" width="228" height="106" rx="12" fill="none" stroke="#7A2840" strokeWidth="1" strokeDasharray="5 4" opacity="0.3" />
-            {/* Document pocket */}
-            <rect x="80" y="28" width="100" height="60" rx="8" fill="#2E0A14" opacity="0.55" stroke="#7A2840" strokeWidth="1" strokeDasharray="4 3.5" />
-            <text x="130" y="60" fill="#9B3055" fontSize="7" fontFamily="monospace" fontWeight="bold" textAnchor="middle" opacity="0.7" letterSpacing="1">DOCUMENTS</text>
-            <line x1="88" y1="72" x2="172" y2="72" stroke="#7A2840" strokeWidth="0.7" opacity="0.4" strokeDasharray="3 2.5" />
-            <text x="130" y="82" fill="#7A2840" fontSize="5.5" fontFamily="monospace" textAnchor="middle" opacity="0.5">TripWise Co.</text>
-            {/* Elastic strap */}
-            <path d="M 45 105 Q 130 113 215 105" stroke="#7A2840" strokeWidth="2.5" fill="none" opacity="0.45" strokeLinecap="round" />
-            {/* Strap buckle */}
-            <rect x="122" y="103" width="16" height="10" rx="3" fill="#4E1525" stroke="#9B3055" strokeWidth="1" opacity="0.7" />
-        </svg>
-    );
-}
-
-/* ─── Suitcase exterior components ──────────────────────────────── */
-function SuitcaseLid() {
-    return (
-        <svg width="260" height="138" viewBox="0 0 260 138" fill="none">
-            <rect x="2" y="2" width="256" height="134" rx="20" fill="#8B5E3C" />
-            <rect x="2" y="2" width="256" height="134" rx="20" stroke="#6B4525" strokeWidth="2" />
-            <rect x="16" y="16" width="228" height="106" rx="14" fill="#9B6E4C" opacity="0.35" />
-            <line x1="2" y1="46" x2="258" y2="46" stroke="#6B4525" strokeWidth="0.7" opacity="0.22" />
-            <line x1="2" y1="92" x2="258" y2="92" stroke="#6B4525" strokeWidth="0.7" opacity="0.22" />
-            <path d="M16 16 L32 16 L32 32" stroke="#7A5030" strokeWidth="1.2" fill="none" strokeDasharray="3 2" opacity="0.45" />
-            <path d="M244 16 L228 16 L228 32" stroke="#7A5030" strokeWidth="1.2" fill="none" strokeDasharray="3 2" opacity="0.45" />
-            <path d="M16 122 L32 122 L32 106" stroke="#7A5030" strokeWidth="1.2" fill="none" strokeDasharray="3 2" opacity="0.45" />
-            <path d="M244 122 L228 122 L228 106" stroke="#7A5030" strokeWidth="1.2" fill="none" strokeDasharray="3 2" opacity="0.45" />
-            <rect x="98" y="0" width="64" height="20" rx="10" fill="#7A5030" />
-            <rect x="106" y="2" width="48" height="14" rx="7" fill="#5A3820" />
-            <path d="M111 10 Q130 -28 149 10" stroke="#3D2810" strokeWidth="5.5" fill="none" strokeLinecap="round" />
-            <path d="M111 10 Q130 -28 149 10" stroke="#9B6E4C" strokeWidth="3" fill="none" strokeLinecap="round" />
-            <rect className="suitcase-clasp-left" x="30" y="112" width="28" height="20" rx="5" fill="#C8A951" />
-            <rect x="34" y="115" width="20" height="14" rx="3" fill="#8B7331" opacity="0.38" />
-            <circle cx="44" cy="122" r="3.5" fill="#8B7331" />
-            <rect className="suitcase-clasp-right" x="202" y="112" width="28" height="20" rx="5" fill="#C8A951" />
-            <rect x="206" y="115" width="20" height="14" rx="3" fill="#8B7331" opacity="0.38" />
-            <circle cx="216" cy="122" r="3.5" fill="#8B7331" />
-            <rect x="108" y="110" width="44" height="24" rx="7" fill="#C8A951" />
-            <circle cx="130" cy="122" r="6.5" fill="#8B7331" />
-            <rect x="127" y="124" width="6" height="8" rx="2" fill="#5A4010" />
-            <circle cx="130" cy="121" r="2.2" fill="#C8A951" />
-        </svg>
-    );
-}
-
-function SuitcaseBody() {
-    return (
-        <svg width="260" height="190" viewBox="0 0 260 190" fill="none">
-            <rect x="2" y="0" width="256" height="186" rx="20" fill="#7A5030" />
-            <rect x="2" y="0" width="256" height="186" rx="20" stroke="#6B4525" strokeWidth="2" />
-            <rect x="2" y="0" width="256" height="12" fill="#4A2F15" opacity="0.35" />
-            <rect x="16" y="12" width="228" height="158" rx="14" fill="#8B5E3C" opacity="0.35" />
-            
-            {/* Added decorative travel items peeking from the body of the suitcase */}
-            {/* Rolled Shirt / Fabric */}
-            <g className="peeking-item peeking-shirt">
-                <rect x="32" y="12" width="55" height="24" rx="8" fill="#0D9488" opacity="0.8" />
-                <line x1="32" y1="20" x2="87" y2="20" stroke="#0a6b62" strokeWidth="1" opacity="0.4" />
-                <line x1="32" y1="28" x2="87" y2="28" stroke="#0a6b62" strokeWidth="1" opacity="0.4" />
-            </g>
-            
-            {/* Sunglasses sitting in the case */}
-            <g className="peeking-item peeking-sunglasses">
-                <path d="M 160 15 C 165 15, 170 22, 165 28 C 160 32, 153 30, 150 25" stroke="#1C1B1B" strokeWidth="2.5" fill="none" opacity="0.85" />
-                <path d="M 180 15 C 185 15, 190 22, 185 28 C 180 32, 173 30, 170 25" stroke="#1C1B1B" strokeWidth="2.5" fill="none" opacity="0.85" />
-                <line x1="165" y1="22" x2="170" y2="22" stroke="#1C1B1B" strokeWidth="1.5" opacity="0.85" />
-            </g>
-
-            {/* Map Corner */}
-            <g className="peeking-item peeking-map">
-                <path d="M 90 12 L 140 12 L 125 38 L 80 30 Z" fill="#EAD5C3" opacity="0.75" />
-                <path d="M 90 12 L 140 12 L 125 38 L 80 30 Z" fill="none" stroke="#D1B296" strokeWidth="0.8" opacity="0.75" />
-            </g>
-            
-            <line x1="2" y1="52" x2="258" y2="52" stroke="#6B4525" strokeWidth="0.7" opacity="0.22" />
-            <line x1="2" y1="108" x2="258" y2="108" stroke="#6B4525" strokeWidth="0.7" opacity="0.22" />
-            <line x1="2" y1="158" x2="258" y2="158" stroke="#6B4525" strokeWidth="0.7" opacity="0.22" />
-            <path d="M16 12 L32 12 L32 28" stroke="#7A5030" strokeWidth="1.2" fill="none" strokeDasharray="3 2" opacity="0.45" />
-            <path d="M244 12 L228 12 L228 28" stroke="#7A5030" strokeWidth="1.2" fill="none" strokeDasharray="3 2" opacity="0.45" />
-            <path d="M16 174 L32 174 L32 158" stroke="#7A5030" strokeWidth="1.2" fill="none" strokeDasharray="3 2" opacity="0.45" />
-            <path d="M244 174 L228 174 L228 158" stroke="#7A5030" strokeWidth="1.2" fill="none" strokeDasharray="3 2" opacity="0.45" />
-            <rect className="suitcase-lock-left" x="30" y="0" width="28" height="20" rx="5" fill="#C8A951" />
-            <rect x="34" y="4" width="20" height="14" rx="3" fill="#8B7331" opacity="0.38" />
-            <circle cx="44" cy="10" r="3.5" fill="#8B7331" />
-            <rect className="suitcase-lock-right" x="202" y="0" width="28" height="20" rx="5" fill="#C8A951" />
-            <rect x="206" y="4" width="20" height="14" rx="3" fill="#8B7331" opacity="0.38" />
-            <circle cx="216" cy="10" r="3.5" fill="#8B7331" />
-            <rect x="108" y="0" width="44" height="24" rx="7" fill="#C8A951" />
-            <circle cx="130" cy="12" r="6.5" fill="#8B7331" />
-            <rect x="127" y="14" width="6" height="8" rx="2" fill="#5A4010" />
-            <circle cx="130" cy="11" r="2.2" fill="#C8A951" />
-            <text x="130" y="97" fill="#FFF8F5" fontSize="11" fontFamily="monospace" fontWeight="bold" textAnchor="middle" opacity="0.1" letterSpacing="4">TRIPWISE</text>
-            <ellipse cx="52" cy="184" rx="20" ry="9" fill="#2A1A0E" />
-            <ellipse cx="52" cy="184" rx="15" ry="6.5" fill="#3A2A1A" />
-            <circle cx="52" cy="184" r="4" fill="#1C1000" />
-            <ellipse cx="208" cy="184" rx="20" ry="9" fill="#2A1A0E" />
-            <ellipse cx="208" cy="184" rx="15" ry="6.5" fill="#3A2A1A" />
-            <circle cx="208" cy="184" r="4" fill="#1C1000" />
-            <rect x="2" y="160" width="24" height="28" rx="5" fill="#C8A951" opacity="0.45" />
-            <rect x="234" y="160" width="24" height="28" rx="5" fill="#C8A951" opacity="0.45" />
-        </svg>
-    );
-}
-
-/* ─── Feature card (with mouse-move hover glow) ─────────────────── */
-function FeatureCard({ feature: f }) {
-    const [coords, setCoords] = useState({ x: 0, y: 0 });
-    const [isHovered, setIsHovered] = useState(false);
-
-    const handleMouseMove = (e) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        setCoords({
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top,
-        });
-    };
-
-    return (
-        <div
-            className="rounded-2xl p-5 border relative overflow-hidden transition-all duration-300 select-none cursor-default"
-            onMouseMove={handleMouseMove}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            style={{
-                background: '#FFFFFF',
-                backdropFilter: 'blur(24px)',
-                WebkitBackdropFilter: 'blur(24px)',
-                borderColor: `${f.color}28`,
-                boxShadow: isHovered 
-                    ? `0 20px 40px rgba(0, 0, 0, 0.08), 0 8px 20px rgba(0, 0, 0, 0.04), inset 0 0 1px 1px ${f.color}15`
-                    : `0 10px 30px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.02)`,
-                transform: isHovered ? 'scale(1.02) translateY(-2px)' : 'scale(1)',
-            }}
-        >
-            {/* Dynamic Hover Radial Light Highlight */}
-            {isHovered && (
-                <div
-                    className="absolute inset-0 pointer-events-none transition-opacity duration-300"
-                    style={{
-                        background: `radial-gradient(150px circle at ${coords.x}px ${coords.y}px, ${f.color}15, transparent 80%)`,
-                    }}
-                />
-            )}
-
-            <div className="flex items-start gap-3 mb-3 relative z-10">
-                <div className="w-1.5 h-10 rounded-full shrink-0 mt-0.5" style={{ background: f.color }} />
-                <div className="min-w-0">
-                    <p className="font-mono text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: f.color }}>
-                        {f.tagline}
-                    </p>
-                    <h3 className="text-sm font-extrabold text-brand-dark leading-tight">{f.title}</h3>
-                </div>
-            </div>
-            <p className="text-[11px] text-secondary-text leading-relaxed mb-3 relative z-10">{f.desc}</p>
-            <div className="flex flex-col gap-1.5 border-t border-brand-dark/5 pt-3 relative z-10">
-                {f.details.map((d, di) => (
-                    <div key={di} className="flex items-center gap-2">
-                        <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke={f.color} strokeWidth="3.5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span className="text-[10px] font-mono font-semibold text-brand-dark/70">{d}</span>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-}
-
-/* ─── Main component ─────────────────────────────────────────────── */
 function FeaturesSelection() {
-    const containerRef  = useRef(null);
-    const stickyRef     = useRef(null);
-    const suitcaseWrapRef = useRef(null);
-    const lidRef        = useRef(null);
-    const interiorRef   = useRef(null);
-    const shadowRef     = useRef(null);
-    const headerRef     = useRef(null);
-    const scrollHintRef = useRef(null);
-    const progressFillRef = useRef(null);
-    const stepDotRefs   = useRef([null, null, null, null]);
-    const itemRefs      = useRef([null, null, null, null]);
-    const cardRefs      = useRef([null, null, null, null]);
-
-    // Active tab state updated dynamically onScroll or onClick
     const [activeTab, setActiveTab] = useState(0);
-
-    // Custom Scroll Trigger trigger click-navigation function
-    const navigateToPhase = (scrollProgress) => {
-        if (!containerRef.current) return;
-        const totalHeight = containerRef.current.offsetHeight;
-        const offsetTop = containerRef.current.offsetTop;
-        const targetScroll = offsetTop + (scrollProgress * (totalHeight - window.innerHeight));
-        
-        window.scrollTo({
-            top: targetScroll,
-            behavior: 'smooth',
-        });
-    };
-
-
+    const [activePreviewTab, setActivePreviewTab] = useState(0);
+    const containerRef = useRef(null);
+    const stickyRef = useRef(null);
+    const planeRef = useRef(null);
+    const basePathRef = useRef(null);
+    const activePathRef = useRef(null);
+    const maskPathRef = useRef(null);
+    const svgRef = useRef(null);
 
     useEffect(() => {
         if (!containerRef.current || !stickyRef.current) return;
         gsap.registerPlugin(ScrollTrigger);
 
         const ctx = gsap.context(() => {
-            /* ── Initial states ─────────────────────────────────── */
-            gsap.set(lidRef.current, { rotationX: 0 });
-            gsap.set(interiorRef.current, { opacity: 0 });
-            gsap.set(suitcaseWrapRef.current, { scale: 0.82, opacity: 0, y: 40, rotateX: 5, rotateY: -3, transformStyle: 'preserve-3d' });
-            gsap.set(shadowRef.current, { scaleX: 0.8, scaleY: 0.8, y: 0, opacity: 0.2 });
-            gsap.set(progressFillRef.current, { width: '0%' });
-
-            itemRefs.current.forEach((el) => {
-                gsap.set(el, { y: 80, opacity: 0, scale: 0.7, rotateZ: 0, rotateY: 0, x: 0 });
-            });
-            cardRefs.current.forEach((el, i) => {
-                gsap.set(el, { opacity: 0, x: features[i].side === 'right' ? 60 : -60 });
-            });
-            stepDotRefs.current.forEach((el, i) => {
-                gsap.set(el, { scale: i === 0 ? 1.6 : 1, opacity: i === 0 ? 1 : 0.2 });
-            });
-            gsap.set('.peeking-item', { y: 0, scaleY: 1, transformOrigin: 'center bottom' });
-
-            /* ── Main scroll timeline ─────────────────────────── */
-            const tl = gsap.timeline();
-
-            /* PHASE 0-15: Suitcase glides in + Pop lock shake */
-            tl.to(suitcaseWrapRef.current, { scale: 1, opacity: 1, y: 0, rotateX: 0, rotateY: 0, duration: 15, ease: 'power3.out' }, 0);
-            tl.to(shadowRef.current, { scaleX: 1, scaleY: 1, opacity: 0.45, duration: 15, ease: 'power2.out' }, 0);
-            
-            // Pop locks latch wiggles
-            tl.to(suitcaseWrapRef.current, { x: -5, duration: 0.8, ease: 'power1.inOut' }, 9.5)
-              .to(suitcaseWrapRef.current, { x: 5, duration: 0.8, ease: 'power1.inOut' }, 10.3)
-              .to(suitcaseWrapRef.current, { x: -3, duration: 0.6, ease: 'power1.inOut' }, 11.1)
-              .to(suitcaseWrapRef.current, { x: 0, duration: 0.6, ease: 'power1.out' }, 11.7);
-            
-            // Pop the metallic lock pins outwards
-            tl.to('.suitcase-lock-left', { y: -2, scaleY: 1.15, duration: 1.5, ease: 'back.out(2)' }, 10.5)
-              .to('.suitcase-lock-right', { y: -2, scaleY: 1.15, duration: 1.5, ease: 'back.out(2)' }, 10.5);
-            tl.to('.suitcase-clasp-left', { rotate: -15, y: -4, transformOrigin: 'top center', duration: 2, ease: 'back.out(2)' }, 11.5)
-              .to('.suitcase-clasp-right', { rotate: 15, y: -4, transformOrigin: 'top center', duration: 2, ease: 'back.out(2)' }, 11.5);
-
-            // Jolt peeking items on lock pop
-            tl.to('.peeking-item', { y: -8, scaleY: 1.08, duration: 1.2, ease: 'elastic.out(1.2, 0.4)' }, 11.5)
-              .to('.peeking-item', { y: 0, scaleY: 1, duration: 1, ease: 'power2.out' }, 12.7);
-            
-            tl.to(headerRef.current, { y: -26, opacity: 0, duration: 10, ease: 'power2.in' }, 7);
-            tl.to(scrollHintRef.current, { opacity: 0, duration: 7, ease: 'power2.in' }, 5);
-            tl.to(progressFillRef.current, { width: '6%', duration: 15 }, 0);
-
-            /* PHASE 15-35: Lid cracks open (< 90°), calendar flies left */
-            tl.to(lidRef.current, { rotationX: -58, duration: 22, ease: 'power2.inOut' }, 12);
-            tl.to(shadowRef.current, { scaleX: 1.2, scaleY: 1.1, y: 5, opacity: 0.38, duration: 22 }, 12);
-            tl.to(suitcaseWrapRef.current, { rotateX: 12, rotateY: 2, duration: 22, ease: 'power2.inOut' }, 12);
-            tl.to(itemRefs.current[0], {
-                y: -190, x: -240,
-                opacity: 1, scale: 1,
-                rotateZ: features[0].tilt, rotateY: -6,
-                duration: 19, ease: 'elastic.out(1.1, 0.75)',
-            }, 15);
-            tl.to(cardRefs.current[0], { opacity: 1, x: 0, duration: 14, ease: 'power2.out' }, 20);
-            tl.to(stepDotRefs.current[0], { scale: 1.6, opacity: 1, duration: 5 }, 15);
-            tl.to(progressFillRef.current, { width: '28%', duration: 22 }, 13);
-
-            /* PHASE 35-55: Calendar exits, lid past 90° → interior lining, boarding pass flies right */
-            tl.to(itemRefs.current[0], { y: -400, opacity: 0, rotateZ: features[0].tilt * 1.8, duration: 10, ease: 'power2.in' }, 35);
-            tl.to(cardRefs.current[0], { opacity: 0, x: -55, duration: 10, ease: 'power2.in' }, 35);
-            tl.to(stepDotRefs.current[0], { scale: 1, opacity: 0.2, duration: 5 }, 35);
-            tl.to(lidRef.current, { rotationX: -92, duration: 22, ease: 'power2.inOut' }, 33);
-            tl.to(interiorRef.current, { opacity: 1, duration: 9, ease: 'power2.out' }, 37);
-            tl.to(shadowRef.current, { scaleX: 1.35, scaleY: 1.2, y: 8, opacity: 0.32, duration: 22 }, 33);
-            tl.to(suitcaseWrapRef.current, { rotateX: 16, rotateY: -2, duration: 22, ease: 'power2.inOut' }, 33);
-            tl.to(itemRefs.current[1], {
-                y: -190, x: 240,
-                opacity: 1, scale: 1,
-                rotateZ: features[1].tilt, rotateY: 6,
-                duration: 19, ease: 'elastic.out(1.1, 0.75)',
-            }, 38);
-            tl.to(cardRefs.current[1], { opacity: 1, x: 0, duration: 14, ease: 'power2.out' }, 43);
-            tl.to(stepDotRefs.current[1], { scale: 1.6, opacity: 1, duration: 5 }, 38);
-            tl.to(progressFillRef.current, { width: '52%', duration: 22 }, 33);
-
-            /* PHASE 55-75: Boarding pass exits, wallet flies left */
-            tl.to(itemRefs.current[1], { y: -400, opacity: 0, rotateZ: features[1].tilt * 1.8, duration: 10, ease: 'power2.in' }, 55);
-            tl.to(cardRefs.current[1], { opacity: 0, x: 55, duration: 10, ease: 'power2.in' }, 55);
-            tl.to(stepDotRefs.current[1], { scale: 1, opacity: 0.2, duration: 5 }, 55);
-            tl.to(lidRef.current, { rotationX: -108, duration: 22, ease: 'power2.inOut' }, 53);
-            tl.to(shadowRef.current, { scaleX: 1.55, scaleY: 1.25, y: 10, opacity: 0.28, duration: 22 }, 53);
-            tl.to(suitcaseWrapRef.current, { rotateX: 18, rotateY: 3, duration: 22, ease: 'power2.inOut' }, 53);
-            tl.to(itemRefs.current[2], {
-                y: -190, x: -240,
-                opacity: 1, scale: 1,
-                rotateZ: features[2].tilt, rotateY: -6,
-                duration: 19, ease: 'elastic.out(1.1, 0.75)',
-            }, 58);
-            tl.to(cardRefs.current[2], { opacity: 1, x: 0, duration: 14, ease: 'power2.out' }, 63);
-            tl.to(stepDotRefs.current[2], { scale: 1.6, opacity: 1, duration: 5 }, 58);
-            tl.to(progressFillRef.current, { width: '76%', duration: 22 }, 53);
-
-            /* PHASE 75-100: Wallet exits, camera flies right, lid flat open */
-            tl.to(itemRefs.current[2], { y: -400, opacity: 0, rotateZ: features[2].tilt * 1.8, duration: 10, ease: 'power2.in' }, 75);
-            tl.to(cardRefs.current[2], { opacity: 0, x: -55, duration: 10, ease: 'power2.in' }, 75);
-            tl.to(stepDotRefs.current[2], { scale: 1, opacity: 0.2, duration: 5 }, 75);
-            tl.to(lidRef.current, { rotationX: -120, duration: 25, ease: 'power1.inOut' }, 73);
-            tl.to(shadowRef.current, { scaleX: 1.7, scaleY: 1.3, y: 6, opacity: 0.22, duration: 25 }, 73);
-            tl.to(suitcaseWrapRef.current, { rotateX: 14, rotateY: 0, duration: 25, ease: 'power1.inOut' }, 73);
-            tl.to(itemRefs.current[3], {
-                y: -190, x: 240,
-                opacity: 1, scale: 1,
-                rotateZ: features[3].tilt, rotateY: 6,
-                duration: 19, ease: 'elastic.out(1.1, 0.75)',
-            }, 78);
-            tl.to(cardRefs.current[3], { opacity: 1, x: 0, duration: 14, ease: 'power2.out' }, 83);
-            tl.to(stepDotRefs.current[3], { scale: 1.6, opacity: 1, duration: 5 }, 78);
-            tl.to(progressFillRef.current, { width: '100%', duration: 27 }, 73);
-
             ScrollTrigger.create({
                 trigger: containerRef.current,
                 start: 'top top',
                 end: 'bottom bottom',
-                scrub: 1.8,
-                animation: tl,
+                scrub: true,
+                pin: stickyRef.current,
                 onUpdate: (self) => {
-                    // Update active indices for progress bar visuals
-                    const p = self.progress;
+                    const progress = self.progress;
+
+                    // 1. Map activeIdx and activePreviewTab based on when the plane reaches each checkpoint
                     let activeIdx = 0;
-                    if (p >= 0.35 && p < 0.55) activeIdx = 1;
-                    else if (p >= 0.55 && p < 0.75) activeIdx = 2;
-                    else if (p >= 0.75) activeIdx = 3;
+                    if (progress >= 0.44 && progress < 0.68) activeIdx = 1;
+                    else if (progress >= 0.68 && progress < 0.90) activeIdx = 2;
+                    else if (progress >= 0.90) activeIdx = 3;
                     setActiveTab(activeIdx);
+
+                    // Dashboard changes ONLY when the plane reaches its relative preview container (or destination card)
+                    let activePreviewIdx = 0;
+                    if (progress >= 0.46 && progress < 0.70) activePreviewIdx = 1;
+                    else if (progress >= 0.70 && progress < 0.92) activePreviewIdx = 2;
+                    else if (progress >= 0.92) activePreviewIdx = 3;
+                    setActivePreviewTab(activePreviewIdx);
+
+                    // Plane Flight Path Coordinate Calculation
+                    const logoEl = document.querySelector('.header-logo');
+                    const stickyRect = stickyRef.current.getBoundingClientRect();
+                    const cards = containerRef.current.querySelectorAll('.feature-card');
+                    const preview = containerRef.current.querySelector('.preview-outer-container');
+
+                    if (cards.length === 4 && preview && basePathRef.current && activePathRef.current && maskPathRef.current && planeRef.current) {
+                        const previewRect = preview.getBoundingClientRect();
+                        const previewLeftX = previewRect.left - stickyRect.left;
+
+                        // Logo position
+                        let logoX = stickyRect.width / 2;
+                        let logoY = -40; // fallback value above header
+                        if (logoEl) {
+                            const logoRect = logoEl.getBoundingClientRect();
+                            logoX = (logoRect.left + logoRect.right) / 2 - stickyRect.left;
+                            logoY = (logoRect.top + logoRect.bottom) / 2 - stickyRect.top;
+                        }
+
+                        // Build serpentine flight points based on alternating Left/Right rows
+                        const points = [];
+                        
+                        // Point 0: Header Logo
+                        points.push({ x: logoX, y: logoY });
+
+                        // Point 1: Card 0 (Row 0, Left)
+                        {
+                            const cardRect = cards[0].getBoundingClientRect();
+                            const iconEl = cards[0].querySelector('.feature-icon');
+                            let cardX, cardY;
+                            if (iconEl) {
+                                const iconRect = iconEl.getBoundingClientRect();
+                                cardX = iconRect.right - stickyRect.left;
+                                cardY = (iconRect.top + iconRect.bottom) / 2 - stickyRect.top;
+                            } else {
+                                cardX = cardRect.left + 40 - stickyRect.left;
+                                cardY = (cardRect.top + cardRect.bottom) / 2 - stickyRect.top;
+                            }
+                            points.push({ x: cardX, y: cardY });
+                        }
+
+                        // Point 2: Preview 1 (Row 1, Right)
+                        {
+                            const cardRect = cards[1].getBoundingClientRect();
+                            const cardY = (cardRect.top + cardRect.bottom) / 2 - stickyRect.top;
+                            points.push({ x: previewLeftX, y: cardY });
+                        }
+
+                        // Point 3: Card 2 (Row 2, Left)
+                        {
+                            const cardRect = cards[2].getBoundingClientRect();
+                            const iconEl = cards[2].querySelector('.feature-icon');
+                            let cardX, cardY;
+                            if (iconEl) {
+                                const iconRect = iconEl.getBoundingClientRect();
+                                cardX = iconRect.right - stickyRect.left;
+                                cardY = (iconRect.top + iconRect.bottom) / 2 - stickyRect.top;
+                            } else {
+                                cardX = cardRect.left + 40 - stickyRect.left;
+                                cardY = (cardRect.top + cardRect.bottom) / 2 - stickyRect.top;
+                            }
+                            points.push({ x: cardX, y: cardY });
+                        }
+
+                        // Point 4: Preview 3 (Row 3, Right)
+                        {
+                            const cardRect = cards[3].getBoundingClientRect();
+                            const cardY = (cardRect.top + cardRect.bottom) / 2 - stickyRect.top;
+                            points.push({ x: previewLeftX, y: cardY });
+                        }
+
+                        // Generate path string 'pathD'
+                        let pathD = `M ${points[0].x} ${points[0].y}`;
+
+                        // Segment 0: Logo to Card 0 S-curve (Swooping from Logo down-left to Card 0)
+                        {
+                            const p0 = points[0];
+                            const p1 = points[1];
+                            
+                            // Exit logo downwards
+                            const cp1x = p0.x - (p0.x - p1.x) * 0.3;
+                            const cp1y = p0.y + (p1.y - p0.y) * 0.6;
+                            
+                            // Enter Card 0 from top-right with a nice curve
+                            const cp2x = p1.x + 80;
+                            const cp2y = p1.y - 80;
+                            pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`;
+                        }
+
+                        // Segment 1: Card 0 to Preview 1 S-curve (Left to Right)
+                        {
+                            const p1 = points[1];
+                            const p2 = points[2];
+                            
+                            const cp1x = p1.x + 200; // Pull right
+                            const cp1y = p1.y + (p2.y - p1.y) * 0.2;
+                            
+                            const cp2x = p2.x - 200; // Pull left
+                            const cp2y = p2.y - (p2.y - p1.y) * 0.2;
+                            
+                            pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+                        }
+
+                        // Segment 2: Preview 1 to Card 2 S-curve (Right to Left)
+                        {
+                            const p2 = points[2];
+                            const p3 = points[3];
+                            
+                            const cp1x = p2.x - 200; // Pull left
+                            const cp1y = p2.y + (p3.y - p2.y) * 0.2;
+                            
+                            const cp2x = p3.x + 200; // Pull right
+                            const cp2y = p3.y - (p3.y - p2.y) * 0.2;
+                            
+                            pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p3.x} ${p3.y}`;
+                        }
+
+                        // Segment 3: Card 2 to Preview 3 S-curve (Left to Right)
+                        {
+                            const p3 = points[3];
+                            const p4 = points[4];
+                            
+                            const cp1x = p3.x + 200; // Pull right
+                            const cp1y = p3.y + (p4.y - p3.y) * 0.2;
+                            
+                            const cp2x = p4.x - 200; // Pull left
+                            const cp2y = p4.y - (p4.y - p3.y) * 0.2;
+                            
+                            pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p4.x} ${p4.y}`;
+                        }
+
+                        // Apply the computed path dynamically
+                        basePathRef.current.setAttribute('d', pathD);
+                        activePathRef.current.setAttribute('d', pathD);
+                        maskPathRef.current.setAttribute('d', pathD);
+
+                        try {
+                            const pathLength = basePathRef.current.getTotalLength();
+                            const distance = pathLength * progress;
+
+                            // Locate plane coordinates along path
+                            const point = basePathRef.current.getPointAtLength(distance);
+                            const x = point.x;
+                            const y = point.y;
+
+                            // Locate plane rotation angle along path
+                            const delta = 1;
+                            const checkDist = Math.max(0, Math.min(pathLength, distance + delta));
+                            const nextPoint = basePathRef.current.getPointAtLength(checkDist);
+                            const angle = Math.atan2(nextPoint.y - point.y, nextPoint.x - point.x) * (180 / Math.PI);
+
+                            // Reveal active trail behind plane
+                            maskPathRef.current.style.strokeDasharray = `${pathLength} ${pathLength}`;
+                            maskPathRef.current.style.strokeDashoffset = pathLength * (1 - progress);
+
+                            // Fade plane out only at the very top and very bottom of the runway
+                            let opacity = 1;
+                            if (progress < 0.02) {
+                                opacity = progress / 0.02;
+                            } else if (progress > 0.98) {
+                                opacity = (1.0 - progress) / 0.02;
+                            }
+
+                            planeRef.current.style.transform = `translate3d(${x - 16}px, ${y - 16}px, 0) rotate(${angle + 90}deg)`;
+                            planeRef.current.style.opacity = opacity;
+                            planeRef.current.style.display = 'block';
+                        } catch (e) {
+                            console.error("SVG serpentine path computation error", e);
+                        }
+                    }
                 }
             });
         }, containerRef);
@@ -548,263 +220,482 @@ function FeaturesSelection() {
         return () => ctx.revert();
     }, []);
 
-    const itemMarginLeft = (type) => {
-        if (type === 'boarding-pass') return '-79px';
-        if (type === 'wallet')        return '-65px';
-        if (type === 'camera')        return '-67px';
-        return '-59px';
+    const handleTabClick = (idx) => {
+        if (!containerRef.current) return;
+        
+        const rect = containerRef.current.getBoundingClientRect();
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const containerStart = rect.top + scrollTop;
+        const containerHeight = rect.height;
+        const pinRange = containerHeight - window.innerHeight;
+        
+        const targetProgress = idx === 0 ? 0.18 : idx === 1 ? 0.48 : idx === 2 ? 0.72 : 0.95;
+        const targetY = containerStart + pinRange * targetProgress;
+        
+        window.scrollTo({
+            top: targetY,
+            behavior: 'smooth'
+        });
     };
 
+    const features = [
+        {
+            title: "Smart Day-by-Day Scheduling",
+            tagline: "Maps pin places; ChatGPT writes static lists. TripWise designs functional schedules.",
+            desc: "Instead of a simple map pin or a long text response, we map out a realistic daily path optimized for walking distances, peak visiting hours, and logical transit routes.",
+            details: [
+                "Optimal walking sequence & duration estimates",
+                "Crowd density avoidance visit windows"
+            ],
+            icon: (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                    <path d="M8 14h.01" />
+                    <path d="M12 14h.01" />
+                    <path d="M16 14h.01" />
+                    <path d="M8 18h.01" />
+                    <path d="M12 18h.01" />
+                    <path d="M16 18h.01" />
+                </svg>
+            )
+        },
+        {
+            title: "Local Hidden Gems",
+            tagline: "Ditch the tourist traps. Uncover secrets loved by locals.",
+            desc: "Powered by hyper-local review parsing and crowd-sourced data, TripWise steers you away from overpriced tourist zones into authentic culinary spots and scenic detours.",
+            details: [
+                "Verified local-only eateries & views",
+                "Detours curated by local reviewers"
+            ],
+            icon: (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+            )
+        },
+        {
+            title: "Budget Optimization",
+            tagline: "Set a budget limit. We optimize costs and plan details.",
+            desc: "Real-time cost estimations based on category caps. We automatically recommend cheaper transport timings, cost-effective stays, and budget-friendly street-food spots.",
+            details: [
+                "Fare-saving flight & rail shift alerts",
+                "Automatic category-cap cost estimates"
+            ],
+            icon: (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                    <line x1="12" y1="1" x2="12" y2="23" />
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+            )
+        },
+        {
+            title: "Real-Time Flight & Hotel Integration",
+            tagline: "Live status updates and reservations directly in your itinerary.",
+            desc: "Seamlessly link your flight status, hotel coordinates, and check-in times. Any delays will automatically trigger schedule re-routing suggestions.",
+            details: [
+                "Live flight boarding pass status tracking",
+                "Automated delay re-routing suggestions"
+            ],
+            icon: (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                    <path d="M22 2L11 13" />
+                    <path d="M22 2l-7 20-4-9-9-4 20-7z" />
+                </svg>
+            )
+        }
+    ];
+
     return (
-        <section ref={containerRef} className="relative w-full h-[400vh] bg-[#FFF8F5]">
+        <section ref={containerRef} className="relative w-full h-[300vh] bg-[#FFF8F5]">
+            <div ref={stickyRef} className="sticky top-0 w-full h-screen overflow-hidden flex items-center justify-center">
+                {/* Background elements */}
+                <div className="absolute top-1/4 left-0 w-96 h-96 bg-[#fe7717]/5 rounded-full filter blur-[100px] pointer-events-none" />
+                <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-brand-teal/5 rounded-full filter blur-[100px] pointer-events-none" />
 
-            {/* Float bob animation styling */}
-            <style>{`
-                @keyframes floatBob {
-                    0%, 100% { transform: translateY(0px) rotate(0.4deg); }
-                    35%      { transform: translateY(-10px) rotate(-0.4deg); }
-                    70%      { transform: translateY(-5px) rotate(0.2deg); }
-                }
-                .item-bob { animation: floatBob 3.2s ease-in-out infinite; }
-            `}</style>
-
-            <div ref={stickyRef} className="sticky top-0 w-full h-screen overflow-hidden">
-
-
-
-                {/* ── Deep ambient glow ── */}
-                <div className="absolute inset-0 pointer-events-none">
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-225 h-225 rounded-full blur-[200px]"
-                        style={{ background: 'radial-gradient(circle, rgba(254,119,23,0.08) 0%, transparent 60%)' }} />
-                    <div className="absolute top-1/3 left-1/5 w-96 h-96 rounded-full bg-[#0D9488]/5 blur-[120px]" />
-                    <div className="absolute bottom-1/4 right-1/5 w-96 h-96 rounded-full bg-[#fe7717]/5 blur-[120px]" />
-                </div>
-
-                {/* ── Section header ── */}
-                <div ref={headerRef} className="absolute top-14 md:top-16 left-1/2 -translate-x-1/2 text-center z-20 w-full px-6">
-                    <div className="inline-block px-5 py-2 bg-[#1C1B1B] backdrop-blur-md rounded-full shadow-md border border-white/20 text-[#fe7717] font-mono text-[10px] font-bold tracking-[0.16em] uppercase mb-3">
-                        ✦ Why TripWise?
-                    </div>
-                    <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-brand-dark leading-tight">
-                        Beyond Map Pins &amp; Standard Prompts
-                    </h2>
-                    <p className="text-sm text-secondary-text mt-1.5 font-medium opacity-55">
-                        Scroll to unlock and explore details
-                    </p>
-                </div>
-
-                {/* ── Ground shadow ── */}
-                <div className="absolute left-1/2 -translate-x-1/2 pointer-events-none" style={{ bottom: '17%', zIndex: 1 }}>
-                    <div
-                        ref={shadowRef}
-                        style={{
-                            width: '440px',
-                            height: '44px',
-                            background: 'radial-gradient(ellipse, rgba(0,0,0,0.22) 0%, transparent 72%)',
-                            filter: 'blur(14px)',
-                            transformOrigin: 'center center',
-                        }}
+                {/* SVG Dotted Trails */}
+                <svg
+                    ref={svgRef}
+                    className="absolute inset-0 w-full h-full pointer-events-none z-30"
+                    style={{ overflow: 'visible' }}
+                >
+                    <defs>
+                        <mask id="trail-mask" maskUnits="userSpaceOnUse">
+                            <path
+                                ref={maskPathRef}
+                                fill="none"
+                                stroke="white"
+                                strokeWidth="10"
+                                strokeLinecap="round"
+                            />
+                        </mask>
+                    </defs>
+                    {/* Light preview dots trail - hidden initially so line only draws behind plane */}
+                    <path
+                        ref={basePathRef}
+                        fill="none"
+                        stroke="#fe7717"
+                        strokeWidth="2.5"
+                        strokeDasharray="6 6"
+                        strokeLinecap="round"
+                        opacity="0"
                     />
+                    {/* Active bright dots revealed behind the plane */}
+                    <path
+                        ref={activePathRef}
+                        fill="none"
+                        stroke="#fe7717"
+                        strokeWidth="3.5"
+                        strokeDasharray="6 6"
+                        strokeLinecap="round"
+                        mask="url(#trail-mask)"
+                        className="drop-shadow-[0_0_4px_rgba(254,119,23,0.6)]"
+                    />
+                </svg>
+
+                {/* Small Plane Element */}
+                <div
+                    ref={planeRef}
+                    className="absolute pointer-events-none z-45"
+                    style={{
+                        width: '32px',
+                        height: '32px',
+                        left: 0,
+                        top: 0,
+                        transformOrigin: 'center center',
+                        display: 'none',
+                        opacity: 0,
+                    }}
+                >
+                    <svg viewBox="-20 0 56 78" fill="#fe7717" className="w-8 h-8 drop-shadow-[0_2px_8px_rgba(254,119,23,0.5)]">
+                        <path d="M0 34 L8 0 L16 34 L34 44 L34 52 L16 46 L13 64 L21 70 L21 76 L8 70 L-5 76 L-5 70 L3 64 L0 46 L-18 52 L-18 44 Z" />
+                    </svg>
                 </div>
 
-                {/* ── Main centered layout ── */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="relative w-full max-w-6xl mx-auto px-6 flex items-center justify-center h-full">
+                <div className="max-w-7xl mx-auto px-6 relative z-10 w-full h-full flex flex-col justify-start pt-24 md:pt-28 pb-6">
+                    {/* Header Block */}
+                    <div className="text-center max-w-3xl mx-auto mb-5">
+                        <div className="inline-block px-4 py-1.5 bg-[#1C1B1B] backdrop-blur-md rounded-full shadow-md border border-white/20 text-[#fe7717] font-mono text-[10px] font-bold tracking-[0.16em] uppercase mb-1.5">
+                            Why TripWise?
+                        </div>
+                        <h2 className="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-brand-dark mb-1 leading-tight">
+                            Beyond Map Pins &amp; Standard Prompts
+                        </h2>
+                    </div>
 
-                        {/* Decorative orbit rings */}
-                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-                            style={{ width: '530px', height: '530px', border: '1.5px dashed rgba(254,119,23,0.13)', borderRadius: '50%' }} />
-                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-                            style={{ width: '640px', height: '640px', border: '1px dashed rgba(13,148,136,0.08)', borderRadius: '50%' }} />
-
-                        {/* ── Suitcase + items (center) ── */}
-                        <div
-                            ref={suitcaseWrapRef}
-                            className="relative flex flex-col items-center"
-                            style={{ perspective: '1000px', perspectiveOrigin: '50% 55%' }}
-                        >
-                            {/* Floating items */}
-                            {features.map((f, i) => (
-                                <div
-                                    key={`item-${i}`}
-                                    ref={el => { itemRefs.current[i] = el; }}
-                                    style={{
-                                        position: 'absolute',
-                                        top: '232px',
-                                        left: '50%',
-                                        marginLeft: itemMarginLeft(f.item),
-                                        zIndex: 40,
-                                        willChange: 'transform, opacity',
-                                    }}
-                                >
-                                    {/* Number badge */}
-                                    <div style={{
-                                        position: 'absolute',
-                                        top: '-18px',
-                                        left: '50%',
-                                        transform: 'translateX(-50%)',
-                                        background: f.color,
-                                        color: 'white',
-                                        fontSize: '9px',
-                                        fontFamily: 'monospace',
-                                        fontWeight: '900',
-                                        padding: '2px 8px',
-                                        borderRadius: '12px',
-                                        letterSpacing: '0.1em',
-                                        zIndex: 50,
-                                        boxShadow: `0 2px 8px ${f.color}50`,
-                                        whiteSpace: 'nowrap',
-                                    }}>
-                                        {f.badge}
-                                    </div>
-                                    
+                    {/* Features Split Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center flex-1 min-h-0">
+                        {/* Left Column: Interactive Selector List */}
+                        <div className="lg:col-span-5 flex flex-col gap-2 justify-center">
+                            {features.map((feature, idx) => {
+                                const isActive = activeTab === idx;
+                                return (
                                     <div
-                                        className="item-bob"
-                                        style={{
-                                            filter: `drop-shadow(0 0 18px ${f.color}55) drop-shadow(0 18px 40px rgba(0,0,0,0.28))`,
-                                        }}
+                                        key={idx}
+                                        onClick={() => handleTabClick(idx)}
+                                        className={`feature-card relative overflow-hidden p-3 md:p-3.5 rounded-xl cursor-pointer transition-all duration-300 flex items-start gap-3.5 ${
+                                            isActive 
+                                                ? "bg-white shadow-lg shadow-brand-coral/5 scale-[1.01]" 
+                                                : "bg-transparent hover:bg-white/40 hover:scale-[1.005]"
+                                        }`}
                                     >
-                                        {f.item === 'boarding-pass' && <BoardingPass />}
-                                        {f.item === 'wallet'         && <Wallet />}
-                                        {f.item === 'camera'         && <VintageCamera />}
-                                        {f.item === 'calendar'       && <CalendarIcon />}
-                                    </div>
-                                </div>
-                            ))}
+                                        {/* Perfect rounded left-side indicator border */}
+                                        {isActive && (
+                                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#fe7717]" />
+                                        )}
+                                        <div className={`feature-icon p-2 rounded-lg shrink-0 transition-colors duration-300 ${
+                                            isActive 
+                                                ? "bg-[#fe7717] text-white" 
+                                                : "bg-[#1C1B1B]/5 text-brand-dark/60"
+                                        }`}>
+                                            {feature.icon}
+                                        </div>
+                                        <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                                            <h3 className={`text-sm md:text-base font-bold leading-snug transition-colors duration-300 ${
+                                                isActive ? "text-brand-dark" : "text-brand-dark/80"
+                                            }`}>
+                                                {feature.title}
+                                            </h3>
+                                            <p className={`text-[9px] md:text-[10px] font-semibold font-mono tracking-wide uppercase transition-colors duration-300 ${
+                                                isActive ? "text-[#fe7717]" : "text-brand-teal"
+                                            }`}>
+                                                {feature.tagline}
+                                            </p>
+                                            <p className="text-[11px] md:text-xs text-secondary-text leading-normal mt-0.5">
+                                                {feature.desc}
+                                            </p>
 
-                            {/* ── Suitcase (scaled 1.35×) ── */}
-                            <div style={{ transform: 'scale(1.35)', transformOrigin: 'top center', display: 'inline-block' }}>
-                                <div style={{ transformStyle: 'preserve-3d', position: 'relative' }}>
-
-                                    {/* Velvet interior */}
-                                    <div
-                                        ref={interiorRef}
-                                        style={{
-                                            position: 'absolute',
-                                            top: 0, left: 0, right: 0,
-                                            zIndex: 2,
-                                            pointerEvents: 'none',
-                                        }}
-                                    >
-                                        <SuitcaseLidInterior />
+                                            {/* Expanding active sub-details checkmark list */}
+                                            <div 
+                                                className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                                                    isActive ? 'max-h-[250px] opacity-100 mt-1.5' : 'max-h-0 opacity-0 pointer-events-none'
+                                                }`}
+                                            >
+                                                <div className="flex flex-col gap-1 border-t border-brand-dark/5 pt-1.5 flex-wrap">
+                                                    {feature.details.map((detail, dIdx) => (
+                                                        <div key={dIdx} className="flex items-center gap-1.5 text-[9px] md:text-[10px] font-mono font-bold text-brand-dark/75">
+                                                            <svg className="w-3.5 h-3.5 text-[#fe7717] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                            <span>{detail}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-
-                                    {/* Lid */}
-                                    <div
-                                        ref={lidRef}
-                                        style={{
-                                            transformOrigin: 'bottom center',
-                                            transformStyle: 'preserve-3d',
-                                            willChange: 'transform',
-                                            position: 'relative',
-                                            zIndex: 8,
-                                        }}
-                                    >
-                                        <SuitcaseLid />
-                                    </div>
-
-                                    {/* Body */}
-                                    <div style={{ position: 'relative', zIndex: 10, marginTop: '-2px' }}>
-                                        <SuitcaseBody />
-                                    </div>
-                                </div>
-                            </div>
+                                );
+                            })}
                         </div>
 
-                        {/* ── Feature Cards: left-side features ── */}
-                        {features.filter(f => f.side === 'left').map((f) => {
-                            const i = features.indexOf(f);
-                            return (
-                                <div
-                                    key={`card-${i}`}
-                                    ref={el => { cardRefs.current[i] = el; }}
-                                    className="absolute left-0 top-1/2 -translate-y-1/2 z-30"
-                                    style={{ maxWidth: '262px', willChange: 'transform, opacity' }}
-                                >
-                                    <FeatureCard feature={f} />
+                        {/* Right Column: Live Mock UI Preview */}
+                        <div className="preview-outer-container lg:col-span-7 flex items-center justify-center relative w-full h-[500px] lg:h-[560px] rounded-3xl overflow-hidden shadow-2xl">
+                            <div className="w-full h-full bg-[#1C1B1B] border border-white/15 rounded-3xl p-6 md:p-8 flex flex-col relative overflow-hidden shadow-2xl">
+                                
+                                {/* Inner Preview Window Shell */}
+                                <div className="flex items-center gap-1.5 border-b border-white/10 pb-4 mb-6">
+                                    <span className="w-3.5 h-3.5 rounded-full bg-red-500/80" />
+                                    <span className="w-3.5 h-3.5 rounded-full bg-yellow-500/80" />
+                                    <span className="w-3.5 h-3.5 rounded-full bg-green-500/80" />
+                                    <span className="ml-4 font-mono text-xs text-white/40 tracking-wider">TRIPWISE_DASHBOARD_V4</span>
                                 </div>
-                            );
-                        })}
 
-                        {/* ── Feature Cards: right-side features ── */}
-                        {features.filter(f => f.side === 'right').map((f) => {
-                            const i = features.indexOf(f);
-                            return (
-                                <div
-                                    key={`card-${i}`}
-                                    ref={el => { cardRefs.current[i] = el; }}
-                                    className="absolute right-0 top-1/2 -translate-y-1/2 z-30"
-                                    style={{ maxWidth: '262px', willChange: 'transform, opacity' }}
-                                >
-                                    <FeatureCard feature={f} />
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                {/* ── Scroll progress bar + interactive step dots (Hidden visually to preserve GSAP bindings safely) ── */}
-                <div className="hidden absolute bottom-8 left-1/2 -translate-x-1/2 flex-col items-center gap-3 z-50" style={{ width: '290px' }}>
-                    {/* Progress track */}
-                    <div className="relative w-full h-0.75 rounded-full overflow-hidden" style={{ background: 'rgba(28,27,27,0.08)' }}>
-                        <div
-                            ref={progressFillRef}
-                            className="absolute left-0 top-0 h-full rounded-full transition-all duration-100 ease-out"
-                            style={{ width: '0%', background: 'linear-gradient(to right, #fe7717, #0D9488)' }}
-                        />
-                    </div>
-                    {/* Step dots row */}
-                    <div className="flex items-center justify-between w-full px-1">
-                        {features.map((f, i) => {
-                            const isCurrent = activeTab === i;
-                            return (
-                                <div 
-                                    key={i} 
-                                    className="flex flex-col items-center gap-1.5 cursor-pointer group"
-                                    onClick={() => navigateToPhase(f.scrollTarget)}
-                                >
-                                    <div
-                                        ref={el => { stepDotRefs.current[i] = el; }}
-                                        className="transition-all duration-300 relative"
-                                        style={{
-                                            width: '9px', height: '9px',
-                                            borderRadius: '50%',
-                                            background: f.color,
-                                            transformOrigin: 'center',
-                                            boxShadow: isCurrent ? `0 0 10px ${f.color}aa` : 'none',
-                                        }}
-                                    >
-                                        {/* Outer hover ring indicator */}
-                                        <div className="absolute -inset-2 rounded-full border border-brand-dark/0 group-hover:border-brand-dark/15 scale-75 group-hover:scale-100 transition-all duration-200" />
+                                {/* PREVIEW CONTAINER 1: Smart Day-by-Day Scheduling */}
+                                <div className={`flex flex-col flex-1 transition-all duration-500 ease-in-out absolute inset-x-6 md:inset-x-8 bottom-6 md:bottom-8 top-16 md:top-20 ${
+                                    activePreviewTab === 0 ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
+                                }`}>
+                                    <div className="flex justify-between items-center mb-4">
+                                        <div className="flex flex-col">
+                                            <span className="font-mono text-xs font-bold text-[#fe7717]">ACTIVE ITINERARY</span>
+                                            <span className="text-xl font-extrabold text-white">Rome: Day 1 Exploration</span>
+                                        </div>
+                                        <span className="px-3 py-1 bg-brand-teal/20 text-brand-teal border border-brand-teal/30 rounded-full font-mono text-[10px] font-bold">14,200 STEPS EST.</span>
                                     </div>
-                                    <span
-                                        className="font-mono font-bold transition-all duration-300 select-none"
-                                        style={{ 
-                                            fontSize: '8.5px', 
-                                            color: f.color, 
-                                            opacity: isCurrent ? 1 : 0.45, 
-                                            letterSpacing: '0.08em',
-                                            transform: isCurrent ? 'scale(1.1)' : 'scale(1)',
-                                        }}
-                                    >
-                                        {f.badge}
-                                    </span>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
 
-                {/* ── Scroll hint: Scroll to Unlock ── */}
-                <div
-                    ref={scrollHintRef}
-                    className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none"
-                >
-                    <span className="text-[9px] font-mono font-bold text-brand-dark/30 uppercase tracking-[0.18em] select-none">
-                        Scroll to Unlock
-                    </span>
-                    <div className="w-5 h-8 rounded-full border border-brand-dark/12 flex items-start justify-center pt-1.5 bg-[#FFF8F5]/60 backdrop-blur-xs">
-                        <div className="w-1 h-2 rounded-full bg-brand-dark/20 animate-bounce" />
+                                    <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1">
+                                        <div className="flex gap-4 relative">
+                                            <div className="flex flex-col items-center">
+                                                <div className="w-8 h-8 rounded-full bg-[#fe7717]/20 border border-[#fe7717]/40 flex items-center justify-center text-xs font-bold text-[#fe7717] z-10 shrink-0 font-mono">1</div>
+                                                <div className="w-0.5 h-16 border-l border-dashed border-white/20 absolute top-8 left-4 -bottom-4" />
+                                            </div>
+                                            <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col">
+                                                <div className="flex justify-between items-start mb-1">
+                                                    <h4 className="text-sm font-extrabold text-white leading-tight">Colosseum VIP Fast Track Tour</h4>
+                                                    <span className="font-mono text-[10px] font-bold text-white/50">09:30 AM</span>
+                                                </div>
+                                                <p className="text-xs text-white/60 leading-normal mb-2">Pre-booked skip-the-line entrance. Highly advised to visit before peak midday temperatures.</p>
+                                                <div className="inline-flex items-center gap-1.5 text-[9px] font-bold text-green-400 bg-green-400/10 px-2.5 py-0.5 rounded-full w-fit uppercase font-mono">✓ Tickets Confirmed</div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex gap-4 relative mt-2">
+                                            <div className="flex flex-col items-center">
+                                                <div className="w-8 h-8 rounded-full bg-brand-teal/20 border border-brand-teal/40 flex items-center justify-center text-xs font-bold text-brand-teal z-10 shrink-0 font-mono">2</div>
+                                                <div className="w-0.5 h-16 border-l border-dashed border-white/20 absolute top-8 left-4 -bottom-4" />
+                                            </div>
+                                            <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col">
+                                                <div className="flex justify-between items-start mb-1">
+                                                    <h4 className="text-sm font-extrabold text-white leading-tight">Lunch: Osteria da Fortunata</h4>
+                                                    <span className="font-mono text-[10px] font-bold text-white/50">12:45 PM</span>
+                                                </div>
+                                                <p className="text-xs text-white/60 leading-normal mb-2">Transit: 12-min walk from Forum Romanum. Hand-rolled strozzapreti pasta recommended.</p>
+                                                <div className="inline-flex items-center gap-1.5 text-[9px] font-bold text-[#fe7717] bg-[#fe7717]/10 px-2.5 py-0.5 rounded-full w-fit uppercase font-mono">★ highly rated local spot</div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex gap-4 relative mt-2">
+                                            <div className="flex flex-col items-center">
+                                                <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-xs font-bold text-white/80 z-10 shrink-0 font-mono">3</div>
+                                            </div>
+                                            <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col">
+                                                <div className="flex justify-between items-start mb-1">
+                                                    <h4 className="text-sm font-extrabold text-white leading-tight">Pantheon &amp; Piazza Navona</h4>
+                                                    <span className="font-mono text-[10px] font-bold text-white/50">03:00 PM</span>
+                                                </div>
+                                                <p className="text-xs text-white/60 leading-normal">Free entry. Explored in peak afternoon to take advantage of interior structural shade.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* PREVIEW CONTAINER 2: Local Hidden Gems */}
+                                <div className={`flex flex-col flex-1 transition-all duration-500 ease-in-out absolute inset-x-6 md:inset-x-8 bottom-6 md:bottom-8 top-16 md:top-20 ${
+                                    activePreviewTab === 1 ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
+                                }`}>
+                                    <div className="flex justify-between items-center mb-6">
+                                        <div className="flex flex-col">
+                                            <span className="font-mono text-xs font-bold text-[#fe7717]">REAL-TIME CURATION</span>
+                                            <span className="text-xl font-extrabold text-white">Hidden Gem Rerouting</span>
+                                        </div>
+                                        <span className="px-3 py-1 bg-[#fe7717]/20 text-[#fe7717] border border-[#fe7717]/30 rounded-full font-mono text-[10px] font-bold">120+ LOCAL CHEFS AGREE</span>
+                                    </div>
+
+                                    <div className="flex-1 flex flex-col md:grid md:grid-cols-2 gap-4 items-center">
+                                        {/* Left: Tourist Trap Card */}
+                                        <div className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col relative opacity-60">
+                                            <div className="absolute top-3 right-3 px-2 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded font-mono text-[8px] font-bold uppercase">Tourist Zone</div>
+                                            <span className="text-xs font-bold font-mono text-white/40 mb-1">STANDARD RECOMMENDATION</span>
+                                            <h4 className="text-base font-extrabold text-white mb-2 leading-tight">Caffè di Trevi</h4>
+                                            <div className="flex items-center gap-1 mb-3">
+                                                <span className="text-xs font-bold text-yellow-500">3.2 ★</span>
+                                                <span className="text-white/40 text-[10px]">(850 reviews)</span>
+                                            </div>
+                                            <p className="text-xs text-white/50 leading-relaxed">
+                                                "Overpriced, frozen carbonara. Charged €15 cover fee for simple table service near the monument."
+                                            </p>
+                                        </div>
+
+                                        {/* Right: Hidden Gem Card */}
+                                        <div className="w-full bg-white/5 border-2 border-brand-teal rounded-2xl p-5 flex flex-col relative shadow-xl shadow-brand-teal/5">
+                                            <div className="absolute top-3 right-3 px-2 py-0.5 bg-brand-teal/20 text-brand-teal border border-brand-teal/30 rounded font-mono text-[8px] font-bold uppercase tracking-wider">Hidden Gem</div>
+                                            <span className="text-xs font-bold font-mono text-brand-teal mb-1">TRIPWISE RECOMMENDS</span>
+                                            <h4 className="text-base font-extrabold text-white mb-2 leading-tight">Osteria Romana</h4>
+                                            <div className="flex items-center gap-1 mb-3">
+                                                <span className="text-xs font-bold text-[#fe7717]">4.9 ★</span>
+                                                <span className="text-white/40 text-[10px]">(64 locals voted)</span>
+                                            </div>
+                                            <p className="text-xs text-white/80 leading-relaxed">
+                                                "Tucked in an alleyway 4 minutes away. Fresh hand-made pasta under €11, with complementary house wine."
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 p-3 bg-brand-teal/10 border border-brand-teal/20 rounded-xl flex items-center gap-3">
+                                        <span className="text-lg">💡</span>
+                                        <span className="text-xs text-white/80 leading-normal font-mono">
+                                            Saved: <strong className="text-brand-teal font-extrabold">€45</strong> on dining costs &amp; cut queue waiting by <strong className="text-brand-teal font-extrabold">35 mins</strong>.
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* PREVIEW CONTAINER 3: Budget Optimization */}
+                                <div className={`flex flex-col flex-1 transition-all duration-500 ease-in-out absolute inset-x-6 md:inset-x-8 bottom-6 md:bottom-8 top-16 md:top-20 ${
+                                    activePreviewTab === 2 ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
+                                }`}>
+                                    <div className="flex justify-between items-center mb-6">
+                                        <div className="flex flex-col">
+                                            <span className="font-mono text-xs font-bold text-[#fe7717]">FINANCIAL FORECASTING</span>
+                                            <span className="text-xl font-extrabold text-white">Smart Budget Monitor</span>
+                                        </div>
+                                        <span className="px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full font-mono text-[10px] font-bold">$340 SAVED</span>
+                                    </div>
+
+                                    <div className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-6 items-center">
+                                        {/* Left: Progress ring metric */}
+                                        <div className="md:col-span-5 bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col items-center justify-center text-center w-full h-full">
+                                            <div className="relative w-28 h-28 flex items-center justify-center mb-3">
+                                                <svg className="w-full h-full transform -rotate-90">
+                                                    <circle cx="56" cy="56" r="46" stroke="rgba(255,255,255,0.05)" strokeWidth="8" fill="transparent" />
+                                                    <circle cx="56" cy="56" r="46" stroke="#0D9488" strokeWidth="8" fill="transparent" strokeDasharray="289" strokeDashoffset="46" />
+                                                </svg>
+                                                <div className="absolute flex flex-col items-center justify-center">
+                                                    <span className="text-xl font-black text-white font-mono">84%</span>
+                                                    <span className="text-[9px] font-bold text-white/40 uppercase">Spent</span>
+                                                </div>
+                                            </div>
+                                            <span className="text-sm font-extrabold text-white">$1,680 / $2,000</span>
+                                        </div>
+
+                                        {/* Right: Categorical analysis */}
+                                        <div className="md:col-span-7 flex flex-col gap-3.5 w-full">
+                                            {[
+                                                { name: "Hotels & Stays", amount: "$800", pct: "85%", color: "bg-brand-teal" },
+                                                { name: "Flights & Transit", amount: "$520", pct: "90%", color: "bg-[#fe7717]" },
+                                                { name: "Local Meals & Food", amount: "$360", pct: "72%", color: "bg-yellow-500" }
+                                            ].map((item, idx) => (
+                                                <div key={idx} className="flex flex-col gap-1.5">
+                                                    <div className="flex justify-between items-center text-xs font-bold">
+                                                        <span className="text-white/80">{item.name}</span>
+                                                        <span className="text-white font-mono">{item.amount}</span>
+                                                    </div>
+                                                    <div className="w-full h-2.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                                                        <div className={`h-full ${item.color} rounded-full transition-all duration-1000`} style={{ width: item.pct }} />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-4 p-3 bg-[#fe7717]/10 border border-[#fe7717]/20 rounded-xl flex items-center gap-3">
+                                        <span className="text-lg">💰</span>
+                                        <span className="text-xs text-white/85 leading-normal font-mono">
+                                            <strong>Cost Alert</strong>: Switching the Rome $\rightarrow$ Florence train from 05:00 PM to 08:30 PM saves <strong className="text-[#fe7717] font-extrabold">$55</strong>. Apply automatically?
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* PREVIEW CONTAINER 4: Flight & Hotel Integration */}
+                                <div className={`flex flex-col flex-1 transition-all duration-500 ease-in-out absolute inset-x-6 md:inset-x-8 bottom-6 md:bottom-8 top-16 md:top-20 ${
+                                    activePreviewTab === 3 ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
+                                }`}>
+                                    <div className="flex justify-between items-center mb-4">
+                                        <div className="flex flex-col">
+                                            <span className="font-mono text-xs font-bold text-[#fe7717]">SYSTEM SYNC</span>
+                                            <span className="text-xl font-extrabold text-white">Live Booking Voucher</span>
+                                        </div>
+                                        <span className="px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full font-mono text-[10px] font-bold">ON TIME</span>
+                                    </div>
+
+                                    <div className="flex-1 flex flex-col gap-3 overflow-y-auto pr-1">
+                                        {/* Mock Flight Boarding Pass */}
+                                        <div className="w-full bg-[#FFF8F5] text-brand-dark rounded-2xl overflow-hidden shadow-lg border border-white/10 flex flex-col">
+                                            <div className="bg-[#1C1B1B] text-[#fe7717] px-3.5 py-1.5 border-b border-white/5 flex justify-between items-center">
+                                                <span className="font-mono text-[10px] font-bold uppercase tracking-wider">BOARDING PASS SYNC</span>
+                                                <span className="px-2 py-0.5 bg-green-500/10 text-green-400 border border-green-500/20 rounded font-mono text-[8px] font-bold">LIVE STATUS</span>
+                                            </div>
+                                            <div className="p-3.5 flex justify-between items-center gap-4">
+                                                <div className="flex flex-col">
+                                                    <span className="text-2xl font-black font-sans leading-none tracking-tight">JFK</span>
+                                                    <span className="text-[9px] font-bold text-secondary-text uppercase mt-1 leading-none">New York</span>
+                                                </div>
+                                                
+                                                <div className="flex-1 flex items-center justify-center relative">
+                                                    <div className="w-full border-t border-dashed border-brand-dark/20" />
+                                                    <div className="absolute bg-[#FFF8F5] px-2 text-[#fe7717] flex items-center justify-center">
+                                                        <svg viewBox="-20 0 56 78" fill="currentColor" className="w-6 h-6 transform rotate-90">
+                                                            <path d="M0 34 L8 0 L16 34 L34 44 L34 52 L16 46 L13 64 L21 70 L21 76 L8 70 L-5 76 L-5 70 L3 64 L0 46 L-18 52 L-18 44 Z" />
+                                                        </svg>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex flex-col items-end">
+                                                    <span className="text-2xl font-black font-sans leading-none tracking-tight">FCO</span>
+                                                    <span className="text-[9px] font-bold text-secondary-text uppercase mt-1 leading-none">Rome</span>
+                                                </div>
+                                            </div>
+                                            <div className="px-3.5 pb-3 grid grid-cols-3 gap-2 border-t border-brand-dark/5 pt-2.5">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[8px] font-bold text-secondary-text uppercase">Flight</span>
+                                                    <span className="text-xs font-extrabold text-brand-dark font-mono mt-0.5">AZ-405</span>
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-[8px] font-bold text-secondary-text uppercase">Gate</span>
+                                                    <span className="text-xs font-extrabold text-brand-dark font-mono mt-0.5">G12</span>
+                                                </div>
+                                                <div className="flex flex-col items-end">
+                                                    <span className="text-[8px] font-bold text-secondary-text uppercase">Seat</span>
+                                                    <span className="text-xs font-extrabold text-[#fe7717] font-mono mt-0.5">14A</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Mock Hotel Booking */}
+                                        <div className="w-full bg-[#FFF8F5] text-brand-dark rounded-2xl overflow-hidden shadow-lg border border-white/10 flex flex-col">
+                                            <div className="p-3.5 flex justify-between items-center gap-4">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[9px] font-bold text-brand-teal uppercase font-mono tracking-wider">BOOKING CONFIRMED</span>
+                                                    <h4 className="text-base font-black text-brand-dark mt-0.5 tracking-tight">Hotel Quirinale Rome</h4>
+                                                    <span className="text-[10px] font-bold text-secondary-text mt-1">Check-in: Today at 14:00</span>
+                                                </div>
+                                                <span className="w-10 h-10 rounded-full bg-brand-teal/10 flex items-center justify-center text-[#fe7717] text-lg font-bold shrink-0">🛎️</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
