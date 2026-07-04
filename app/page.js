@@ -4,6 +4,7 @@ import Header from "./components/Header";
 import Hero from "./components/Hero";
 import RealTimeAdjuster from "./components/RealTimeAdjuster";
 import PassportGrid from "./components/PassportGrid";
+import FAQAndMarqueeCTA from "./components/FAQAndMarqueeCTA";
 
 export default function Home() {
   return (
@@ -14,6 +15,7 @@ export default function Home() {
       <RealTimeAdjuster />
       <Destination />
       <PassportGrid />
+      <FAQAndMarqueeCTA />
     </div>
   );
 }
