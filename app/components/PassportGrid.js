@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
 
 // Fallback-safe Avatar Component with vibrant initials badge
 const CardAvatar = ({ src, initials, name }) => {
@@ -27,10 +26,10 @@ const CardAvatar = ({ src, initials, name }) => {
 // Circular Passport Stamp SVG Graphic
 const PassportStamp = ({ stampText = "APPROVED", stampCode = "VERIFIED", color = "#0D9488" }) => (
     <div
-        className="passport-stamp absolute top-1/2 left-1/2 sm:left-3/5 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-20 flex items-center justify-center select-none opacity-0 transition-opacity duration-300 group-hover:opacity-25"
+        className="passport-stamp absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-40 flex items-center justify-center select-none opacity-0"
         style={{ color, transform: 'rotate(-15deg) scale(2)' }}
     >
-        <svg className="w-44 h-44 md:w-52 md:h-52 drop-shadow-sm" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg className="w-44 h-44 md:w-52 md:h-52 drop-shadow-md" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
             {/* Outer rubber stamp ring with authentic distressed/uneven pattern */}
             <circle cx="80" cy="80" r="74" stroke="currentColor" strokeWidth="3.5" strokeDasharray="14 4 4 4 8 3 12 5" />
             <circle cx="80" cy="80" r="66" stroke="currentColor" strokeWidth="1.5" />
@@ -39,7 +38,7 @@ const PassportStamp = ({ stampText = "APPROVED", stampCode = "VERIFIED", color =
             <circle cx="80" cy="80" r="50" stroke="currentColor" strokeWidth="0.75" strokeDasharray="2 6" />
 
             {/* Center Banner */}
-            <rect x="14" y="56" width="132" height="48" stroke="currentColor" strokeWidth="2.5" fill="white" fillOpacity="0.2" />
+            <rect x="14" y="56" width="132" height="48" stroke="currentColor" strokeWidth="2.5" fill="white" fillOpacity="0.25" />
             <line x1="18" y1="62" x2="142" y2="62" stroke="currentColor" strokeWidth="1" />
             <line x1="18" y1="98" x2="142" y2="98" stroke="currentColor" strokeWidth="1" />
 
@@ -72,6 +71,9 @@ const PassportStamp = ({ stampText = "APPROVED", stampCode = "VERIFIED", color =
 
 export default function PassportGrid() {
     const sectionRef = useRef(null);
+    const stickyRef = useRef(null);
+    const conveyorRef = useRef(null);
+    const expandedRef = useRef({});
 
     const cardsData = [
         {
@@ -85,14 +87,11 @@ export default function PassportGrid() {
             classCode: "AI-FIRST",
             seat: "01A",
             hoursSaved: "24.5",
-            quote: "We used to spend at least 3 weeks with 40+ browser tabs open across Google Maps, Reddit threads, and travel blogs trying to coordinate our Amalfi Coast itinerary. TripWise built an optimized 10-day route with train timings and hotel clusters in literally 40 seconds. It completely eliminated our pre-trip stress.",
+            quote: "We used to spend at least 3 weeks with 40+ browser tabs open across Google Maps, Reddit threads, and travel blogs trying to coordinate our Amalfi Coast itinerary. TripWise built an optimized 10-day route with train timings and hotel clusters in literally 40 seconds.",
             tripTag: "10-Day Italy & Amalfi Coast • Generated in 42s",
             stampText: "ROMA • FCO",
             stampCode: "APPROVED",
             stampColor: "#0D9488", // Brand Teal
-            colSpanClass: "col-span-1 md:col-span-2 lg:col-span-2",
-            layout: "horizontal",
-            rowClass: "card-row-1"
         },
         {
             id: 2,
@@ -105,14 +104,11 @@ export default function PassportGrid() {
             classCode: "AI-SELECT",
             seat: "14K",
             hoursSaved: "16.0",
-            quote: "Figuring out Tokyo neighborhood logistics and transit passes used to take me days. TripWise mapped my hotels to subway lines instantly.",
+            quote: "Figuring out Tokyo neighborhood logistics and transit passes used to take me days. TripWise mapped my hotels to subway lines instantly, avoiding rush hour crowds completely.",
             tripTag: "7-Day Tokyo Express • Generated in 18s",
             stampText: "TOKYO • NRT",
             stampCode: "VERIFIED",
             stampColor: "#FF5B1D", // Brand Orange
-            colSpanClass: "col-span-1 md:col-span-1 lg:col-span-1",
-            layout: "vertical",
-            rowClass: "card-row-1"
         },
         {
             id: 3,
@@ -125,14 +121,11 @@ export default function PassportGrid() {
             classCode: "AI-SELECT",
             seat: "08F",
             hoursSaved: "12.5",
-            quote: "I needed an itinerary focused purely on Gaudí architecture and optimal lighting hours for photography. TripWise custom-tailored the exact route I needed without any fluff.",
+            quote: "I needed an itinerary focused purely on Gaudí architecture and optimal lighting hours for photography. TripWise custom-tailored the exact route I needed without any generic tourist trap fluff.",
             tripTag: "5-Day Barcelona Arts • Generated in 25s",
             stampText: "ESPAÑA • BCN",
             stampCode: "APPROVED",
             stampColor: "#2563EB", // Royal Blue
-            colSpanClass: "col-span-1 md:col-span-1 lg:col-span-1",
-            layout: "vertical",
-            rowClass: "card-row-2"
         },
         {
             id: 4,
@@ -145,14 +138,11 @@ export default function PassportGrid() {
             classCode: "AI-FIRST",
             seat: "02C",
             hoursSaved: "32.0",
-            quote: "Planning a multi-city Swiss Alps train trip for a family of four with two toddlers seemed impossible. TripWise calculated scenic train transfers, stroller-friendly paths, and nap-time windows automatically. We saved an entire weekend of frustrating research.",
+            quote: "Planning a multi-city Swiss Alps train trip for a family of four with two toddlers seemed impossible. TripWise calculated scenic train transfers, stroller-friendly paths, and nap-time windows automatically.",
             tripTag: "12-Day Swiss Alps Rail Trip • Generated in 55s",
             stampText: "SUISSE • ZRH",
             stampCode: "VERIFIED",
             stampColor: "#059669", // Emerald Green
-            colSpanClass: "col-span-1 md:col-span-2 lg:col-span-2",
-            layout: "horizontal",
-            rowClass: "card-row-2"
         },
         {
             id: 5,
@@ -170,9 +160,6 @@ export default function PassportGrid() {
             stampText: "BALI • DPS",
             stampCode: "APPROVED",
             stampColor: "#9333EA", // Purple
-            colSpanClass: "col-span-1 md:col-span-2 lg:col-span-2",
-            layout: "horizontal",
-            rowClass: "card-row-3"
         },
         {
             id: 6,
@@ -185,130 +172,108 @@ export default function PassportGrid() {
             classCode: "AI-SELECT",
             seat: "12B",
             hoursSaved: "19.5",
-            quote: "Finding Michelin bib-gourmand bistros close to museum reservations used to be a full-time job. TripWise synced dining with sightseeing flawlessly.",
+            quote: "Finding Michelin bib-gourmand bistros close to museum reservations used to be a full-time job. TripWise synced dining with sightseeing flawlessly, giving us walkable gourmet routes.",
             tripTag: "6-Day Paris Culinary • Generated in 22s",
             stampText: "PARIS • CDG",
             stampCode: "VERIFIED",
             stampColor: "#E11D48", // Rose Red
-            colSpanClass: "col-span-1 md:col-span-1 lg:col-span-1",
-            layout: "vertical",
-            rowClass: "card-row-3"
         }
     ];
 
     useEffect(() => {
-        if (!sectionRef.current) return;
-        gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
+        if (!sectionRef.current || !stickyRef.current || !conveyorRef.current) return;
+        gsap.registerPlugin(ScrollTrigger);
 
         const ctx = gsap.context(() => {
-            const maskLine = sectionRef.current.querySelector("#pathMaskLine");
-            const plane = sectionRef.current.querySelector("#flightPlane");
-            if (!maskLine || !plane) return;
+            const conveyorEl = conveyorRef.current;
+            const cards = conveyorEl.querySelectorAll(".luggage-tag-card");
 
-            const totalLength = maskLine.getTotalLength() || 2500;
+            // Calculate total translation distance so every card passes smoothly through center stage
+            const getScrollDistance = () => {
+                const totalWidth = conveyorEl.scrollWidth;
+                const viewportWidth = window.innerWidth;
+                return Math.max(1200, totalWidth - viewportWidth);
+            };
 
-            // Initial states for cards (start above and slide down while fading in)
-            gsap.set(".boarding-pass", { y: -50, opacity: 0 });
-            gsap.set(".passport-stamp", { scale: 2.5, opacity: 0, rotation: -25 });
-            gsap.set(maskLine, { strokeDasharray: totalLength, strokeDashoffset: totalLength });
-            gsap.set(plane, { opacity: 0, scale: 0.3 });
+            let totalScrollDistance = getScrollDistance();
 
-            // Master Choreographed Timeline triggered when user scrolls into the section
-            const tl = gsap.timeline({ paused: true });
-
-            // 1. Plane appears at the top header
-            tl.to(plane, { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(1.7)" }, 0);
-
-            // 2. Plane flies down along the slalom path while drawing the dotted trajectory behind it
-            tl.to(plane, {
-                motionPath: {
-                    path: "#pathMaskLine",
-                    align: "#pathMaskLine",
-                    alignOrigin: [0.5, 0.5],
-                    autoRotate: true
-                },
-                duration: 2.4,
-                ease: "power1.inOut"
-            }, 0.1);
-
-            tl.to(maskLine, {
-                strokeDashoffset: 0,
-                duration: 2.4,
-                ease: "power1.inOut"
-            }, 0.1);
-
-            // 3. As plane crosses Row 1 (around t = 0.45s), Row 1 cards slide down & fade in!
-            tl.to(".card-row-1", {
-                y: 0,
-                opacity: 1,
-                duration: 0.65,
-                stagger: 0.15,
-                ease: "power3.out"
-            }, 0.45);
-
-            tl.to(".card-row-1 .passport-stamp", {
-                scale: 1,
-                opacity: 0.18,
-                rotation: -15,
-                duration: 0.8,
-                stagger: 0.15,
-                ease: "elastic.out(1, 0.35)",
-                onStart: () => {
-                    gsap.fromTo(".card-row-1", { scale: 1 }, { scale: 0.985, duration: 0.08, yoyo: true, repeat: 1 });
-                }
-            }, 0.85);
-
-            // 4. As plane crosses Row 2 (around t = 1.1s), Row 2 cards slide down & fade in!
-            tl.to(".card-row-2", {
-                y: 0,
-                opacity: 1,
-                duration: 0.65,
-                stagger: 0.15,
-                ease: "power3.out"
-            }, 1.1);
-
-            tl.to(".card-row-2 .passport-stamp", {
-                scale: 1,
-                opacity: 0.18,
-                rotation: -15,
-                duration: 0.8,
-                stagger: 0.15,
-                ease: "elastic.out(1, 0.35)",
-                onStart: () => {
-                    gsap.fromTo(".card-row-2", { scale: 1 }, { scale: 0.985, duration: 0.08, yoyo: true, repeat: 1 });
-                }
-            }, 1.5);
-
-            // 5. As plane crosses Row 3 (around t = 1.75s), Row 3 cards slide down & fade in!
-            tl.to(".card-row-3", {
-                y: 0,
-                opacity: 1,
-                duration: 0.65,
-                stagger: 0.15,
-                ease: "power3.out"
-            }, 1.75);
-
-            tl.to(".card-row-3 .passport-stamp", {
-                scale: 1,
-                opacity: 0.18,
-                rotation: -15,
-                duration: 0.8,
-                stagger: 0.15,
-                ease: "elastic.out(1, 0.35)",
-                onStart: () => {
-                    gsap.fromTo(".card-row-3", { scale: 1 }, { scale: 0.985, duration: 0.08, yoyo: true, repeat: 1 });
-                }
-            }, 2.15);
-
-            // 6. Plane swoops out at the bottom
-            tl.to(plane, { opacity: 0, scale: 1.4, duration: 0.35, ease: "power2.in" }, 2.25);
-
-            // Trigger the master timeline when scrolling into view
             ScrollTrigger.create({
                 trigger: sectionRef.current,
-                start: "top 75%",
-                onEnter: () => tl.play(),
-                once: true
+                pin: stickyRef.current,
+                start: "top top",
+                end: "+=2400px", // Generous scrolling runway for 6 cards
+                scrub: 1, // Smooth conveyor belt scrubbing
+                invalidateOnRefresh: true,
+                onRefresh: () => {
+                    totalScrollDistance = getScrollDistance();
+                },
+                onUpdate: (self) => {
+                    const progress = self.progress;
+
+                    // 1. Translate conveyor belt horizontally from right to left
+                    const currentX = -progress * totalScrollDistance;
+                    gsap.set(conveyorEl, { x: currentX });
+
+                    // 2. Center Stage Scanner Logic: Check each card's distance from viewport center!
+                    const viewportCenter = window.innerWidth / 2;
+
+                    cards.forEach((cardEl, idx) => {
+                        const rect = cardEl.getBoundingClientRect();
+                        const cardCenter = rect.left + rect.width / 2;
+                        const dist = Math.abs(cardCenter - viewportCenter);
+
+                        // If card is within 220px of center stage, expand it into Boarding Pass!
+                        const isCenter = dist < 220;
+                        const wasExpanded = expandedRef.current[idx];
+
+                        if (isCenter && !wasExpanded) {
+                            expandedRef.current[idx] = true;
+
+                            // Elevate & scale card container
+                            gsap.to(cardEl, { scale: 1.06, duration: 0.5, ease: "back.out(1.4)", overwrite: "auto", zIndex: 50 });
+
+                            // Hide dark minimal Luggage Tag state
+                            gsap.to(cardEl.querySelector(".tag-state"), {
+                                opacity: 0, scale: 0.9, duration: 0.35, pointerEvents: "none", overwrite: "auto"
+                            });
+
+                            // Reveal & expand bright Boarding Pass state
+                            gsap.to(cardEl.querySelector(".pass-state"), {
+                                opacity: 1, scale: 1, duration: 0.45, pointerEvents: "auto", overwrite: "auto"
+                            });
+
+                            // Slam down colored ink passport stamp!
+                            const stamp = cardEl.querySelector(".passport-stamp");
+                            if (stamp) {
+                                gsap.fromTo(stamp,
+                                    { scale: 2.8, opacity: 0, rotation: -35 },
+                                    { scale: 1, opacity: 0.22, rotation: -15, duration: 0.7, delay: 0.15, ease: "elastic.out(1, 0.35)", overwrite: "auto" }
+                                );
+                            }
+                        } else if (!isCenter && wasExpanded) {
+                            expandedRef.current[idx] = false;
+
+                            // Return to normal scale & z-index
+                            gsap.to(cardEl, { scale: 1, duration: 0.45, ease: "power2.out", overwrite: "auto", zIndex: 20 });
+
+                            // Reveal dark minimal Luggage Tag state
+                            gsap.to(cardEl.querySelector(".tag-state"), {
+                                opacity: 1, scale: 1, duration: 0.4, pointerEvents: "auto", overwrite: "auto"
+                            });
+
+                            // Hide Boarding Pass state
+                            gsap.to(cardEl.querySelector(".pass-state"), {
+                                opacity: 0, scale: 0.95, duration: 0.3, pointerEvents: "none", overwrite: "auto"
+                            });
+
+                            // Hide stamp
+                            const stamp = cardEl.querySelector(".passport-stamp");
+                            if (stamp) {
+                                gsap.to(stamp, { opacity: 0, scale: 2, duration: 0.3, overwrite: "auto" });
+                            }
+                        }
+                    });
+                }
             });
         }, sectionRef);
 
@@ -316,25 +281,27 @@ export default function PassportGrid() {
     }, []);
 
     return (
-        <section ref={sectionRef} className="py-28 md:py-36 bg-[#FFF8F5] relative overflow-hidden border-t border-brand-dark/5">
-            {/* Ambient background glow decoration */}
-            <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-1/3 left-1/4 -translate-y-1/2 w-96 h-96 rounded-full bg-[#0D9488]/5 blur-[140px]" />
-                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-[#FF5B1D]/5 blur-[140px]" />
-            </div>
+        <section ref={sectionRef} className="bg-[#FFF8F5] relative overflow-hidden border-t border-brand-dark/5">
+            {/* Pinned Sticky Viewport Container */}
+            <div ref={stickyRef} className="h-screen w-full flex flex-col justify-between py-12 md:py-16 relative overflow-hidden select-none">
+                
+                {/* Ambient background glow decoration */}
+                <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute top-1/4 left-1/4 -translate-y-1/2 w-96 h-96 rounded-full bg-[#0D9488]/5 blur-[140px]" />
+                    <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-[#FF5B1D]/5 blur-[140px]" />
+                </div>
 
-            <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
-                {/* Section Header */}
-                <div className="text-center mb-16 md:mb-20 flex flex-col items-center relative z-20">
+                {/* Top Section Header */}
+                <div className="text-center px-4 max-w-3xl mx-auto flex flex-col items-center relative z-30 shrink-0">
                     {/* Micro-Badge */}
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#0D9488]/10 text-[#0D9488] rounded-full font-mono text-[10px] font-black tracking-widest uppercase mb-4 shadow-2xs border border-[#0D9488]/20 select-none">
+                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#0D9488]/10 text-[#0D9488] rounded-full font-mono text-[10px] font-black tracking-widest uppercase mb-3 shadow-2xs border border-[#0D9488]/20">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#0D9488] animate-pulse" />
-                        Social Proof • Verified Passports
+                        Live Baggage Claim • Verified Reviews
                     </div>
 
                     {/* Section Title */}
                     <h2 className="text-3xl md:text-5xl font-bold text-brand-dark tracking-tight leading-none font-serif uppercase">
-                        Trusted by <span className="relative inline-block text-[#0D9488] select-none normal-case font-serif italic font-bold">
+                        Trusted by <span className="relative inline-block text-[#0D9488] normal-case font-serif italic font-bold">
                             Modern Travelers
                             <svg className="absolute -bottom-1.5 left-0 w-full h-1.5 text-[#0D9488]/40" viewBox="0 0 100 10" preserveAspectRatio="none">
                                 <path d="M0,5 C30,9 70,2 100,6" stroke="currentColor" strokeWidth="8" strokeLinecap="round" fill="none" />
@@ -343,189 +310,172 @@ export default function PassportGrid() {
                     </h2>
 
                     {/* Subtitle */}
-                    <p className="text-sm md:text-base text-brand-dark/60 max-w-xl mt-5 tracking-wide select-none leading-relaxed">
-                        See how TripWise is eliminating hours of open-tab research worldwide.
+                    <p className="text-sm md:text-base text-brand-dark/60 max-w-xl mt-3 tracking-wide leading-relaxed">
+                        See how TripWise is eliminating hours of open-tab research worldwide. Scroll down to inspect luggage tags on the conveyor belt.
                     </p>
                 </div>
 
-                {/* Grid Wrapper + SVG Slalom Flight Path Overlay */}
-                <div className="relative">
-                    {/* SVG Flight Path Overlay weaving between cards */}
-                    <svg className="absolute inset-0 w-full h-full pointer-events-none z-30" viewBox="0 0 1000 1000" preserveAspectRatio="none">
-                        <defs>
-                            <mask id="pathRevealMask">
-                                <path
-                                    id="pathMaskLine"
-                                    d="M 500,-40 C 500,80 666,120 666,280 C 666,440 333,440 333,580 C 333,720 666,720 666,860 C 666,960 500,980 500,1050"
-                                    fill="none"
-                                    stroke="white"
-                                    strokeWidth="16"
-                                    strokeLinecap="round"
-                                />
-                            </mask>
-                        </defs>
+                {/* Center Conveyor Belt Track Line (.carousel-track) */}
+                <div className="carousel-track absolute top-1/2 left-0 right-0 -translate-y-1/2 h-24 bg-gradient-to-r from-transparent via-[#1C1B1B]/5 to-transparent border-t border-b border-[#0D9488]/20 pointer-events-none z-10 flex items-center justify-between overflow-hidden">
+                    {/* Animated conveyor belt markings / rails */}
+                    <div className="w-full flex items-center justify-between px-4 opacity-40">
+                        {Array.from({ length: 50 }).map((_, i) => (
+                            <div key={i} className="flex flex-col items-center gap-1.5">
+                                <div className="w-1 h-3 bg-[#0D9488]/60 rounded-full" />
+                                <div className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D]/50" />
+                                <div className="w-1 h-3 bg-[#0D9488]/60 rounded-full" />
+                            </div>
+                        ))}
+                    </div>
 
-                        {/* Faint background guideline */}
-                        <path
-                            d="M 500,-40 C 500,80 666,120 666,280 C 666,440 333,440 333,580 C 333,720 666,720 666,860 C 666,960 500,980 500,1050"
-                            fill="none"
-                            stroke="#0D9488"
-                            strokeWidth="2"
-                            strokeDasharray="6 6"
-                            strokeOpacity="0.18"
-                        />
-
-                        {/* Active bright dashed flight path revealed by mask as plane flies */}
-                        <path
-                            d="M 500,-40 C 500,80 666,120 666,280 C 666,440 333,440 333,580 C 333,720 666,720 666,860 C 666,960 500,980 500,1050"
-                            fill="none"
-                            stroke="#0D9488"
-                            strokeWidth="3.5"
-                            strokeDasharray="12 8"
-                            strokeLinecap="round"
-                            mask="url(#pathRevealMask)"
-                        />
-
-                        {/* The Flying Airplane */}
-                        <g id="flightPlane" className="opacity-0">
-                            {/* Glowing wake / engine thrust behind plane */}
-                            <circle cx="0" cy="0" r="28" fill="#0D9488" fillOpacity="0.25" className="animate-pulse" />
-                            <circle cx="0" cy="0" r="16" fill="#FF5B1D" fillOpacity="0.35" />
-                            
-                            {/* Modern Jet Airplane Icon pointing along X-axis (0 deg) */}
-                            <g transform="scale(1.6)">
-                                <path
-                                    d="M 18,0 L 4,-6 L -6,-14 L -10,-14 L -4,-4 L -14,-4 L -18,-8 L -20,-8 L -16,0 L -20,8 L -18,8 L -14,4 L -4,4 L -10,14 L -6,14 L 4,6 Z"
-                                    fill="#FF5B1D"
-                                    stroke="#FFFFFF"
-                                    strokeWidth="1.5"
-                                    strokeLinejoin="round"
-                                    className="drop-shadow-lg"
-                                />
-                            </g>
-                        </g>
-                    </svg>
-
-                    {/* Responsive 3-Column Bento Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
-                        {cardsData.map((card) => {
-                            const isHorizontal = card.layout === "horizontal";
-
-                            return (
-                                <div
-                                    key={card.id}
-                                    className={`boarding-pass ${card.rowClass} ${card.colSpanClass} bg-white/95 backdrop-blur-md border border-[#4B4745]/15 hover:border-[#0D9488]/50 shadow-md hover:shadow-[0_20px_40px_rgba(13,148,136,0.12)] hover:-translate-y-2 transition-all duration-500 ease-out rounded-2xl flex ${
-                                        isHorizontal ? "flex-col sm:flex-row" : "flex-col"
-                                    } relative overflow-hidden group`}
-                                >
-                                    {/* Subtle Top Shimmer Accent on Hover */}
-                                    <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-[#0D9488] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-30" />
-
-                                    {/* Passport Stamp block */}
-                                    <PassportStamp stampText={card.stampText} stampCode={card.stampCode} color={card.stampColor} />
-
-                                    {/* Main Body */}
-                                    <div className="flex-1 p-6 md:p-7 flex flex-col justify-between relative z-10">
-                                        {/* Top Header: User info + Route Badge */}
-                                        <div className={`flex ${isHorizontal ? "flex-col sm:flex-row sm:items-center justify-between" : "flex-col items-start"} gap-3.5 mb-4`}>
-                                            <div className="flex items-center gap-3.5 min-w-0 max-w-full">
-                                                <CardAvatar src={card.avatar} initials={card.initials} name={card.name} />
-                                                <div className="min-w-0 flex-1">
-                                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                                        <span className="font-bold text-[#1C1B1B] text-sm md:text-base leading-snug group-hover:text-[#0D9488] transition-colors duration-300">{card.name}</span>
-                                                        {/* Verified Checkmark Badge */}
-                                                        <span className="w-4 h-4 rounded-full bg-[#0D9488] text-white flex items-center justify-center text-[10px] shadow-2xs font-bold shrink-0" title="Verified Traveler">
-                                                            ✓
-                                                        </span>
-                                                    </div>
-                                                    <span className="text-xs text-[#4B4745]/80 block font-mono mt-0.5 truncate">{card.handle}</span>
-                                                </div>
-                                            </div>
-
-                                            {/* Routing Tag Pill Badge */}
-                                            <div className="shrink-0 max-w-full px-3 py-1.5 rounded-full bg-[#0D9488]/10 border border-[#0D9488]/25 flex items-center gap-2 font-mono text-xs font-bold text-[#0D9488] shadow-2xs group-hover:bg-[#0D9488] group-hover:text-white transition-all duration-300 group-hover:scale-105">
-                                                <span className="tracking-wider shrink-0">{card.route}</span>
-                                                <span className="text-[10px] opacity-75 font-sans truncate">({card.routeLabel})</span>
-                                            </div>
-                                        </div>
-
-                                        {/* Testimonial Quote */}
-                                        <p className="text-[#1C1B1B]/90 text-sm md:text-base leading-relaxed font-sans italic my-4 relative pl-2 group-hover:text-[#1C1B1B] transition-colors duration-300">
-                                            <span className="text-[#FF5B1D] font-serif text-3xl leading-none absolute -left-2 -top-1 select-none opacity-50">“</span>
-                                            {card.quote}
-                                            <span className="text-[#FF5B1D] font-serif text-3xl leading-none select-none opacity-50 ml-1">”</span>
-                                        </p>
-
-                                        {/* Footer: Trip Tag & Timestamp */}
-                                        <div className="flex items-center justify-between pt-4 border-t border-[#4B4745]/10 text-xs text-[#4B4745] font-mono mt-auto gap-2">
-                                            <div className="flex items-center gap-2 min-w-0">
-                                                <span className="w-2 h-2 rounded-full bg-[#FF5B1D] shrink-0 group-hover:scale-125 transition-transform duration-300" />
-                                                <span className="font-semibold text-[#1C1B1B] truncate">{card.tripTag}</span>
-                                            </div>
-                                            <span className="opacity-70 font-bold tracking-wider shrink-0 hidden sm:inline group-hover:text-[#0D9488] transition-colors duration-300">AI ROUTED</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Dashed Divider Line with Semi-Circle Cutouts (Horizontal Layout) */}
-                                    {isHorizontal ? (
-                                        <div className="hidden md:block relative w-px bg-transparent shrink-0">
-                                            <div className="absolute inset-y-0 -left-px border-l-2 border-dashed border-[#4B4745]/25 group-hover:border-[#0D9488]/50 transition-colors duration-300" />
-                                            {/* Top Notch Cutout */}
-                                            <div className="absolute -top-3 -left-3 w-6 h-6 rounded-full bg-[#FFF8F5] border-b border-[#4B4745]/15 z-20 group-hover:border-[#0D9488]/40 transition-colors duration-300 shadow-inner" />
-                                            {/* Bottom Notch Cutout */}
-                                            <div className="absolute -bottom-3 -left-3 w-6 h-6 rounded-full bg-[#FFF8F5] border-t border-[#4B4745]/15 z-20 group-hover:border-[#0D9488]/40 transition-colors duration-300 shadow-inner" />
-                                        </div>
-                                    ) : null}
-
-                                    {/* Dashed Divider Line with Cutouts (Vertical Layout or Mobile fallback) */}
-                                    <div className={`${isHorizontal ? "block md:hidden" : "block"} relative h-px w-full bg-transparent shrink-0`}>
-                                        <div className="absolute inset-x-0 -top-px border-t-2 border-dashed border-[#4B4745]/25 group-hover:border-[#0D9488]/50 transition-colors duration-300" />
-                                        {/* Left Notch Cutout */}
-                                        <div className="absolute -left-3 -top-3 w-6 h-6 rounded-full bg-[#FFF8F5] border-r border-[#4B4745]/15 z-20 group-hover:border-[#0D9488]/40 transition-colors duration-300 shadow-inner" />
-                                        {/* Right Notch Cutout */}
-                                        <div className="absolute -right-3 -top-3 w-6 h-6 rounded-full bg-[#FFF8F5] border-l border-[#4B4745]/15 z-20 group-hover:border-[#0D9488]/40 transition-colors duration-300 shadow-inner" />
-                                    </div>
-
-                                    {/* Ticket Stub */}
-                                    <div className={`${
-                                        isHorizontal ? "md:w-48 bg-[#FF5B1D]/3 md:bg-transparent" : "w-full bg-[#FF5B1D]/3"
-                                    } p-5 md:p-6 flex flex-col justify-between items-center text-center relative shrink-0 z-10 group-hover:bg-[#FF5B1D]/6 transition-colors duration-300`}>
-                                        {/* Top Gate / Seat Info */}
-                                        <div className="w-full flex items-center justify-between text-[9px] font-mono font-bold text-[#4B4745]/80 uppercase tracking-wider mb-2 pb-2 border-b border-[#4B4745]/10">
-                                            <span>CLS: {card.classCode}</span>
-                                            <span>SEAT: {card.seat}</span>
-                                        </div>
-
-                                        {/* Center Prominent Data Label */}
-                                        <div className="my-auto py-3">
-                                            <span className="text-[10px] font-mono uppercase tracking-widest text-[#4B4745] font-bold block mb-1">
-                                                HOURS SAVED
-                                            </span>
-                                            <div className="text-3xl lg:text-4xl font-mono font-black text-[#FF5B1D] tracking-tight leading-none drop-shadow-2xs group-hover:scale-110 group-hover:text-[#0D9488] transition-all duration-300">
-                                                {card.hoursSaved}
-                                            </div>
-                                            <span className="text-[9px] font-mono uppercase text-[#1C1B1B]/70 font-extrabold tracking-wider mt-1.5 block">
-                                                HRS OF RESEARCH
-                                            </span>
-                                        </div>
-
-                                        {/* Bottom Barcode */}
-                                        <div className="w-full pt-3 border-t border-[#4B4745]/10 mt-2">
-                                            <div className="w-full flex items-center justify-center gap-[2px] opacity-60 group-hover:opacity-100 transition-opacity duration-300">
-                                                {[2, 1, 3, 1, 1, 2, 4, 1, 2, 1, 3, 2, 1, 1, 2, 3, 1, 2, 1, 2].map((w, idx) => (
-                                                    <div key={idx} className="h-5 bg-[#1C1B1B] rounded-3xs group-hover:bg-[#0D9488] transition-colors duration-300" style={{ width: `${w}px` }} />
-                                                ))}
-                                            </div>
-                                            <div className="text-[8px] font-mono tracking-widest text-[#4B4745]/80 mt-1 uppercase group-hover:text-[#1C1B1B] transition-colors duration-300">
-                                                TW-{card.id}982-AI
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
+                    {/* Center Stage Scanner Indicator Marker */}
+                    <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-80 bg-gradient-to-r from-transparent via-[#0D9488]/15 to-transparent border-x border-[#0D9488]/30 flex flex-col items-center justify-between py-1">
+                        <span className="text-[9px] font-mono tracking-widest text-[#0D9488] font-bold uppercase bg-[#FFF8F5] px-2.5 py-0.5 rounded-full border border-[#0D9488]/30 shadow-2xs">
+                            ▼ SCANNER STAGE ▼
+                        </span>
+                        <span className="text-[9px] font-mono tracking-widest text-[#0D9488] font-bold uppercase bg-[#FFF8F5] px-2.5 py-0.5 rounded-full border border-[#0D9488]/30 shadow-2xs">
+                            ▲ SCANNER STAGE ▲
+                        </span>
                     </div>
                 </div>
+
+                {/* Moving Horizontal Conveyor Belt Container (.conveyor-row) */}
+                <div className="relative flex-1 w-full flex items-center z-20 overflow-visible">
+                    <div
+                        ref={conveyorRef}
+                        className="conveyor-row absolute left-0 flex items-center gap-16 sm:gap-24 md:gap-32 pl-[60vw] pr-[50vw] will-change-transform"
+                    >
+                        {cardsData.map((card) => (
+                            <div
+                                key={card.id}
+                                className="luggage-tag-card relative shrink-0 transition-all duration-500 will-change-transform"
+                                style={{ width: '400px', height: '440px' }}
+                            >
+                                {/* Layer 1: Minimal Dark Glassmorphism Luggage Tag (.tag-state) */}
+                                <div className="tag-state absolute inset-0 bg-[#1C1B1B]/95 backdrop-blur-md border-2 border-white/20 rounded-3xl p-6 flex flex-col justify-between text-white shadow-2xl z-20 transition-all duration-500 group">
+                                    {/* Top Luggage Strap / Loop Icon */}
+                                    <div className="w-16 h-5 bg-[#333030] rounded-full mx-auto -mt-10 mb-2 border border-white/30 shadow-lg flex items-center justify-center shrink-0">
+                                        <div className="w-6 h-2 bg-[#1C1B1B] rounded-full border border-white/10" />
+                                    </div>
+
+                                    {/* Top Header: Avatar + User Info */}
+                                    <div className="flex items-center gap-3.5 border-b border-white/10 pb-4">
+                                        <CardAvatar src={card.avatar} initials={card.initials} name={card.name} />
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="font-bold text-white text-base leading-snug truncate">{card.name}</span>
+                                                <span className="w-4 h-4 rounded-full bg-[#0D9488] text-white flex items-center justify-center text-[10px] font-bold shrink-0">✓</span>
+                                            </div>
+                                            <span className="text-xs text-white/60 block font-mono mt-0.5 truncate">{card.handle}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Center: Large Sleek Luggage Tag Typography */}
+                                    <div className="my-auto py-4 text-center">
+                                        <div className="inline-block px-3 py-1 bg-white/10 rounded-full text-[10px] font-mono uppercase tracking-widest text-[#0D9488] font-black mb-3 border border-white/10">
+                                            LUGGAGE TAG #{card.id < 10 ? `0${card.id}` : card.id}
+                                        </div>
+                                        <div className="text-3xl font-mono font-black tracking-tight text-white flex items-center justify-center gap-2 mb-2">
+                                            <span>{card.route.split(" ➔ ")[0]}</span>
+                                            <span className="text-[#FF5B1D]">➔</span>
+                                            <span>{card.route.split(" ➔ ")[1]}</span>
+                                        </div>
+                                        <span className="text-xs font-mono text-white/70 uppercase block tracking-wider">
+                                            {card.routeLabel}
+                                        </span>
+                                        <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-center gap-2">
+                                            <span className="text-xs font-mono text-[#0D9488] font-bold">HOURS SAVED:</span>
+                                            <span className="text-xl font-mono font-black text-[#FF5B1D]">{card.hoursSaved} HRS</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Footer: Barcode + Status */}
+                                    <div className="pt-3 border-t border-white/10 flex items-center justify-between text-[10px] font-mono text-white/60">
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="w-2 h-2 rounded-full bg-[#0D9488] animate-pulse shrink-0" />
+                                            <span>IN TRANSIT TO SCANNER</span>
+                                        </div>
+                                        <span className="tracking-widest">TW-{card.id}982</span>
+                                    </div>
+                                </div>
+
+                                {/* Layer 2: Full Expanded Boarding Pass Layout (.pass-state) */}
+                                <div className="pass-state absolute inset-0 bg-white/98 backdrop-blur-md border-2 border-[#0D9488]/60 rounded-3xl p-6 flex flex-col justify-between text-brand-dark shadow-[0_25px_60px_rgba(13,148,136,0.25)] opacity-0 pointer-events-none scale-95 z-30 transition-all duration-500 overflow-hidden">
+                                    
+                                    {/* Passport Stamp Overlay */}
+                                    <PassportStamp stampText={card.stampText} stampCode={card.stampCode} color={card.stampColor} />
+
+                                    {/* Top Header: User info + Route Badge */}
+                                    <div className="flex items-center justify-between gap-3 border-b border-[#4B4745]/15 pb-3.5 relative z-10">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <CardAvatar src={card.avatar} initials={card.initials} name={card.name} />
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="font-bold text-[#1C1B1B] text-base leading-snug truncate">{card.name}</span>
+                                                    <span className="w-4 h-4 rounded-full bg-[#0D9488] text-white flex items-center justify-center text-[10px] font-bold shrink-0">✓</span>
+                                                </div>
+                                                <span className="text-xs text-[#4B4745]/80 block font-mono mt-0.5 truncate">{card.handle}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="shrink-0 px-2.5 py-1 rounded-full bg-[#0D9488]/10 border border-[#0D9488]/25 font-mono text-xs font-bold text-[#0D9488] shadow-2xs">
+                                            {card.route}
+                                        </div>
+                                    </div>
+
+                                    {/* Testimonial Quote */}
+                                    <p className="text-[#1C1B1B]/90 text-sm leading-relaxed font-sans italic my-auto relative pl-3 py-2 z-10">
+                                        <span className="text-[#FF5B1D] font-serif text-3xl leading-none absolute -left-1 -top-0 select-none opacity-50">“</span>
+                                        {card.quote}
+                                    </p>
+
+                                    {/* Ticket Stub Cutout Divider */}
+                                    <div className="relative h-px w-full bg-transparent my-2 shrink-0 z-10">
+                                        <div className="absolute inset-x-0 -top-px border-t-2 border-dashed border-[#4B4745]/25" />
+                                        <div className="absolute -left-8 -top-3 w-6 h-6 rounded-full bg-[#FFF8F5] border-r border-[#4B4745]/20 shadow-inner" />
+                                        <div className="absolute -right-8 -top-3 w-6 h-6 rounded-full bg-[#FFF8F5] border-l border-[#4B4745]/20 shadow-inner" />
+                                    </div>
+
+                                    {/* Ticket Stub Footer: Data Label & Barcode */}
+                                    <div className="bg-[#FF5B1D]/5 p-3.5 rounded-xl flex items-center justify-between relative z-10 shrink-0">
+                                        <div>
+                                            <span className="text-[9px] font-mono uppercase tracking-widest text-[#4B4745] font-bold block">
+                                                HOURS SAVED
+                                            </span>
+                                            <div className="text-2xl font-mono font-black text-[#FF5B1D] leading-none mt-0.5">
+                                                {card.hoursSaved} HRS
+                                            </div>
+                                            <span className="text-[9px] font-mono text-[#1C1B1B]/70 font-semibold block mt-0.5">
+                                                {card.tripTag}
+                                            </span>
+                                        </div>
+
+                                        {/* Barcode */}
+                                        <div className="flex flex-col items-end">
+                                            <div className="flex items-center gap-[2px] opacity-75">
+                                                {[2, 1, 3, 1, 2, 3, 1, 2, 1, 3, 2, 1, 2, 3, 1, 2].map((w, i) => (
+                                                    <div key={i} className="h-6 bg-[#1C1B1B] rounded-3xs" style={{ width: `${w}px` }} />
+                                                ))}
+                                            </div>
+                                            <span className="text-[8px] font-mono tracking-widest text-[#4B4745]/80 mt-1 uppercase">
+                                                TW-{card.id}982-AI
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Bottom Scroll Hint */}
+                <div className="text-center relative z-30 shrink-0">
+                    <span className="text-xs font-mono text-brand-dark/50 uppercase tracking-widest flex items-center justify-center gap-2">
+                        <span>←</span> Scroll Down to Inspect Conveyor Belt <span>→</span>
+                    </span>
+                </div>
+
             </div>
         </section>
     );
