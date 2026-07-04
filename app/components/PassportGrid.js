@@ -8,7 +8,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 const CardAvatar = ({ src, initials, name }) => {
     const [imgError, setImgError] = useState(false);
     return (
-        <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-white shadow-md bg-gradient-to-br from-[#0D9488] via-[#14b8a6] to-[#FF5B1D] flex items-center justify-center text-white font-mono font-bold text-sm group-hover:scale-105 transition-transform duration-300">
+        <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-white shadow-md bg-linear-to-br from-[#0D9488] via-[#14b8a6] to-[#FF5B1D] flex items-center justify-center text-white font-mono font-bold text-sm group-hover:scale-105 transition-transform duration-300">
             {!imgError ? (
                 <img
                     src={src}
@@ -347,7 +347,7 @@ export default function PassportGrid() {
                                 } relative overflow-hidden group`}
                             >
                                 {/* Subtle Top Shimmer Accent on Hover */}
-                                <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-[#0D9488] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-30" />
+                                <div className="absolute top-0 inset-x-0 h-1 bg-linear-to-r from-transparent via-[#0D9488] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-30" />
 
                                 {/* Passport Stamp block */}
                                 <PassportStamp stampText={card.stampText} stampCode={card.stampCode} color={card.stampColor} />
@@ -439,7 +439,7 @@ export default function PassportGrid() {
 
                                     {/* Bottom Barcode */}
                                     <div className="w-full pt-3 border-t border-[#4B4745]/10 mt-2">
-                                        <div className="w-full flex items-center justify-center gap-[2px] opacity-60 group-hover:opacity-100 transition-opacity duration-300">
+                                        <div className="w-full flex items-center justify-center gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity duration-300">
                                             {[2, 1, 3, 1, 1, 2, 4, 1, 2, 1, 3, 2, 1, 1, 2, 3, 1, 2, 1, 2].map((w, idx) => (
                                                 <div key={idx} className="h-5 bg-[#1C1B1B] rounded-3xs group-hover:bg-[#0D9488] transition-colors duration-300" style={{ width: `${w}px` }} />
                                             ))}

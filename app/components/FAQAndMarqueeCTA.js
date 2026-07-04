@@ -244,7 +244,7 @@ export default function FAQAndMarqueeCTA() {
                   </h3>
                   <div
                     ref={(el) => (iconRefs.current[i] = el)}
-                    className="w-8 h-8 rounded-full bg-black/5 group-hover:bg-[#FF5B1D]/10 flex items-center justify-center flex-shrink-0 transition-colors duration-200"
+                    className="w-8 h-8 rounded-full bg-black/5 group-hover:bg-[#FF5B1D]/10 flex items-center justify-center shrink-0 transition-colors duration-200"
                   >
                     <svg
                       className="w-4 h-4 text-gray-700 group-hover:text-[#FF5B1D] transition-colors duration-200"
@@ -278,7 +278,7 @@ export default function FAQAndMarqueeCTA() {
         className="relative w-full bg-[#0A0A0A] py-32 md:py-44 overflow-hidden flex flex-col items-center justify-center text-center select-none"
       >
         {/* Soft Ambient Orange Pulse Layer */}
-        <div className="cta-ambient-glow absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] md:w-[650px] h-[250px] md:h-[450px] rounded-full bg-[#F97316]/30 blur-[130px] md:blur-[180px] pointer-events-none z-0" />
+        <div className="cta-ambient-glow absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-87.5 md:w-162.5 h-62.5 md:h-112.5 rounded-full bg-[#F97316]/30 blur-[130px] md:blur-[180px] pointer-events-none z-0" />
 
         {/* Infinite Horizontal Dual-Track Marquee Background at Low Opacity */}
         <div className="absolute inset-0 flex flex-col justify-between py-12 pointer-events-none overflow-hidden z-0 opacity-15 md:opacity-20">
@@ -311,7 +311,7 @@ export default function FAQAndMarqueeCTA() {
         <div className="relative z-10 max-w-5xl mx-auto px-4 flex flex-col items-center">
           <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white tracking-tight leading-none mb-10 md:mb-14 drop-shadow-lg">
             Stop planning.<br />
-            <span className="bg-gradient-to-r from-white via-orange-100 to-[#FF5B1D] bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-white via-orange-100 to-[#FF5B1D] bg-clip-text text-transparent">
               Start traveling.
             </span>
           </h2>
