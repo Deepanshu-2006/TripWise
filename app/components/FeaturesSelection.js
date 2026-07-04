@@ -430,7 +430,7 @@ function FeaturesSelection() {
                                             {/* Expanding active sub-details checkmark list */}
                                             <div 
                                                 className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                                                    isActive ? 'max-h-[250px] opacity-100 mt-1.5' : 'max-h-0 opacity-0 pointer-events-none'
+                                                    isActive ? 'max-h-62.5 opacity-100 mt-1.5' : 'max-h-0 opacity-0 pointer-events-none'
                                                 }`}
                                             >
                                                 <div className="flex flex-col gap-1 border-t border-brand-dark/5 pt-1.5 flex-wrap">
@@ -451,7 +451,7 @@ function FeaturesSelection() {
                         </div>
 
                         {/* Right Column: Live Mock UI Preview */}
-                        <div className="preview-outer-container lg:col-span-7 flex items-center justify-center relative w-full h-[500px] lg:h-[560px] rounded-3xl overflow-hidden shadow-2xl">
+                        <div className="preview-outer-container lg:col-span-7 flex items-center justify-center relative w-full h-125 lg:h-140 rounded-3xl overflow-hidden shadow-2xl">
                             <div className="w-full h-full bg-[#1C1B1B] border border-white/15 rounded-3xl p-6 md:p-8 flex flex-col relative overflow-hidden shadow-2xl">
                                 
                                 {/* Inner Preview Window Shell */}
