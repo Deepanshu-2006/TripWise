@@ -107,10 +107,6 @@ function Header() {
                             </a>
                         ))}
                     </div>
-                    <button className="group inline-flex items-center bg-[#fe7717] hover:bg-[#4B4745] hover:text-[#fe7717] rounded-full pl-5 pr-2 py-1.5 transition-all duration-500 cursor-pointer border-none outline-none select-none shrink-0 shadow-md group-hover:rounded-2xl group-hover:text-[10px] hover:font-bold hover:scale-101">
-                        <span className="font-mono font-extrabold tracking-widest transition-all duration-500 mr-3 text-[10px]">GET STARTED</span>
-                        <span className="bg-[#16323A] group-hover:bg-[#fe7717] group-hover:text-white text-white rounded-full flex items-center justify-center font-extrabold transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:rotate-45 w-5 h-5 text-[9px]">»</span>
-                    </button>
                 </div>
             </div>
         </header>
