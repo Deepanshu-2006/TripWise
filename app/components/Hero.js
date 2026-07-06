@@ -254,10 +254,7 @@ const Hero = () => {
 
     const scrollToPlanner = (e) => {
         if (e) e.preventDefault();
-        const target = document.getElementById('ai-planner');
-        if (target) {
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+        window.location.href = '/ai-planner';
     };
 
     useEffect(() => {
@@ -499,7 +496,7 @@ const Hero = () => {
                                 Your <span className="text-[#fe7717]">Day-by-Day</span> Itinerary, <br />
                                 <span className="text-brand-coral">Auto-Generated</span>
                             </h2>
-                            <button className="stage5-cta pointer-events-auto px-8 py-4 bg-[#fe7717] hover:bg-[#4B4745] text-[#1C1B1B] hover:text-[#fe7717] font-extrabold text-lg rounded-full shadow-lg shadow-brand-coral/25 hover:shadow-brand-dark/25 transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer font-mono tracking-widest uppercase">
+                            <button onClick={scrollToPlanner} className="stage5-cta pointer-events-auto px-8 py-4 bg-[#fe7717] hover:bg-[#4B4745] text-[#1C1B1B] hover:text-[#fe7717] font-extrabold text-lg rounded-full shadow-lg shadow-brand-coral/25 hover:shadow-brand-dark/25 transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer font-mono tracking-widest uppercase">
                                 Plan My Trip →
                             </button>
                         </div>

@@ -65,7 +65,7 @@ export default function RealTimeAdjuster() {
                 chars: fullPrompt.length,
                 duration: 3.2,
                 ease: 'none',
-                onUpdate: function() {
+                onUpdate: function () {
                     const isForward = !tl.reversed();
                     const count = Math.floor(promptObj.chars);
                     setTypedPrompt(isForward ? fullPrompt.slice(0, count) : '');
@@ -155,7 +155,7 @@ export default function RealTimeAdjuster() {
     // ScrollTrigger to auto-play when user scrolls in
     useEffect(() => {
         gsap.registerPlugin(ScrollTrigger);
-        
+
         const trigger = ScrollTrigger.create({
             trigger: sectionRef.current,
             start: 'top 65%',
@@ -194,10 +194,10 @@ export default function RealTimeAdjuster() {
 
                 {/* Main Split Layout */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
-                    
+
                     {/* Left Column: Simulated Phone Frame */}
                     <div className="lg:col-span-5 flex flex-col items-center justify-center">
-                        <div 
+                        <div
                             ref={phoneRef}
                             className="relative w-71.25 h-137.5 rounded-[48px] border-12 border-[#1C1B1E] bg-[#111012] shadow-2xl overflow-hidden transition-all duration-500"
                             style={{
@@ -210,8 +210,8 @@ export default function RealTimeAdjuster() {
                             </div>
 
                             {/* Cursor arrow element (absolute relative to phone mockup wrapper) */}
-                            <div 
-                                ref={cursorRef} 
+                            <div
+                                ref={cursorRef}
                                 className="mouse-cursor absolute pointer-events-none z-30 w-5 h-5 opacity-0"
                                 style={{
                                     filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.4))',
@@ -227,7 +227,7 @@ export default function RealTimeAdjuster() {
 
                             {/* Phone Screen App Canvas */}
                             <div className="absolute inset-0 bg-[#0A090B] p-5 flex flex-col justify-between text-white font-sans">
-                                
+
                                 {/* App Header */}
                                 <div className="flex justify-between items-center mt-8 border-b border-white/5 pb-3 shrink-0">
                                     <span className="text-[12px] font-black tracking-widest text-[#FF5B1D]">TRIPWISE</span>
@@ -236,11 +236,11 @@ export default function RealTimeAdjuster() {
 
                                 {/* Active prompt mockup card */}
                                 <div className="flex-1 flex flex-col justify-center gap-4 py-4 relative z-10">
-                                    
+
                                     <div className="rounded-2xl border border-white/10 bg-white/3 backdrop-blur-xl p-4.5 relative shadow-inner">
                                         <label className="block text-[8px] font-bold text-white/40 uppercase tracking-widest mb-2.5">Custom Travel Request</label>
-                                        
-                                        <div 
+
+                                        <div
                                             className="relative min-h-27.5 bg-black/60 rounded-xl border border-white/10 p-3 leading-normal select-none shadow-inner"
                                             style={{
                                                 fontFamily: "system-ui, 'SF Mono', Monaco, Consolas, monospace",
@@ -252,9 +252,9 @@ export default function RealTimeAdjuster() {
                                             {typedPrompt}
                                             <span className="inline-block w-1.5 h-3.5 bg-[#FF5B1D] animate-pulse ml-0.5" />
                                         </div>
-                                        
+
                                         {/* Action Button */}
-                                        <button 
+                                        <button
                                             ref={generateBtnRef}
                                             className="generate-btn mt-4.5 w-full py-3 bg-linear-to-r from-[#FF5B1D] to-[#E04F18] hover:from-[#FF7843] hover:to-[#FF5B1D] text-white rounded-xl font-mono text-[8.5px] font-bold tracking-widest uppercase flex items-center justify-center gap-1.5 select-none transition-all duration-300 shadow-[0_0_20px_rgba(255,91,29,0.3)]"
                                             style={{
@@ -277,7 +277,7 @@ export default function RealTimeAdjuster() {
 
                     {/* Right Column: Tailored Itinerary Timeline */}
                     <div ref={timelineRef} className="lg:col-span-7 flex flex-col gap-6">
-                        
+
                         <div className="flex items-center justify-between border-b border-brand-dark/5 pb-4">
                             <div>
                                 <h3 className="font-extrabold text-brand-dark text-xl leading-tight">Tailored Rome Itinerary</h3>
@@ -309,7 +309,7 @@ export default function RealTimeAdjuster() {
                             )}
 
                             {/* Event 1: Flight Landing */}
-                            <div 
+                            <div
                                 ref={el => { cardRefs.current[0] = el; }}
                                 className="timeline-card card-flight relative p-5 rounded-2xl border border-brand-dark/5 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.04)] flex items-start justify-between gap-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:border-[#FF5B1D]/20"
                             >
@@ -334,7 +334,7 @@ export default function RealTimeAdjuster() {
                             </div>
 
                             {/* Event 2: Hotel Check-In */}
-                            <div 
+                            <div
                                 ref={el => { cardRefs.current[1] = el; }}
                                 className="timeline-card relative p-5 rounded-2xl border border-brand-dark/5 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.04)] flex items-start justify-between gap-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:border-[#FF5B1D]/20"
                             >
@@ -358,7 +358,7 @@ export default function RealTimeAdjuster() {
                             </div>
 
                             {/* Event 3: Colosseum Guided Tour */}
-                            <div 
+                            <div
                                 ref={el => { cardRefs.current[2] = el; }}
                                 className="timeline-card card-tour relative p-5 rounded-2xl border border-brand-dark/5 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.04)] flex items-start justify-between gap-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:border-[#FF5B1D]/20"
                             >
@@ -382,7 +382,7 @@ export default function RealTimeAdjuster() {
                             </div>
 
                             {/* Event 4: Trastevere Dinner Reservation */}
-                            <div 
+                            <div
                                 ref={el => { cardRefs.current[3] = el; }}
                                 className="timeline-card card-dinner relative p-5 rounded-2xl border border-brand-dark/5 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.04)] flex items-start justify-between gap-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:border-[#FF5B1D]/20"
                             >
@@ -405,7 +405,6 @@ export default function RealTimeAdjuster() {
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 </div>
             </div>

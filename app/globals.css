@@ -11,6 +11,20 @@
   /* Surface Container: Warm Sand */
   --secondary-text: #4B4745;
   /* Secondary Text: Slate Brown */
+
+  /* TripWise Left Panel Tokens */
+  --bg-page: #FEF8F5;
+  --bg-dark: #181819;
+  --bg-dark-alt: #141312;
+  --bg-white: #FFFFFF;
+  --accent-orange: #EC6735;
+  --accent-orange-tint: #FCE8E1;
+  --status-success-bg: #E1EEEB;
+  --status-success-text: #0F6E56;
+  --text-primary: #180F0F;
+  --text-on-dark: #F1F4FE;
+  --text-secondary: #5F5E5A;
+  --border-soft: #EFEAE7;
 }
 
 @theme inline {
@@ -26,6 +40,19 @@
   --color-brand-teal: var(--primary-accent);
   --color-brand-dark: var(--foreground);
   --color-brand-coral: var(--surface-container);
+
+  --color-bg-page: var(--bg-page);
+  --color-bg-dark: var(--bg-dark);
+  --color-bg-dark-alt: var(--bg-dark-alt);
+  --color-bg-white: var(--bg-white);
+  --color-accent-orange: var(--accent-orange);
+  --color-accent-orange-tint: var(--accent-orange-tint);
+  --color-status-success-bg: var(--status-success-bg);
+  --color-status-success-text: var(--status-success-text);
+  --color-text-primary: var(--text-primary);
+  --color-text-on-dark: var(--text-on-dark);
+  --color-text-secondary: var(--text-secondary);
+  --color-border-soft: var(--border-soft);
 
   --font-sans: var(--font-montserrat), sans-serif;
   --font-serif: var(--font-playfair), serif;

@@ -41,7 +41,7 @@ function Header() {
                     {['Destinations', 'AI Planner'].map((item) => (
                         <a
                             key={item}
-                            href={`#${item.toLowerCase().replace(' ', '-')}`}
+                            href={item === 'AI Planner' ? '/ai-planner' : `#${item.toLowerCase().replace(' ', '-')}`}
                             className={`font-mono text-[11px] font-bold text-white/60 hover:text-[#fe7717] transition-all duration-500 relative py-2 nav-link-underline uppercase whitespace-nowrap ${isScrolled ? "tracking-widest" : "tracking-[0.16em]"
                                 }`}
                         >
@@ -107,6 +107,12 @@ function Header() {
                             </a>
                         ))}
                     </div>
+                    <a
+                        href="/ai-planner"
+                        className="px-5 py-2.5 bg-[#fe7717] hover:bg-[#ff8833] text-[#1C1B1B] font-extrabold text-xs rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg shadow-[#fe7717]/20 uppercase tracking-wider whitespace-nowrap"
+                    >
+                        Plan My Trip
+                    </a>
                 </div>
             </div>
         </header>

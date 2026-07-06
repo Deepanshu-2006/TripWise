@@ -320,6 +320,7 @@ export default function FAQAndMarqueeCTA() {
           <div className="relative inline-block p-4">
             <button
               ref={buttonRef}
+              onClick={() => window.location.href = '/ai-planner'}
               className="group relative inline-flex items-center justify-center px-8 sm:px-12 py-5 sm:py-6 rounded-full bg-[#FF5B1D] hover:bg-[#ff6c34] text-white font-extrabold text-lg sm:text-2xl tracking-wide shadow-[0_0_50px_rgba(249,115,22,0.4)] hover:shadow-[0_0_80px_rgba(249,115,22,0.6)] transition-shadow duration-300 cursor-pointer overflow-hidden border border-white/20"
             >
               {/* Button inner highlight sheen */}
