@@ -51,7 +51,7 @@ function Header() {
                 </div>
 
                 {/* Center: Logo (Centered on desktop, left on mobile) */}
-                <div className="header-logo flex items-center justify-start md:justify-center cursor-pointer group select-none">
+                <a href="/" className="header-logo flex items-center justify-start md:justify-center cursor-pointer group select-none">
                     {/* Icon Part (Always visible, height stays constant h-16) */}
                     <div className="h-16 w-16 shrink-0 flex items-center justify-center">
                         <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 object-contain transition-transform duration-300 group-hover:scale-105">
@@ -89,7 +89,7 @@ function Header() {
                             AI TRIP PLANNER
                         </span>
                     </div>
-                </div>
+                </a>
 
                 {/* Right Side: My Trips, Community & Get Started */}
                 <div className={`flex items-center justify-end transition-all duration-500 ${isScrolled ? "gap-4" : "gap-6"
