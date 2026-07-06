@@ -142,6 +142,8 @@ export default function PlannerSidebar({
     travelStyle: null,
     interests: []
   },
+  isGenerating = false,
+  itinerary = null,
   onGenerate,
   onViewItinerary
 }) {
@@ -182,7 +184,15 @@ export default function PlannerSidebar({
     }
   }, [onGenerate, userPromptInput, rawPrompt, extracted?.destination]);
 
-  // State 1 auto-advance after ~2.2s
+  // Sync when rawPrompt is updated from external click (e.g. clicking a destination card on the right radar map)
+  useEffect(() => {
+    if (rawPrompt && rawPrompt !== userPromptInput) {
+      setUserPromptInput(rawPrompt);
+      setStep('parsing');
+    }
+  }, [rawPrompt]);
+
+  // State 1 auto-advance after ~0.6s (Ultra-fast transition)
   useEffect(() => {
     if (step !== 'parsing') return;
 
@@ -196,45 +206,44 @@ export default function PlannerSidebar({
           pace: selectedPace || 'balanced'
         });
       }
-    }, 2200);
+    }, 600);
 
     return () => clearTimeout(timer);
   }, [step, isMissingRequiredFields, selectedInterests, selectedBudget, selectedPace, startProgressTransition]);
 
-  // State 3 progress tracker animation (~5.5s total)
+  // State 3 progress tracker animation (Fast & linked to real AI generation status)
   useEffect(() => {
     if (step !== 'progress') return;
 
+    // If real generation is finished, instantly snap to 100% without forcing user to wait!
+    if (!isGenerating && itinerary) {
+      setProgressPercent(100);
+      setActiveRowIndex(3);
+      setShowFinalCTA(true);
+      return;
+    }
+
     const startTime = Date.now();
-    const duration = 5500;
+    const duration = 2500; // Animate smoothly up to 88% while generating
 
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
-      const pct = Math.min(100, (elapsed / duration) * 100);
+      const pct = Math.min(88, (elapsed / duration) * 88);
       setProgressPercent(pct);
 
-      // Reveal rows roughly every 1.3 seconds
-      if (elapsed >= 5200) {
+      if (elapsed >= 1800) {
         setActiveRowIndex(3);
-        setShowFinalCTA(true);
-      } else if (elapsed >= 3900) {
-        setActiveRowIndex(3);
-      } else if (elapsed >= 2600) {
+      } else if (elapsed >= 1200) {
         setActiveRowIndex(2);
-      } else if (elapsed >= 1300) {
+      } else if (elapsed >= 600) {
         setActiveRowIndex(1);
       } else {
         setActiveRowIndex(0);
       }
-
-      if (elapsed >= duration) {
-        clearInterval(interval);
-        setProgressPercent(100);
-      }
     }, 50);
 
     return () => clearInterval(interval);
-  }, [step]);
+  }, [step, isGenerating, itinerary]);
 
   // Handlers
   const toggleInterest = (id) => {
@@ -275,7 +284,7 @@ export default function PlannerSidebar({
   const activePromptText = userPromptInput || rawPrompt || "Planning your custom journey...";
 
   return (
-    <div className="w-full h-full min-h-160 bg-(--background) text-(--foreground) p-6 md:p-8 flex flex-col justify-between font-sans select-none border-r border-[rgba(28,27,27,0.08)]">
+    <div className="w-full h-full min-h-160 bg-[#FFF8F5] text-(--foreground) p-6 md:p-8 flex flex-col justify-between font-sans select-none border-r border-[rgba(28,27,27,0.08)]">
       {/* Top Header Brand / Label */}
       <div>
         <div className="flex items-center justify-between mb-8">
@@ -320,6 +329,39 @@ export default function PlannerSidebar({
               />
 
               <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#EC6735] block mb-1.5 flex items-center gap-1">
+                  <span>⚡ One-Click Vibe Enhancers</span>
+                  <span className="text-[10px] text-secondary-text font-normal">(Click to instantly append to prompt)</span>
+                </span>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {[
+                    "➕ Hidden Local Gems",
+                    "➕ Michelin & Street Food",
+                    "➕ Scenic Photography Spots",
+                    "➕ Budget Friendly & Hostels",
+                    "➕ Luxury Boutique Stays",
+                    "➕ Fast-Paced Nightlife"
+                  ].map((tag, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        const cleanTag = tag.replace('➕ ', '');
+                        setUserPromptInput((prev) => {
+                          const trimmed = prev.trim();
+                          if (!trimmed) return `Include ${cleanTag.toLowerCase()}.`;
+                          return `${trimmed}${trimmed.endsWith('.') ? '' : ','} include ${cleanTag.toLowerCase()}.`;
+                        });
+                      }}
+                       className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-[#FFF2EA] text-[#EC6735] hover:bg-[#EC6735] hover:text-white border border-[#EC6735]/20 transition-all duration-150 cursor-pointer shadow-2xs active:scale-95"
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-secondary-text block mb-2">
                   Or try an example prompt:
                 </span>
@@ -332,7 +374,11 @@ export default function PlannerSidebar({
                     <button
                       key={idx}
                       type="button"
-                      onClick={() => setUserPromptInput(ex.replace(/^[^\s]+\s/, ''))}
+                      onClick={() => {
+                        const cleanPrompt = ex.replace(/^[^\s]+\s/, '');
+                        setUserPromptInput(cleanPrompt);
+                        setStep('parsing');
+                      }}
                       className="text-left text-xs text-secondary-text hover:text-accent-orange bg-bg-white hover:bg-[#FFFDFB] border border-[rgba(28,27,27,0.08)] hover:border-(--accent-orange)/40 p-2.5 rounded-xl transition-all duration-150 truncate cursor-pointer shadow-2xs"
                     >
                       {ex}
