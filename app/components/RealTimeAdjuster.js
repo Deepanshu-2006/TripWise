@@ -181,13 +181,13 @@ export default function RealTimeAdjuster() {
             <div className="max-w-6xl mx-auto px-6 relative z-10">
                 {/* Header */}
                 <div className="text-center max-w-3xl mx-auto mb-16">
-                    <div className="inline-block px-4 py-1.5 bg-[#FF5B1D]/10 border border-[#FF5B1D]/20 text-[#FF5B1D] font-mono text-[9px] font-bold tracking-wider uppercase rounded-full mb-4">
+                    <div className="inline-block px-4 py-1.5 bg-[#FF5B1D]/10 border border-[#FF5B1D]/20 text-[#FF5B1D] font-mono text-[12px] font-bold tracking-wider uppercase rounded-full mb-6">
                         ✦ TYPE &amp; MAGIC
                     </div>
                     <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-brand-dark leading-tight">
                         From a Single Sentence to a Perfect Itinerary
                     </h2>
-                    <p className="text-sm text-secondary-text mt-4 leading-relaxed mb-16 max-w-2xl mx-auto">
+                    <p className="text-sm text-secondary-text mt-4 leading-relaxed mb-26 max-w-2xl mx-auto">
                         Type exactly how you want to travel. No forms, no rigid filters. Just pure AI tailoring.
                     </p>
                 </div>
