@@ -252,7 +252,7 @@ export default function Destination() {
                 }`}
             >
                 {/* Spaced Micro-Badge */}
-                <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-orange-500/10 text-[#FF5B1D] rounded-full font-mono text-[9px] font-black tracking-widest uppercase mb-3.5 shadow-sm border border-orange-500/5 select-none">
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-orange-500/10 text-[#FF5B1D] rounded-full font-mono text-[12px] font-black tracking-widest uppercase mb-3.5 shadow-sm border border-orange-500/5 select-none">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D] animate-pulse" />
                     TripWise Experience
                 </div>
