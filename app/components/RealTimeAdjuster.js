@@ -195,26 +195,37 @@ export default function RealTimeAdjuster() {
                 {/* Main Split Layout */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
 
-                    {/* Left Column: Simulated Phone Frame */}
-                    <div className="lg:col-span-5 flex flex-col items-center justify-center">
+                    {/* Left Column: Realistic iPhone Titanium Frame */}
+                    <div className="lg:col-span-5 flex flex-col items-center justify-center py-6">
                         <div
                             ref={phoneRef}
-                            className="relative w-71.25 h-137.5 rounded-[48px] border-12 border-[#1C1B1E] bg-[#111012] shadow-2xl overflow-hidden transition-all duration-500"
+                            className="relative w-[296px] h-[580px] rounded-[54px] bg-[#1A191C] border-[3px] border-[#4A4950] transition-all duration-500"
                             style={{
-                                boxShadow: '0 25px 60px -15px rgba(28,27,27,0.15), 0 0 50px rgba(255, 91, 29, 0.05)',
+                                boxShadow: '0 0 0 1px #2C2B30, 0 0 0 4px #121114, 0 30px 70px -15px rgba(0, 0, 0, 0.6), 0 0 60px rgba(255, 91, 29, 0.12)',
                             }}
                         >
-                            {/* iPhone Dynamic Island */}
-                            <div className="absolute top-3 left-1/2 -translate-x-1/2 w-26 h-6 rounded-full bg-black z-30 flex items-center justify-end px-3">
-                                <div className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D]/80 animate-pulse" />
-                            </div>
+                            {/* Physical Hardware Side Buttons */}
+                            {/* Left Side: Silent Switch */}
+                            <div className="absolute -left-[7px] top-24 w-[4px] h-6 bg-gradient-to-r from-[#2A292D] to-[#4A4950] rounded-l-sm border-l border-[#626168] shadow-sm" />
+                            {/* Left Side: Volume Up */}
+                            <div className="absolute -left-[7px] top-36 w-[4px] h-11 bg-gradient-to-r from-[#2A292D] to-[#4A4950] rounded-l-sm border-l border-[#626168] shadow-sm" />
+                            {/* Left Side: Volume Down */}
+                            <div className="absolute -left-[7px] top-51 w-[4px] h-11 bg-gradient-to-r from-[#2A292D] to-[#4A4950] rounded-l-sm border-l border-[#626168] shadow-sm" />
+                            {/* Right Side: Power Button */}
+                            <div className="absolute -right-[7px] top-40 w-[4px] h-16 bg-gradient-to-l from-[#2A292D] to-[#4A4950] rounded-r-sm border-r border-[#626168] shadow-sm" />
+
+                            {/* Antenna Bands */}
+                            <div className="absolute top-0 left-16 w-2 h-[3px] bg-[#0F0E11] z-10" />
+                            <div className="absolute top-0 right-16 w-2 h-[3px] bg-[#0F0E11] z-10" />
+                            <div className="absolute bottom-0 left-16 w-2 h-[3px] bg-[#0F0E11] z-10" />
+                            <div className="absolute bottom-0 right-16 w-2 h-[3px] bg-[#0F0E11] z-10" />
 
                             {/* Cursor arrow element (absolute relative to phone mockup wrapper) */}
                             <div
                                 ref={cursorRef}
-                                className="mouse-cursor absolute pointer-events-none z-30 w-5 h-5 opacity-0"
+                                className="mouse-cursor absolute pointer-events-none z-50 w-6 h-6 opacity-0"
                                 style={{
-                                    filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.4))',
+                                    filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.6))',
                                     transformOrigin: 'top left',
                                     top: 0,
                                     left: 0,
@@ -225,51 +236,104 @@ export default function RealTimeAdjuster() {
                                 </svg>
                             </div>
 
-                            {/* Phone Screen App Canvas */}
-                            <div className="absolute inset-0 bg-[#0A090B] p-5 flex flex-col justify-between text-white font-sans">
+                            {/* Inner Screen Display */}
+                            <div className="absolute inset-[8px] bg-gradient-to-b from-[#111014] via-[#0A090C] to-[#070608] rounded-[45px] overflow-hidden border-[3px] border-[#0A090C] shadow-2xl flex flex-col justify-between text-white font-sans">
+                                
+                                {/* Realistic Glass Reflection Overlay */}
+                                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-white/[0.08] pointer-events-none z-40" />
+                                <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-white/[0.06] to-transparent pointer-events-none z-40" />
+
+                                {/* Earpiece Speaker Grille */}
+                                <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-12 h-[3px] bg-white/20 rounded-full z-30" />
+
+                                {/* iPhone 15 Pro Dynamic Island */}
+                                <div className="absolute top-3 left-1/2 -translate-x-1/2 w-28 h-7 rounded-full bg-black z-30 flex items-center justify-between px-2.5 border border-white/[0.1] shadow-[0_4px_12px_rgba(0,0,0,0.9)]">
+                                    {/* Front Camera Lens */}
+                                    <div className="w-3 h-3 rounded-full bg-[#121116] border border-white/15 flex items-center justify-center shadow-inner">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500/50 shadow-[0_0_4px_#3b82f6]" />
+                                    </div>
+                                    {/* FaceID & Recording Dot */}
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="w-2 h-2 rounded-full bg-[#18171C]" />
+                                        <div className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D] animate-pulse shadow-[0_0_6px_#FF5B1D]" />
+                                    </div>
+                                </div>
+
+                                {/* iOS Status Bar */}
+                                <div className="pt-3 px-6 flex items-center justify-between z-20 text-white select-none shrink-0">
+                                    <span className="text-[11px] font-bold tracking-tight font-sans">9:41</span>
+                                    <div className="flex items-center gap-1.5">
+                                        {/* Signal Bars */}
+                                        <div className="flex items-end gap-[1.5px] h-2.5">
+                                            <div className="w-0.5 h-1 bg-white rounded-t-[0.5px]" />
+                                            <div className="w-0.5 h-1.5 bg-white rounded-t-[0.5px]" />
+                                            <div className="w-0.5 h-2 bg-white rounded-t-[0.5px]" />
+                                            <div className="w-0.5 h-2.5 bg-white rounded-t-[0.5px]" />
+                                        </div>
+                                        {/* Wi-Fi Icon */}
+                                        <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                                            <path d="M12 3c-4.97 0-9.5 2.01-12.8 5.28l1.4 1.42C3.62 6.74 7.6 5 12 5c4.4 0 8.38 1.74 11.4 4.7l1.4-1.42C21.5 5.01 16.97 3 12 3zm0 5c-3.59 0-6.83 1.46-9.19 3.82l1.41 1.41C6.15 11.3 9.04 10 12 10c2.96 0 5.85 1.3 7.78 3.23l1.41-1.41C18.83 9.46 15.59 8 12 8zm0 5c-2.21 0-4.21.9-5.66 2.34l1.41 1.41C8.84 15.66 10.34 15 12 15c1.66 0 3.16.66 4.24 1.76l1.41-1.41C16.21 13.9 14.21 13 12 13zm0 5l-2.83 2.83C10.02 21.68 10.98 22 12 22s1.98-.32 2.83-1.17L12 18z"/>
+                                        </svg>
+                                        {/* Battery Icon */}
+                                        <div className="flex items-center">
+                                            <div className="w-5 h-2.5 border border-white/70 rounded-[3px] p-[1.5px] flex items-center">
+                                                <div className="w-full h-full bg-white rounded-[1px]" />
+                                            </div>
+                                            <div className="w-0.5 h-1 bg-white/70 rounded-r-[1px]" />
+                                        </div>
+                                    </div>
+                                </div>
 
                                 {/* App Header */}
-                                <div className="flex justify-between items-center mt-8 border-b border-white/5 pb-3 shrink-0">
-                                    <span className="text-[12px] font-black tracking-widest text-[#FF5B1D]">TRIPWISE</span>
-                                    <span className="px-2.5 py-0.5 rounded-full bg-[#FF5B1D]/10 border border-[#FF5B1D]/20 text-[#FF5B1D] text-[7px] font-bold tracking-widest uppercase">PROMPT COMPILER</span>
+                                <div className="flex justify-between items-center mt-5 px-5 pb-3 border-b border-white/10 shrink-0 z-10">
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="w-2 h-2 rounded-full bg-[#FF5B1D] shadow-[0_0_6px_#FF5B1D]" />
+                                        <span className="text-[11px] font-black tracking-widest text-white">TRIPWISE</span>
+                                    </div>
+                                    <span className="px-2.5 py-0.5 rounded-full bg-[#FF5B1D]/15 border border-[#FF5B1D]/30 text-[#FF5B1D] text-[7.5px] font-bold tracking-widest uppercase shadow-2xs">PROMPT COMPILER</span>
                                 </div>
 
                                 {/* Active prompt mockup card */}
-                                <div className="flex-1 flex flex-col justify-center gap-4 py-4 relative z-10">
-
-                                    <div className="rounded-2xl border border-white/10 bg-white/3 backdrop-blur-xl p-4.5 relative shadow-inner">
-                                        <label className="block text-[8px] font-bold text-white/40 uppercase tracking-widest mb-2.5">Custom Travel Request</label>
+                                <div className="flex-1 flex flex-col justify-center px-5 py-2 relative z-10">
+                                    <div className="rounded-2xl border border-white/15 bg-gradient-to-b from-white/[0.08] to-white/[0.02] backdrop-blur-xl p-4 relative shadow-[0_12px_32px_rgba(0,0,0,0.5)]">
+                                        <div className="flex items-center justify-between mb-2.5">
+                                            <label className="text-[9px] font-extrabold text-white/60 uppercase tracking-widest flex items-center gap-1">
+                                                <span className="text-[#FF5B1D]">✦</span> Custom Travel Request
+                                            </label>
+                                            <span className="text-[8px] font-mono text-white/30">AI v2.1</span>
+                                        </div>
 
                                         <div
-                                            className="relative min-h-27.5 bg-black/60 rounded-xl border border-white/10 p-3 leading-normal select-none shadow-inner"
+                                            className="relative min-h-24 bg-[#0A090C]/90 rounded-xl border border-white/10 p-3.5 leading-relaxed select-none shadow-inner"
                                             style={{
-                                                fontFamily: "system-ui, 'SF Mono', Monaco, Consolas, monospace",
-                                                fontSize: '12.5px',
-                                                opacity: 0.95,
-                                                color: '#FFFFFF'
+                                                fontFamily: "system-ui, 'SF Pro Display', -apple-system, sans-serif",
+                                                fontSize: '13px',
+                                                color: '#F3F3F5',
+                                                textShadow: '0 1px 2px rgba(0,0,0,0.5)'
                                             }}
                                         >
                                             {typedPrompt}
-                                            <span className="inline-block w-1.5 h-3.5 bg-[#FF5B1D] animate-pulse ml-0.5" />
+                                            <span className="inline-block w-1.5 h-3.5 bg-[#FF5B1D] animate-pulse ml-0.5 align-middle" />
                                         </div>
 
                                         {/* Action Button */}
                                         <button
                                             ref={generateBtnRef}
-                                            className="generate-btn mt-4.5 w-full py-3 bg-linear-to-r from-[#FF5B1D] to-[#E04F18] hover:from-[#FF7843] hover:to-[#FF5B1D] text-white rounded-xl font-mono text-[8.5px] font-bold tracking-widest uppercase flex items-center justify-center gap-1.5 select-none transition-all duration-300 shadow-[0_0_20px_rgba(255,91,29,0.3)]"
-                                            style={{
-                                                boxShadow: '0 4px 20px rgba(255, 91, 29, 0.35)',
-                                            }}
+                                            className="generate-btn mt-4 w-full py-3.5 bg-gradient-to-r from-[#FF5B1D] to-[#E04F18] hover:from-[#FF7843] hover:to-[#FF5B1D] text-white rounded-xl font-mono text-[9px] font-bold tracking-widest uppercase flex items-center justify-center gap-2 select-none transition-all duration-300 shadow-[0_4px_20px_rgba(255,91,29,0.35)] active:scale-95 border border-white/20"
                                         >
                                             <span>Generate Itinerary</span>
-                                            <span className="text-[10px]">✦</span>
+                                            <span className="text-[11px] animate-bounce">✦</span>
                                         </button>
                                     </div>
                                 </div>
 
-                                {/* Status Footer details */}
-                                <div className="text-center text-white/20 text-[7px] font-mono tracking-widest uppercase mb-1">
-                                    TripWise Tailor Engine v2.1
+                                {/* Status Footer & Home Indicator */}
+                                <div className="flex flex-col items-center justify-end pb-2 shrink-0 z-20">
+                                    <div className="text-center text-white/30 text-[8px] font-mono tracking-widest uppercase mb-2">
+                                        TripWise Tailor Engine v2.1
+                                    </div>
+                                    {/* iOS Home Indicator Bar */}
+                                    <div className="w-32 h-[4px] bg-white/40 rounded-full" />
                                 </div>
                             </div>
                         </div>
