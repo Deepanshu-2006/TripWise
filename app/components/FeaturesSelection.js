@@ -377,7 +377,7 @@ function FeaturesSelection() {
                 <div className="max-w-7xl mx-auto px-6 relative z-10 w-full h-full flex flex-col justify-start pt-24 md:pt-28 pb-6">
                     {/* Header Block */}
                     <div className="text-center max-w-3xl mx-auto mb-5">
-                        <div className="inline-block px-4 py-1.5 bg-[#1C1B1B] backdrop-blur-md rounded-full shadow-md border border-white/20 text-[#fe7717] font-mono text-[10px] font-bold tracking-[0.16em] uppercase mb-1.5">
+                        <div className="inline-block px-4 py-1.5 bg-[#1C1B1B] backdrop-blur-md rounded-full shadow-md border border-white/20 text-[#fe7717] font-mono text-[12px] font-bold tracking-[0.16em] uppercase mb-1.5">
                             Why TripWise?
                         </div>
                         <h2 className="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-brand-dark mb-1 leading-tight">

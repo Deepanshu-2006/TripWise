@@ -1,8 +1,8 @@
-import Destination from "./components/Destination";
+import Destination from "./components/Difference Slider";
 import FeaturesSelection from "./components/FeaturesSelection";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
-import RealTimeAdjuster from "./components/RealTimeAdjuster";
+import RealTimeAdjuster from "./components/Live Demo";
 import PassportGrid from "./components/PassportGrid";
 import FAQAndMarqueeCTA from "./components/FAQAndMarqueeCTA";
 

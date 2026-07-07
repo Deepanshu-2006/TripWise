@@ -313,7 +313,7 @@ export default function PassportGrid() {
                 {/* Section Header */}
                 <div className="text-center mb-16 md:mb-20 flex flex-col items-center section-header">
                     {/* Micro-Badge */}
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#0D9488]/10 text-[#0D9488] rounded-full font-mono text-[10px] font-black tracking-widest uppercase mb-4 shadow-2xs border border-[#0D9488]/20 select-none">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#0D9488]/10 text-[#0D9488] rounded-full font-mono text-[12px] font-black tracking-widest uppercase mb-4 shadow-2xs border border-[#0D9488]/20 select-none">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#0D9488] animate-pulse" />
                         Social Proof • Verified Passports
                     </div>
