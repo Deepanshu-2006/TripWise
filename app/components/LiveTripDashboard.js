@@ -187,21 +187,6 @@ export default function LiveTripDashboard({
           <InteractiveGlobe onSelectPrompt={onSelectPrompt} />
         )}
       </div>
-
-      {/* Bottom Footer Telemetry */}
-      <div className="relative z-10 pt-4 border-t border-[rgba(28,27,27,0.08)] flex items-center justify-between text-xs font-bold text-[#8CA3A8] flex-wrap gap-2">
-        <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1.5 text-[#4B4745]">
-            <span className="w-2 h-2 rounded-full bg-[#0D9488]" />
-            <span>14,280 Routes Optimized</span>
-          </span>
-          <span className="hidden sm:inline">|</span>
-          <span className="hidden sm:inline">🌍 Real-time Weather & Transit Sync</span>
-        </div>
-        <span className="text-[#1C1B1B] font-extrabold">
-          {itinerary ? `Est. Total Budget: ${itinerary.estimatedCost}` : 'TripWise GeoEngine v2.5'}
-        </span>
-      </div>
     </div>
   );
 }
