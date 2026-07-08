@@ -324,13 +324,13 @@ export default function PlannerSidebar({
   const activePromptText = userPromptInput || rawPrompt || "Planning your custom journey...";
 
   return (
-    <div className="w-full h-full min-h-160 bg-[#FFF8F5] text-(--foreground) p-6 md:p-8 flex flex-col justify-between font-sans select-none border-r border-[rgba(28,27,27,0.08)]">
+    <div className="w-full h-full min-h-160 bg-[#FAF3EE] text-stone-900 p-6 md:p-8 flex flex-col justify-between font-sans select-none border-r border-stone-200/60">
       {/* Top Header Brand / Label */}
       <div>
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-accent-orange" />
-            <span className="text-xs font-bold tracking-widest uppercase text-secondary-text">
+            <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35]" />
+            <span className="text-xs font-bold tracking-widest uppercase text-stone-500">
               TripWise AI Planner
             </span>
           </div>
@@ -341,39 +341,44 @@ export default function PlannerSidebar({
                 setStep('input');
                 setUserPromptInput('');
               }}
-              className="text-xs font-semibold text-accent-orange hover:underline cursor-pointer bg-transparent border-none"
+              className="text-xs font-semibold text-[#FF6B35] hover:underline cursor-pointer bg-transparent border-none"
             >
               ← New Prompt
             </button>
           )}
         </div>
 
-        {/* STATE 0: Prompt Input */}
+        {/* STATE 0: Prompt Input Setup Page */}
         {step === 'input' && (
-          <div className="flex flex-col gap-6 animate-fade-in">
-            <div>
-              <h2 className="text-2xl md:text-3xl font-black text-(--foreground) tracking-tight leading-tight">
+          <div className="space-y-8 animate-fade-in">
+            {/* Header Block */}
+            <div className="space-y-2">
+              <h2 className="text-3xl md:text-4xl font-black text-stone-900 tracking-tight leading-tight">
                 Where to next?
               </h2>
-              <p className="text-xs md:text-sm text-secondary-text mt-1.5 leading-relaxed">
+              <p className="text-sm md:text-base text-stone-600 leading-relaxed">
                 Tell TripWise your dream destination, vibe, budget, or timeline. Our AI will craft your custom itinerary in seconds.
               </p>
             </div>
 
-            <div className="flex flex-col gap-3">
+            {/* Input Block */}
+            <div className="space-y-6">
               <textarea
                 value={userPromptInput}
                 onChange={(e) => setUserPromptInput(e.target.value)}
                 placeholder="e.g., 5 days in Kyoto during cherry blossom season... love historic temples, hidden gardens, authentic ramen shops, and boutique stays."
-                className="w-full h-36 p-4 rounded-2xl bg-bg-white border border-[rgba(28,27,27,0.12)] focus:border-accent-orange text-sm md:text-base text-(--foreground) placeholder-(--secondary-text)/50 focus:outline-none shadow-xs transition-all duration-150 resize-none"
+                className="w-full h-36 p-4 md:p-5 rounded-2xl bg-white border border-stone-300 focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 text-sm md:text-base text-stone-900 placeholder:text-stone-400 focus:outline-none shadow-sm transition-all duration-150 resize-none font-medium"
               />
 
-              <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#EC6735] block mb-1.5 flex items-center gap-1">
-                  <span>⚡ One-Click Vibe Enhancers</span>
-                  <span className="text-[10px] text-secondary-text font-normal">(Click to instantly append to prompt)</span>
-                </span>
-                <div className="flex flex-wrap gap-1.5 mb-2">
+              {/* Vibe Enhancers */}
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#FF6B35] flex items-center gap-1.5">
+                    <span>⚡ One-Click Vibe Enhancers</span>
+                  </span>
+                  <span className="text-[11px] text-stone-500 font-normal">Click to append</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
                   {[
                     "➕ Hidden Local Gems",
                     "➕ Michelin & Street Food",
@@ -393,7 +398,7 @@ export default function PlannerSidebar({
                           return `${trimmed}${trimmed.endsWith('.') ? '' : ','} include ${cleanTag.toLowerCase()}.`;
                         });
                       }}
-                       className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-[#FFF2EA] text-[#EC6735] hover:bg-[#EC6735] hover:text-white border border-[#EC6735]/20 transition-all duration-150 cursor-pointer shadow-2xs active:scale-95"
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#FF6B35]/10 text-[#FF6B35] hover:bg-[#FF6B35] hover:text-white border border-[#FF6B35]/20 transition-all duration-150 cursor-pointer shadow-2xs active:scale-95"
                     >
                       {tag}
                     </button>
@@ -401,50 +406,55 @@ export default function PlannerSidebar({
                 </div>
               </div>
 
-              <div>
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-secondary-text block mb-2">
+              {/* De-emphasized Examples */}
+              <div className="space-y-2.5 pt-2 border-t border-stone-200/60">
+                <span className="text-xs font-semibold uppercase tracking-wider text-stone-500 block">
                   Or try an example prompt:
                 </span>
-                <div className="flex flex-col gap-1.5">
+                <ul className="space-y-2">
                   {[
-                    "🌸 5 days in Kyoto: temples, gardens & street food",
-                    "🍕 3 budget days in Rome: hidden gems & local pasta",
-                    "⚡ 7 fast-paced days in Tokyo: cyberpunk nightlife & tech"
+                    { text: "5 days in Kyoto: temples, gardens & street food", emoji: "🌸" },
+                    { text: "3 budget days in Rome: hidden gems & local pasta", emoji: "🍕" },
+                    { text: "7 fast-paced days in Tokyo: cyberpunk nightlife & tech", emoji: "⚡" }
                   ].map((ex, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => {
-                        const cleanPrompt = ex.replace(/^[^\s]+\s/, '');
-                        setUserPromptInput(cleanPrompt);
-                        setStep('parsing');
-                      }}
-                      className="text-left text-xs text-secondary-text hover:text-accent-orange bg-bg-white hover:bg-[#FFFDFB] border border-[rgba(28,27,27,0.08)] hover:border-(--accent-orange)/40 p-2.5 rounded-xl transition-all duration-150 truncate cursor-pointer shadow-2xs"
-                    >
-                      {ex}
-                    </button>
+                    <li key={idx}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserPromptInput(`${ex.emoji} ${ex.text}`);
+                          setStep('parsing');
+                        }}
+                        className="w-full flex items-center gap-2.5 text-left text-xs md:text-sm text-slate-500 hover:text-[#FF6B35] transition-colors cursor-pointer py-1 group font-medium"
+                      >
+                        <span className="text-stone-400 group-hover:text-[#FF6B35] transition-colors">→</span>
+                        <span className="truncate">{ex.emoji} {ex.text}</span>
+                      </button>
+                    </li>
                   ))}
-                </div>
+                </ul>
               </div>
             </div>
 
-            <button
-              type="button"
-              disabled={!userPromptInput.trim()}
-              onClick={() => {
-                if (userPromptInput.trim()) {
-                  setStep('parsing');
-                }
-              }}
-              className={`w-full py-4 px-6 rounded-xl font-extrabold text-base transition-all duration-150 flex items-center justify-center gap-2 shadow-md ${
-                userPromptInput.trim()
-                  ? 'bg-accent-orange text-bg-white hover:opacity-90 active:scale-[0.99] cursor-pointer shadow-(--accent-orange)/20'
-                  : 'bg-[rgba(28,27,27,0.1)] text-secondary-text cursor-not-allowed'
-              }`}
-            >
-              <span>Plan My Trip</span>
-              <ArrowRightIcon />
-            </button>
+            {/* Action Button */}
+            <div className="pt-2">
+              <button
+                type="button"
+                disabled={!userPromptInput.trim()}
+                onClick={() => {
+                  if (userPromptInput.trim()) {
+                    setStep('parsing');
+                  }
+                }}
+                className={`w-full py-4 px-6 rounded-2xl font-extrabold text-base transition-all duration-200 flex items-center justify-center gap-2.5 ${
+                  userPromptInput.trim()
+                    ? 'bg-[#FF6B35] text-white hover:bg-[#e85a24] shadow-lg shadow-[#FF6B35]/25 active:scale-[0.99] cursor-pointer'
+                    : 'border-2 border-dashed border-stone-300 text-stone-400 bg-transparent cursor-not-allowed'
+                }`}
+              >
+                <span>Plan My Trip</span>
+                <ArrowRightIcon />
+              </button>
+            </div>
           </div>
         )}
 
