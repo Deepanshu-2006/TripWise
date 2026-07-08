@@ -18,6 +18,7 @@ export default function AIPlannerPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: selections.prompt || currentPrompt || "A dream vacation",
+          destination: selections.destination || selections.prompt || currentPrompt || "",
           interests: selections.interests || [],
           budget: selections.budget || 'standard',
           pace: selections.pace || 'balanced'

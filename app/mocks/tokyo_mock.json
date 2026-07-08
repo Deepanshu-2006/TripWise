@@ -1,0 +1,98 @@
+{
+  "destinationName": "Tokyo, Japan",
+  "tagline": "Cyberpunk Nightlife & Michelin Ramen Alleys",
+  "estimatedCost": "$2,400",
+  "coordinates": { "lat": 35.6762, "lng": 139.6503 },
+  "days": [
+    {
+      "dayNumber": 1,
+      "dateLabel": "Day 1 - Neon Shinjuku & Cyberpunk Alleys",
+      "activities": [
+        {
+          "time": "10:00 AM",
+          "category": "Sightseeing",
+          "title": "Tokyo Metropolitan Government Building Observation",
+          "description": "Take the high-speed elevator to the 45th floor panoramic deck with clear views of Mount Fuji.",
+          "badge": "OPTIMIZED ROUTE",
+          "coordinates": { "lat": 35.6896, "lng": 139.6917 }
+        },
+        {
+          "time": "01:00 PM",
+          "category": "Dining",
+          "title": "Michelin Star Ramen Tasting at Nakiryu",
+          "description": "Slurp world-famous tantanmen ramen with rich nutty broth handcrafted by master noodle chefs.",
+          "badge": "LOCAL GEM",
+          "coordinates": { "lat": 35.7314, "lng": 139.7303 }
+        },
+        {
+          "time": "06:30 PM",
+          "category": "Nightlife",
+          "title": "Omoide Yokocho (Memory Lane) Izakaya Crawl",
+          "description": "Wander smoky lantern-lit alleys packed with tiny stalls serving yakitori and ice-cold draft beer.",
+          "badge": "MUST SEE",
+          "coordinates": { "lat": 35.6929, "lng": 139.6994 }
+        }
+      ]
+    },
+    {
+      "dayNumber": 2,
+      "dateLabel": "Day 2 - Digital Art & Shibuya Scramble",
+      "activities": [
+        {
+          "time": "09:30 AM",
+          "category": "Art",
+          "title": "teamLab Planets Immersive Digital Art Museum",
+          "description": "Walk barefoot through glowing water mazes and digital crystal rooms in Toyosu.",
+          "badge": "MUST SEE",
+          "coordinates": { "lat": 35.6496, "lng": 139.7898 }
+        },
+        {
+          "time": "02:00 PM",
+          "category": "Shopping",
+          "title": "Harajuku Takeshita Street & Omotesando Boutiques",
+          "description": "Explore eclectic pop fashion stalls, crepe stands, and sleek flagship architectural boutiques.",
+          "badge": "OPTIMIZED ROUTE",
+          "coordinates": { "lat": 35.6702, "lng": 139.7027 }
+        },
+        {
+          "time": "06:00 PM",
+          "category": "Sightseeing",
+          "title": "Shibuya Scramble Crossing & Rooftop Sky View",
+          "description": "Watch thousands cross the world's busiest intersection simultaneously from Shibuya Sky terrace.",
+          "badge": "MUST SEE",
+          "coordinates": { "lat": 35.6595, "lng": 139.7004 }
+        }
+      ]
+    },
+    {
+      "dayNumber": 3,
+      "dateLabel": "Day 3 - Historic Asakusa & Akihabara Tech",
+      "activities": [
+        {
+          "time": "09:00 AM",
+          "category": "History",
+          "title": "Senso-ji Temple & Nakamise Dori Street",
+          "description": "Pass through the giant Thunder Gate and shop for traditional crafts and fresh ningyoyaki cakes.",
+          "badge": "MUST SEE",
+          "coordinates": { "lat": 35.7148, "lng": 139.7967 }
+        },
+        {
+          "time": "01:30 PM",
+          "category": "Dining",
+          "title": "Tsukiji Outer Market Seafood Feast",
+          "description": "Savor melt-in-your-mouth otoro tuna sushi, wagyu skewers, and sweet tamagoyaki egg rolls.",
+          "badge": "BUDGET MATCH",
+          "coordinates": { "lat": 35.6655, "lng": 139.7708 }
+        },
+        {
+          "time": "05:00 PM",
+          "category": "Shopping",
+          "title": "Akihabara Electric Town & Retro Gaming Tour",
+          "description": "Immerse yourself in multi-story anime galleries, retro arcade halls, and cutting-edge electronics superstores.",
+          "badge": "LOCAL GEM",
+          "coordinates": { "lat": 35.6984, "lng": 139.7731 }
+        }
+      ]
+    }
+  ]
+}

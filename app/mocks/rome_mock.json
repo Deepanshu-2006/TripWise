@@ -1,0 +1,98 @@
+{
+  "destinationName": "Rome, Italy",
+  "tagline": "Eternal City Highlights & Hidden Culinary Gems",
+  "estimatedCost": "$1,450",
+  "coordinates": { "lat": 41.9028, "lng": 12.4964 },
+  "days": [
+    {
+      "dayNumber": 1,
+      "dateLabel": "Day 1 - Ancient Wonders & Colosseum",
+      "activities": [
+        {
+          "time": "09:00 AM",
+          "category": "Sightseeing",
+          "title": "Colosseum VIP Fast-Track Exploration",
+          "description": "Step into the iconic amphitheater with skip-the-line access before peak midday crowds arrive.",
+          "badge": "MUST SEE",
+          "coordinates": { "lat": 41.8902, "lng": 12.4922 }
+        },
+        {
+          "time": "01:00 PM",
+          "category": "Dining",
+          "title": "Authentic Roman Pasta at Osteria da Fortunata",
+          "description": "Watch pasta chefs hand-roll fresh strozzapreti while savoring classic carbonara and cacio e pepe.",
+          "badge": "LOCAL GEM",
+          "coordinates": { "lat": 41.8958, "lng": 12.4732 }
+        },
+        {
+          "time": "04:30 PM",
+          "category": "Culture",
+          "title": "Pantheon Interior & Piazza Navona Sunset",
+          "description": "Marvel at the ancient dome's oculus in late afternoon light, followed by artisanal gelato near Bernini's fountains.",
+          "badge": "OPTIMIZED ROUTE",
+          "coordinates": { "lat": 41.8986, "lng": 12.4769 }
+        }
+      ]
+    },
+    {
+      "dayNumber": 2,
+      "dateLabel": "Day 2 - Vatican Treasures & Trastevere Vibe",
+      "activities": [
+        {
+          "time": "08:30 AM",
+          "category": "Sightseeing",
+          "title": "Vatican Museums & Sistine Chapel Early Entry",
+          "description": "Experience Michelangelo's masterpiece in tranquility before general admission doors open.",
+          "badge": "OPTIMIZED ROUTE",
+          "coordinates": { "lat": 41.9067, "lng": 12.4536 }
+        },
+        {
+          "time": "01:30 PM",
+          "category": "Dining",
+          "title": "Market Lunch at Mercato di Testaccio",
+          "description": "Feast on gourmet Roman street food, from tender panino con bollito to artisanal Sicilian cannoli.",
+          "badge": "BUDGET MATCH",
+          "coordinates": { "lat": 41.8785, "lng": 12.4746 }
+        },
+        {
+          "time": "06:00 PM",
+          "category": "Leisure",
+          "title": "Sunset Aperitivo in Trastevere Alleyways",
+          "description": "Wander ivy-draped cobblestone streets and enjoy Aperol spritzes accompanied by complimentary local tapas.",
+          "badge": "LOCAL GEM",
+          "coordinates": { "lat": 41.8894, "lng": 12.4691 }
+        }
+      ]
+    },
+    {
+      "dayNumber": 3,
+      "dateLabel": "Day 3 - Baroque Masterpieces & Panoramic Views",
+      "activities": [
+        {
+          "time": "09:30 AM",
+          "category": "Sightseeing",
+          "title": "Trevi Fountain & Spanish Steps Morning Stroll",
+          "description": "Toss a coin into the sparkling fountain early in the day, then climb the famous travertine steps.",
+          "badge": "MUST SEE",
+          "coordinates": { "lat": 41.9009, "lng": 12.4833 }
+        },
+        {
+          "time": "01:00 PM",
+          "category": "Dining",
+          "title": "Rooftop Dining at Terrazza Borromini",
+          "description": "Enjoy gourmet Italian gastronomy with breathtaking 360-degree panoramic views overlooking Piazza Navona.",
+          "badge": "LOCAL GEM",
+          "coordinates": { "lat": 41.8989, "lng": 12.4731 }
+        },
+        {
+          "time": "05:00 PM",
+          "category": "Leisure",
+          "title": "Villa Borghese Gardens & Sunset at Pincio Terrace",
+          "description": "Relax in Rome's most beloved park and watch the sun dip below the St. Peter's Basilica skyline.",
+          "badge": "OPTIMIZED ROUTE",
+          "coordinates": { "lat": 41.9114, "lng": 12.4797 }
+        }
+      ]
+    }
+  ]
+}

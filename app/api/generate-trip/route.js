@@ -1,5 +1,10 @@
 import { GoogleGenAI } from '@google/genai';
 import { NextResponse } from 'next/server';
+import londonMock from '../../mocks/london_mock.json';
+import romeMock from '../../mocks/rome_mock.json';
+import kyotoMock from '../../mocks/kyoto_mock.json';
+import tokyoMock from '../../mocks/tokyo_mock.json';
+import punjabMock from '../../mocks/punjab_mock.json';
 
 const itinerarySchema = {
   type: 'OBJECT',
@@ -151,14 +156,39 @@ const fallbackItinerary = {
   ]
 };
 
+function getDynamicMockItinerary(promptOrDest = "", destination = "") {
+  const combined = `${promptOrDest} ${destination}`.toLowerCase();
+  if (combined.includes("punjab")) return punjabMock;
+  if (combined.includes("london")) return londonMock;
+  if (combined.includes("kyoto")) return kyotoMock;
+  if (combined.includes("tokyo")) return tokyoMock;
+  if (combined.includes("rome")) return romeMock;
+  
+  // Universal dynamic demo customizer: adapt fallback template to requested city so users never see Rome when asking for another city
+  let customDestName = destination || promptOrDest;
+  if (!customDestName || customDestName.trim().length === 0 || customDestName.toLowerCase().includes("rome")) {
+    return fallbackItinerary;
+  }
+  
+  const cleanDest = customDestName.trim().replace(/^(?:generate\s+)?(?:a\s+)?(?:trip\s+to\s+|trip\s+for\s+|visit\s+|for\s+)/i, "").trim();
+  const titleDest = cleanDest.length > 0 ? (cleanDest.charAt(0).toUpperCase() + cleanDest.slice(1)) : "Your Destination";
+  
+  const customItinerary = JSON.parse(JSON.stringify(fallbackItinerary));
+  customItinerary.destinationName = `${titleDest} (Demo Mode)`;
+  customItinerary.tagline = `Highlights, Culture & Top Local Gems across ${titleDest}`;
+  return customItinerary;
+}
+
 export async function POST(req) {
   try {
-    const { prompt, interests = [], budget = 'standard', pace = 'balanced' } = await req.json();
+    const { prompt = "", destination = "", interests = [], budget = 'standard', pace = 'balanced' } = await req.json();
 
     const apiKey = process.env.GEMINI_API_KEY;
+    const mockPayload = getDynamicMockItinerary(prompt, destination);
+
     if (!apiKey) {
-      console.warn('GEMINI_API_KEY not set. Using fallback itinerary.');
-      return NextResponse.json({ success: true, itinerary: fallbackItinerary, isFallback: true });
+      console.warn('GEMINI_API_KEY not set. Using dynamic mock itinerary for:', destination || prompt);
+      return NextResponse.json({ success: true, itinerary: mockPayload, isFallback: true });
     }
 
     const ai = new GoogleGenAI({ apiKey });
@@ -203,14 +233,17 @@ CRITICAL RULES FOR SPEED & QUALITY:
     }
 
     if (!response || !response.text) {
-      console.warn('All Gemini models failed (likely quota/rate limit). Returning fallback demo itinerary.', lastError);
-      return NextResponse.json({ success: true, itinerary: fallbackItinerary, isFallback: true });
+      console.warn('All Gemini models failed (likely quota/rate limit). Returning dynamic mock itinerary.', lastError);
+      return NextResponse.json({ success: true, itinerary: mockPayload, isFallback: true });
     }
 
     const itinerary = JSON.parse(response.text);
     return NextResponse.json({ success: true, itinerary });
   } catch (error) {
     console.error('Gemini API Error:', error);
-    return NextResponse.json({ success: true, itinerary: fallbackItinerary, isFallback: true });
+    let body = {};
+    try { body = await req.json(); } catch (e) {}
+    const mockPayload = getDynamicMockItinerary(body.prompt, body.destination);
+    return NextResponse.json({ success: true, itinerary: mockPayload, isFallback: true });
   }
 }

@@ -1,0 +1,98 @@
+{
+  "destinationName": "Kyoto, Japan",
+  "tagline": "Autumn Temples & Traditional Tea Gardens",
+  "estimatedCost": "$1,800",
+  "coordinates": { "lat": 35.0116, "lng": 135.7681 },
+  "days": [
+    {
+      "dayNumber": 1,
+      "dateLabel": "Day 1 - Bamboo Groves & Golden Pavilion",
+      "activities": [
+        {
+          "time": "08:30 AM",
+          "category": "Nature",
+          "title": "Arashiyama Bamboo Grove Morning Walk",
+          "description": "Experience the soaring emerald bamboo stalks in zen stillness before morning crowds arrive.",
+          "badge": "MUST SEE",
+          "coordinates": { "lat": 35.0170, "lng": 135.6713 }
+        },
+        {
+          "time": "01:00 PM",
+          "category": "Dining",
+          "title": "Traditional Kaiseki Lunch near Tenryu-ji",
+          "description": "Savor meticulously prepared seasonal Japanese dishes highlighting tofu and Kyoto root vegetables.",
+          "badge": "LOCAL GEM",
+          "coordinates": { "lat": 35.0158, "lng": 135.6738 }
+        },
+        {
+          "time": "04:00 PM",
+          "category": "Sightseeing",
+          "title": "Kinkaku-ji (Golden Pavilion) Reflection",
+          "description": "Marvel at the top two floors covered in gold leaf reflecting beautifully across the Kyoko-chi Mirror Pond.",
+          "badge": "MUST SEE",
+          "coordinates": { "lat": 35.0394, "lng": 135.7292 }
+        }
+      ]
+    },
+    {
+      "dayNumber": 2,
+      "dateLabel": "Day 2 - Fushimi Inari & Gion Geisha District",
+      "activities": [
+        {
+          "time": "08:00 AM",
+          "category": "Sightseeing",
+          "title": "Fushimi Inari Shrine Torii Gate Hike",
+          "description": "Hike through thousands of vermilion torii gates winding up the sacred Mount Inari.",
+          "badge": "OPTIMIZED ROUTE",
+          "coordinates": { "lat": 34.9671, "lng": 135.7727 }
+        },
+        {
+          "time": "01:30 PM",
+          "category": "Dining",
+          "title": "Nishiki Market Street Food Grazing",
+          "description": "Sample fresh takoyaki, matcha sweets, and skewered seafood along Kyoto's historic kitchen street.",
+          "badge": "BUDGET MATCH",
+          "coordinates": { "lat": 35.0050, "lng": 135.7649 }
+        },
+        {
+          "time": "06:00 PM",
+          "category": "Culture",
+          "title": "Twilight Stroll through Gion & Hanamikoji Street",
+          "description": "Wander preserved wooden machiya lanes with a chance to spot geiko and maiko heading to evening appointments.",
+          "badge": "LOCAL GEM",
+          "coordinates": { "lat": 35.0037, "lng": 135.7756 }
+        }
+      ]
+    },
+    {
+      "dayNumber": 3,
+      "dateLabel": "Day 3 - Higashiyama Heritage & Tea Ceremony",
+      "activities": [
+        {
+          "time": "09:30 AM",
+          "category": "Sightseeing",
+          "title": "Kiyomizu-dera Wooden Stage & Views",
+          "description": "Visit the UNESCO wooden temple jutting out over hillside cherry and maple trees.",
+          "badge": "MUST SEE",
+          "coordinates": { "lat": 34.9949, "lng": 135.7850 }
+        },
+        {
+          "time": "02:00 PM",
+          "category": "Culture",
+          "title": "Authentic Matcha Tea Ceremony experience",
+          "description": "Learn the zen art of preparing and serving powdered green tea inside a tranquil tatami room.",
+          "badge": "LOCAL GEM",
+          "coordinates": { "lat": 35.0020, "lng": 135.7800 }
+        },
+        {
+          "time": "06:30 PM",
+          "category": "Dining",
+          "title": "Pontocho Alley Riverside Dinner",
+          "description": "Dine on grilled yakitori and sake in a narrow atmospheric lantern-lit alley overlooking the Kamo River.",
+          "badge": "OPTIMIZED ROUTE",
+          "coordinates": { "lat": 35.0064, "lng": 135.7711 }
+        }
+      ]
+    }
+  ]
+}

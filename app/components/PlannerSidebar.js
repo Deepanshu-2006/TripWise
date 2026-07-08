@@ -163,6 +163,7 @@ export default function PlannerSidebar({
   const [progressPercent, setProgressPercent] = useState(0);
   const [activeRowIndex, setActiveRowIndex] = useState(-1);
   const [showFinalCTA, setShowFinalCTA] = useState(false);
+  const [parsedIntent, setParsedIntent] = useState(null);
 
   // Check if confirmation state is needed
   const isMissingRequiredFields = 
@@ -179,10 +180,10 @@ export default function PlannerSidebar({
       onGenerate({
         ...selections,
         prompt: userPromptInput || rawPrompt || "Planning a trip",
-        destination: extracted?.destination || userPromptInput || rawPrompt || "Your Destination"
+        destination: parsedIntent?.destination || extracted?.destination || userPromptInput || rawPrompt || "Your Destination"
       });
     }
-  }, [onGenerate, userPromptInput, rawPrompt, extracted?.destination]);
+  }, [onGenerate, userPromptInput, rawPrompt, extracted?.destination, parsedIntent?.destination]);
 
   // Sync when rawPrompt is updated from external click (e.g. clicking a destination card on the right radar map)
   useEffect(() => {
@@ -192,24 +193,55 @@ export default function PlannerSidebar({
     }
   }, [rawPrompt]);
 
-  // State 1 auto-advance after ~0.6s (Ultra-fast transition)
+  // State 1: Call /api/parse-intent to analyze user query and pre-populate UI chips
   useEffect(() => {
     if (step !== 'parsing') return;
 
-    const timer = setTimeout(() => {
-      if (isMissingRequiredFields) {
-        setStep('confirming');
-      } else {
-        startProgressTransition({
-          interests: selectedInterests,
-          budget: selectedBudget || 'standard',
-          pace: selectedPace || 'balanced'
+    let isMounted = true;
+    const parseUserPrompt = async () => {
+      try {
+        const promptToParse = userPromptInput || rawPrompt || "A dream trip";
+        const res = await fetch('/api/parse-intent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: promptToParse })
         });
-      }
-    }, 600);
+        const data = await res.json();
+        if (isMounted && data.success && data.intent) {
+          const intent = data.intent;
+          setParsedIntent(intent);
 
-    return () => clearTimeout(timer);
-  }, [step, isMissingRequiredFields, selectedInterests, selectedBudget, selectedPace, startProgressTransition]);
+          // Pre-populate Step 2 UI chips automatically based on returned JSON object:
+          if (Array.isArray(intent.vibes) && intent.vibes.length > 0) {
+            setSelectedInterests(intent.vibes);
+          }
+          if (intent.budget_tier) {
+            const b = intent.budget_tier.toLowerCase();
+            if (b === 'premium') setSelectedBudget('premium');
+            else if (b === 'economy') setSelectedBudget('economy');
+            else setSelectedBudget('standard');
+          }
+          if (intent.pace) {
+            const p = intent.pace.toLowerCase();
+            if (p.includes('fast')) setSelectedPace('fast');
+            else if (p.includes('relax')) setSelectedPace('relaxed');
+            else setSelectedPace('balanced');
+          }
+        }
+      } catch (err) {
+        console.error("Error parsing intent:", err);
+      } finally {
+        if (isMounted) {
+          // Always transition smoothly to confirming step after parsing
+          setStep('confirming');
+        }
+      }
+    };
+
+    parseUserPrompt();
+
+    return () => { isMounted = false; };
+  }, [step, userPromptInput, rawPrompt]);
 
   // State 3 progress tracker animation (Fast & linked to real AI generation status)
   useEffect(() => {
@@ -270,13 +302,21 @@ export default function PlannerSidebar({
 
   // Derive destination name gracefully
   const derivedDestination = () => {
+    if (parsedIntent?.destination) return parsedIntent.destination;
     if (extracted?.destination) return extracted.destination;
     const lower = userPromptInput.toLowerCase();
-    if (lower.includes("kyoto")) return "Kyoto";
-    if (lower.includes("tokyo")) return "Tokyo";
-    if (lower.includes("rome")) return "Rome";
-    if (lower.includes("paris")) return "Paris";
-    if (lower.includes("swiss") || lower.includes("alps")) return "Swiss Alps";
+    if (lower.includes("london")) return "London, United Kingdom";
+    if (lower.includes("kyoto")) return "Kyoto, Japan";
+    if (lower.includes("tokyo")) return "Tokyo, Japan";
+    if (lower.includes("punjab")) return "Punjab, India";
+    if (lower.includes("rome")) return "Rome, Italy";
+    if (lower.includes("paris")) return "Paris, France";
+    if (lower.includes("swiss") || lower.includes("alps")) return "Swiss Alps, Switzerland";
+    
+    const clean = userPromptInput.trim().replace(/^(?:generate\s+)?(?:a\s+)?(?:trip\s+to\s+|trip\s+for\s+|visit\s+|for\s+)/i, "").trim();
+    if (clean.length > 2 && clean.split(/\s+/).length <= 4) {
+      return clean.charAt(0).toUpperCase() + clean.slice(1);
+    }
     return "your trip";
   };
 

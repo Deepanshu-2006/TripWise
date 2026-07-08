@@ -1,0 +1,98 @@
+{
+  "destinationName": "Punjab, India",
+  "tagline": "Land of Five Rivers: Golden Shrine Spiritual Peace & Rich Culinary Heritage",
+  "estimatedCost": "$800 - $1,400",
+  "coordinates": { "lat": 31.1471, "lng": 75.3412 },
+  "days": [
+    {
+      "dayNumber": 1,
+      "dateLabel": "Day 1 - Sacred Amritsar & Wagah Border Patriotism",
+      "activities": [
+        {
+          "time": "08:30 AM",
+          "category": "Sightseeing",
+          "title": "Harmandir Sahib (The Golden Temple) Spiritual Serenity",
+          "description": "Witness the morning sun gleaming off the golden sanctum, walk around the sacred Amrit Sarovar pool, and partake in the community Langar.",
+          "badge": "MUST SEE",
+          "coordinates": { "lat": 31.6200, "lng": 74.8765 }
+        },
+        {
+          "time": "01:00 PM",
+          "category": "Dining",
+          "title": "Authentic Amritsari Kulcha at Kesar Da Dhaba",
+          "description": "Savor flaky, butter-drenched tandoori kulchas paired with slow-cooked dal makhani and refreshing lassi at a century-old legendary eatery.",
+          "badge": "LOCAL GEM",
+          "coordinates": { "lat": 31.6234, "lng": 74.8781 }
+        },
+        {
+          "time": "04:30 PM",
+          "category": "Sightseeing",
+          "title": "Wagah-Attari Border Beating Retreat Ceremony",
+          "description": "Experience the electrifying patriotic enthusiasm and synchronized military parade at the India-Pakistan border flag-lowering ceremony.",
+          "badge": "MUST SEE",
+          "coordinates": { "lat": 31.6047, "lng": 74.5768 }
+        }
+      ]
+    },
+    {
+      "dayNumber": 2,
+      "dateLabel": "Day 2 - Heritage Walk & Partition History",
+      "activities": [
+        {
+          "time": "09:30 AM",
+          "category": "History",
+          "title": "Jallianwala Bagh & Partition Museum",
+          "description": "Pay homage at the historic memorial gardens before exploring poignant exhibits preserving oral histories of the 1947 Partition.",
+          "badge": "MUST SEE",
+          "coordinates": { "lat": 31.6206, "lng": 74.8801 }
+        },
+        {
+          "time": "01:30 PM",
+          "category": "Shopping",
+          "title": "Hall Bazaar Phulkari & Jutti Shopping Stroll",
+          "description": "Browse vibrant traditional Phulkari embroidery dupattas, handcrafted Punjabi leather juttis, and authentic spice stalls.",
+          "badge": "OPTIMIZED ROUTE",
+          "coordinates": { "lat": 31.6311, "lng": 74.8744 }
+        },
+        {
+          "time": "07:00 PM",
+          "category": "Dining",
+          "title": "Makki Di Roti & Sarson Ka Saag Dinner at Haveli",
+          "description": "Dine in a village-themed village setting enjoying farm-fresh mustard greens, corn flatbread with white butter, and folk Bhangra music.",
+          "badge": "LOCAL GEM",
+          "coordinates": { "lat": 31.3260, "lng": 75.5762 }
+        }
+      ]
+    },
+    {
+      "dayNumber": 3,
+      "dateLabel": "Day 3 - Royal Patiala & Anandpur Sahib Fortress",
+      "activities": [
+        {
+          "time": "09:00 AM",
+          "category": "History",
+          "title": "Virasat-e-Khalsa Sikh Heritage Museum",
+          "description": "Explore the award-winning architectural complex in Anandpur Sahib showcasing 500 years of Sikh history and cultural evolution.",
+          "badge": "MUST SEE",
+          "coordinates": { "lat": 31.2361, "lng": 76.5002 }
+        },
+        {
+          "time": "02:00 PM",
+          "category": "Sightseeing",
+          "title": "Qila Mubarak Royal Palace Complex in Patiala",
+          "description": "Marvel at the majestic Rajput and Mughal blended fort architecture, ornate mirror rooms, and royal antique armory.",
+          "badge": "LOCAL GEM",
+          "coordinates": { "lat": 30.3289, "lng": 76.4018 }
+        },
+        {
+          "time": "06:30 PM",
+          "category": "Dining",
+          "title": "Riverside Sunset Chai & Patiala Shahi Cuisine Feast",
+          "description": "Conclude your Punjab journey overlooking peaceful river waters with spicy Patiala shahi gosht, tandoori paneer, and sweet phirni.",
+          "badge": "BUDGET MATCH",
+          "coordinates": { "lat": 30.3398, "lng": 76.3869 }
+        }
+      ]
+    }
+  ]
+}
