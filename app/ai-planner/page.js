@@ -47,7 +47,7 @@ export default function AIPlannerPage() {
       {/* Split-Screen Layout (Subheader removed as requested) */}
       <div className="flex-1 flex w-full h-full overflow-hidden">
         {/* Left 40% Sidebar */}
-        <div className="w-full md:w-[42%] lg:w-[40%] xl:w-[38%] h-full overflow-y-auto shrink-0 bg-[#FFF8F5]">
+        <div className="w-full md:w-[42%] lg:w-[40%] xl:w-[38%] h-full overflow-y-auto shrink-0 bg-[#FAF3EE]">
           <PlannerSidebar
             rawPrompt={currentPrompt}
             isGenerating={isGenerating}

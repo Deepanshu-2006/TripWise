@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import InteractiveRouteMap from './InteractiveRouteMap';
 
 // Sample curated destination cards for the initial interactive radar view
 const CURATED_DESTINATIONS = [
@@ -105,18 +106,16 @@ export default function LiveTripDashboard({
               <button
                 type="button"
                 onClick={() => setActiveTab('map')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === 'map' ? 'bg-[#EC6735] text-white shadow-xs' : 'text-[#4B4745] hover:text-[#1C1B1B]'
-                }`}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'map' ? 'bg-[#EC6735] text-white shadow-xs' : 'text-[#4B4745] hover:text-[#1C1B1B]'
+                  }`}
               >
                 🗺️ Route Map
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab('activities')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === 'activities' ? 'bg-[#EC6735] text-white shadow-xs' : 'text-[#4B4745] hover:text-[#1C1B1B]'
-                }`}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'activities' ? 'bg-[#EC6735] text-white shadow-xs' : 'text-[#4B4745] hover:text-[#1C1B1B]'
+                  }`}
               >
                 📋 Day Schedule
               </button>
@@ -163,11 +162,10 @@ export default function LiveTripDashboard({
                     key={idx}
                     type="button"
                     onClick={() => setSelectedDayIndex(idx)}
-                    className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap shadow-2xs ${
-                      selectedDayIndex === idx
-                        ? 'bg-[#1C1B1B] text-white shadow-md scale-[1.02]'
-                        : 'bg-white text-[#4B4745] hover:bg-[#FFFDFB] border border-[rgba(28,27,27,0.1)]'
-                    }`}
+                    className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap shadow-2xs ${selectedDayIndex === idx
+                      ? 'bg-[#1C1B1B] text-white shadow-md scale-[1.02]'
+                      : 'bg-white text-[#4B4745] hover:bg-[#FFFDFB] border border-[rgba(28,27,27,0.1)]'
+                      }`}
                   >
                     <span>Day {day.dayNumber || idx + 1}</span>
                   </button>
@@ -181,58 +179,11 @@ export default function LiveTripDashboard({
 
             {/* Content: Either Route Map or Activity Cards */}
             {activeTab === 'map' ? (
-              <div className="relative w-full h-80 md:h-96 bg-white/80 backdrop-blur-md rounded-3xl border border-[rgba(28,27,27,0.1)] shadow-md overflow-hidden flex flex-col items-center justify-center p-6 text-center">
-                {/* Simulated Radar Route Map */}
-                <div className="absolute inset-0 opacity-20" style={{
-                  backgroundImage: `radial-gradient(#0D9488 2px, transparent 2px)`,
-                  backgroundSize: '24px 24px'
-                }} />
-
-                {/* Dashed Connecting Flight/Walking Path */}
-                <svg className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M 20% 60% Q 50% 20% 80% 60%"
-                    fill="none"
-                    stroke="#EC6735"
-                    strokeWidth="3"
-                    strokeDasharray="6 8"
-                    className="animate-pulse"
-                  />
-                  <path
-                    d="M 30% 70% L 70% 30%"
-                    fill="none"
-                    stroke="#0D9488"
-                    strokeWidth="2"
-                    strokeDasharray="4 6"
-                    opacity="0.5"
-                  />
-                </svg>
-
-                {/* Interactive Pins for Current Day Activities */}
-                <div className="relative z-10 w-full h-full flex items-center justify-around">
-                  {activities.map((act, idx) => {
-                    const pinColors = ['bg-[#EC6735]', 'bg-[#0D9488]', 'bg-[#1C1B1B]', 'bg-[#8CA3A8]'];
-                    const color = pinColors[idx % pinColors.length];
-                    return (
-                      <div key={idx} className="flex flex-col items-center group cursor-pointer transition-transform hover:scale-110">
-                        <div className={`w-10 h-10 rounded-2xl ${color} text-white font-black text-sm flex items-center justify-center shadow-lg border-2 border-white mb-2 group-hover:ring-4 ring-orange-400/40`}>
-                          {idx + 1}
-                        </div>
-                        <div className="bg-white px-3 py-1.5 rounded-xl border border-[rgba(28,27,27,0.1)] shadow-md max-w-40 text-left">
-                          <span className="text-[10px] font-bold text-[#EC6735] block uppercase tracking-wider">{act.time}</span>
-                          <span className="text-xs font-extrabold text-[#1C1B1B] truncate block">{act.title}</span>
-                          <span className="text-[10px] font-semibold text-[#8CA3A8] block mt-0.5">{act.badge || act.category}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="absolute bottom-4 left-6 right-6 flex items-center justify-between text-xs font-bold text-[#4B4745] bg-white/90 backdrop-blur-sm px-4 py-2 rounded-xl border border-[rgba(28,27,27,0.08)] shadow-2xs">
-                  <span>📍 GPS Sync: {itinerary.coordinates?.lat ? `${itinerary.coordinates.lat.toFixed(3)}° N, ${itinerary.coordinates.lng.toFixed(3)}° E` : '41.902° N, 12.496° E'}</span>
-                  <span className="text-[#EC6735]">💡 Click pins or switch to Day Schedule for details</span>
-                </div>
-              </div>
+              <InteractiveRouteMap
+                activities={activities}
+                destinationName={displayDest}
+                coordinates={itinerary.coordinates || { lat: 41.9028, lng: 12.4964 }}
+              />
             ) : (
               /* Day Schedule Cards */
               <div className="w-full h-80 md:h-96 overflow-y-auto pr-2 flex flex-col gap-3">

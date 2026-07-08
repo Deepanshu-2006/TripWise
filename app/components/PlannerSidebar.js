@@ -187,9 +187,11 @@ export default function PlannerSidebar({
 
   // Sync when rawPrompt is updated from external click (e.g. clicking a destination card on the right radar map)
   useEffect(() => {
-    if (rawPrompt && rawPrompt !== userPromptInput) {
+    if (rawPrompt) {
       setUserPromptInput(rawPrompt);
-      setStep('parsing');
+      if (step === 'input' || rawPrompt !== userPromptInput) {
+        setStep('parsing');
+      }
     }
   }, [rawPrompt]);
 
