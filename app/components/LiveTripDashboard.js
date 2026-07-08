@@ -1,51 +1,18 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import InteractiveRouteMap from './InteractiveRouteMap';
 
-// Sample curated destination cards for the initial interactive radar view
-const CURATED_DESTINATIONS = [
-  {
-    id: 'kyoto',
-    name: 'Kyoto, Japan',
-    tagline: 'Autumn Temples & Traditional Tea Gardens',
-    duration: '5 Days',
-    budget: '$1,800',
-    icon: '🌸',
-    coords: '35.0116° N, 135.7681° E',
-    prompt: '5 days in Kyoto during cherry blossom season... love historic temples, hidden gardens, authentic ramen shops, and boutique stays.'
-  },
-  {
-    id: 'rome',
-    name: 'Rome, Italy',
-    tagline: 'Hidden Pasta Gems & Baroque Masterpieces',
-    duration: '3 Days',
-    budget: '$1,450',
-    icon: '🍕',
-    coords: '41.9028° N, 12.4964° E',
-    prompt: '3 days in Rome... heavy on authentic local food, find hidden gems, keep it highly budget-friendly.'
-  },
-  {
-    id: 'tokyo',
-    name: 'Tokyo, Japan',
-    tagline: 'Cyberpunk Nightlife & Michelin Ramen Alleys',
-    duration: '7 Days',
-    budget: '$2,400',
-    icon: '⚡',
-    coords: '35.6762° N, 139.6503° E',
-    prompt: 'A full week in Tokyo exploring neon nightlife, cyberpunk alleys, top shopping districts, and Michelin street ramen!'
-  },
-  {
-    id: 'alps',
-    name: 'Swiss Alps',
-    tagline: 'Panoramic Glacier Rail & Alpine Chalets',
-    duration: '6 Days',
-    budget: '$3,200',
-    icon: '🏔️',
-    coords: '46.5580° N, 8.5610° E',
-    prompt: '6 days in the Swiss Alps exploring scenic train rides, alpine hiking trails, cozy chalets, and fondue dining.'
-  }
-];
+const InteractiveGlobe = dynamic(() => import('./InteractiveGlobe'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-80 sm:h-96 flex flex-col items-center justify-center bg-stone-100/80 rounded-3xl animate-pulse p-6">
+      <div className="w-12 h-12 rounded-full border-4 border-dashed border-[#FF6B35] animate-spin mb-4" />
+      <span className="text-xs font-black text-stone-700 uppercase tracking-wider">Loading 3D TripWise Globe...</span>
+    </div>
+  )
+});
 
 const GENERATION_STEPS = [
   "🛰️ Triangulating optimal GPS coordinates & scenic routes...",
@@ -216,55 +183,8 @@ export default function LiveTripDashboard({
             )}
           </div>
         ) : (
-          /* STATE: EXPLORE MODE / CURATED DESTINATIONS RADAR */
-          <div className="w-full flex flex-col gap-6 animate-fade-in">
-            <div className="text-center max-w-md mx-auto">
-              <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#EC6735] bg-[#FFF2EA] px-3 py-1 rounded-full border border-[#EC6735]/20 inline-block mb-2">
-                🌍 Global Route Radar
-              </span>
-              <h3 className="text-xl md:text-2xl font-black text-[#1C1B1B] tracking-tight">
-                Explore Curated AI Journeys
-              </h3>
-              <p className="text-xs md:text-sm text-[#4B4745] mt-1">
-                Select an inspired route below to instantly test our AI planner, or type your own custom dream destination on the left.
-              </p>
-            </div>
-
-            {/* 2x2 Grid of Curated Destination Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {CURATED_DESTINATIONS.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => onSelectPrompt && onSelectPrompt(item.prompt)}
-                  className="bg-white/90 hover:bg-white p-4 rounded-2xl border border-[rgba(28,27,27,0.1)] hover:border-[#EC6735] transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md group flex flex-col justify-between relative overflow-hidden"
-                >
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-[#FFF2EA] to-transparent rounded-bl-full pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity" />
-
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-2xl">{item.icon}</span>
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#0D9488] bg-[#0D9488]/10 px-2.5 py-1 rounded-md border border-[#0D9488]/20">
-                        {item.duration} • {item.budget}
-                      </span>
-                    </div>
-                    <h4 className="text-base font-black text-[#1C1B1B] group-hover:text-[#EC6735] transition-colors">
-                      {item.name}
-                    </h4>
-                    <p className="text-xs font-semibold text-[#4B4745] mt-0.5">
-                      {item.tagline}
-                    </p>
-                  </div>
-
-                  <div className="mt-4 pt-3 border-t border-[rgba(28,27,27,0.06)] flex items-center justify-between text-[11px] font-bold text-[#8CA3A8]">
-                    <span>📍 {item.coords}</span>
-                    <span className="text-[#EC6735] group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                      Load Route →
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          /* STATE: EXPLORE MODE / ROTATING 3D GLOBE */
+          <InteractiveGlobe onSelectPrompt={onSelectPrompt} />
         )}
       </div>
 
