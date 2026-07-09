@@ -91,7 +91,12 @@ export default function InteractiveRouteMap({
   const [showLayerMenu, setShowLayerMenu] = useState(false);
   const [selectedStopIdx, setSelectedStopIdx] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [routeStats, setRouteStats] = useState({ totalKm: 0, stopsCount: 0 });
+
+  useEffect(() => {
+    setSelectedCategory('all');
+  }, [activities]);
 
   // Create looped Basecamp / Hotel hub (Stop 0) and full day stop list
   const validActivities = (activities || []).filter(
@@ -113,6 +118,62 @@ export default function InteractiveRouteMap({
   };
 
   const loopedStops = validActivities.length > 0 ? [basecampStop, ...validActivities] : [];
+
+  // Compute category counts across active stops (excluding Basecamp for categories, all for all)
+  const nonBasecampStopsCount = loopedStops.filter((act, idx) => !(act.isBasecamp === true || idx === 0)).length;
+
+  const categoryFilters = [
+    { 
+      id: 'all', 
+      label: 'All Stops', 
+      icon: '⭐', 
+      count: nonBasecampStopsCount,
+      activeBg: 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/25 border-emerald-500 scale-105 ring-2 ring-emerald-500/20',
+      badgeBg: 'bg-white/20 text-white'
+    },
+    { 
+      id: 'dining', 
+      label: 'Food & Dining', 
+      icon: '🍽️', 
+      count: loopedStops.filter((act, idx) => !(act.isBasecamp === true || idx === 0) && getCategoryMeta(act).label === 'Dining').length,
+      activeBg: 'bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-md shadow-orange-500/25 border-orange-400 scale-105 ring-2 ring-orange-500/20',
+      badgeBg: 'bg-white/20 text-white'
+    },
+    { 
+      id: 'attractions', 
+      label: 'Attractions', 
+      icon: '🏛️', 
+      count: loopedStops.filter((act, idx) => !(act.isBasecamp === true || idx === 0) && getCategoryMeta(act).label !== 'Dining').length,
+      activeBg: 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/25 border-purple-400 scale-105 ring-2 ring-purple-500/20',
+      badgeBg: 'bg-white/20 text-white'
+    },
+    { 
+      id: 'landmark', 
+      label: 'Landmarks', 
+      icon: '📸', 
+      count: loopedStops.filter((act, idx) => !(act.isBasecamp === true || idx === 0) && getCategoryMeta(act).label === 'Landmark').length,
+      activeBg: 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-md shadow-teal-500/25 border-teal-400 scale-105 ring-2 ring-teal-500/20',
+      badgeBg: 'bg-white/20 text-white'
+    },
+    { 
+      id: 'nature', 
+      label: 'Nature & Parks', 
+      icon: '🌲', 
+      count: loopedStops.filter((act, idx) => !(act.isBasecamp === true || idx === 0) && getCategoryMeta(act).label === 'Nature').length,
+      activeBg: 'bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-md shadow-emerald-500/25 border-emerald-400 scale-105 ring-2 ring-emerald-500/20',
+      badgeBg: 'bg-white/20 text-white'
+    },
+    { 
+      id: 'shopping', 
+      label: 'Shopping', 
+      icon: '🛍️', 
+      count: loopedStops.filter((act, idx) => !(act.isBasecamp === true || idx === 0) && getCategoryMeta(act).label === 'Shopping').length,
+      activeBg: 'bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-md shadow-pink-500/25 border-pink-400 scale-105 ring-2 ring-pink-500/20',
+      badgeBg: 'bg-white/20 text-white'
+    }
+  ];
+
+  const availableCategoryFilters = categoryFilters.filter(filter => filter.id === 'all' || filter.count > 0);
 
   // 1. Dynamically load Leaflet JS & CSS without SSR issues or version conflicts
   useEffect(() => {
@@ -261,71 +322,106 @@ export default function InteractiveRouteMap({
         const meta = isBasecamp ? { icon: '🏨', label: 'Basecamp', bg: '#1E293B' } : getCategoryMeta(act);
         const pinBg = isSelected ? '#10B981' : (isBasecamp ? '#1E293B' : meta.bg);
 
+        let isCategoryMatch = true;
+        if (selectedCategory !== 'all') {
+          if (selectedCategory === 'dining') isCategoryMatch = !isBasecamp && meta.label === 'Dining';
+          else if (selectedCategory === 'attractions') isCategoryMatch = !isBasecamp && meta.label !== 'Dining';
+          else if (selectedCategory === 'landmark') isCategoryMatch = !isBasecamp && meta.label === 'Landmark';
+          else if (selectedCategory === 'nature') isCategoryMatch = !isBasecamp && meta.label === 'Nature';
+          else if (selectedCategory === 'shopping') isCategoryMatch = !isBasecamp && meta.label === 'Shopping';
+        }
+
+        const isFilterActive = selectedCategory !== 'all';
+        const isHighlightedByFilter = isFilterActive && isCategoryMatch && !isBasecamp;
+
+        // Rich 3D Glassmorphism Gradients for luxury depth
+        const gradientBg = isSelected 
+          ? 'linear-gradient(135deg, #10B981 0%, #047857 100%)' 
+          : (isBasecamp 
+              ? 'linear-gradient(135deg, #334155 0%, #0F172A 100%)'
+              : (meta.label === 'Dining' ? 'linear-gradient(135deg, #FF8A00 0%, #C2410C 100%)'
+                 : meta.label === 'Culture' ? 'linear-gradient(135deg, #A855F7 0%, #6D28D9 100%)'
+                 : meta.label === 'Nature' ? 'linear-gradient(135deg, #34D399 0%, #047857 100%)'
+                 : meta.label === 'Shopping' ? 'linear-gradient(135deg, #FB7185 0%, #BE123C 100%)'
+                 : meta.label === 'Landmark' ? 'linear-gradient(135deg, #2DD4BF 0%, #0F766E 100%)'
+                 : `linear-gradient(135deg, ${pinBg} 0%, #1D4ED8 100%)`));
+
         const customIcon = L.divIcon({
           className: 'custom-tripwise-pin',
           html: `
-            <div style="position: relative; width: ${isSelected ? '46px' : '38px'}; height: ${isSelected ? '56px' : '46px'}; display: flex; align-items: flex-start; justify-content: center; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); transform: ${isSelected ? 'scale(1.15) translateY(-6px)' : 'scale(1)'}; cursor: pointer;">
+            <div style="position: relative; width: ${isSelected || isHighlightedByFilter ? '48px' : '40px'}; height: ${isSelected || isHighlightedByFilter ? '58px' : '48px'}; display: flex; align-items: flex-start; justify-content: center; transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); transform: ${isSelected ? 'scale(1.2) translateY(-6px)' : (isHighlightedByFilter ? 'scale(1.12) translateY(-3px)' : (isCategoryMatch ? 'scale(1)' : 'scale(0.72)'))}; opacity: ${isCategoryMatch ? '1' : '0.16'}; filter: ${isCategoryMatch ? 'none' : 'blur(0.5px) grayscale(90%)'}; z-index: ${isSelected || isHighlightedByFilter ? '1000' : (isCategoryMatch ? '100' : '10')}; cursor: pointer;">
               
-              <!-- Apple Maps Style Vertical Teardrop Body -->
+              <!-- Apple Maps Style 3D Glossy Teardrop Body -->
               <div style="
-                width: ${isSelected ? '42px' : '34px'};
-                height: ${isSelected ? '42px' : '34px'};
-                background: ${isSelected ? '#10B981' : pinBg};
+                width: ${isSelected || isHighlightedByFilter ? '42px' : '36px'};
+                height: ${isSelected || isHighlightedByFilter ? '42px' : '36px'};
+                background: ${gradientBg};
                 border-radius: 50% 50% 50% 0;
                 transform: rotate(-45deg);
-                border: ${isSelected ? '3.5px solid #ffffff' : (isBasecamp ? '2.5px solid #F59E0B' : '2.5px solid #ffffff')};
-                box-shadow: ${isSelected ? '0 8px 24px rgba(16, 185, 129, 0.85)' : (isBasecamp ? '0 6px 18px rgba(245, 158, 11, 0.45)' : '0 6px 16px rgba(28, 27, 27, 0.3)')};
+                border: ${isSelected ? '3.5px solid #ffffff' : (isHighlightedByFilter ? '3px solid #ffffff' : (isBasecamp ? '2.5px solid #F59E0B' : '2.5px solid #ffffff'))};
+                box-shadow: ${isSelected ? '0 10px 28px rgba(16, 185, 129, 0.85), inset 0 2px 4px rgba(255,255,255,0.45)' : (isHighlightedByFilter ? `0 0 24px ${pinBg}, 0 8px 22px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.45)` : (isBasecamp ? '0 6px 20px rgba(245, 158, 11, 0.5), inset 0 2px 4px rgba(255,255,255,0.3)' : '0 6px 18px rgba(0, 0, 0, 0.32), inset 0 2px 4px rgba(255,255,255,0.45)'))};
                 display: flex;
                 align-items: center;
                 justify-content: center;
               ">
-                <!-- Inner Step Number or Basecamp Icon (Upright Counter-Rotated) -->
-                <span style="
+                <!-- Inner Enamel Glass Medal Ring (Upright Counter-Rotated) -->
+                <div style="
                   transform: rotate(45deg);
-                  color: #ffffff;
-                  font-weight: 950;
-                  font-size: ${isSelected ? '16px' : (isBasecamp ? '16px' : '14px')};
-                  letter-spacing: -0.5px;
-                  text-shadow: 0 1px 2px rgba(0,0,0,0.25);
-                ">${isBasecamp ? '🏨' : stopIdx}</span>
+                  width: ${isSelected || isHighlightedByFilter ? '28px' : '24px'};
+                  height: ${isSelected || isHighlightedByFilter ? '28px' : '24px'};
+                  border-radius: 50%;
+                  background: rgba(255, 255, 255, 0.22);
+                  border: 1px solid rgba(255, 255, 255, 0.55);
+                  box-shadow: inset 0 2px 4px rgba(0,0,0,0.18);
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-size: ${isSelected || isHighlightedByFilter ? '16px' : '14px'};
+                ">
+                  ${isBasecamp ? '🏨' : meta.icon}
+                </div>
               </div>
 
-              <!-- Floating Corner Category Jewel Badge -->
+              <!-- Top-Right Chronological Crown Badge (#1, #2, #3 or ★) -->
               <div style="
                 position: absolute;
-                top: -3px;
-                right: -2px;
-                width: ${isSelected ? '22px' : '20px'};
-                height: ${isSelected ? '22px' : '20px'};
-                background: #ffffff;
-                border: 1.5px solid ${isSelected ? '#10B981' : pinBg};
-                border-radius: 50%;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.22);
+                top: -5px;
+                right: -4px;
+                background: ${isBasecamp ? '#F59E0B' : '#1C1B1B'};
+                color: #FFFFFF;
+                border: 2px solid #FFFFFF;
+                border-radius: 9999px;
+                padding: ${isBasecamp ? '0 5px' : '1px 6.5px'};
+                min-width: 20px;
+                height: 20px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.45);
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: ${isSelected ? '12px' : '11px'};
-                z-index: 10;
+                font-size: 11px;
+                font-weight: 950;
+                letter-spacing: -0.3px;
+                z-index: 20;
               ">
-                ${isBasecamp ? '⭐' : meta.icon}
+                ${isBasecamp ? '★' : stopIdx}
               </div>
 
-              <!-- Realistic Ground Contact Shadow Dot -->
+              <!-- Realistic Dual-Layer Ground Contact Shadow -->
               <div style="
                 position: absolute;
                 bottom: -2px;
-                width: ${isSelected ? '16px' : '12px'};
-                height: 4px;
-                background: rgba(0,0,0,0.28);
+                width: ${isSelected || isHighlightedByFilter ? '20px' : '14px'};
+                height: 5px;
+                background: rgba(0,0,0,0.32);
                 border-radius: 50%;
-                filter: blur(1.5px);
+                filter: blur(2px);
                 z-index: -1;
               "></div>
             </div>
           `,
-          iconSize: isSelected ? [46, 56] : [38, 46],
-          iconAnchor: isSelected ? [23, 56] : [19, 46],
-          popupAnchor: [0, -48]
+          iconSize: isSelected || isHighlightedByFilter ? [48, 58] : [40, 48],
+          iconAnchor: isSelected || isHighlightedByFilter ? [24, 58] : [20, 48],
+          popupAnchor: [0, -50]
         });
 
         const marker = L.marker(latLng, { icon: customIcon }).addTo(layerGroupRef.current);
@@ -431,7 +527,7 @@ export default function InteractiveRouteMap({
         const animatedPolyline = L.polyline(latLngs, {
           color: '#FF6B35',
           weight: 4,
-          opacity: 0.95,
+          opacity: selectedCategory !== 'all' ? 0.35 : 0.95,
           dashArray: '14, 14',
           lineCap: 'round',
           lineJoin: 'round',
@@ -467,6 +563,7 @@ export default function InteractiveRouteMap({
                 border: 2px solid #ffffff;
                 border-radius: 50%;
                 box-shadow: 0 3px 10px rgba(236,103,53,0.55);
+                opacity: ${selectedCategory !== 'all' ? '0.35' : '1'};
               ">
                 ➤
               </div>
@@ -502,6 +599,7 @@ export default function InteractiveRouteMap({
                   color: ${isReturnSegment ? '#92400E' : '#1C1B1B'};
                   white-space: nowrap;
                   transform: translateY(-24px);
+                  opacity: ${selectedCategory !== 'all' ? '0.35' : '1'};
                 ">
                   <span>${transit.icon}</span>
                   <span style="color: ${isReturnSegment ? '#D97706' : transit.color};">${segmentPrefix}${transit.label}</span>
@@ -516,14 +614,14 @@ export default function InteractiveRouteMap({
         }
 
         // Only auto-fit route bounds if user hasn't explicitly clicked and locked onto a specific stop
-        if (selectedStopIdx === null) {
+        if (selectedStopIdx === null && selectedCategory === 'all') {
           mapRef.current.fitBounds(animatedPolyline.getBounds(), {
             padding: [60, 60],
             maxZoom: 16,
             animate: true
           });
         }
-      } else if (selectedStopIdx === null && latLngs.length === 1) {
+      } else if (selectedStopIdx === null && latLngs.length === 1 && selectedCategory === 'all') {
         mapRef.current.setView(latLngs[0], 15, { animate: true });
       }
     };
@@ -535,7 +633,7 @@ export default function InteractiveRouteMap({
       clearTimeout(timer1);
       clearTimeout(timer2);
     };
-  }, [isReady, activities, coordinates, selectedStopIdx, isFullscreen]);
+  }, [isReady, activities, coordinates, selectedStopIdx, isFullscreen, selectedCategory]);
 
   // Handle flyTo stop when clicked from interactive top strip or external button
   const handleFlyToStop = (stopIdx) => {
@@ -563,6 +661,45 @@ export default function InteractiveRouteMap({
     if (latLngs.length > 0 && window.L) {
       const bounds = window.L.latLngBounds(latLngs);
       mapRef.current.fitBounds(bounds, { padding: [60, 60], maxZoom: 16, animate: true, duration: 1.0 });
+    }
+  };
+
+  // Handle category filter selection (dims non-matching & zooms to matching stops)
+  const handleCategorySelect = (catId) => {
+    setSelectedCategory(catId);
+    setSelectedStopIdx(null); // Clear individual pin selection when filtering
+
+    if (!mapRef.current || !window.L || !layerGroupRef.current) return;
+
+    if (catId === 'all') {
+      handleFitRoute();
+      return;
+    }
+
+    const matchingLatLngs = [];
+    loopedStops.forEach((act, idx) => {
+      const isBasecamp = act.isBasecamp === true || idx === 0;
+      const meta = isBasecamp ? { icon: '🏨', label: 'Basecamp' } : getCategoryMeta(act);
+
+      let isMatch = false;
+      if (catId === 'dining') isMatch = !isBasecamp && meta.label === 'Dining';
+      else if (catId === 'attractions') isMatch = !isBasecamp && meta.label !== 'Dining';
+      else if (catId === 'landmark') isMatch = !isBasecamp && meta.label === 'Landmark';
+      else if (catId === 'nature') isMatch = !isBasecamp && meta.label === 'Nature';
+      else if (catId === 'shopping') isMatch = !isBasecamp && meta.label === 'Shopping';
+
+      if (isMatch && act.coordinates) {
+        matchingLatLngs.push([act.coordinates.lat, act.coordinates.lng]);
+      }
+    });
+
+    if (matchingLatLngs.length > 0 && window.L) {
+      if (matchingLatLngs.length === 1) {
+        mapRef.current.flyTo(matchingLatLngs[0], 16, { duration: 1.1, easeLinearity: 0.25 });
+      } else {
+        const bounds = window.L.latLngBounds(matchingLatLngs);
+        mapRef.current.fitBounds(bounds, { padding: [60, 60], maxZoom: 16, animate: true, duration: 1.0 });
+      }
     }
   };
 
@@ -635,7 +772,53 @@ export default function InteractiveRouteMap({
           </div>
         </div>
 
-        {/* Row 2: Looped Quick Stop Selector Strip (Clicking any chip flies to that stop) */}
+        {/* Row 2: Category Filter Pills (Smoothly fades non-matching pins & zooms camera to matching stops) */}
+        {availableCategoryFilters.length > 1 && (
+          <div className="flex items-center gap-2 overflow-x-auto pt-1 pb-2 no-scrollbar border-b border-stone-100">
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-[11px] font-black text-stone-400 uppercase tracking-wider flex items-center gap-1">
+                <span>🎛️</span>
+                <span>Category:</span>
+              </span>
+              {selectedCategory !== 'all' && (
+                <button
+                  type="button"
+                  onClick={() => handleCategorySelect('all')}
+                  className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
+                >
+                  <span>✕ Clear</span>
+                </button>
+              )}
+            </div>
+            {availableCategoryFilters.map((filter) => {
+              const isSelected = selectedCategory === filter.id;
+              return (
+                <button
+                  key={filter.id}
+                  type="button"
+                  onClick={() => handleCategorySelect(filter.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer border shadow-2xs ${
+                    isSelected
+                      ? (filter.activeBg || 'bg-[#1C1B1B] text-white border-[#1C1B1B] scale-105 shadow-md')
+                      : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100 hover:border-stone-300 hover:text-stone-950'
+                  }`}
+                >
+                  <span className="text-sm">{filter.icon}</span>
+                  <span>{filter.label}</span>
+                  {typeof filter.count === 'number' && (
+                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+                      isSelected ? 'bg-white/25 text-white shadow-2xs' : 'bg-stone-200 text-stone-600'
+                    }`}>
+                      {filter.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Row 3: Looped Quick Stop Selector Strip (Clicking any chip flies to that stop) */}
         {loopedStops.length > 0 && (
           <div className="flex items-center gap-2 overflow-x-auto pt-0.5 pb-1 no-scrollbar">
             {loopedStops.map((act, idx) => {
@@ -643,12 +826,23 @@ export default function InteractiveRouteMap({
               const meta = isBasecamp ? { icon: '🏨', label: 'Basecamp', bg: '#1E293B' } : getCategoryMeta(act);
               const isSelected = selectedStopIdx === idx;
 
+              let isCategoryMatch = true;
+              if (selectedCategory !== 'all') {
+                if (selectedCategory === 'dining') isCategoryMatch = !isBasecamp && meta.label === 'Dining';
+                else if (selectedCategory === 'attractions') isCategoryMatch = !isBasecamp && meta.label !== 'Dining';
+                else if (selectedCategory === 'landmark') isCategoryMatch = !isBasecamp && meta.label === 'Landmark';
+                else if (selectedCategory === 'nature') isCategoryMatch = !isBasecamp && meta.label === 'Nature';
+                else if (selectedCategory === 'shopping') isCategoryMatch = !isBasecamp && meta.label === 'Shopping';
+              }
+
               let transitConnector = null;
               if (idx > 0 && loopedStops[idx - 1]?.coordinates && act?.coordinates && typeof window !== 'undefined' && window.L) {
                 const transit = getTransitTelemetry(loopedStops[idx - 1].coordinates, act.coordinates);
                 if (transit) {
                   transitConnector = (
-                    <div className="shrink-0 px-2.5 py-1 rounded-lg bg-stone-100 border border-stone-200 text-[10px] font-extrabold text-stone-600 flex items-center gap-1 shadow-2xs">
+                    <div className={`shrink-0 px-2.5 py-1 rounded-lg bg-stone-100 border border-stone-200 text-[10px] font-extrabold text-stone-600 flex items-center gap-1 shadow-2xs transition-opacity ${
+                      selectedCategory !== 'all' && !isCategoryMatch ? 'opacity-40' : 'opacity-100'
+                    }`}>
                       <span>{transit.icon}</span>
                       <span>{transit.label}</span>
                     </div>
@@ -664,8 +858,10 @@ export default function InteractiveRouteMap({
                     onClick={() => handleFlyToStop(idx)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all shrink-0 flex items-center gap-2 shadow-2xs cursor-pointer border ${
                       isSelected
-                        ? (isBasecamp ? 'bg-[#1E293B] text-white border-[#334155] scale-102 shadow-md' : 'bg-[#10B981] text-white border-[#059669] scale-102 shadow-md')
-                        : 'bg-stone-50 text-stone-800 border-stone-200 hover:bg-stone-100'
+                        ? (isBasecamp ? 'bg-[#1E293B] text-white border-[#334155] scale-102 shadow-md z-10' : 'bg-[#10B981] text-white border-[#059669] scale-102 shadow-md z-10')
+                        : (selectedCategory !== 'all' && !isCategoryMatch
+                            ? 'bg-stone-50/60 text-stone-400 border-stone-100 opacity-45 scale-95 hover:opacity-85'
+                            : 'bg-stone-50 text-stone-800 border-stone-200 hover:bg-stone-100')
                     }`}
                   >
                     <span className={`w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black ${
