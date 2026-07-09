@@ -2,7 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import InteractiveRouteMap from './InteractiveRouteMap';
+
+const InteractiveRouteMap = dynamic(() => import('./InteractiveRouteMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="relative w-full h-80 md:h-96 rounded-3xl overflow-hidden border border-stone-200 shadow-md bg-stone-100 flex flex-col items-center justify-center text-center p-6">
+      <div className="w-8 h-8 rounded-full border-2 border-dashed border-[#FF6B35] animate-spin mb-3" />
+      <span className="text-xs font-extrabold text-stone-700">Loading Interactive Route Map...</span>
+    </div>
+  )
+});
 
 const InteractiveGlobe = dynamic(() => import('./InteractiveGlobe'), {
   ssr: false,
@@ -30,6 +39,8 @@ export default function LiveTripDashboard({
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('map'); // 'map' | 'activities'
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const prevIsGeneratingRef = React.useRef(isGenerating);
 
   // Cycle generation status messages
   useEffect(() => {
@@ -38,6 +49,25 @@ export default function LiveTripDashboard({
       setActiveStepIndex((prev) => (prev + 1) % GENERATION_STEPS.length);
     }, 1400);
     return () => clearInterval(interval);
+  }, [isGenerating]);
+
+  // Handle camera plunge target lock right after trip generation completes
+  useEffect(() => {
+    if (prevIsGeneratingRef.current && !isGenerating && itinerary) {
+      setIsTransitioning(true);
+      const timer = setTimeout(() => {
+        setIsTransitioning(false);
+      }, 1800); // 1.8 seconds of cinematic globe target lock camera plunge!
+      return () => clearTimeout(timer);
+    }
+    prevIsGeneratingRef.current = isGenerating;
+  }, [isGenerating, itinerary]);
+
+  // Reset transition state if user triggers a new generation
+  useEffect(() => {
+    if (isGenerating) {
+      setIsTransitioning(false);
+    }
   }, [isGenerating]);
 
   // Reset day index when new itinerary arrives
@@ -68,7 +98,7 @@ export default function LiveTripDashboard({
         </div>
 
         <div className="flex items-center gap-2">
-          {itinerary && (
+          {itinerary && !isTransitioning && !isGenerating && (
             <div className="flex bg-white/90 backdrop-blur-md p-1 rounded-xl border border-[rgba(28,27,27,0.1)] shadow-2xs">
               <button
                 type="button"
@@ -91,34 +121,23 @@ export default function LiveTripDashboard({
 
           <div className="bg-[#1C1B1B] text-white px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-wide shadow-sm flex items-center gap-1.5">
             <span>⚡</span>
-            <span>{itinerary ? 'AI Optimized' : 'Live Radar'}</span>
+            <span>{isGenerating ? 'Satellite Triangulation' : isTransitioning ? 'Target Lock' : itinerary ? 'AI Optimized' : 'Live Radar'}</span>
           </div>
         </div>
       </div>
 
       {/* Main Center Dashboard Area */}
-      <div className="relative z-10 my-auto flex flex-col items-center justify-center w-full max-w-4xl mx-auto py-4">
-        {isGenerating ? (
-          /* STATE: GENERATING / SCANNING */
-          <div className="flex flex-col items-center justify-center text-center py-12 px-6 max-w-md mx-auto animate-fade-in">
-            <div className="relative w-32 h-32 flex items-center justify-center mb-8">
-              <div className="absolute inset-0 rounded-full border-4 border-[#EC6735]/20 animate-ping duration-1000" />
-              <div className="absolute inset-2 rounded-full border-2 border-dashed border-[#EC6735] animate-spin duration-3000" />
-              <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-[#EC6735] to-[#FF8C61] flex items-center justify-center text-white shadow-xl shadow-[#EC6735]/30">
-                <svg className="w-10 h-10 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-              </div>
-            </div>
-
-            <h3 className="text-lg md:text-xl font-black text-[#1C1B1B] mb-2">
-              Crafting Your Custom Route...
-            </h3>
-            <p className="text-xs md:text-sm font-semibold text-[#EC6735] bg-white/90 px-4 py-2 rounded-full border border-[#EC6735]/20 shadow-xs animate-pulse">
-              {GENERATION_STEPS[activeStepIndex]}
-            </p>
-          </div>
-        ) : itinerary ? (
+      <div className="relative z-10 my-auto flex flex-col items-center justify-center w-full max-w-4xl mx-auto py-2">
+        {isGenerating || isTransitioning || !itinerary ? (
+          /* STATE: 3D GLOBE (IDLE / HYPER-SCANNING DURING GENERATION / TARGET LOCK CAMERA PLUNGE) */
+          <InteractiveGlobe
+            isGenerating={isGenerating}
+            isTransitioning={isTransitioning}
+            activeStepText={GENERATION_STEPS[activeStepIndex]}
+            destinationName={displayDest}
+            targetCoordinates={itinerary?.coordinates || { lat: 35.0116, lng: 135.7681 }}
+          />
+        ) : (
           /* STATE: GENERATED ITINERARY VIEW */
           <div className="w-full flex flex-col gap-5 animate-fade-in">
             {/* Day Selector Tabs */}
@@ -182,9 +201,6 @@ export default function LiveTripDashboard({
               </div>
             )}
           </div>
-        ) : (
-          /* STATE: EXPLORE MODE / ROTATING 3D GLOBE */
-          <InteractiveGlobe onSelectPrompt={onSelectPrompt} />
         )}
       </div>
     </div>

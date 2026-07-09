@@ -3,11 +3,24 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
-export default function InteractiveGlobe() {
+export default function InteractiveGlobe({
+  isGenerating = false,
+  isTransitioning = false,
+  activeStepText = '',
+  destinationName = 'Your Destination',
+  targetCoordinates = { lat: 35.0116, lng: 135.7681 }
+}) {
   const containerRef = useRef(null);
   const globeGroupRef = useRef(null);
+  const ringRef = useRef(null);
   const isDraggingRef = useRef(false);
   const previousMousePositionRef = useRef({ x: 0, y: 0 });
+
+  // Track props in ref for smooth access inside animation loop without re-initializing WebGL
+  const stateRef = useRef({ isGenerating, isTransitioning, activeStepText, destinationName, targetCoordinates });
+  useEffect(() => {
+    stateRef.current = { isGenerating, isTransitioning, activeStepText, destinationName, targetCoordinates };
+  }, [isGenerating, isTransitioning, activeStepText, destinationName, targetCoordinates]);
 
   useEffect(() => {
     if (!containerRef.current || typeof window === 'undefined') return;
@@ -74,7 +87,19 @@ export default function InteractiveGlobe() {
     const haloMesh = new THREE.Mesh(haloGeometry, haloMaterial);
     globeGroup.add(haloMesh);
 
-    // 5. Lighting for Realistic Sun & Space Ambiance
+    // 5. Holographic Orbital Laser Scanning Ring (Only active during AI Triangulation / Target Lock)
+    const ringGeometry = new THREE.TorusGeometry(2.9, 0.018, 16, 100);
+    const ringMaterial = new THREE.MeshBasicMaterial({
+      color: 0xFF6B35,
+      transparent: true,
+      opacity: 0.7
+    });
+    const ringMesh = new THREE.Mesh(ringGeometry, ringMaterial);
+    ringMesh.visible = false;
+    ringRef.current = ringMesh;
+    globeGroup.add(ringMesh);
+
+    // 6. Lighting for Realistic Sun & Space Ambiance
     const ambientLight = new THREE.AmbientLight(0xffffff, 1.4);
     scene.add(ambientLight);
 
@@ -86,7 +111,7 @@ export default function InteractiveGlobe() {
     backLight.position.set(-5, -3, -5);
     scene.add(backLight);
 
-    // 6. Mouse & Touch Drag Controls for Free 360° Rotation
+    // 7. Mouse & Touch Drag Controls for Free 360° Rotation
     const handleMouseDown = (e) => {
       isDraggingRef.current = true;
       previousMousePositionRef.current = {
@@ -126,24 +151,70 @@ export default function InteractiveGlobe() {
     domElement.addEventListener('touchmove', handleMouseMove, { passive: true });
     window.addEventListener('touchend', handleMouseUp);
 
-    // 7. Animation Loop
+    // 8. Animation Loop
     let animationFrameId;
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
 
-      if (!isDraggingRef.current) {
-        // Smooth idle rotation
-        globeGroup.rotation.y += 0.0025;
-      }
+      const state = stateRef.current;
 
-      // Clouds rotate slightly faster/independently from the Earth surface
-      cloudsMesh.rotation.y += 0.0008;
+      if (state.isTransitioning) {
+        // PHASE: CAMERA PLUNGE / TARGET LOCK ON GENERATED TRIP!
+        // Smoothly rotate right to target coordinates (Lat/Lng to radians)
+        if (state.targetCoordinates?.lat !== undefined && state.targetCoordinates?.lng !== undefined) {
+          const targetLonRad = (state.targetCoordinates.lng + 90) * (Math.PI / 180);
+          const targetLatRad = (state.targetCoordinates.lat * 0.4) * (Math.PI / 180);
+          globeGroup.rotation.y += (targetLonRad - globeGroup.rotation.y) * 0.08;
+          globeGroup.rotation.x += (targetLatRad - globeGroup.rotation.x) * 0.08;
+        }
+
+        // Zoom camera rapidly toward Earth's surface!
+        camera.position.z += (2.6 - camera.position.z) * 0.07;
+
+        if (ringRef.current) {
+          ringRef.current.visible = true;
+          ringRef.current.material.color.setHex(0x10b981); // Emerald green target lock
+          ringRef.current.rotation.z += 0.12;
+          ringRef.current.scale.setScalar(1 + Math.sin(Date.now() * 0.01) * 0.05);
+        }
+      } else if (state.isGenerating) {
+        // PHASE: HYPER-SPEED SATELLITE SCANNING (While trip is generating)
+        globeGroup.rotation.y += 0.038;
+        globeGroup.rotation.x = Math.sin(Date.now() * 0.002) * 0.25;
+
+        // Clouds counter-rotate for dramatic atmospheric turbulence
+        cloudsMesh.rotation.y -= 0.015;
+
+        if (ringRef.current) {
+          ringRef.current.visible = true;
+          ringRef.current.material.color.setHex(0xFF6B35); // Orange high-energy radar scan
+          ringRef.current.rotation.z += 0.04;
+          ringRef.current.rotation.x = Math.sin(Date.now() * 0.003) * 0.6;
+          ringRef.current.scale.setScalar(1 + Math.sin(Date.now() * 0.008) * 0.08);
+        }
+
+        // Smoothly reset camera distance if previously zoomed
+        camera.position.z += (7.2 - camera.position.z) * 0.05;
+      } else {
+        // PHASE: IDLE REALISTIC GLOBE
+        if (!isDraggingRef.current) {
+          globeGroup.rotation.y += 0.0025;
+        }
+        cloudsMesh.rotation.y += 0.0008;
+
+        if (ringRef.current) {
+          ringRef.current.visible = false;
+        }
+
+        // Smoothly return camera to space distance
+        camera.position.z += (7.2 - camera.position.z) * 0.05;
+      }
 
       renderer.render(scene, camera);
     };
     animate();
 
-    // 8. Resize Handling
+    // 9. Resize Handling
     const handleResize = () => {
       if (!containerRef.current) return;
       const w = containerRef.current.clientWidth;
@@ -172,18 +243,45 @@ export default function InteractiveGlobe() {
 
   return (
     <div className="w-full flex flex-col items-center justify-center animate-fade-in my-auto py-2">
-      {/* Globe Title Header */}
-      <div className="text-center max-w-md mx-auto mb-1">
-        <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#FF6B35] bg-[#FF6B35]/10 px-3 py-1 rounded-full border border-[#FF6B35]/20 inline-block mb-2">
-          🌍 3D Global Route Radar
-        </span>
-        <h3 className="text-xl md:text-2xl font-black text-stone-900 tracking-tight">
-          Interactive Realistic Globe
-        </h3>
-        <p className="text-xs md:text-sm text-stone-600 mt-1 font-medium">
-          Drag to freely spin the realistic 3D Earth, or enter your dream destination on the left to start planning.
-        </p>
-      </div>
+      {/* Dynamic Header State */}
+      {isTransitioning ? (
+        <div className="text-center max-w-md mx-auto mb-1 animate-fade-in">
+          <span className="text-xs font-black uppercase tracking-widest text-white bg-[#10b981] px-4 py-1.5 rounded-full shadow-lg shadow-emerald-500/30 inline-flex items-center gap-2 animate-bounce mb-2">
+            ✨ TARGET LOCKED: {destinationName?.toUpperCase()}
+          </span>
+          <h3 className="text-xl md:text-2xl font-black text-stone-900 tracking-tight">
+            Plunging Into Local Terrain...
+          </h3>
+          <p className="text-xs md:text-sm text-[#10b981] mt-1 font-bold">
+            Directing satellite coordinates to your custom interactive route map.
+          </p>
+        </div>
+      ) : isGenerating ? (
+        <div className="text-center max-w-md mx-auto mb-1 animate-fade-in">
+          <span className="text-xs font-black uppercase tracking-widest text-white bg-[#FF6B35] px-4 py-1.5 rounded-full shadow-lg shadow-orange-500/30 inline-flex items-center gap-2 animate-pulse mb-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping" />
+            📡 SATELLITE SCAN: {destinationName?.toUpperCase() || 'GLOBAL SECTOR'}
+          </span>
+          <h3 className="text-xl md:text-2xl font-black text-stone-900 tracking-tight">
+            Triangulating AI Waypoints...
+          </h3>
+          <p className="text-xs md:text-sm font-extrabold text-[#FF6B35] mt-1.5 bg-white/95 px-4 py-2 rounded-xl border border-[#FF6B35]/20 shadow-sm max-w-xs mx-auto animate-pulse">
+            {activeStepText || 'Triangulating optimal GPS coordinates & scenic routes...'}
+          </p>
+        </div>
+      ) : (
+        <div className="text-center max-w-md mx-auto mb-1">
+          <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#FF6B35] bg-[#FF6B35]/10 px-3 py-1 rounded-full border border-[#FF6B35]/20 inline-block mb-2">
+            🌍 3D Global Route Radar
+          </span>
+          <h3 className="text-xl md:text-2xl font-black text-stone-900 tracking-tight">
+            Interactive Realistic Globe
+          </h3>
+          <p className="text-xs md:text-sm text-stone-600 mt-1 font-medium">
+            Drag to freely spin the realistic 3D Earth, or enter your dream destination on the left to start planning.
+          </p>
+        </div>
+      )}
 
       {/* 3D Canvas Container */}
       <div className="relative w-full h-80 sm:h-96 md:h-[430px] flex items-center justify-center my-2">

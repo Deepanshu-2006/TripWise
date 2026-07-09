@@ -73,97 +73,110 @@ export default function InteractiveRouteMap({
     }
   }, [isReady, coordinates]);
 
-  // 3. Update Markers & Polyline when activities or selected day changes
+  // 3. Update Markers & Polyline when activities, selected day, or Leaflet readiness changes
   useEffect(() => {
-    if (!mapRef.current || !layerGroupRef.current || typeof window === 'undefined' || !window.L) return;
+    if (typeof window === 'undefined') return;
 
-    const L = window.L;
-    layerGroupRef.current.clearLayers();
+    const plotRoute = () => {
+      if (!mapRef.current || !layerGroupRef.current || !window.L) return;
 
-    const validActivities = activities.filter(
-      (act) => act.coordinates && typeof act.coordinates.lat === 'number' && typeof act.coordinates.lng === 'number'
-    );
+      const L = window.L;
+      mapRef.current.invalidateSize();
+      layerGroupRef.current.clearLayers();
 
-    if (validActivities.length === 0) {
-      // If no valid coordinates for this day, center on destination center if available
-      if (coordinates && typeof coordinates.lat === 'number' && typeof coordinates.lng === 'number') {
-        mapRef.current.setView([coordinates.lat, coordinates.lng], 13);
+      const validActivities = activities.filter(
+        (act) => act.coordinates && typeof act.coordinates.lat === 'number' && typeof act.coordinates.lng === 'number'
+      );
+
+      if (validActivities.length === 0) {
+        // If no valid coordinates for this day, center on destination center if available
+        if (coordinates && typeof coordinates.lat === 'number' && typeof coordinates.lng === 'number') {
+          mapRef.current.setView([coordinates.lat, coordinates.lng], 13);
+        }
+        return;
       }
-      return;
-    }
 
-    const latLngs = [];
-    const pinColors = ['#FF6B35', '#0D9488', '#1C1B1B', '#8CA3A8', '#EC6735'];
+      const latLngs = [];
+      const pinColors = ['#FF6B35', '#0D9488', '#1C1B1B', '#8CA3A8', '#EC6735'];
 
-    validActivities.forEach((act, idx) => {
-      const latLng = [act.coordinates.lat, act.coordinates.lng];
-      latLngs.push(latLng);
+      validActivities.forEach((act, idx) => {
+        const latLng = [act.coordinates.lat, act.coordinates.lng];
+        latLngs.push(latLng);
 
-      const color = pinColors[idx % pinColors.length];
+        const color = pinColors[idx % pinColors.length];
 
-      // Custom HTML Marker Pin
-      const customIcon = L.divIcon({
-        className: 'custom-tripwise-pin',
-        html: `
-          <div style="
-            background-color: ${color};
-            width: 36px;
-            height: 36px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #ffffff;
-            font-weight: 900;
-            font-size: 14px;
-            border: 2px solid #ffffff;
-            box-shadow: 0 4px 12px rgba(28,27,27,0.25);
-            transition: transform 0.2s ease;
-          ">
-            ${idx + 1}
+        // Custom HTML Marker Pin
+        const customIcon = L.divIcon({
+          className: 'custom-tripwise-pin',
+          html: `
+            <div style="
+              background-color: ${color};
+              width: 36px;
+              height: 36px;
+              border-radius: 12px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: #ffffff;
+              font-weight: 900;
+              font-size: 14px;
+              border: 2px solid #ffffff;
+              box-shadow: 0 4px 12px rgba(28,27,27,0.25);
+              transition: transform 0.2s ease;
+            ">
+              ${idx + 1}
+            </div>
+          `,
+          iconSize: [36, 36],
+          iconAnchor: [18, 18],
+          popupAnchor: [0, -20]
+        });
+
+        const marker = L.marker(latLng, { icon: customIcon }).addTo(layerGroupRef.current);
+
+        const popupContent = `
+          <div style="font-family: system-ui, -apple-system, sans-serif; padding: 4px; max-width: 220px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+              <span style="font-size: 10px; font-weight: 800; color: #FF6B35; text-transform: uppercase;">${act.time || 'Schedule'}</span>
+              ${act.badge ? `<span style="font-size: 9px; font-weight: 800; background: #F5ECE6; color: #4B4745; padding: 2px 6px; border-radius: 4px;">${act.badge}</span>` : ''}
+            </div>
+            <h4 style="font-size: 13px; font-weight: 900; color: #1C1B1B; margin: 0 0 4px 0; line-height: 1.2;">${act.title || 'Stop ' + (idx + 1)}</h4>
+            <p style="font-size: 11px; color: #4B4745; margin: 0; line-height: 1.4;">${act.description || ''}</p>
           </div>
-        `,
-        iconSize: [36, 36],
-        iconAnchor: [18, 18],
-        popupAnchor: [0, -20]
+        `;
+
+        marker.bindPopup(popupContent);
       });
 
-      const marker = L.marker(latLng, { icon: customIcon }).addTo(layerGroupRef.current);
+      // Draw dashed polyline connecting the day's stops
+      if (latLngs.length > 1) {
+        const polyline = L.polyline(latLngs, {
+          color: '#FF6B35',
+          weight: 4,
+          opacity: 0.85,
+          dashArray: '8, 8',
+          lineCap: 'round',
+          lineJoin: 'round'
+        }).addTo(layerGroupRef.current);
 
-      const popupContent = `
-        <div style="font-family: system-ui, -apple-system, sans-serif; padding: 4px; max-width: 220px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-            <span style="font-size: 10px; font-weight: 800; color: #FF6B35; text-transform: uppercase;">${act.time || 'Schedule'}</span>
-            ${act.badge ? `<span style="font-size: 9px; font-weight: 800; background: #F5ECE6; color: #4B4745; padding: 2px 6px; border-radius: 4px;">${act.badge}</span>` : ''}
-          </div>
-          <h4 style="font-size: 13px; font-weight: 900; color: #1C1B1B; margin: 0 0 4px 0; line-height: 1.2;">${act.title || 'Stop ' + (idx + 1)}</h4>
-          <p style="font-size: 11px; color: #4B4745; margin: 0; line-height: 1.4;">${act.description || ''}</p>
-        </div>
-      `;
+        mapRef.current.fitBounds(polyline.getBounds(), {
+          padding: [50, 50],
+          maxZoom: 16,
+          animate: true
+        });
+      } else if (latLngs.length === 1) {
+        mapRef.current.setView(latLngs[0], 15, { animate: true });
+      }
+    };
 
-      marker.bindPopup(popupContent);
-    });
-
-    // Draw dashed polyline connecting the day's stops
-    if (latLngs.length > 1) {
-      const polyline = L.polyline(latLngs, {
-        color: '#FF6B35',
-        weight: 4,
-        opacity: 0.85,
-        dashArray: '8, 8',
-        lineCap: 'round',
-        lineJoin: 'round'
-      }).addTo(layerGroupRef.current);
-
-      mapRef.current.fitBounds(polyline.getBounds(), {
-        padding: [50, 50],
-        maxZoom: 16,
-        animate: true
-      });
-    } else if (latLngs.length === 1) {
-      mapRef.current.setView(latLngs[0], 15, { animate: true });
-    }
-  }, [activities, coordinates]);
+    plotRoute();
+    const timer1 = setTimeout(plotRoute, 150);
+    const timer2 = setTimeout(plotRoute, 500);
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
+  }, [isReady, activities, coordinates]);
 
   return (
     <div className="relative w-full h-80 md:h-96 rounded-3xl overflow-hidden border border-stone-200 shadow-md bg-stone-100 flex flex-col">
