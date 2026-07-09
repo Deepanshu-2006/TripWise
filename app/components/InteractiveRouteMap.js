@@ -163,41 +163,105 @@ export default function InteractiveRouteMap({
         const color = pinColors[idx % pinColors.length];
         const isSelected = selectedStopIdx === idx;
 
+        // Smart Category & Icon detection from stop details
+        const getCategoryMeta = (activity) => {
+          const text = ((activity.title || '') + ' ' + (activity.description || '') + ' ' + (activity.badge || '') + ' ' + (activity.category || '')).toLowerCase();
+          if (/restaurant|cafe|coffee|lunch|dinner|breakfast|food|dining|sushi|pizza|trattoria|izakaya|bar|bistro|culinary|eat|tasting/.test(text)) {
+            return { icon: '🍽️', label: 'Dining', bg: '#FF6B35' };
+          }
+          if (/museum|shrine|temple|castle|palace|cathedral|church|monument|history|heritage|culture|art|gallery|exhibition|historical/.test(text)) {
+            return { icon: '🏛️', label: 'Culture', bg: '#8B5CF6' };
+          }
+          if (/park|garden|nature|forest|mountain|lake|river|beach|scenic|viewpoint|hike|hiking|trail|waterfall|botanical/.test(text)) {
+            return { icon: '🌲', label: 'Nature', bg: '#10B981' };
+          }
+          if (/shop|market|bazaar|mall|boutique|fashion|souvenir|retail|shopping|outlet/.test(text)) {
+            return { icon: '🛍️', label: 'Shopping', bg: '#EC4899' };
+          }
+          if (/photo|tower|observatory|skyline|landmark|bridge|iconic|spot|attraction|highlights/.test(text)) {
+            return { icon: '📸', label: 'Landmark', bg: '#0D9488' };
+          }
+          return { icon: '📍', label: activity.badge || 'Attraction', bg: color };
+        };
+
+        const meta = getCategoryMeta(act);
+        const pinBg = isSelected ? '#10B981' : meta.bg;
+
         const customIcon = L.divIcon({
           className: 'custom-tripwise-pin',
           html: `
-            <div style="
-              background-color: ${isSelected ? '#10B981' : color};
-              width: ${isSelected ? '42px' : '36px'};
-              height: ${isSelected ? '42px' : '36px'};
-              border-radius: ${isSelected ? '14px' : '12px'};
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              color: #ffffff;
-              font-weight: 900;
-              font-size: ${isSelected ? '16px' : '14px'};
-              border: ${isSelected ? '3px solid #ffffff' : '2px solid #ffffff'};
-              box-shadow: ${isSelected ? '0 0 16px rgba(16, 185, 129, 0.8)' : '0 4px 12px rgba(28,27,27,0.25)'};
-              transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-              transform: ${isSelected ? 'scale(1.15) translateY(-4px)' : 'scale(1)'};
-            ">
-              ${idx + 1}
+            <div style="position: relative; width: ${isSelected ? '46px' : '38px'}; height: ${isSelected ? '56px' : '46px'}; display: flex; align-items: flex-start; justify-content: center; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); transform: ${isSelected ? 'scale(1.15) translateY(-6px)' : 'scale(1)'}; cursor: pointer;">
+              
+              <!-- Apple Maps Style Vertical Teardrop Body -->
+              <div style="
+                width: ${isSelected ? '42px' : '34px'};
+                height: ${isSelected ? '42px' : '34px'};
+                background: ${isSelected ? '#10B981' : pinBg};
+                border-radius: 50% 50% 50% 0;
+                transform: rotate(-45deg);
+                border: ${isSelected ? '3.5px solid #ffffff' : '2.5px solid #ffffff'};
+                box-shadow: ${isSelected ? '0 8px 24px rgba(16, 185, 129, 0.85)' : '0 6px 16px rgba(28, 27, 27, 0.3)'};
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              ">
+                <!-- Inner Step Number (Upright Counter-Rotated) -->
+                <span style="
+                  transform: rotate(45deg);
+                  color: #ffffff;
+                  font-weight: 950;
+                  font-size: ${isSelected ? '16px' : '14px'};
+                  letter-spacing: -0.5px;
+                  text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+                ">${idx + 1}</span>
+              </div>
+
+              <!-- Floating Corner Category Jewel Badge -->
+              <div style="
+                position: absolute;
+                top: -3px;
+                right: -2px;
+                width: ${isSelected ? '22px' : '20px'};
+                height: ${isSelected ? '22px' : '20px'};
+                background: #ffffff;
+                border: 1.5px solid ${isSelected ? '#10B981' : pinBg};
+                border-radius: 50%;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.22);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: ${isSelected ? '12px' : '11px'};
+                z-index: 10;
+              ">
+                ${meta.icon}
+              </div>
+
+              <!-- Realistic Ground Contact Shadow Dot -->
+              <div style="
+                position: absolute;
+                bottom: -2px;
+                width: ${isSelected ? '16px' : '12px'};
+                height: 4px;
+                background: rgba(0,0,0,0.28);
+                border-radius: 50%;
+                filter: blur(1.5px);
+                z-index: -1;
+              "></div>
             </div>
           `,
-          iconSize: isSelected ? [42, 42] : [36, 36],
-          iconAnchor: isSelected ? [21, 21] : [18, 18],
-          popupAnchor: [0, -22]
+          iconSize: isSelected ? [46, 56] : [38, 46],
+          iconAnchor: isSelected ? [23, 56] : [19, 46],
+          popupAnchor: [0, -48]
         });
 
         const marker = L.marker(latLng, { icon: customIcon }).addTo(layerGroupRef.current);
         markersRef.current[idx] = marker;
 
         const popupContent = `
-          <div style="font-family: system-ui, -apple-system, sans-serif; padding: 6px; min-width: 200px; max-width: 240px;">
+          <div style="font-family: system-ui, -apple-system, sans-serif; padding: 6px; min-width: 210px; max-width: 250px;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
               <span style="font-size: 11px; font-weight: 800; color: #FF6B35; text-transform: uppercase;">${act.time || 'Schedule'}</span>
-              ${act.badge ? `<span style="font-size: 9px; font-weight: 800; background: #F5ECE6; color: #4B4745; padding: 2px 6px; border-radius: 4px;">${act.badge}</span>` : ''}
+              <span style="font-size: 10px; font-weight: 800; background: ${meta.bg}; color: #ffffff; padding: 2px 7px; border-radius: 6px;">${meta.icon} ${meta.label}</span>
             </div>
             <h4 style="font-size: 14px; font-weight: 900; color: #1C1B1B; margin: 0 0 4px 0; line-height: 1.2;">${act.title || 'Stop ' + (idx + 1)}</h4>
             <p style="font-size: 11px; color: #4B4745; margin: 0 0 8px 0; line-height: 1.4;">${act.description || ''}</p>
@@ -207,7 +271,7 @@ export default function InteractiveRouteMap({
           </div>
         `;
 
-        marker.bindPopup(popupContent);
+        marker.bindPopup(popupContent, { autoPanPadding: [30, 30] });
 
         marker.on('click', () => {
           setSelectedStopIdx(idx);
@@ -280,19 +344,18 @@ export default function InteractiveRouteMap({
             html: `
               <div style="
                 transform: rotate(${angleDeg}deg);
-                color: #EC6735;
-                font-size: 13px;
+                color: #ffffff;
+                font-size: 11px;
                 font-weight: 900;
-                filter: drop-shadow(0 2px 4px rgba(28,27,27,0.35));
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 width: 22px;
                 height: 22px;
-                background: #FFF8F5;
-                border: 2px solid #EC6735;
+                background: #EC6735;
+                border: 2px solid #ffffff;
                 border-radius: 50%;
-                box-shadow: 0 2px 6px rgba(236,103,53,0.3);
+                box-shadow: 0 3px 10px rgba(236,103,53,0.55);
               ">
                 ➤
               </div>
@@ -427,25 +490,36 @@ export default function InteractiveRouteMap({
         {/* Row 2: Quick Stop Selector Strip (Clicking any chip flies to that stop) */}
         {activities.length > 0 && (
           <div className="flex items-center gap-2 overflow-x-auto pt-0.5 pb-1 no-scrollbar">
-            {activities.map((act, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => handleFlyToStop(idx)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all shrink-0 flex items-center gap-2 shadow-2xs cursor-pointer border ${
-                  selectedStopIdx === idx
-                    ? 'bg-[#10B981] text-white border-[#059669] scale-102 shadow-md'
-                    : 'bg-stone-50 text-stone-800 border-stone-200 hover:bg-stone-100'
-                }`}
-              >
-                <span className={`w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black ${
-                  selectedStopIdx === idx ? 'bg-black/15 text-white' : 'bg-stone-200 text-stone-700'
-                }`}>
-                  {idx + 1}
-                </span>
-                <span className="truncate max-w-32 sm:max-w-48">{act.title}</span>
-              </button>
-            ))}
+            {activities.map((act, idx) => {
+              const text = ((act.title || '') + ' ' + (act.description || '') + ' ' + (act.badge || '') + ' ' + (act.category || '')).toLowerCase();
+              let icon = '📍';
+              if (/restaurant|cafe|coffee|lunch|dinner|breakfast|food|dining|sushi|pizza|trattoria|izakaya|bar|bistro|culinary|eat|tasting/.test(text)) icon = '🍽️';
+              else if (/museum|shrine|temple|castle|palace|cathedral|church|monument|history|heritage|culture|art|gallery|exhibition|historical/.test(text)) icon = '🏛️';
+              else if (/park|garden|nature|forest|mountain|lake|river|beach|scenic|viewpoint|hike|hiking|trail|waterfall|botanical/.test(text)) icon = '🌲';
+              else if (/shop|market|bazaar|mall|boutique|fashion|souvenir|retail|shopping|outlet/.test(text)) icon = '🛍️';
+              else if (/photo|tower|observatory|skyline|landmark|bridge|iconic|spot|attraction|highlights/.test(text)) icon = '📸';
+
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleFlyToStop(idx)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all shrink-0 flex items-center gap-2 shadow-2xs cursor-pointer border ${
+                    selectedStopIdx === idx
+                      ? 'bg-[#10B981] text-white border-[#059669] scale-102 shadow-md'
+                      : 'bg-stone-50 text-stone-800 border-stone-200 hover:bg-stone-100'
+                  }`}
+                >
+                  <span className={`w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black ${
+                    selectedStopIdx === idx ? 'bg-black/15 text-white' : 'bg-stone-200 text-stone-700'
+                  }`}>
+                    {idx + 1}
+                  </span>
+                  <span className="text-xs">{icon}</span>
+                  <span className="truncate max-w-32 sm:max-w-48">{act.title}</span>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
