@@ -220,21 +220,98 @@ export default function InteractiveRouteMap({
         stopsCount: validActivities.length
       });
 
-      if (selectedStopIdx === null && latLngs.length > 1) {
-        const polyline = L.polyline(latLngs, {
+      // Inject CSS animation for the glowing route pulse
+      if (!document.querySelector('#route-flow-animation-css')) {
+        const style = document.createElement('style');
+        style.id = 'route-flow-animation-css';
+        style.innerHTML = `
+          @keyframes tripwiseRouteFlow {
+            0% {
+              stroke-dashoffset: 56px;
+            }
+            100% {
+              stroke-dashoffset: 0px;
+            }
+          }
+          .animated-route-flow {
+            animation: tripwiseRouteFlow 1.6s linear infinite !important;
+            filter: drop-shadow(0 0 6px rgba(255, 107, 53, 0.75));
+          }
+        `;
+        document.head.appendChild(style);
+      }
+
+      // Draw layered polyline (Base Track + Animated Pulse + Directional Arrows) when we have 2 or more stops
+      if (latLngs.length > 1) {
+        // 1. Base Track (Solid translucent highway bed)
+        L.polyline(latLngs, {
           color: '#FF6B35',
-          weight: 4.5,
-          opacity: 0.9,
-          dashArray: '10, 8',
+          weight: 6,
+          opacity: 0.22,
           lineCap: 'round',
           lineJoin: 'round'
         }).addTo(layerGroupRef.current);
 
-        mapRef.current.fitBounds(polyline.getBounds(), {
-          padding: [60, 60],
-          maxZoom: 16,
-          animate: true
-        });
+        // 2. Animated Directional Pulse Wave (Glides continuously from Stop 1 to Stop N)
+        const animatedPolyline = L.polyline(latLngs, {
+          color: '#FF6B35',
+          weight: 4,
+          opacity: 0.95,
+          dashArray: '14, 14',
+          lineCap: 'round',
+          lineJoin: 'round',
+          className: 'animated-route-flow'
+        }).addTo(layerGroupRef.current);
+
+        // 3. Directional Arrowheads along midpoints between sequential stops
+        for (let i = 0; i < latLngs.length - 1; i++) {
+          const p1 = latLngs[i];
+          const p2 = latLngs[i + 1];
+          const midLat = (p1.lat + p2.lat) / 2;
+          const midLng = (p1.lng + p2.lng) / 2;
+
+          // Calculate directional angle in degrees
+          const dy = p2.lat - p1.lat;
+          const dx = (p2.lng - p1.lng) * Math.cos(p1.lat * (Math.PI / 180));
+          const angleDeg = (Math.atan2(dy, dx) * (180 / Math.PI)) * -1 + 90;
+
+          const arrowIcon = L.divIcon({
+            className: 'route-directional-arrow',
+            html: `
+              <div style="
+                transform: rotate(${angleDeg}deg);
+                color: #EC6735;
+                font-size: 13px;
+                font-weight: 900;
+                filter: drop-shadow(0 2px 4px rgba(28,27,27,0.35));
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 22px;
+                height: 22px;
+                background: #FFF8F5;
+                border: 2px solid #EC6735;
+                border-radius: 50%;
+                box-shadow: 0 2px 6px rgba(236,103,53,0.3);
+              ">
+                ➤
+              </div>
+            `,
+            iconSize: [22, 22],
+            iconAnchor: [11, 11]
+          });
+
+          L.marker([midLat, midLng], { icon: arrowIcon, interactive: false }).addTo(layerGroupRef.current);
+        }
+
+        // Only auto-fit route bounds if user hasn't explicitly clicked and locked onto a specific stop
+        if (selectedStopIdx === null) {
+          mapRef.current.fitBounds(animatedPolyline.getBounds(), {
+            padding: [60, 60],
+            maxZoom: 16,
+            animate: true
+          });
+        }
       } else if (selectedStopIdx === null && latLngs.length === 1) {
         mapRef.current.setView(latLngs[0], 15, { animate: true });
       }
@@ -279,8 +356,8 @@ export default function InteractiveRouteMap({
   };
 
   return (
-    <div className={`relative w-full rounded-3xl overflow-hidden border border-stone-200 shadow-md bg-white flex flex-col transition-all duration-300 ${
-      isFullscreen ? 'fixed inset-4 z-50 h-[calc(100vh-2rem)] shadow-2xl' : 'h-[460px] md:h-[540px]'
+    <div className={`overflow-hidden border border-stone-200 shadow-md bg-white flex flex-col transition-all duration-300 ${
+      isFullscreen ? 'fixed inset-0 z-[9999] w-screen h-screen rounded-none shadow-2xl' : 'relative w-full rounded-3xl h-[460px] md:h-[540px]'
     }`}>
       {/* Top Header: Controls & Quick Stop Selector Bar (Outside the map canvas so popups NEVER overlap!) */}
       <div className="bg-white border-b border-stone-200 p-3 flex flex-col gap-2.5 z-30 shrink-0">
