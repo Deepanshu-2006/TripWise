@@ -279,104 +279,115 @@ export default function InteractiveRouteMap({
   };
 
   return (
-    <div className={`relative w-full rounded-3xl overflow-hidden border border-stone-200 shadow-md bg-stone-100 flex flex-col transition-all duration-300 ${
-      isFullscreen ? 'fixed inset-4 z-50 h-[calc(100vh-2rem)] shadow-2xl' : 'h-96 md:h-[460px]'
+    <div className={`relative w-full rounded-3xl overflow-hidden border border-stone-200 shadow-md bg-white flex flex-col transition-all duration-300 ${
+      isFullscreen ? 'fixed inset-4 z-50 h-[calc(100vh-2rem)] shadow-2xl' : 'h-[460px] md:h-[540px]'
     }`}>
-      {/* Top Google Maps Style Controls & Layer Switcher */}
-      <div className="absolute top-4 left-4 z-20 flex items-center gap-2 flex-wrap max-w-[80%] pointer-events-auto">
-        {/* Layer Dropdown */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setShowLayerMenu(!showLayerMenu)}
-            className="bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-xl text-xs font-extrabold text-[#1C1B1B] shadow-md border border-[rgba(28,27,27,0.1)] flex items-center gap-2 hover:bg-stone-50 transition-all cursor-pointer"
-          >
-            <span>{MAP_STYLES[mapStyle].icon}</span>
-            <span>{MAP_STYLES[mapStyle].name.split(' ')[0]}</span>
-            <span className="text-[10px] text-stone-400">▼</span>
-          </button>
+      {/* Top Header: Controls & Quick Stop Selector Bar (Outside the map canvas so popups NEVER overlap!) */}
+      <div className="bg-white border-b border-stone-200 p-3 flex flex-col gap-2.5 z-30 shrink-0">
+        {/* Row 1: Map Styles, Fit Route, Fullscreen Toggle */}
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Layer Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowLayerMenu(!showLayerMenu)}
+                className="bg-stone-100 px-3.5 py-1.5 rounded-xl text-xs font-extrabold text-[#1C1B1B] shadow-2xs border border-stone-200 flex items-center gap-2 hover:bg-stone-200 transition-all cursor-pointer"
+              >
+                <span>{MAP_STYLES[mapStyle].icon}</span>
+                <span>{MAP_STYLES[mapStyle].name.split(' ')[0]}</span>
+                <span className="text-[10px] text-stone-400">▼</span>
+              </button>
 
-          {showLayerMenu && (
-            <div className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-xl border border-stone-200 p-1.5 w-48 flex flex-col gap-1 z-30 animate-fade-in">
-              {Object.entries(MAP_STYLES).map(([key, style]) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => {
-                    setMapStyle(key);
-                    setShowLayerMenu(false);
-                  }}
-                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold w-full text-left transition-all cursor-pointer ${
-                    mapStyle === key ? 'bg-[#EC6735] text-white shadow-xs' : 'text-stone-700 hover:bg-stone-100'
-                  }`}
-                >
-                  <span>{style.icon}</span>
-                  <span>{style.name}</span>
-                </button>
-              ))}
+              {showLayerMenu && (
+                <div className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-xl border border-stone-200 p-1.5 w-48 flex flex-col gap-1 z-50 animate-fade-in">
+                  {Object.entries(MAP_STYLES).map(([key, style]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => {
+                        setMapStyle(key);
+                        setShowLayerMenu(false);
+                      }}
+                      className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold w-full text-left transition-all cursor-pointer ${
+                        mapStyle === key ? 'bg-[#EC6735] text-white shadow-xs' : 'text-stone-700 hover:bg-stone-100'
+                      }`}
+                    >
+                      <span>{style.icon}</span>
+                      <span>{style.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Fit Entire Route Button */}
+            <button
+              type="button"
+              onClick={handleFitRoute}
+              className="bg-stone-100 px-3.5 py-1.5 rounded-xl text-xs font-extrabold text-[#0D9488] shadow-2xs border border-stone-200 hover:bg-[#0D9488]/10 transition-all cursor-pointer flex items-center gap-1.5"
+            >
+              <span>🎯</span>
+              <span>Fit Route</span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Fullscreen Toggle */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsFullscreen(!isFullscreen);
+                setTimeout(() => mapRef.current?.invalidateSize(), 350);
+              }}
+              className="bg-stone-100 px-3 py-1.5 rounded-xl text-xs font-extrabold text-[#1C1B1B] shadow-2xs border border-stone-200 hover:bg-stone-200 transition-all cursor-pointer flex items-center gap-1"
+            >
+              <span>{isFullscreen ? '✕ Exit Fullscreen' : '⛶ Expand Map'}</span>
+            </button>
+          </div>
         </div>
 
-        {/* Fit Entire Route Button */}
-        <button
-          type="button"
-          onClick={handleFitRoute}
-          className="bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-xl text-xs font-extrabold text-[#0D9488] shadow-md border border-[rgba(28,27,27,0.1)] hover:bg-[#0D9488]/10 transition-all cursor-pointer flex items-center gap-1.5"
-        >
-          <span>🎯</span>
-          <span>Fit Route</span>
-        </button>
-
-        {/* Fullscreen Toggle */}
-        <button
-          type="button"
-          onClick={() => {
-            setIsFullscreen(!isFullscreen);
-            setTimeout(() => mapRef.current?.invalidateSize(), 350);
-          }}
-          className="bg-white/95 backdrop-blur-md px-3 py-2 rounded-xl text-xs font-extrabold text-[#1C1B1B] shadow-md border border-[rgba(28,27,27,0.1)] hover:bg-stone-100 transition-all cursor-pointer flex items-center gap-1"
-        >
-          <span>{isFullscreen ? '✕ Exit' : '⛶ Expand'}</span>
-        </button>
+        {/* Row 2: Quick Stop Selector Strip (Clicking any chip flies to that stop) */}
+        {activities.length > 0 && (
+          <div className="flex items-center gap-2 overflow-x-auto pt-0.5 pb-1 no-scrollbar">
+            {activities.map((act, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handleFlyToStop(idx)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all shrink-0 flex items-center gap-2 shadow-2xs cursor-pointer border ${
+                  selectedStopIdx === idx
+                    ? 'bg-[#10B981] text-white border-[#059669] scale-102 shadow-md'
+                    : 'bg-stone-50 text-stone-800 border-stone-200 hover:bg-stone-100'
+                }`}
+              >
+                <span className={`w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black ${
+                  selectedStopIdx === idx ? 'bg-black/15 text-white' : 'bg-stone-200 text-stone-700'
+                }`}>
+                  {idx + 1}
+                </span>
+                <span className="truncate max-w-32 sm:max-w-48">{act.title}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Interactive Google Maps Style Quick Stop Selector Strip */}
-      {activities.length > 0 && (
-        <div className="absolute top-16 left-4 right-16 z-20 overflow-x-auto py-1 flex items-center gap-2 pointer-events-auto no-scrollbar">
-          {activities.map((act, idx) => (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => handleFlyToStop(idx)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all shrink-0 flex items-center gap-2 shadow-sm cursor-pointer border ${
-                selectedStopIdx === idx
-                  ? 'bg-[#10B981] text-white border-white scale-105 shadow-md'
-                  : 'bg-white/95 backdrop-blur-md text-stone-800 border-stone-200 hover:bg-stone-50'
-              }`}
-            >
-              <span className="w-5 h-5 rounded-lg bg-black/10 flex items-center justify-center text-[10px] font-black">
-                {idx + 1}
-              </span>
-              <span className="truncate max-w-28 sm:max-w-40">{act.title}</span>
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Map Container (Pure, unobstructed 100% canvas space) */}
+      <div className="relative w-full flex-1 min-h-[260px] z-10">
+        <div ref={mapContainerRef} className="w-full h-full" />
 
-      {/* Map Container */}
-      <div ref={mapContainerRef} className="w-full h-full z-10" />
+        {/* Loading Overlay while Leaflet fetches */}
+        {!isReady && (
+          <div className="absolute inset-0 bg-stone-100/90 backdrop-blur-xs z-20 flex flex-col items-center justify-center text-center p-6">
+            <div className="w-8 h-8 rounded-full border-2 border-dashed border-[#FF6B35] animate-spin mb-3" />
+            <span className="text-xs font-extrabold text-stone-700">Loading Real-World Map Tiles...</span>
+          </div>
+        )}
+      </div>
 
-      {/* Loading Overlay while Leaflet fetches */}
-      {!isReady && (
-        <div className="absolute inset-0 bg-stone-100/90 backdrop-blur-xs z-20 flex flex-col items-center justify-center text-center p-6">
-          <div className="w-8 h-8 rounded-full border-2 border-dashed border-[#FF6B35] animate-spin mb-3" />
-          <span className="text-xs font-extrabold text-stone-700">Loading Real-World Map Tiles...</span>
-        </div>
-      )}
-
-      {/* Google Maps Style Bottom Telemetry Bar */}
-      <div className="absolute bottom-4 left-4 right-4 z-20 bg-stone-900/90 backdrop-blur-md text-white px-4 py-2.5 rounded-2xl text-xs font-semibold flex items-center justify-between shadow-lg pointer-events-none flex-wrap gap-2">
+      {/* Bottom Footer: Telemetry & Route Stats Bar (Outside map area so zero overlap!) */}
+      <div className="bg-[#1C1B1B] text-white px-4 py-2.5 text-xs font-semibold flex items-center justify-between shrink-0 flex-wrap gap-2 z-30">
         <div className="flex items-center gap-2.5 truncate">
           <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] animate-pulse shrink-0" />
           <span className="font-extrabold tracking-wide truncate">📍 {destinationName}</span>
