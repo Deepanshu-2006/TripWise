@@ -31,7 +31,7 @@ export default function InteractiveGlobe({
     const height = containerRef.current.clientHeight || 420;
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.z = 7.2;
+    camera.position.z = 6.65;
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setSize(width, height);
@@ -194,7 +194,7 @@ export default function InteractiveGlobe({
         }
 
         // Smoothly reset camera distance if previously zoomed
-        camera.position.z += (7.2 - camera.position.z) * 0.05;
+        camera.position.z += (6.65 - camera.position.z) * 0.05;
       } else {
         // PHASE: IDLE REALISTIC GLOBE
         if (!isDraggingRef.current) {
@@ -207,7 +207,7 @@ export default function InteractiveGlobe({
         }
 
         // Smoothly return camera to space distance
-        camera.position.z += (7.2 - camera.position.z) * 0.05;
+        camera.position.z += (6.65 - camera.position.z) * 0.05;
       }
 
       renderer.render(scene, camera);
@@ -269,23 +269,11 @@ export default function InteractiveGlobe({
             {activeStepText || 'Triangulating optimal GPS coordinates & scenic routes...'}
           </p>
         </div>
-      ) : (
-        <div className="text-center max-w-md mx-auto mb-1">
-          <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#FF6B35] bg-[#FF6B35]/10 px-3 py-1 rounded-full border border-[#FF6B35]/20 inline-block mb-2">
-            🌍 3D Global Route Radar
-          </span>
-          <h3 className="text-xl md:text-2xl font-black text-stone-900 tracking-tight">
-            Interactive Realistic Globe
-          </h3>
-          <p className="text-xs md:text-sm text-stone-600 mt-1 font-medium">
-            Drag to freely spin the realistic 3D Earth, or enter your dream destination on the left to start planning.
-          </p>
-        </div>
-      )}
+      ) : null}
 
       {/* 3D Canvas Container */}
-      <div className="relative w-full h-80 sm:h-96 md:h-[430px] flex items-center justify-center my-2">
-        <div ref={containerRef} className="w-full h-full max-w-2xl flex items-center justify-center cursor-grab active:cursor-grabbing" />
+      <div className="relative w-full h-80 sm:h-[420px] md:h-[460px] flex items-center justify-center my-1">
+        <div ref={containerRef} className="w-full h-full max-w-3xl flex items-center justify-center cursor-grab active:cursor-grabbing" />
       </div>
     </div>
   );
