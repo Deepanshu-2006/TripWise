@@ -33,6 +33,47 @@ const MAP_STYLES = {
   }
 };
 
+// Smart Category & Icon detection from stop details
+const getCategoryMeta = (activity, fallbackColor = '#FF6B35') => {
+  const text = ((activity?.title || '') + ' ' + (activity?.description || '') + ' ' + (activity?.badge || '') + ' ' + (activity?.category || '')).toLowerCase();
+  if (/restaurant|cafe|coffee|lunch|dinner|breakfast|food|dining|sushi|pizza|trattoria|izakaya|bar|bistro|culinary|eat|tasting/.test(text)) {
+    return { icon: '🍽️', label: 'Dining', bg: '#FF6B35' };
+  }
+  if (/museum|shrine|temple|castle|palace|cathedral|church|monument|history|heritage|culture|art|gallery|exhibition|historical/.test(text)) {
+    return { icon: '🏛️', label: 'Culture', bg: '#8B5CF6' };
+  }
+  if (/park|garden|nature|forest|mountain|lake|river|beach|scenic|viewpoint|hike|hiking|trail|waterfall|botanical/.test(text)) {
+    return { icon: '🌲', label: 'Nature', bg: '#10B981' };
+  }
+  if (/shop|market|bazaar|mall|boutique|fashion|souvenir|retail|shopping|outlet/.test(text)) {
+    return { icon: '🛍️', label: 'Shopping', bg: '#EC4899' };
+  }
+  if (/photo|tower|observatory|skyline|landmark|bridge|iconic|spot|attraction|highlights/.test(text)) {
+    return { icon: '📸', label: 'Landmark', bg: '#0D9488' };
+  }
+  return { icon: '📍', label: activity?.badge || 'Attraction', bg: fallbackColor };
+};
+
+// Helper to compute realistic transit mode and estimated duration between two stops
+const getTransitTelemetry = (p1Coordinates, p2Coordinates) => {
+  if (!p1Coordinates || !p2Coordinates || typeof window === 'undefined' || !window.L) return null;
+  const p1 = window.L.latLng(p1Coordinates.lat, p1Coordinates.lng);
+  const p2 = window.L.latLng(p2Coordinates.lat, p2Coordinates.lng);
+  const distMeters = p1.distanceTo(p2);
+  const distKm = (distMeters / 1000).toFixed(1);
+
+  if (distMeters < 1800) {
+    const mins = Math.max(2, Math.round(distMeters / 80));
+    return { icon: '🚶', mode: 'walk', label: `${mins} min walk`, mins, distKm, color: '#0D9488', bg: '#F0FDFA', border: '#CCFBF1' };
+  } else if (distMeters < 15000) {
+    const mins = Math.max(5, Math.round(distMeters / 400 + 3));
+    return { icon: '🚕', mode: 'taxi / metro', label: `${mins} min taxi/metro`, mins, distKm, color: '#EA580C', bg: '#FFF7ED', border: '#FFEDD5' };
+  } else {
+    const mins = Math.max(15, Math.round(distMeters / 700 + 8));
+    return { icon: '🚆', mode: 'express / transit', label: `${mins} min express`, mins, distKm, color: '#7C3AED', bg: '#F5F3FF', border: '#EDE9FE' };
+  }
+};
+
 export default function InteractiveRouteMap({
   activities = [],
   destinationName = 'Your Destination',
@@ -163,27 +204,6 @@ export default function InteractiveRouteMap({
         const color = pinColors[idx % pinColors.length];
         const isSelected = selectedStopIdx === idx;
 
-        // Smart Category & Icon detection from stop details
-        const getCategoryMeta = (activity) => {
-          const text = ((activity.title || '') + ' ' + (activity.description || '') + ' ' + (activity.badge || '') + ' ' + (activity.category || '')).toLowerCase();
-          if (/restaurant|cafe|coffee|lunch|dinner|breakfast|food|dining|sushi|pizza|trattoria|izakaya|bar|bistro|culinary|eat|tasting/.test(text)) {
-            return { icon: '🍽️', label: 'Dining', bg: '#FF6B35' };
-          }
-          if (/museum|shrine|temple|castle|palace|cathedral|church|monument|history|heritage|culture|art|gallery|exhibition|historical/.test(text)) {
-            return { icon: '🏛️', label: 'Culture', bg: '#8B5CF6' };
-          }
-          if (/park|garden|nature|forest|mountain|lake|river|beach|scenic|viewpoint|hike|hiking|trail|waterfall|botanical/.test(text)) {
-            return { icon: '🌲', label: 'Nature', bg: '#10B981' };
-          }
-          if (/shop|market|bazaar|mall|boutique|fashion|souvenir|retail|shopping|outlet/.test(text)) {
-            return { icon: '🛍️', label: 'Shopping', bg: '#EC4899' };
-          }
-          if (/photo|tower|observatory|skyline|landmark|bridge|iconic|spot|attraction|highlights/.test(text)) {
-            return { icon: '📸', label: 'Landmark', bg: '#0D9488' };
-          }
-          return { icon: '📍', label: activity.badge || 'Attraction', bg: color };
-        };
-
         const meta = getCategoryMeta(act);
         const pinBg = isSelected ? '#10B981' : meta.bg;
 
@@ -257,13 +277,38 @@ export default function InteractiveRouteMap({
         const marker = L.marker(latLng, { icon: customIcon }).addTo(layerGroupRef.current);
         markersRef.current[idx] = marker;
 
+        // Calculate transit from previous stop if idx > 0
+        let transitCardHtml = '';
+        if (idx > 0 && validActivities[idx - 1]?.coordinates) {
+          const transit = getTransitTelemetry(validActivities[idx - 1].coordinates, act.coordinates);
+          if (transit) {
+            transitCardHtml = `
+              <div style="margin-bottom: 8px; padding: 6px 8px; background: ${transit.bg}; border: 1px solid ${transit.border}; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; font-size: 11px;">
+                <span style="font-weight: 800; color: #1C1B1B; display: flex; align-items: center; gap: 5px;">
+                  <span style="font-size: 13px;">${transit.icon}</span>
+                  <span>From Stop ${idx}: <b>${transit.label}</b></span>
+                </span>
+                <span style="font-weight: 900; color: ${transit.color}; font-size: 11px; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">${transit.distKm} km</span>
+              </div>
+            `;
+          }
+        } else if (idx === 0) {
+          transitCardHtml = `
+            <div style="margin-bottom: 8px; padding: 5px 8px; background: #F0FDF4; border: 1px solid #DCFCE7; border-radius: 8px; font-size: 10px; font-weight: 800; color: #15803D; display: flex; align-items: center; gap: 5px;">
+              <span>🏁</span>
+              <span>Initial Departure Point (Day Start)</span>
+            </div>
+          `;
+        }
+
         const popupContent = `
-          <div style="font-family: system-ui, -apple-system, sans-serif; padding: 6px; min-width: 210px; max-width: 250px;">
+          <div style="font-family: system-ui, -apple-system, sans-serif; padding: 6px; min-width: 220px; max-width: 260px;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
               <span style="font-size: 11px; font-weight: 800; color: #FF6B35; text-transform: uppercase;">${act.time || 'Schedule'}</span>
               <span style="font-size: 10px; font-weight: 800; background: ${meta.bg}; color: #ffffff; padding: 2px 7px; border-radius: 6px;">${meta.icon} ${meta.label}</span>
             </div>
             <h4 style="font-size: 14px; font-weight: 900; color: #1C1B1B; margin: 0 0 4px 0; line-height: 1.2;">${act.title || 'Stop ' + (idx + 1)}</h4>
+            ${transitCardHtml}
             <p style="font-size: 11px; color: #4B4745; margin: 0 0 8px 0; line-height: 1.4;">${act.description || ''}</p>
             <div style="font-size: 10px; font-weight: 700; color: #0D9488; background: rgba(13, 148, 136, 0.1); padding: 4px 8px; border-radius: 6px; text-align: center;">
               📍 GPS: ${act.coordinates.lat.toFixed(4)}, ${act.coordinates.lng.toFixed(4)}
@@ -327,7 +372,7 @@ export default function InteractiveRouteMap({
           className: 'animated-route-flow'
         }).addTo(layerGroupRef.current);
 
-        // 3. Directional Arrowheads along midpoints between sequential stops
+        // 3. Directional Arrowheads & Midpoint Transit Pills along midpoints between sequential stops
         for (let i = 0; i < latLngs.length - 1; i++) {
           const p1 = latLngs[i];
           const p2 = latLngs[i + 1];
@@ -365,6 +410,39 @@ export default function InteractiveRouteMap({
           });
 
           L.marker([midLat, midLng], { icon: arrowIcon, interactive: false }).addTo(layerGroupRef.current);
+
+          // Add floating Midpoint Transit Pill right along the route path
+          const transit = getTransitTelemetry(validActivities[i].coordinates, validActivities[i+1].coordinates);
+          if (transit) {
+            const transitPillIcon = L.divIcon({
+              className: 'route-transit-pill',
+              html: `
+                <div style="
+                  display: flex;
+                  align-items: center;
+                  gap: 5px;
+                  background: rgba(255, 255, 255, 0.96);
+                  padding: 3px 9px;
+                  border-radius: 9999px;
+                  border: 1.5px solid ${transit.border};
+                  box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+                  font-family: system-ui, -apple-system, sans-serif;
+                  font-size: 11px;
+                  font-weight: 900;
+                  color: #1C1B1B;
+                  white-space: nowrap;
+                  transform: translateY(-24px);
+                ">
+                  <span>${transit.icon}</span>
+                  <span style="color: ${transit.color};">${transit.label}</span>
+                  <span style="color: #64748B; font-size: 10px; font-weight: 700;">(${transit.distKm} km)</span>
+                </div>
+              `,
+              iconSize: [120, 26],
+              iconAnchor: [60, 13]
+            });
+            L.marker([midLat, midLng], { icon: transitPillIcon, interactive: false }).addTo(layerGroupRef.current);
+          }
         }
 
         // Only auto-fit route bounds if user hasn't explicitly clicked and locked onto a specific stop
@@ -499,25 +577,40 @@ export default function InteractiveRouteMap({
               else if (/shop|market|bazaar|mall|boutique|fashion|souvenir|retail|shopping|outlet/.test(text)) icon = '🛍️';
               else if (/photo|tower|observatory|skyline|landmark|bridge|iconic|spot|attraction|highlights/.test(text)) icon = '📸';
 
+              let transitConnector = null;
+              if (idx > 0 && activities[idx - 1]?.coordinates && act?.coordinates && window.L) {
+                const transit = getTransitTelemetry(activities[idx - 1].coordinates, act.coordinates);
+                if (transit) {
+                  transitConnector = (
+                    <div className="shrink-0 px-2.5 py-1 rounded-lg bg-stone-100 border border-stone-200 text-[10px] font-extrabold text-stone-600 flex items-center gap-1 shadow-2xs">
+                      <span>{transit.icon}</span>
+                      <span>{transit.label}</span>
+                    </div>
+                  );
+                }
+              }
+
               return (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => handleFlyToStop(idx)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all shrink-0 flex items-center gap-2 shadow-2xs cursor-pointer border ${
-                    selectedStopIdx === idx
-                      ? 'bg-[#10B981] text-white border-[#059669] scale-102 shadow-md'
-                      : 'bg-stone-50 text-stone-800 border-stone-200 hover:bg-stone-100'
-                  }`}
-                >
-                  <span className={`w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black ${
-                    selectedStopIdx === idx ? 'bg-black/15 text-white' : 'bg-stone-200 text-stone-700'
-                  }`}>
-                    {idx + 1}
-                  </span>
-                  <span className="text-xs">{icon}</span>
-                  <span className="truncate max-w-32 sm:max-w-48">{act.title}</span>
-                </button>
+                <React.Fragment key={idx}>
+                  {transitConnector}
+                  <button
+                    type="button"
+                    onClick={() => handleFlyToStop(idx)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all shrink-0 flex items-center gap-2 shadow-2xs cursor-pointer border ${
+                      selectedStopIdx === idx
+                        ? 'bg-[#10B981] text-white border-[#059669] scale-102 shadow-md'
+                        : 'bg-stone-50 text-stone-800 border-stone-200 hover:bg-stone-100'
+                    }`}
+                  >
+                    <span className={`w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black ${
+                      selectedStopIdx === idx ? 'bg-black/15 text-white' : 'bg-stone-200 text-stone-700'
+                    }`}>
+                      {idx + 1}
+                    </span>
+                    <span className="text-xs">{icon}</span>
+                    <span className="truncate max-w-32 sm:max-w-48">{act.title}</span>
+                  </button>
+                </React.Fragment>
               );
             })}
           </div>
