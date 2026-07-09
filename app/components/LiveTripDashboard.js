@@ -199,7 +199,7 @@ export default function LiveTripDashboard({
 
             {/* Content: Either Route Map or Activity Cards */}
             <div className={`w-full transition-all duration-800 ${
-              isTransitioning && !isFadingOutGlobe ? 'opacity-0 pointer-events-none scale-98' : 'opacity-100 scale-100'
+              isTransitioning && !isFadingOutGlobe ? 'opacity-0 pointer-events-none scale-98' : 'opacity-100'
             }`}>
               {activeTab === 'map' ? (
                 <InteractiveRouteMap

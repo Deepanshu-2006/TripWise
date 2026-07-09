@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 const MAP_STYLES = {
   streets: {
@@ -148,30 +149,61 @@ export default function InteractiveRouteMap({
     }
   }, []);
 
-  // 2. Initialize Leaflet Map once L is loaded
+  // 2. Initialize Leaflet Map once L is loaded (or when re-mounting to/from createPortal on fullscreen toggle)
   useEffect(() => {
     if (!isReady || !mapContainerRef.current || typeof window === 'undefined' || !window.L) return;
 
-    if (!mapRef.current) {
-      const defaultCenter = coordinates ? [coordinates.lat, coordinates.lng] : [41.9028, 12.4964];
-      const map = window.L.map(mapContainerRef.current, {
-        zoomControl: false,
-        attributionControl: false
-      }).setView(defaultCenter, 13);
-
-      window.L.control.zoom({ position: 'topright' }).addTo(map);
-
-      const styleObj = MAP_STYLES[mapStyle];
-      const tileLayer = window.L.tileLayer(styleObj.url, {
-        maxZoom: styleObj.maxZoom,
-        subdomains: styleObj.subdomains
-      }).addTo(map);
-
-      tileLayerRef.current = tileLayer;
-      layerGroupRef.current = window.L.layerGroup().addTo(map);
-      mapRef.current = map;
+    // Clean up detached instance if re-mounted
+    if (mapRef.current) {
+      try {
+        mapRef.current.remove();
+      } catch (e) {}
+      mapRef.current = null;
+      layerGroupRef.current = null;
+      tileLayerRef.current = null;
+      markersRef.current = {};
     }
-  }, [isReady, coordinates]);
+
+    const defaultCenter = coordinates ? [coordinates.lat, coordinates.lng] : [41.9028, 12.4964];
+    const map = window.L.map(mapContainerRef.current, {
+      zoomControl: false,
+      attributionControl: false
+    }).setView(defaultCenter, 13);
+
+    window.L.control.zoom({ position: 'topright' }).addTo(map);
+
+    const styleObj = MAP_STYLES[mapStyle];
+    const tileLayer = window.L.tileLayer(styleObj.url, {
+      maxZoom: styleObj.maxZoom,
+      subdomains: styleObj.subdomains
+    }).addTo(map);
+
+    tileLayerRef.current = tileLayer;
+    layerGroupRef.current = window.L.layerGroup().addTo(map);
+    mapRef.current = map;
+
+    return () => {
+      if (mapRef.current) {
+        try {
+          mapRef.current.remove();
+        } catch (e) {}
+        mapRef.current = null;
+        layerGroupRef.current = null;
+        tileLayerRef.current = null;
+        markersRef.current = {};
+      }
+    };
+  }, [isReady, coordinates, isFullscreen]);
+
+  // Listen for Escape key to exit fullscreen cleanly
+  useEffect(() => {
+    if (!isFullscreen || typeof window === 'undefined') return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setIsFullscreen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreen]);
 
   // 3. Switch Base Map Style Dynamically when user toggles
   useEffect(() => {
@@ -503,7 +535,7 @@ export default function InteractiveRouteMap({
       clearTimeout(timer1);
       clearTimeout(timer2);
     };
-  }, [isReady, activities, coordinates, selectedStopIdx]);
+  }, [isReady, activities, coordinates, selectedStopIdx, isFullscreen]);
 
   // Handle flyTo stop when clicked from interactive top strip or external button
   const handleFlyToStop = (stopIdx) => {
@@ -534,9 +566,9 @@ export default function InteractiveRouteMap({
     }
   };
 
-  return (
+  const mapJSX = (
     <div className={`overflow-hidden border border-stone-200 shadow-md bg-white flex flex-col transition-all duration-300 ${
-      isFullscreen ? 'fixed inset-0 z-[9999] w-screen h-screen rounded-none shadow-2xl' : 'relative w-full rounded-3xl h-[460px] md:h-[540px]'
+      isFullscreen ? 'fixed inset-0 z-[999999] w-screen h-screen rounded-none shadow-2xl m-0 p-0' : 'relative w-full rounded-3xl h-[460px] md:h-[540px]'
     }`}>
       {/* Top Header: Controls & Quick Stop Selector Bar (Outside the map canvas so popups NEVER overlap!) */}
       <div className="bg-white border-b border-stone-200 p-3 flex flex-col gap-2.5 z-30 shrink-0">
@@ -701,4 +733,10 @@ export default function InteractiveRouteMap({
       </div>
     </div>
   );
+
+  if (isFullscreen && typeof document !== 'undefined') {
+    return createPortal(mapJSX, document.body);
+  }
+
+  return mapJSX;
 }
