@@ -164,12 +164,12 @@ export default function InteractiveGlobe({
         if (state.targetCoordinates?.lat !== undefined && state.targetCoordinates?.lng !== undefined) {
           const targetLonRad = (state.targetCoordinates.lng + 90) * (Math.PI / 180);
           const targetLatRad = (state.targetCoordinates.lat * 0.4) * (Math.PI / 180);
-          globeGroup.rotation.y += (targetLonRad - globeGroup.rotation.y) * 0.08;
-          globeGroup.rotation.x += (targetLatRad - globeGroup.rotation.x) * 0.08;
+          globeGroup.rotation.y += (targetLonRad - globeGroup.rotation.y) * 0.1;
+          globeGroup.rotation.x += (targetLatRad - globeGroup.rotation.x) * 0.1;
         }
 
-        // Zoom camera rapidly toward Earth's surface!
-        camera.position.z += (2.6 - camera.position.z) * 0.07;
+        // Zoom camera smoothly and rapidly toward target country on Earth's surface!
+        camera.position.z += (3.3 - camera.position.z) * 0.08;
 
         if (ringRef.current) {
           ringRef.current.visible = true;

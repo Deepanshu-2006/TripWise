@@ -40,6 +40,7 @@ export default function LiveTripDashboard({
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('map'); // 'map' | 'activities'
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isFadingOutGlobe, setIsFadingOutGlobe] = useState(false);
   const prevIsGeneratingRef = React.useRef(isGenerating);
 
   // Cycle generation status messages
@@ -55,10 +56,23 @@ export default function LiveTripDashboard({
   useEffect(() => {
     if (prevIsGeneratingRef.current && !isGenerating && itinerary) {
       setIsTransitioning(true);
-      const timer = setTimeout(() => {
+      setIsFadingOutGlobe(false);
+
+      // At 750ms: begin smooth cinematic cross-fade from 3D Globe into pre-loaded 2D Route Map
+      const fadeTimer = setTimeout(() => {
+        setIsFadingOutGlobe(true);
+      }, 750);
+
+      // At 1600ms: transition complete, unmount globe overlay cleanly
+      const endTimer = setTimeout(() => {
         setIsTransitioning(false);
-      }, 1800); // 1.8 seconds of cinematic globe target lock camera plunge!
-      return () => clearTimeout(timer);
+        setIsFadingOutGlobe(false);
+      }, 1600);
+
+      return () => {
+        clearTimeout(fadeTimer);
+        clearTimeout(endTimer);
+      };
     }
     prevIsGeneratingRef.current = isGenerating;
   }, [isGenerating, itinerary]);
@@ -67,6 +81,7 @@ export default function LiveTripDashboard({
   useEffect(() => {
     if (isGenerating) {
       setIsTransitioning(false);
+      setIsFadingOutGlobe(false);
     }
   }, [isGenerating]);
 
@@ -128,20 +143,39 @@ export default function LiveTripDashboard({
 
       {/* Main Center Dashboard Area */}
       <div className="relative z-10 my-auto flex flex-col items-center justify-center w-full max-w-4xl mx-auto py-2">
-        {isGenerating || isTransitioning || !itinerary ? (
-          /* STATE: 3D GLOBE (IDLE / HYPER-SCANNING DURING GENERATION / TARGET LOCK CAMERA PLUNGE) */
+        {isGenerating || !itinerary ? (
+          /* STATE 1: IDLE / HYPER-SCANNING DURING GENERATION */
           <InteractiveGlobe
             isGenerating={isGenerating}
-            isTransitioning={isTransitioning}
+            isTransitioning={false}
             activeStepText={GENERATION_STEPS[activeStepIndex]}
             destinationName={displayDest}
             targetCoordinates={itinerary?.coordinates || { lat: 35.0116, lng: 135.7681 }}
           />
         ) : (
-          /* STATE: GENERATED ITINERARY VIEW */
-          <div className="w-full flex flex-col gap-5 animate-fade-in">
+          /* STATE 2: GENERATED ITINERARY VIEW (MOUNTED IMMEDIATELY UNDERNEATH DURING TRANSITION FOR 0-LAG TILE LOAD) */
+          <div className="relative w-full flex flex-col gap-5 animate-fade-in">
+            {/* Cinematic 3D Globe Overlay during Target Lock Phase */}
+            {isTransitioning && (
+              <div
+                className={`absolute inset-0 z-40 flex items-center justify-center bg-[#FFF8F5]/95 backdrop-blur-xs rounded-3xl transition-all duration-800 ease-in-out pointer-events-none ${
+                  isFadingOutGlobe ? 'opacity-0 scale-110' : 'opacity-100 scale-100'
+                }`}
+              >
+                <InteractiveGlobe
+                  isGenerating={false}
+                  isTransitioning={true}
+                  activeStepText="Target Locked!"
+                  destinationName={displayDest}
+                  targetCoordinates={itinerary.coordinates || { lat: 35.0116, lng: 135.7681 }}
+                />
+              </div>
+            )}
+
             {/* Day Selector Tabs */}
-            <div className="flex items-center justify-between border-b border-[rgba(28,27,27,0.1)] pb-3 flex-wrap gap-2">
+            <div className={`flex items-center justify-between border-b border-[rgba(28,27,27,0.1)] pb-3 flex-wrap gap-2 transition-opacity duration-800 ${
+              isTransitioning && !isFadingOutGlobe ? 'opacity-0 pointer-events-none' : 'opacity-100'
+            }`}>
               <div className="flex items-center gap-2 overflow-x-auto py-1">
                 {itinerary.days?.map((day, idx) => (
                   <button
@@ -164,42 +198,46 @@ export default function LiveTripDashboard({
             </div>
 
             {/* Content: Either Route Map or Activity Cards */}
-            {activeTab === 'map' ? (
-              <InteractiveRouteMap
-                activities={activities}
-                destinationName={displayDest}
-                coordinates={itinerary.coordinates || { lat: 41.9028, lng: 12.4964 }}
-              />
-            ) : (
-              /* Day Schedule Cards */
-              <div className="w-full h-80 md:h-96 overflow-y-auto pr-2 flex flex-col gap-3">
-                {activities.map((act, idx) => (
-                  <div key={idx} className="bg-white p-4 rounded-2xl border border-[rgba(28,27,27,0.1)] shadow-2xs hover:shadow-md transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div className="flex items-start gap-3.5">
-                      <div className="w-10 h-10 rounded-xl bg-[#FFF2EA] text-[#EC6735] font-black text-sm flex items-center justify-center shrink-0 border border-[#EC6735]/20">
-                        {idx + 1}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs font-bold text-[#EC6735]">{act.time}</span>
-                          <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-[#F5ECE6] text-[#4B4745] uppercase tracking-wider">
-                            {act.badge || act.category || 'Highlight'}
-                          </span>
+            <div className={`w-full transition-all duration-800 ${
+              isTransitioning && !isFadingOutGlobe ? 'opacity-0 pointer-events-none scale-98' : 'opacity-100 scale-100'
+            }`}>
+              {activeTab === 'map' ? (
+                <InteractiveRouteMap
+                  activities={activities}
+                  destinationName={displayDest}
+                  coordinates={itinerary.coordinates || { lat: 41.9028, lng: 12.4964 }}
+                />
+              ) : (
+                /* Day Schedule Cards */
+                <div className="w-full h-80 md:h-96 overflow-y-auto pr-2 flex flex-col gap-3">
+                  {activities.map((act, idx) => (
+                    <div key={idx} className="bg-white p-4 rounded-2xl border border-[rgba(28,27,27,0.1)] shadow-2xs hover:shadow-md transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      <div className="flex items-start gap-3.5">
+                        <div className="w-10 h-10 rounded-xl bg-[#FFF2EA] text-[#EC6735] font-black text-sm flex items-center justify-center shrink-0 border border-[#EC6735]/20">
+                          {idx + 1}
                         </div>
-                        <h4 className="text-sm md:text-base font-extrabold text-[#1C1B1B] mt-1">{act.title}</h4>
-                        <p className="text-xs text-[#4B4745] mt-1 leading-relaxed">{act.description}</p>
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs font-bold text-[#EC6735]">{act.time}</span>
+                            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-[#F5ECE6] text-[#4B4745] uppercase tracking-wider">
+                              {act.badge || act.category || 'Highlight'}
+                            </span>
+                          </div>
+                          <h4 className="text-sm md:text-base font-extrabold text-[#1C1B1B] mt-1">{act.title}</h4>
+                          <p className="text-xs text-[#4B4745] mt-1 leading-relaxed">{act.description}</p>
+                        </div>
+                      </div>
+
+                      <div className="shrink-0 self-end sm:self-center">
+                        <span className="text-xs font-bold text-[#0D9488] bg-[#0D9488]/10 px-3 py-1.5 rounded-lg border border-[#0D9488]/20">
+                          📍 View Map Pin
+                        </span>
                       </div>
                     </div>
-
-                    <div className="shrink-0 self-end sm:self-center">
-                      <span className="text-xs font-bold text-[#0D9488] bg-[#0D9488]/10 px-3 py-1.5 rounded-lg border border-[#0D9488]/20">
-                        📍 View Map Pin
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
