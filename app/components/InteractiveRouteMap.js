@@ -92,6 +92,27 @@ export default function InteractiveRouteMap({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [routeStats, setRouteStats] = useState({ totalKm: 0, stopsCount: 0 });
 
+  // Create looped Basecamp / Hotel hub (Stop 0) and full day stop list
+  const validActivities = (activities || []).filter(
+    act => act?.coordinates && typeof act.coordinates.lat === 'number' && typeof act.coordinates.lng === 'number'
+  );
+
+  const firstAct = validActivities[0];
+  const basecampLat = coordinates?.lat ? (coordinates.lat - 0.007) : (firstAct ? firstAct.coordinates.lat - 0.008 : 35.6762);
+  const basecampLng = coordinates?.lng ? (coordinates.lng - 0.007) : (firstAct ? firstAct.coordinates.lng - 0.008 : 139.6503);
+
+  const basecampStop = {
+    isBasecamp: true,
+    title: `${destinationName && destinationName !== 'Your Destination' ? destinationName.split(',')[0] + ' ' : ''}Basecamp Hotel`,
+    description: 'Your central hotel & lodging hub. Start your morning itinerary here and complete the loop to return refreshed in the evening.',
+    badge: 'Basecamp Hotel',
+    category: 'hotel',
+    time: 'Departure & Return Hub',
+    coordinates: { lat: basecampLat, lng: basecampLng }
+  };
+
+  const loopedStops = validActivities.length > 0 ? [basecampStop, ...validActivities] : [];
+
   // 1. Dynamically load Leaflet JS & CSS without SSR issues or version conflicts
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -194,18 +215,19 @@ export default function InteractiveRouteMap({
       const pinColors = ['#FF6B35', '#0D9488', '#1C1B1B', '#8CA3A8', '#EC6735'];
       let totalMeters = 0;
 
-      validActivities.forEach((act, idx) => {
+      loopedStops.forEach((act, stopIdx) => {
         const latLng = L.latLng(act.coordinates.lat, act.coordinates.lng);
         if (latLngs.length > 0) {
           totalMeters += latLngs[latLngs.length - 1].distanceTo(latLng);
         }
         latLngs.push(latLng);
 
-        const color = pinColors[idx % pinColors.length];
-        const isSelected = selectedStopIdx === idx;
+        const isBasecamp = act.isBasecamp === true || stopIdx === 0;
+        const color = isBasecamp ? '#1E293B' : pinColors[(stopIdx - 1) % pinColors.length];
+        const isSelected = selectedStopIdx === stopIdx;
 
-        const meta = getCategoryMeta(act);
-        const pinBg = isSelected ? '#10B981' : meta.bg;
+        const meta = isBasecamp ? { icon: '🏨', label: 'Basecamp', bg: '#1E293B' } : getCategoryMeta(act);
+        const pinBg = isSelected ? '#10B981' : (isBasecamp ? '#1E293B' : meta.bg);
 
         const customIcon = L.divIcon({
           className: 'custom-tripwise-pin',
@@ -219,21 +241,21 @@ export default function InteractiveRouteMap({
                 background: ${isSelected ? '#10B981' : pinBg};
                 border-radius: 50% 50% 50% 0;
                 transform: rotate(-45deg);
-                border: ${isSelected ? '3.5px solid #ffffff' : '2.5px solid #ffffff'};
-                box-shadow: ${isSelected ? '0 8px 24px rgba(16, 185, 129, 0.85)' : '0 6px 16px rgba(28, 27, 27, 0.3)'};
+                border: ${isSelected ? '3.5px solid #ffffff' : (isBasecamp ? '2.5px solid #F59E0B' : '2.5px solid #ffffff')};
+                box-shadow: ${isSelected ? '0 8px 24px rgba(16, 185, 129, 0.85)' : (isBasecamp ? '0 6px 18px rgba(245, 158, 11, 0.45)' : '0 6px 16px rgba(28, 27, 27, 0.3)')};
                 display: flex;
                 align-items: center;
                 justify-content: center;
               ">
-                <!-- Inner Step Number (Upright Counter-Rotated) -->
+                <!-- Inner Step Number or Basecamp Icon (Upright Counter-Rotated) -->
                 <span style="
                   transform: rotate(45deg);
                   color: #ffffff;
                   font-weight: 950;
-                  font-size: ${isSelected ? '16px' : '14px'};
+                  font-size: ${isSelected ? '16px' : (isBasecamp ? '16px' : '14px')};
                   letter-spacing: -0.5px;
                   text-shadow: 0 1px 2px rgba(0,0,0,0.25);
-                ">${idx + 1}</span>
+                ">${isBasecamp ? '🏨' : stopIdx}</span>
               </div>
 
               <!-- Floating Corner Category Jewel Badge -->
@@ -253,7 +275,7 @@ export default function InteractiveRouteMap({
                 font-size: ${isSelected ? '12px' : '11px'};
                 z-index: 10;
               ">
-                ${meta.icon}
+                ${isBasecamp ? '⭐' : meta.icon}
               </div>
 
               <!-- Realistic Ground Contact Shadow Dot -->
@@ -275,28 +297,33 @@ export default function InteractiveRouteMap({
         });
 
         const marker = L.marker(latLng, { icon: customIcon }).addTo(layerGroupRef.current);
-        markersRef.current[idx] = marker;
+        markersRef.current[stopIdx] = marker;
 
-        // Calculate transit from previous stop if idx > 0
+        // Calculate transit from previous stop if stopIdx > 0
         let transitCardHtml = '';
-        if (idx > 0 && validActivities[idx - 1]?.coordinates) {
-          const transit = getTransitTelemetry(validActivities[idx - 1].coordinates, act.coordinates);
+        if (stopIdx > 0 && loopedStops[stopIdx - 1]?.coordinates) {
+          const prevAct = loopedStops[stopIdx - 1];
+          const transit = getTransitTelemetry(prevAct.coordinates, act.coordinates);
           if (transit) {
+            const fromLabel = stopIdx === 1 ? 'Basecamp Hotel (Stop 0)' : `Stop ${stopIdx - 1}`;
             transitCardHtml = `
               <div style="margin-bottom: 8px; padding: 6px 8px; background: ${transit.bg}; border: 1px solid ${transit.border}; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; font-size: 11px;">
                 <span style="font-weight: 800; color: #1C1B1B; display: flex; align-items: center; gap: 5px;">
                   <span style="font-size: 13px;">${transit.icon}</span>
-                  <span>From Stop ${idx}: <b>${transit.label}</b></span>
+                  <span>From ${fromLabel}: <b>${transit.label}</b></span>
                 </span>
                 <span style="font-weight: 900; color: ${transit.color}; font-size: 11px; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">${transit.distKm} km</span>
               </div>
             `;
           }
-        } else if (idx === 0) {
+        } else if (isBasecamp) {
           transitCardHtml = `
-            <div style="margin-bottom: 8px; padding: 5px 8px; background: #F0FDF4; border: 1px solid #DCFCE7; border-radius: 8px; font-size: 10px; font-weight: 800; color: #15803D; display: flex; align-items: center; gap: 5px;">
-              <span>🏁</span>
-              <span>Initial Departure Point (Day Start)</span>
+            <div style="margin-bottom: 8px; padding: 6px 8px; background: #FFFBEB; border: 1px solid #FEF3C7; border-radius: 8px; font-size: 11px; font-weight: 800; color: #92400E; display: flex; align-items: center; justify-content: space-between;">
+              <span style="display: flex; align-items: center; gap: 5px;">
+                <span>🔄</span>
+                <span>Full Day Loop: Depart & Return</span>
+              </span>
+              <span style="background: #F59E0B; color: #fff; padding: 1.5px 6px; border-radius: 6px; font-size: 10px;">Stop 0</span>
             </div>
           `;
         }
@@ -304,10 +331,10 @@ export default function InteractiveRouteMap({
         const popupContent = `
           <div style="font-family: system-ui, -apple-system, sans-serif; padding: 6px; min-width: 220px; max-width: 260px;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-              <span style="font-size: 11px; font-weight: 800; color: #FF6B35; text-transform: uppercase;">${act.time || 'Schedule'}</span>
+              <span style="font-size: 11px; font-weight: 800; color: #FF6B35; text-transform: uppercase;">${act.time || (isBasecamp ? 'Hub' : 'Schedule')}</span>
               <span style="font-size: 10px; font-weight: 800; background: ${meta.bg}; color: #ffffff; padding: 2px 7px; border-radius: 6px;">${meta.icon} ${meta.label}</span>
             </div>
-            <h4 style="font-size: 14px; font-weight: 900; color: #1C1B1B; margin: 0 0 4px 0; line-height: 1.2;">${act.title || 'Stop ' + (idx + 1)}</h4>
+            <h4 style="font-size: 14px; font-weight: 900; color: #1C1B1B; margin: 0 0 4px 0; line-height: 1.2;">${act.title || (isBasecamp ? 'Basecamp Hotel' : 'Stop ' + stopIdx)}</h4>
             ${transitCardHtml}
             <p style="font-size: 11px; color: #4B4745; margin: 0 0 8px 0; line-height: 1.4;">${act.description || ''}</p>
             <div style="font-size: 10px; font-weight: 700; color: #0D9488; background: rgba(13, 148, 136, 0.1); padding: 4px 8px; border-radius: 6px; text-align: center;">
@@ -319,14 +346,21 @@ export default function InteractiveRouteMap({
         marker.bindPopup(popupContent, { autoPanPadding: [30, 30] });
 
         marker.on('click', () => {
-          setSelectedStopIdx(idx);
+          setSelectedStopIdx(stopIdx);
           mapRef.current.flyTo(latLng, 16, { duration: 1.2, easeLinearity: 0.25 });
         });
       });
 
+      // Complete the return loop journey back to Basecamp (Stop N ➔ Basecamp)
+      if (loopedStops.length > 1) {
+        const returnLatLng = L.latLng(basecampStop.coordinates.lat, basecampStop.coordinates.lng);
+        totalMeters += latLngs[latLngs.length - 1].distanceTo(returnLatLng);
+        latLngs.push(returnLatLng);
+      }
+
       setRouteStats({
         totalKm: (totalMeters / 1000).toFixed(1),
-        stopsCount: validActivities.length
+        stopsCount: validActivities.length + 1 // Plus Basecamp Stop 0
       });
 
       // Inject CSS animation for the glowing route pulse
@@ -412,8 +446,12 @@ export default function InteractiveRouteMap({
           L.marker([midLat, midLng], { icon: arrowIcon, interactive: false }).addTo(layerGroupRef.current);
 
           // Add floating Midpoint Transit Pill right along the route path
-          const transit = getTransitTelemetry(validActivities[i].coordinates, validActivities[i+1].coordinates);
+          const p1Act = i < loopedStops.length ? loopedStops[i] : loopedStops[loopedStops.length - 1];
+          const p2Act = (i + 1) < loopedStops.length ? loopedStops[i + 1] : loopedStops[0];
+          const transit = getTransitTelemetry(p1Act.coordinates, p2Act.coordinates);
           if (transit) {
+            const isReturnSegment = i === latLngs.length - 2;
+            const segmentPrefix = isReturnSegment ? '🔄 Return: ' : '';
             const transitPillIcon = L.divIcon({
               className: 'route-transit-pill',
               html: `
@@ -421,25 +459,25 @@ export default function InteractiveRouteMap({
                   display: flex;
                   align-items: center;
                   gap: 5px;
-                  background: rgba(255, 255, 255, 0.96);
+                  background: ${isReturnSegment ? '#FFFBEB' : 'rgba(255, 255, 255, 0.96)'};
                   padding: 3px 9px;
                   border-radius: 9999px;
-                  border: 1.5px solid ${transit.border};
+                  border: 1.5px solid ${isReturnSegment ? '#FCD34D' : transit.border};
                   box-shadow: 0 4px 14px rgba(0,0,0,0.18);
                   font-family: system-ui, -apple-system, sans-serif;
                   font-size: 11px;
                   font-weight: 900;
-                  color: #1C1B1B;
+                  color: ${isReturnSegment ? '#92400E' : '#1C1B1B'};
                   white-space: nowrap;
                   transform: translateY(-24px);
                 ">
                   <span>${transit.icon}</span>
-                  <span style="color: ${transit.color};">${transit.label}</span>
+                  <span style="color: ${isReturnSegment ? '#D97706' : transit.color};">${segmentPrefix}${transit.label}</span>
                   <span style="color: #64748B; font-size: 10px; font-weight: 700;">(${transit.distKm} km)</span>
                 </div>
               `,
-              iconSize: [120, 26],
-              iconAnchor: [60, 13]
+              iconSize: [140, 26],
+              iconAnchor: [70, 13]
             });
             L.marker([midLat, midLng], { icon: transitPillIcon, interactive: false }).addTo(layerGroupRef.current);
           }
@@ -468,14 +506,14 @@ export default function InteractiveRouteMap({
   }, [isReady, activities, coordinates, selectedStopIdx]);
 
   // Handle flyTo stop when clicked from interactive top strip or external button
-  const handleFlyToStop = (idx) => {
-    setSelectedStopIdx(idx);
-    const act = activities[idx];
+  const handleFlyToStop = (stopIdx) => {
+    setSelectedStopIdx(stopIdx);
+    const act = loopedStops[stopIdx];
     if (act?.coordinates && mapRef.current && window.L) {
       const latLng = [act.coordinates.lat, act.coordinates.lng];
       mapRef.current.flyTo(latLng, 16, { duration: 1.2, easeLinearity: 0.25 });
       setTimeout(() => {
-        markersRef.current[idx]?.openPopup();
+        markersRef.current[stopIdx]?.openPopup();
       }, 1250);
     }
   };
@@ -565,21 +603,17 @@ export default function InteractiveRouteMap({
           </div>
         </div>
 
-        {/* Row 2: Quick Stop Selector Strip (Clicking any chip flies to that stop) */}
-        {activities.length > 0 && (
+        {/* Row 2: Looped Quick Stop Selector Strip (Clicking any chip flies to that stop) */}
+        {loopedStops.length > 0 && (
           <div className="flex items-center gap-2 overflow-x-auto pt-0.5 pb-1 no-scrollbar">
-            {activities.map((act, idx) => {
-              const text = ((act.title || '') + ' ' + (act.description || '') + ' ' + (act.badge || '') + ' ' + (act.category || '')).toLowerCase();
-              let icon = '📍';
-              if (/restaurant|cafe|coffee|lunch|dinner|breakfast|food|dining|sushi|pizza|trattoria|izakaya|bar|bistro|culinary|eat|tasting/.test(text)) icon = '🍽️';
-              else if (/museum|shrine|temple|castle|palace|cathedral|church|monument|history|heritage|culture|art|gallery|exhibition|historical/.test(text)) icon = '🏛️';
-              else if (/park|garden|nature|forest|mountain|lake|river|beach|scenic|viewpoint|hike|hiking|trail|waterfall|botanical/.test(text)) icon = '🌲';
-              else if (/shop|market|bazaar|mall|boutique|fashion|souvenir|retail|shopping|outlet/.test(text)) icon = '🛍️';
-              else if (/photo|tower|observatory|skyline|landmark|bridge|iconic|spot|attraction|highlights/.test(text)) icon = '📸';
+            {loopedStops.map((act, idx) => {
+              const isBasecamp = act.isBasecamp === true || idx === 0;
+              const meta = isBasecamp ? { icon: '🏨', label: 'Basecamp', bg: '#1E293B' } : getCategoryMeta(act);
+              const isSelected = selectedStopIdx === idx;
 
               let transitConnector = null;
-              if (idx > 0 && activities[idx - 1]?.coordinates && act?.coordinates && window.L) {
-                const transit = getTransitTelemetry(activities[idx - 1].coordinates, act.coordinates);
+              if (idx > 0 && loopedStops[idx - 1]?.coordinates && act?.coordinates && typeof window !== 'undefined' && window.L) {
+                const transit = getTransitTelemetry(loopedStops[idx - 1].coordinates, act.coordinates);
                 if (transit) {
                   transitConnector = (
                     <div className="shrink-0 px-2.5 py-1 rounded-lg bg-stone-100 border border-stone-200 text-[10px] font-extrabold text-stone-600 flex items-center gap-1 shadow-2xs">
@@ -597,22 +631,43 @@ export default function InteractiveRouteMap({
                     type="button"
                     onClick={() => handleFlyToStop(idx)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all shrink-0 flex items-center gap-2 shadow-2xs cursor-pointer border ${
-                      selectedStopIdx === idx
-                        ? 'bg-[#10B981] text-white border-[#059669] scale-102 shadow-md'
+                      isSelected
+                        ? (isBasecamp ? 'bg-[#1E293B] text-white border-[#334155] scale-102 shadow-md' : 'bg-[#10B981] text-white border-[#059669] scale-102 shadow-md')
                         : 'bg-stone-50 text-stone-800 border-stone-200 hover:bg-stone-100'
                     }`}
                   >
                     <span className={`w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black ${
-                      selectedStopIdx === idx ? 'bg-black/15 text-white' : 'bg-stone-200 text-stone-700'
+                      isSelected ? 'bg-black/15 text-white' : (isBasecamp ? 'bg-amber-500/20 text-amber-600' : 'bg-stone-200 text-stone-700')
                     }`}>
-                      {idx + 1}
+                      {isBasecamp ? '🏨' : idx}
                     </span>
-                    <span className="text-xs">{icon}</span>
-                    <span className="truncate max-w-32 sm:max-w-48">{act.title}</span>
+                    <span className="text-xs">{isBasecamp ? '⭐' : meta.icon}</span>
+                    <span className="truncate max-w-32 sm:max-w-48">{act.title || (isBasecamp ? 'Basecamp Hotel' : `Stop ${idx}`)}</span>
                   </button>
                 </React.Fragment>
               );
             })}
+
+            {/* Final Return Loop Badge right at the end of the strip */}
+            {loopedStops.length > 1 && typeof window !== 'undefined' && window.L && (() => {
+              const returnTransit = getTransitTelemetry(loopedStops[loopedStops.length - 1].coordinates, basecampStop.coordinates);
+              return returnTransit ? (
+                <React.Fragment>
+                  <div className="shrink-0 px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-[10px] font-extrabold text-amber-800 flex items-center gap-1 shadow-2xs">
+                    <span>🔄 Return: {returnTransit.icon}</span>
+                    <span>{returnTransit.label}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleFlyToStop(0)}
+                    className="px-2.5 py-1.5 rounded-xl text-xs font-extrabold bg-stone-100 border border-stone-200 text-stone-700 hover:bg-stone-200 transition-all shrink-0 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span>🏨</span>
+                    <span>Return to Base</span>
+                  </button>
+                </React.Fragment>
+              ) : null;
+            })()}
           </div>
         )}
       </div>
