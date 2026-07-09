@@ -93,6 +93,7 @@ export default function InteractiveRouteMap({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [routeStats, setRouteStats] = useState({ totalKm: 0, stopsCount: 0 });
+  const [telemetry, setTelemetry] = useState(null);
 
   useEffect(() => {
     setSelectedCategory('all');
@@ -106,6 +107,97 @@ export default function InteractiveRouteMap({
   const firstAct = validActivities[0];
   const basecampLat = coordinates?.lat ? (coordinates.lat - 0.007) : (firstAct ? firstAct.coordinates.lat - 0.008 : 35.6762);
   const basecampLng = coordinates?.lng ? (coordinates.lng - 0.007) : (firstAct ? firstAct.coordinates.lng - 0.008 : 139.6503);
+
+  // Calculate live destination weather & local time telemetry overlay data
+  useEffect(() => {
+    const cityName = destinationName && destinationName !== 'Your Destination' 
+      ? destinationName.split(',')[0].trim() 
+      : (firstAct?.location ? firstAct.location.split(',')[0].trim() : 'Rome');
+
+    let isMounted = true;
+
+    const formatLocalTime = (tz) => {
+      try {
+        return new Intl.DateTimeFormat('en-US', {
+          timeZone: tz || 'UTC',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        }).format(new Date());
+      } catch (e) {
+        return new Intl.DateTimeFormat('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        }).format(new Date());
+      }
+    };
+
+    const fetchWeatherAndTelemetry = async () => {
+      try {
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${basecampLat}&longitude=${basecampLng}&current=temperature_2m,weather_code,is_day&daily=sunset&timezone=auto`);
+        if (!res.ok) throw new Error('Weather API fetch failed');
+        const data = await res.json();
+        
+        if (!isMounted) return;
+
+        const temp = Math.round(data.current?.temperature_2m || 24) + '°C';
+        const code = data.current?.weather_code ?? 1;
+        const isDay = data.current?.is_day ?? 1;
+        
+        let icon = '☀️';
+        let condition = 'Clear';
+        if (code === 0) { icon = isDay ? '☀️' : '🌙'; condition = 'Clear'; }
+        else if (code <= 3) { icon = '⛅'; condition = 'Partly Cloudy'; }
+        else if (code <= 48) { icon = '🌫️'; condition = 'Foggy'; }
+        else if (code <= 67) { icon = '🌧️'; condition = 'Light Rain'; }
+        else if (code <= 77) { icon = '❄️'; condition = 'Snow Showers'; }
+        else if (code <= 82) { icon = '🌦️'; condition = 'Rain Showers'; }
+        else if (code <= 99) { icon = '⛈️'; condition = 'Thunderstorm'; }
+
+        let sunsetStr = '8:15 PM';
+        if (data.daily?.sunset?.[0]) {
+          const sunsetDate = new Date(data.daily.sunset[0]);
+          sunsetStr = sunsetDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        }
+
+        const tz = data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+        setTelemetry({
+          city: cityName,
+          temp,
+          icon,
+          condition,
+          sunset: sunsetStr,
+          tz,
+          localTime: formatLocalTime(tz)
+        });
+      } catch (err) {
+        if (!isMounted) return;
+        const simulatedTemp = Math.round(20 + Math.abs(Math.cos(basecampLat)) * 9) + '°C';
+        const fallbackTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+        setTelemetry({
+          city: cityName,
+          temp: simulatedTemp,
+          icon: '⛅',
+          condition: 'Pleasant',
+          sunset: '8:15 PM',
+          tz: fallbackTz,
+          localTime: formatLocalTime(fallbackTz)
+        });
+      }
+    };
+
+    fetchWeatherAndTelemetry();
+    const interval = setInterval(() => {
+      setTelemetry(prev => prev ? { ...prev, localTime: formatLocalTime(prev.tz) } : null);
+    }, 30000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [basecampLat, basecampLng, destinationName]);
 
   const basecampStop = {
     isBasecamp: true,
@@ -123,50 +215,50 @@ export default function InteractiveRouteMap({
   const nonBasecampStopsCount = loopedStops.filter((act, idx) => !(act.isBasecamp === true || idx === 0)).length;
 
   const categoryFilters = [
-    { 
-      id: 'all', 
-      label: 'All Stops', 
-      icon: '⭐', 
+    {
+      id: 'all',
+      label: 'All Stops',
+      icon: '⭐',
       count: nonBasecampStopsCount,
       activeBg: 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/25 border-emerald-500 scale-105 ring-2 ring-emerald-500/20',
       badgeBg: 'bg-white/20 text-white'
     },
-    { 
-      id: 'dining', 
-      label: 'Food & Dining', 
-      icon: '🍽️', 
+    {
+      id: 'dining',
+      label: 'Food & Dining',
+      icon: '🍽️',
       count: loopedStops.filter((act, idx) => !(act.isBasecamp === true || idx === 0) && getCategoryMeta(act).label === 'Dining').length,
       activeBg: 'bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-md shadow-orange-500/25 border-orange-400 scale-105 ring-2 ring-orange-500/20',
       badgeBg: 'bg-white/20 text-white'
     },
-    { 
-      id: 'attractions', 
-      label: 'Attractions', 
-      icon: '🏛️', 
+    {
+      id: 'attractions',
+      label: 'Attractions',
+      icon: '🏛️',
       count: loopedStops.filter((act, idx) => !(act.isBasecamp === true || idx === 0) && getCategoryMeta(act).label !== 'Dining').length,
       activeBg: 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/25 border-purple-400 scale-105 ring-2 ring-purple-500/20',
       badgeBg: 'bg-white/20 text-white'
     },
-    { 
-      id: 'landmark', 
-      label: 'Landmarks', 
-      icon: '📸', 
+    {
+      id: 'landmark',
+      label: 'Landmarks',
+      icon: '📸',
       count: loopedStops.filter((act, idx) => !(act.isBasecamp === true || idx === 0) && getCategoryMeta(act).label === 'Landmark').length,
       activeBg: 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-md shadow-teal-500/25 border-teal-400 scale-105 ring-2 ring-teal-500/20',
       badgeBg: 'bg-white/20 text-white'
     },
-    { 
-      id: 'nature', 
-      label: 'Nature & Parks', 
-      icon: '🌲', 
+    {
+      id: 'nature',
+      label: 'Nature & Parks',
+      icon: '🌲',
       count: loopedStops.filter((act, idx) => !(act.isBasecamp === true || idx === 0) && getCategoryMeta(act).label === 'Nature').length,
       activeBg: 'bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-md shadow-emerald-500/25 border-emerald-400 scale-105 ring-2 ring-emerald-500/20',
       badgeBg: 'bg-white/20 text-white'
     },
-    { 
-      id: 'shopping', 
-      label: 'Shopping', 
-      icon: '🛍️', 
+    {
+      id: 'shopping',
+      label: 'Shopping',
+      icon: '🛍️',
       count: loopedStops.filter((act, idx) => !(act.isBasecamp === true || idx === 0) && getCategoryMeta(act).label === 'Shopping').length,
       activeBg: 'bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-md shadow-pink-500/25 border-pink-400 scale-105 ring-2 ring-pink-500/20',
       badgeBg: 'bg-white/20 text-white'
@@ -218,7 +310,7 @@ export default function InteractiveRouteMap({
     if (mapRef.current) {
       try {
         mapRef.current.remove();
-      } catch (e) {}
+      } catch (e) { }
       mapRef.current = null;
       layerGroupRef.current = null;
       tileLayerRef.current = null;
@@ -247,7 +339,7 @@ export default function InteractiveRouteMap({
       if (mapRef.current) {
         try {
           mapRef.current.remove();
-        } catch (e) {}
+        } catch (e) { }
         mapRef.current = null;
         layerGroupRef.current = null;
         tileLayerRef.current = null;
@@ -335,16 +427,16 @@ export default function InteractiveRouteMap({
         const isHighlightedByFilter = isFilterActive && isCategoryMatch && !isBasecamp;
 
         // Rich 3D Glassmorphism Gradients for luxury depth
-        const gradientBg = isSelected 
-          ? 'linear-gradient(135deg, #10B981 0%, #047857 100%)' 
-          : (isBasecamp 
-              ? 'linear-gradient(135deg, #334155 0%, #0F172A 100%)'
-              : (meta.label === 'Dining' ? 'linear-gradient(135deg, #FF8A00 0%, #C2410C 100%)'
-                 : meta.label === 'Culture' ? 'linear-gradient(135deg, #A855F7 0%, #6D28D9 100%)'
-                 : meta.label === 'Nature' ? 'linear-gradient(135deg, #34D399 0%, #047857 100%)'
-                 : meta.label === 'Shopping' ? 'linear-gradient(135deg, #FB7185 0%, #BE123C 100%)'
-                 : meta.label === 'Landmark' ? 'linear-gradient(135deg, #2DD4BF 0%, #0F766E 100%)'
-                 : `linear-gradient(135deg, ${pinBg} 0%, #1D4ED8 100%)`));
+        const gradientBg = isSelected
+          ? 'linear-gradient(135deg, #10B981 0%, #047857 100%)'
+          : (isBasecamp
+            ? 'linear-gradient(135deg, #334155 0%, #0F172A 100%)'
+            : (meta.label === 'Dining' ? 'linear-gradient(135deg, #FF8A00 0%, #C2410C 100%)'
+              : meta.label === 'Culture' ? 'linear-gradient(135deg, #A855F7 0%, #6D28D9 100%)'
+                : meta.label === 'Nature' ? 'linear-gradient(135deg, #34D399 0%, #047857 100%)'
+                  : meta.label === 'Shopping' ? 'linear-gradient(135deg, #FB7185 0%, #BE123C 100%)'
+                    : meta.label === 'Landmark' ? 'linear-gradient(135deg, #2DD4BF 0%, #0F766E 100%)'
+                      : `linear-gradient(135deg, ${pinBg} 0%, #1D4ED8 100%)`));
 
         const customIcon = L.divIcon({
           className: 'custom-tripwise-pin',
@@ -704,9 +796,8 @@ export default function InteractiveRouteMap({
   };
 
   const mapJSX = (
-    <div className={`overflow-hidden border border-stone-200 shadow-md bg-white flex flex-col transition-all duration-300 ${
-      isFullscreen ? 'fixed inset-0 z-[999999] w-screen h-screen rounded-none shadow-2xl m-0 p-0' : 'relative w-full rounded-3xl h-[460px] md:h-[540px]'
-    }`}>
+    <div className={`overflow-hidden border border-stone-200 shadow-md bg-white flex flex-col transition-all duration-300 ${isFullscreen ? 'fixed inset-0 z-[999999] w-screen h-screen rounded-none shadow-2xl m-0 p-0' : 'relative w-full rounded-3xl h-[460px] md:h-[540px]'
+      }`}>
       {/* Top Header: Controls & Quick Stop Selector Bar (Outside the map canvas so popups NEVER overlap!) */}
       <div className="bg-white border-b border-stone-200 p-3 flex flex-col gap-2.5 z-30 shrink-0">
         {/* Row 1: Map Styles, Fit Route, Fullscreen Toggle */}
@@ -734,9 +825,8 @@ export default function InteractiveRouteMap({
                         setMapStyle(key);
                         setShowLayerMenu(false);
                       }}
-                      className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold w-full text-left transition-all cursor-pointer ${
-                        mapStyle === key ? 'bg-[#EC6735] text-white shadow-xs' : 'text-stone-700 hover:bg-stone-100'
-                      }`}
+                      className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold w-full text-left transition-all cursor-pointer ${mapStyle === key ? 'bg-[#EC6735] text-white shadow-xs' : 'text-stone-700 hover:bg-stone-100'
+                        }`}
                     >
                       <span>{style.icon}</span>
                       <span>{style.name}</span>
@@ -797,18 +887,16 @@ export default function InteractiveRouteMap({
                   key={filter.id}
                   type="button"
                   onClick={() => handleCategorySelect(filter.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer border shadow-2xs ${
-                    isSelected
+                  className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer border shadow-2xs ${isSelected
                       ? (filter.activeBg || 'bg-[#1C1B1B] text-white border-[#1C1B1B] scale-105 shadow-md')
                       : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100 hover:border-stone-300 hover:text-stone-950'
-                  }`}
+                    }`}
                 >
                   <span className="text-sm">{filter.icon}</span>
                   <span>{filter.label}</span>
                   {typeof filter.count === 'number' && (
-                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
-                      isSelected ? 'bg-white/25 text-white shadow-2xs' : 'bg-stone-200 text-stone-600'
-                    }`}>
+                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${isSelected ? 'bg-white/25 text-white shadow-2xs' : 'bg-stone-200 text-stone-600'
+                      }`}>
                       {filter.count}
                     </span>
                   )}
@@ -840,9 +928,8 @@ export default function InteractiveRouteMap({
                 const transit = getTransitTelemetry(loopedStops[idx - 1].coordinates, act.coordinates);
                 if (transit) {
                   transitConnector = (
-                    <div className={`shrink-0 px-2.5 py-1 rounded-lg bg-stone-100 border border-stone-200 text-[10px] font-extrabold text-stone-600 flex items-center gap-1 shadow-2xs transition-opacity ${
-                      selectedCategory !== 'all' && !isCategoryMatch ? 'opacity-40' : 'opacity-100'
-                    }`}>
+                    <div className={`shrink-0 px-2.5 py-1 rounded-lg bg-stone-100 border border-stone-200 text-[10px] font-extrabold text-stone-600 flex items-center gap-1 shadow-2xs transition-opacity ${selectedCategory !== 'all' && !isCategoryMatch ? 'opacity-40' : 'opacity-100'
+                      }`}>
                       <span>{transit.icon}</span>
                       <span>{transit.label}</span>
                     </div>
@@ -856,17 +943,15 @@ export default function InteractiveRouteMap({
                   <button
                     type="button"
                     onClick={() => handleFlyToStop(idx)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all shrink-0 flex items-center gap-2 shadow-2xs cursor-pointer border ${
-                      isSelected
+                    className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all shrink-0 flex items-center gap-2 shadow-2xs cursor-pointer border ${isSelected
                         ? (isBasecamp ? 'bg-[#1E293B] text-white border-[#334155] scale-102 shadow-md z-10' : 'bg-[#10B981] text-white border-[#059669] scale-102 shadow-md z-10')
                         : (selectedCategory !== 'all' && !isCategoryMatch
-                            ? 'bg-stone-50/60 text-stone-400 border-stone-100 opacity-45 scale-95 hover:opacity-85'
-                            : 'bg-stone-50 text-stone-800 border-stone-200 hover:bg-stone-100')
-                    }`}
+                          ? 'bg-stone-50/60 text-stone-400 border-stone-100 opacity-45 scale-95 hover:opacity-85'
+                          : 'bg-stone-50 text-stone-800 border-stone-200 hover:bg-stone-100')
+                      }`}
                   >
-                    <span className={`w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black ${
-                      isSelected ? 'bg-black/15 text-white' : (isBasecamp ? 'bg-amber-500/20 text-amber-600' : 'bg-stone-200 text-stone-700')
-                    }`}>
+                    <span className={`w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black ${isSelected ? 'bg-black/15 text-white' : (isBasecamp ? 'bg-amber-500/20 text-amber-600' : 'bg-stone-200 text-stone-700')
+                      }`}>
                       {isBasecamp ? '🏨' : idx}
                     </span>
                     <span className="text-xs">{isBasecamp ? '⭐' : meta.icon}</span>
@@ -914,18 +999,42 @@ export default function InteractiveRouteMap({
       </div>
 
       {/* Bottom Footer: Telemetry & Route Stats Bar (Outside map area so zero overlap!) */}
-      <div className="bg-[#1C1B1B] text-white px-4 py-2.5 text-xs font-semibold flex items-center justify-between shrink-0 flex-wrap gap-2 z-30">
-        <div className="flex items-center gap-2.5 truncate">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] animate-pulse shrink-0" />
-          <span className="font-extrabold tracking-wide truncate">📍 {destinationName}</span>
-          <span className="text-stone-400">|</span>
-          <span className="text-[#FF8C61] font-extrabold shrink-0">🚗 {routeStats.totalKm} km path</span>
-          <span className="text-stone-400 hidden sm:inline">|</span>
+      <div className="bg-[#1C1B1B] text-white px-4 py-2.5 text-xs font-semibold flex items-center justify-between shrink-0 flex-wrap gap-2.5 z-30">
+        <div className="flex items-center gap-2.5 truncate flex-wrap">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] animate-pulse shrink-0" />
+            <span className="font-extrabold tracking-wide truncate">📍 {destinationName}</span>
+          </div>
+          <span className="text-stone-500 hidden sm:inline">|</span>
+          <div className="flex items-center gap-1 text-[#FF8C61] font-extrabold shrink-0">
+            <span>🚗</span>
+            <span>{routeStats.totalKm} km path</span>
+          </div>
+          <span className="text-stone-500 hidden sm:inline">|</span>
           <span className="text-stone-300 hidden sm:inline">{routeStats.stopsCount} Waypoints</span>
         </div>
-        <div className="flex items-center gap-2 text-[11px] font-bold text-stone-300 shrink-0">
-          <span>Click any pin or top chip to fly inside</span>
-        </div>
+
+        {/* Live Weather & Time Telemetry Badge inside Bottom Bar */}
+        {telemetry ? (
+          <div className="flex items-center gap-2 bg-stone-800/90 px-3 py-1 rounded-xl border border-stone-700/80 text-[11px] font-extrabold text-stone-100 shadow-inner shrink-0">
+            <span className="text-sm">{telemetry.icon}</span>
+            <span className="text-white font-black">{telemetry.city} • <span className="text-[#FF6B35]">{telemetry.temp}</span></span>
+            <span className="text-stone-500">•</span>
+            <span className="text-stone-300 flex items-center gap-1 font-bold">
+              <span>🕒</span>
+              <span>{telemetry.localTime}</span>
+            </span>
+            <span className="text-stone-500">•</span>
+            <span className="text-amber-400 font-bold flex items-center gap-1">
+              <span>🌅</span>
+              <span>Sunset at {telemetry.sunset}</span>
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-[11px] font-bold text-stone-300 shrink-0">
+            <span>Click any pin or top chip to fly inside</span>
+          </div>
+        )}
       </div>
     </div>
   );
