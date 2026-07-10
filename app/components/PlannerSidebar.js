@@ -158,6 +158,7 @@ export default function PlannerSidebar({
   const handleDaySelect = (idx) => {
     if (onSelectDay) onSelectDay(idx);
     setInternalSelectedDayIndex(idx);
+    setRefineExplanation(null);
   };
 
   const [internalHoveredStopIdx, setInternalHoveredStopIdx] = useState(null);
@@ -165,6 +166,124 @@ export default function PlannerSidebar({
   const handleHoverStop = (idx) => {
     if (onHoverStop) onHoverStop(idx);
     setInternalHoveredStopIdx(idx);
+  };
+
+  // Drag and Drop Stop Reordering State & Handlers
+  const [draggedStopIdx, setDraggedStopIdx] = useState(null);
+  const [dragOverStopIdx, setDragOverStopIdx] = useState(null);
+
+  const handleDragStart = (e, idx) => {
+    e.stopPropagation();
+    setDraggedStopIdx(idx);
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', idx.toString());
+    }
+  };
+
+  const handleDragOver = (e, idx) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (draggedStopIdx === null || draggedStopIdx === idx) return;
+    if (dragOverStopIdx !== idx) {
+      setDragOverStopIdx(idx);
+    }
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e, targetIdx) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverStopIdx(null);
+    if (draggedStopIdx === null || draggedStopIdx === targetIdx || !itinerary || !itinerary.days?.[selectedDayIndex]) {
+      setDraggedStopIdx(null);
+      return;
+    }
+
+    const currentDay = itinerary.days[selectedDayIndex];
+    const newActivities = [...(currentDay.activities || [])];
+    const [movedItem] = newActivities.splice(draggedStopIdx, 1);
+    newActivities.splice(targetIdx, 0, movedItem);
+
+    const updatedDays = itinerary.days.map((day, dIdx) => {
+      if (dIdx === selectedDayIndex) {
+        return { ...day, activities: newActivities };
+      }
+      return day;
+    });
+
+    const updatedItinerary = {
+      ...itinerary,
+      days: updatedDays
+    };
+
+    if (onUpdateItinerary) {
+      onUpdateItinerary(updatedItinerary);
+    }
+    setDraggedStopIdx(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedStopIdx(null);
+    setDragOverStopIdx(null);
+  };
+
+  // Real-Time AI Refinement ("Chat to Modify") State & Handlers
+  const [refinePromptInput, setRefinePromptInput] = useState('');
+  const [isRefiningDay, setIsRefiningDay] = useState(false);
+  const [refineExplanation, setRefineExplanation] = useState(null);
+  const [showCopilotDrawer, setShowCopilotDrawer] = useState(false);
+
+  const triggerRefineDay = async (customPrompt = null) => {
+    const promptText = (customPrompt || refinePromptInput).trim();
+    if (!promptText || !itinerary?.days?.[selectedDayIndex]) return;
+    setIsRefiningDay(true);
+    setRefineExplanation(null);
+
+    try {
+      const currentDay = itinerary.days[selectedDayIndex];
+      const res = await fetch('/api/refine-day', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: promptText,
+          currentDay,
+          destinationName: itinerary.destinationName || 'Your Destination',
+          dayIndex: selectedDayIndex
+        })
+      });
+      const data = await res.json();
+      if (data && data.updatedDay) {
+        const updatedDays = itinerary.days.map((day, idx) => {
+          if (idx === selectedDayIndex) {
+            return data.updatedDay;
+          }
+          return day;
+        });
+        const updatedItinerary = {
+          ...itinerary,
+          days: updatedDays
+        };
+        if (onUpdateItinerary) {
+          onUpdateItinerary(updatedItinerary);
+        }
+        setRefineExplanation(data.explanation || `Refined Day ${selectedDayIndex + 1} with AI!`);
+        setRefinePromptInput('');
+      }
+    } catch (err) {
+      console.error("Failed to refine day:", err);
+      setRefineExplanation("❌ Could not modify day right now. Please try again.");
+    } finally {
+      setIsRefiningDay(false);
+    }
+  };
+
+  const handleRefineDaySubmit = (e) => {
+    e.preventDefault();
+    triggerRefineDay();
   };
 
   // State: 'input' | 'parsing' | 'confirming' | 'progress'
@@ -719,10 +838,10 @@ export default function PlannerSidebar({
                   </button>
                 </div>
 
-                {/* Day Selector Pills */}
-                {itinerary.days && itinerary.days.length > 1 && (
-                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-                    {itinerary.days.map((day, idx) => (
+                {/* Day Selector Pills & Chat to Modify Toggle Button */}
+                <div className="flex items-center justify-between gap-2 pb-1">
+                  <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+                    {itinerary.days && itinerary.days.map((day, idx) => (
                       <button
                         key={idx}
                         type="button"
@@ -737,7 +856,135 @@ export default function PlannerSidebar({
                       </button>
                     ))}
                   </div>
-                )}
+
+                  {/* Chat to Modify Toggle Button right of the days */}
+                  <button
+                    type="button"
+                    onClick={() => setShowCopilotDrawer(!showCopilotDrawer)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap shadow-sm flex items-center gap-1.5 shrink-0 border ${
+                      showCopilotDrawer || isRefiningDay || refineExplanation
+                        ? 'bg-linear-to-r from-[#EC6735] to-[#FF8C61] text-white border-[#EC6735] shadow-md scale-102'
+                        : 'bg-[#1C1B1B] hover:bg-[#2A2626] text-white border-[#1C1B1B]'
+                    }`}
+                  >
+                    <span className="animate-pulse">✨</span>
+                    <span>Chat to Modify</span>
+                    <span className={`transition-transform duration-300 text-[10px] ${showCopilotDrawer ? 'rotate-180' : ''}`}>▼</span>
+                  </button>
+                </div>
+
+                {/* Floating AI Copilot Drawer with Smooth Pop Animation */}
+                <div className={`w-full transition-all duration-500 ease-in-out overflow-hidden ${
+                  showCopilotDrawer || isRefiningDay || refineExplanation
+                    ? 'max-h-[380px] opacity-100 mt-1 mb-2'
+                    : 'max-h-0 opacity-0 mt-0 mb-0 pointer-events-none'
+                }`}>
+                  <div className="w-full bg-linear-to-r from-[#1C1B1B] via-[#2A2626] to-[#1C1B1B] p-3 rounded-2xl shadow-lg border border-[rgba(255,255,255,0.12)] flex flex-col gap-2 relative">
+                    <div className="flex items-center justify-between text-[11px] font-black tracking-wider text-[#EC6735] uppercase">
+                      <span className="flex items-center gap-1.5">
+                        <span className="animate-pulse">✨</span>
+                        <span>AI Copilot: Refine {itinerary.days?.[selectedDayIndex]?.dateLabel || `Day ${selectedDayIndex + 1}`}</span>
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-stone-400 font-bold tracking-normal hidden sm:inline">Only modifies this day</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowCopilotDrawer(false);
+                            setRefineExplanation(null);
+                          }}
+                          className="text-stone-400 hover:text-white text-xs font-bold cursor-pointer px-1"
+                          title="Close AI Copilot"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+
+                    <form
+                      onSubmit={handleRefineDaySubmit}
+                      className="flex items-center gap-2"
+                    >
+                      <div className="relative flex-1">
+                        <input
+                          type="text"
+                          value={refinePromptInput}
+                          onChange={(e) => setRefinePromptInput(e.target.value)}
+                          placeholder='e.g. "Add a Michelin-star dinner after Stop #3..."'
+                          disabled={isRefiningDay}
+                          className="w-full bg-white/10 hover:bg-white/15 focus:bg-white/20 text-white placeholder-stone-400 text-xs rounded-xl px-3.5 py-2 border border-white/15 focus:border-[#EC6735] focus:outline-hidden transition-all pr-8"
+                        />
+                        {refinePromptInput && !isRefiningDay && (
+                          <button
+                            type="button"
+                            onClick={() => setRefinePromptInput('')}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-white text-xs font-bold cursor-pointer"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={!refinePromptInput.trim() || isRefiningDay}
+                        className="bg-linear-to-r from-[#EC6735] to-[#FF8C61] hover:from-[#d85827] hover:to-[#EC6735] text-white px-3.5 py-2 rounded-xl text-xs font-extrabold shadow-sm transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                      >
+                        {isRefiningDay ? (
+                          <>
+                            <div className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                            <span>Refining...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>✨</span>
+                            <span>Apply</span>
+                          </>
+                        )}
+                      </button>
+                    </form>
+
+                    {/* Quick suggestion pills for instant 1-click refinement */}
+                    <div className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-0.5 scrollbar-none">
+                      {[
+                        '🍷 Add a Michelin-star dinner after Stop #3',
+                        '🧸 Make this day more kid-friendly',
+                        '☕ Add early morning coffee & pastry before Stop #1',
+                        '💆 Insert a relaxing luxury thermal spa break'
+                      ].map((sugg, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => {
+                            const cleanPrompt = sugg.replace(/^[^\s]+\s+/, '');
+                            setRefinePromptInput(cleanPrompt);
+                            triggerRefineDay(cleanPrompt);
+                          }}
+                          disabled={isRefiningDay}
+                          className="text-[10px] font-bold text-stone-300 bg-white/10 hover:bg-white/20 border border-white/15 rounded-lg px-2.5 py-1 whitespace-nowrap transition-all cursor-pointer shrink-0"
+                        >
+                          {sugg}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* AI Refinement Feedback Notification */}
+                    {refineExplanation && (
+                      <div className="mt-1 bg-[#10B981]/20 border border-[#10B981]/40 text-[#A7F3D0] px-3 py-2 rounded-xl text-xs flex items-center justify-between gap-2 animate-fade-in font-bold">
+                        <span className="flex items-center gap-1.5">
+                          <span>✅</span>
+                          <span>{refineExplanation}</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setRefineExplanation(null)}
+                          className="text-[#A7F3D0] hover:text-white font-extrabold text-xs ml-2 cursor-pointer"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
                 {/* Day Schedule Activities Cards List */}
                 <div className="flex flex-col gap-3 px-1 py-1 max-h-[calc(100vh-280px)] overflow-y-auto overflow-x-hidden">
@@ -747,25 +994,43 @@ export default function PlannerSidebar({
                     return (
                       <div
                         key={idx}
+                        draggable={true}
+                        onDragStart={(e) => handleDragStart(e, idx)}
+                        onDragOver={(e) => handleDragOver(e, idx)}
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => handleDrop(e, idx)}
+                        onDragEnd={handleDragEnd}
                         onMouseEnter={() => handleHoverStop(stopNum)}
                         onMouseLeave={() => handleHoverStop(null)}
                         onClick={() => handleHoverStop(stopNum)}
-                        className={`w-full box-border p-4 rounded-2xl border transition-all duration-200 flex flex-col gap-2.5 cursor-pointer ${
-                          isHovered
+                        className={`w-full box-border p-4 rounded-2xl border transition-all duration-200 flex flex-col gap-2.5 cursor-pointer select-none ${
+                          dragOverStopIdx === idx
+                            ? 'border-[#EC6735] border-2 bg-[#FFF8F5] scale-102 ring-4 ring-[#EC6735]/30 shadow-xl z-30'
+                            : draggedStopIdx === idx
+                            ? 'opacity-40 scale-95 border-dashed border-2 border-stone-400 bg-stone-50'
+                            : isHovered
                             ? 'bg-[#FFF8F5] border-[#EC6735] border-2 ring-2 sm:ring-4 ring-[#EC6735]/25 -translate-y-0.5 shadow-xl z-20 font-bold'
                             : 'bg-white border-[rgba(28,27,27,0.1)] shadow-2xs hover:border-[rgba(28,27,27,0.25)] hover:shadow-md'
                         }`}
                       >
                         <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-2.5">
+                          <div className="flex items-center gap-2">
+                            {/* Drag Handle */}
+                            <div
+                              className="cursor-grab active:cursor-grabbing text-stone-400 hover:text-[#EC6735] px-1 py-1 flex items-center justify-center transition-colors shrink-0"
+                              title="Drag stop to reorder along route"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <span className="text-base font-black tracking-tighter leading-none">⋮⋮</span>
+                            </div>
                             <div className={`w-8 h-8 rounded-xl font-black text-xs flex items-center justify-center shrink-0 border ${
-                              isHovered
+                              isHovered || dragOverStopIdx === idx
                                 ? 'bg-[#EC6735] text-white border-[#EC6735] shadow-sm animate-pulse'
                                 : 'bg-[#FFF2EA] text-[#EC6735] border-[#EC6735]/20'
                             }`}>
                               {stopNum}
                             </div>
-                            <div>
+                            <div className="ml-0.5">
                               <span className="text-xs font-bold text-[#EC6735]">{act.time}</span>
                               <h4 className="text-sm font-extrabold text-[#1C1B1B] leading-snug">{act.title}</h4>
                             </div>
@@ -774,8 +1039,8 @@ export default function PlannerSidebar({
                             {act.badge || act.category || 'Stop'}
                           </span>
                         </div>
-                        <p className="text-xs text-[#4B4745] leading-relaxed pl-10.5">{act.description}</p>
-                        <div className="pl-10.5 flex items-center flex-wrap gap-1.5 pt-1">
+                        <p className="text-xs text-[#4B4745] leading-relaxed pl-12">{act.description}</p>
+                        <div className="pl-12 flex items-center flex-wrap gap-1.5 pt-1">
                           {act.duration && (
                             <span className="text-[10px] font-bold text-[#5F5E5A] bg-[#F5F2EE] px-2 py-0.5 rounded-md flex items-center gap-1 border border-[rgba(28,27,27,0.06)]">
                               ⏱️ {act.duration}

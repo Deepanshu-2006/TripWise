@@ -166,8 +166,20 @@ const getKnownRealWalkablePlaces = (baseLat, baseLng, destName = '') => {
   }).filter(p => calcDist(baseLat, baseLng, p.coordinates.lat, p.coordinates.lng) <= 1500);
 };
 
+const DAY_SIGNATURE_COLORS = [
+  { name: 'Day 1: Sunset Orange', color: '#EC6735', glow: 'rgba(236,103,53,0.75)', bg: '#FFF2EA', border: '#FFDBC8' },
+  { name: 'Day 2: Emerald Green', color: '#10B981', glow: 'rgba(16,185,129,0.75)', bg: '#ECFDF5', border: '#A7F3D0' },
+  { name: 'Day 3: Electric Purple', color: '#8B5CF6', glow: 'rgba(139,92,246,0.75)', bg: '#F5F3FF', border: '#DDD6FE' },
+  { name: 'Day 4: Ocean Blue', color: '#3B82F6', glow: 'rgba(59,130,246,0.75)', bg: '#EFF6FF', border: '#BFDBFE' },
+  { name: 'Day 5: Rose Pink', color: '#EC4899', glow: 'rgba(236,72,153,0.75)', bg: '#FDF2F8', border: '#FBCFE8' },
+  { name: 'Day 6: Amber Gold', color: '#F59E0B', glow: 'rgba(245,158,11,0.75)', bg: '#FFFBEB', border: '#FDE68A' },
+  { name: 'Day 7: Teal Turquoise', color: '#0D9488', glow: 'rgba(13,148,136,0.75)', bg: '#F0FDFA', border: '#99F6E4' },
+];
+
 export default function InteractiveRouteMap({
   activities = [],
+  allDays = [],
+  selectedDayIndex = 0,
   destinationName = 'Your Destination',
   coordinates = null,
   hoveredStopIdx: propHoveredIdx = null,
@@ -191,12 +203,19 @@ export default function InteractiveRouteMap({
   const [isHotelRingActive, setIsHotelRingActive] = useState(false);
   const [realWalkablePlaces, setRealWalkablePlaces] = useState([]);
   const [internalHoveredIdx, setInternalHoveredIdx] = useState(null);
+  const [showAllDaysOverview, setShowAllDaysOverview] = useState(false);
 
   const activeHoverIdx = propHoveredIdx !== null && propHoveredIdx !== undefined ? propHoveredIdx : internalHoveredIdx;
 
   useEffect(() => {
     setSelectedCategory('all');
   }, [activities]);
+
+  // When switching days, automatically exit overview mode to focus on the selected day
+  useEffect(() => {
+    setShowAllDaysOverview(false);
+    setSelectedStopIdx(null);
+  }, [selectedDayIndex]);
 
   // Create looped Basecamp / Hotel hub (Stop 0) and full day stop list
   const validActivities = (activities || []).filter(
@@ -660,7 +679,6 @@ export default function InteractiveRouteMap({
   useEffect(() => {
     if (!mapRef.current || !window.L || !tileLayerRef.current) return;
     const styleObj = MAP_STYLES[mapStyle];
-
     mapRef.current.removeLayer(tileLayerRef.current);
     const newTileLayer = window.L.tileLayer(styleObj.url, {
       maxZoom: styleObj.maxZoom,
@@ -682,337 +700,332 @@ export default function InteractiveRouteMap({
       layerGroupRef.current.clearLayers();
       markersRef.current = {};
 
-      const validActivities = activities.filter(
-        (act) => act.coordinates && typeof act.coordinates.lat === 'number' && typeof act.coordinates.lng === 'number'
-      );
-
-      if (validActivities.length === 0) {
-        setRouteStats({ totalKm: 0, stopsCount: 0 });
-        if (coordinates && typeof coordinates.lat === 'number' && typeof coordinates.lng === 'number') {
-          mapRef.current.setView([coordinates.lat, coordinates.lng], 13);
-        }
-        return;
-      }
-
-      const latLngs = [];
-      const pinColors = ['#FF6B35', '#0D9488', '#1C1B1B', '#8CA3A8', '#EC6735'];
-      let totalMeters = 0;
-
-      loopedStops.forEach((act, stopIdx) => {
-        const latLng = L.latLng(act.coordinates.lat, act.coordinates.lng);
-        if (latLngs.length > 0) {
-          totalMeters += latLngs[latLngs.length - 1].distanceTo(latLng) * 1.28;
-        }
-        latLngs.push(latLng);
-
-        const isBasecamp = act.isBasecamp === true || stopIdx === 0;
-        const color = isBasecamp ? '#1E293B' : pinColors[(stopIdx - 1) % pinColors.length];
-        const isSelected = selectedStopIdx === stopIdx;
-
-        const meta = isBasecamp ? { icon: '🏨', label: 'Basecamp', bg: '#1E293B' } : getCategoryMeta(act);
-        const pinBg = isSelected ? '#10B981' : (isBasecamp ? '#1E293B' : meta.bg);
-
-        let isCategoryMatch = true;
-        if (selectedCategory !== 'all') {
-          if (selectedCategory === 'dining') isCategoryMatch = !isBasecamp && meta.label === 'Dining';
-          else if (selectedCategory === 'attractions') isCategoryMatch = !isBasecamp && meta.label !== 'Dining';
-          else if (selectedCategory === 'landmark') isCategoryMatch = !isBasecamp && meta.label === 'Landmark';
-          else if (selectedCategory === 'nature') isCategoryMatch = !isBasecamp && meta.label === 'Nature';
-          else if (selectedCategory === 'shopping') isCategoryMatch = !isBasecamp && meta.label === 'Shopping';
-        }
-
-        const isFilterActive = selectedCategory !== 'all';
-        const isHighlightedByFilter = isFilterActive && isCategoryMatch && !isBasecamp;
-
-        // Rich 3D Glassmorphism Gradients for luxury depth
-        const gradientBg = isSelected
-          ? 'linear-gradient(135deg, #10B981 0%, #047857 100%)'
-          : (isBasecamp
-            ? 'linear-gradient(135deg, #334155 0%, #0F172A 100%)'
-            : (meta.label === 'Dining' ? 'linear-gradient(135deg, #FF8A00 0%, #C2410C 100%)'
-              : meta.label === 'Culture' ? 'linear-gradient(135deg, #A855F7 0%, #6D28D9 100%)'
-                : meta.label === 'Nature' ? 'linear-gradient(135deg, #34D399 0%, #047857 100%)'
-                  : meta.label === 'Shopping' ? 'linear-gradient(135deg, #FB7185 0%, #BE123C 100%)'
-                    : meta.label === 'Landmark' ? 'linear-gradient(135deg, #2DD4BF 0%, #0F766E 100%)'
-                      : `linear-gradient(135deg, ${pinBg} 0%, #1D4ED8 100%)`));
-
-        const customIcon = L.divIcon({
-          className: 'custom-tripwise-pin',
-          html: `
-            <div style="position: relative; width: ${isSelected || isHighlightedByFilter ? '48px' : '40px'}; height: ${isSelected || isHighlightedByFilter ? '58px' : '48px'}; display: flex; align-items: flex-start; justify-content: center; transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); transform: ${isSelected ? 'scale(1.2) translateY(-6px)' : (isHighlightedByFilter ? 'scale(1.12) translateY(-3px)' : (isCategoryMatch ? 'scale(1)' : 'scale(0.72)'))}; opacity: ${isCategoryMatch ? '1' : '0.16'}; filter: ${isCategoryMatch ? 'none' : 'blur(0.5px) grayscale(90%)'}; z-index: ${isSelected || isHighlightedByFilter ? '1000' : (isCategoryMatch ? '100' : '10')}; cursor: pointer;">
-              
-              <!-- Apple Maps Style 3D Glossy Teardrop Body -->
-              <div style="
-                width: ${isSelected || isHighlightedByFilter ? '42px' : '36px'};
-                height: ${isSelected || isHighlightedByFilter ? '42px' : '36px'};
-                background: ${gradientBg};
-                border-radius: 50% 50% 50% 0;
-                transform: rotate(-45deg);
-                border: ${isSelected ? '3.5px solid #ffffff' : (isHighlightedByFilter ? '3px solid #ffffff' : (isBasecamp ? '2.5px solid #F59E0B' : '2.5px solid #ffffff'))};
-                box-shadow: ${isSelected ? '0 10px 28px rgba(16, 185, 129, 0.85), inset 0 2px 4px rgba(255,255,255,0.45)' : (isHighlightedByFilter ? `0 0 24px ${pinBg}, 0 8px 22px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.45)` : (isBasecamp ? '0 6px 20px rgba(245, 158, 11, 0.5), inset 0 2px 4px rgba(255,255,255,0.3)' : '0 6px 18px rgba(0, 0, 0, 0.32), inset 0 2px 4px rgba(255,255,255,0.45)'))};
-                display: flex;
-                align-items: center;
-                justify-content: center;
-              ">
-                <!-- Inner Enamel Glass Medal Ring (Upright Counter-Rotated) -->
-                <div style="
-                  transform: rotate(45deg);
-                  width: ${isSelected || isHighlightedByFilter ? '28px' : '24px'};
-                  height: ${isSelected || isHighlightedByFilter ? '28px' : '24px'};
-                  border-radius: 50%;
-                  background: rgba(255, 255, 255, 0.22);
-                  border: 1px solid rgba(255, 255, 255, 0.55);
-                  box-shadow: inset 0 2px 4px rgba(0,0,0,0.18);
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  font-size: ${isSelected || isHighlightedByFilter ? '16px' : '14px'};
-                ">
-                  ${isBasecamp ? '🏨' : meta.icon}
-                </div>
-              </div>
-
-              <!-- Top-Right Chronological Crown Badge (#1, #2, #3 or ★) -->
-              <div style="
-                position: absolute;
-                top: -5px;
-                right: -4px;
-                background: ${isBasecamp ? '#F59E0B' : '#1C1B1B'};
-                color: #FFFFFF;
-                border: 2px solid #FFFFFF;
-                border-radius: 9999px;
-                padding: ${isBasecamp ? '0 5px' : '1px 6.5px'};
-                min-width: 20px;
-                height: 20px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.45);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 11px;
-                font-weight: 950;
-                letter-spacing: -0.3px;
-                z-index: 20;
-              ">
-                ${isBasecamp ? '★' : stopIdx}
-              </div>
-
-              <!-- Realistic Dual-Layer Ground Contact Shadow -->
-              <div style="
-                position: absolute;
-                bottom: -2px;
-                width: ${isSelected || isHighlightedByFilter ? '20px' : '14px'};
-                height: 5px;
-                background: rgba(0,0,0,0.32);
-                border-radius: 50%;
-                filter: blur(2px);
-                z-index: -1;
-              "></div>
-            </div>
-          `,
-          iconSize: isSelected || isHighlightedByFilter ? [48, 58] : [40, 48],
-          iconAnchor: isSelected || isHighlightedByFilter ? [24, 58] : [20, 48],
-          popupAnchor: [0, -50]
-        });
-
-        const marker = L.marker(latLng, { icon: customIcon }).addTo(layerGroupRef.current);
-        markersRef.current[stopIdx] = marker;
-
-        // Calculate transit from previous stop if stopIdx > 0
-        let transitCardHtml = '';
-        if (stopIdx > 0 && loopedStops[stopIdx - 1]?.coordinates) {
-          const prevAct = loopedStops[stopIdx - 1];
-          const transit = getTransitTelemetry(prevAct.coordinates, act.coordinates);
-          if (transit) {
-            const fromLabel = stopIdx === 1 ? 'Basecamp Hotel (Stop 0)' : `Stop ${stopIdx - 1}`;
-            transitCardHtml = `
-              <div style="margin-bottom: 8px; padding: 6px 8px; background: ${transit.bg}; border: 1px solid ${transit.border}; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; font-size: 11px;">
-                <span style="font-weight: 800; color: #1C1B1B; display: flex; align-items: center; gap: 5px;">
-                  <span style="font-size: 13px;">${transit.icon}</span>
-                  <span>From ${fromLabel}: <b>${transit.label}</b></span>
-                </span>
-                <span style="font-weight: 900; color: ${transit.color}; font-size: 11px; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">${transit.distKm} km</span>
-              </div>
-            `;
-          }
-        } else if (isBasecamp) {
-          transitCardHtml = `
-            <div style="margin-bottom: 8px; padding: 6px 8px; background: #FFFBEB; border: 1px solid #FEF3C7; border-radius: 8px; font-size: 11px; font-weight: 800; color: #92400E; display: flex; align-items: center; justify-content: space-between;">
-              <span style="display: flex; align-items: center; gap: 5px;">
-                <span>🔄</span>
-                <span>Full Day Loop: Depart & Return</span>
-              </span>
-              <span style="background: #F59E0B; color: #fff; padding: 1.5px 6px; border-radius: 6px; font-size: 10px;">Stop 0</span>
-            </div>
-          `;
-        }
-
-        marker.on('click', () => {
-          setSelectedStopIdx(stopIdx);
-          if (isBasecamp) setIsHotelRingActive(true);
-          mapRef.current.flyTo(latLng, 16, { duration: 1.2, easeLinearity: 0.25 });
-        });
-
-        marker.on('mouseover', () => {
-          setInternalHoveredIdx(stopIdx);
-          onHoverStop(stopIdx);
-          if (isBasecamp) {
-            setIsHotelRingActive(true);
-          }
-        });
-
-        marker.on('mouseout', () => {
-          setInternalHoveredIdx(null);
-          onHoverStop(null);
-          if (isBasecamp && selectedStopIdx !== 0 && selectedStopIdx !== loopedStops.length - 1) {
-            setIsHotelRingActive(false);
-          }
-        });
-      });
-
-      // Complete the return loop journey back to Basecamp (Stop N ➔ Basecamp)
-      if (loopedStops.length > 1) {
-        const returnLatLng = L.latLng(basecampStop.coordinates.lat, basecampStop.coordinates.lng);
-        totalMeters += latLngs[latLngs.length - 1].distanceTo(returnLatLng) * 1.28;
-        latLngs.push(returnLatLng);
-      }
-
-      setRouteStats({
-        totalKm: (totalMeters / 1000).toFixed(1),
-        stopsCount: validActivities.length + 1 // Plus Basecamp Stop 0
-      });
-
-      // Inject CSS animation for the glowing route pulse
+      // Inject CSS animation and glassmorphic popover styling
       if (!document.querySelector('#route-flow-animation-css')) {
         const style = document.createElement('style');
         style.id = 'route-flow-animation-css';
         style.innerHTML = `
           @keyframes tripwiseRouteFlow {
-            0% {
-              stroke-dashoffset: 56px;
-            }
-            100% {
-              stroke-dashoffset: 0px;
-            }
+            0% { stroke-dashoffset: 56px; }
+            100% { stroke-dashoffset: 0px; }
           }
           .animated-route-flow {
             animation: tripwiseRouteFlow 1.6s linear infinite !important;
-            filter: drop-shadow(0 0 6px rgba(255, 107, 53, 0.75));
+            filter: drop-shadow(0 0 6px rgba(236, 103, 53, 0.75));
+          }
+          .glass-stop-popup .leaflet-popup-content-wrapper {
+            background: rgba(255, 255, 255, 0.96) !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+            border: 1.5px solid rgba(236, 103, 53, 0.35) !important;
+            border-radius: 18px !important;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.8) !important;
+            padding: 0 !important;
+          }
+          .dark .glass-stop-popup .leaflet-popup-content-wrapper {
+            background: rgba(28, 27, 27, 0.96) !important;
+            border-color: rgba(236, 103, 53, 0.5) !important;
+          }
+          .glass-stop-popup .leaflet-popup-content {
+            margin: 0 !important;
+            line-height: 1.4 !important;
+          }
+          .glass-stop-popup .leaflet-popup-tip-container {
+            overflow: visible !important;
+          }
+          .glass-stop-popup .leaflet-popup-tip {
+            background: rgba(255, 255, 255, 0.96) !important;
+            border: 1.5px solid rgba(236, 103, 53, 0.35) !important;
+            border-top: none !important;
+            border-left: none !important;
+            box-shadow: 3px 3px 6px rgba(0,0,0,0.12) !important;
+          }
+          .glass-stop-popup .leaflet-popup-close-button {
+            top: 10px !important;
+            right: 12px !important;
+            color: #64748B !important;
+            font-size: 16px !important;
+            font-weight: 900 !important;
+          }
+          .glass-stop-popup .leaflet-popup-close-button:hover {
+            color: #FF6B35 !important;
           }
         `;
         document.head.appendChild(style);
       }
 
-      // Draw layered polyline (Base Track + Animated Pulse + Directional Arrows) when we have 2 or more stops
-      if (latLngs.length > 1) {
-        // 1. Base Track (Solid translucent highway bed)
-        L.polyline(latLngs, {
-          color: '#FF6B35',
-          weight: 6,
-          opacity: 0.22,
-          lineCap: 'round',
-          lineJoin: 'round'
-        }).addTo(layerGroupRef.current);
+      const plotSingleDayStops = (dayActivities, dayIdx, isMultiDayMode) => {
+        const dayColorMeta = DAY_SIGNATURE_COLORS[dayIdx % DAY_SIGNATURE_COLORS.length];
+        const validActs = (dayActivities || []).filter(
+          (act) => act?.coordinates && typeof act.coordinates.lat === 'number' && typeof act.coordinates.lng === 'number'
+        );
+        if (validActs.length === 0) return { latLngs: [], totalMeters: 0, stopsCount: 0, animatedPolyline: null };
 
-        // 2. Animated Directional Pulse Wave (Glides continuously from Stop 1 to Stop N)
-        const animatedPolyline = L.polyline(latLngs, {
-          color: '#FF6B35',
-          weight: 4,
-          opacity: selectedCategory !== 'all' ? 0.35 : 0.95,
-          dashArray: '14, 14',
-          lineCap: 'round',
-          lineJoin: 'round',
-          className: 'animated-route-flow'
-        }).addTo(layerGroupRef.current);
+        const baseLat = coordinates?.lat || validActs[0].coordinates.lat;
+        const baseLng = coordinates?.lng || validActs[0].coordinates.lng;
+        const basecampStop = {
+          title: `${destinationName} Basecamp Hotel`,
+          description: `Central hub & luxury accommodation around ${destinationName}.`,
+          coordinates: { lat: baseLat, lng: baseLng },
+          isBasecamp: true
+        };
 
-        // 3. Directional Arrowheads & Midpoint Transit Pills along midpoints between sequential stops
-        for (let i = 0; i < latLngs.length - 1; i++) {
-          const p1 = latLngs[i];
-          const p2 = latLngs[i + 1];
-          const midLat = (p1.lat + p2.lat) / 2;
-          const midLng = (p1.lng + p2.lng) / 2;
+        const dayLoopedStops = isMultiDayMode
+          ? (dayIdx === 0 ? [basecampStop, ...validActs] : validActs)
+          : [basecampStop, ...validActs, ...(validActs.length > 1 ? [basecampStop] : [])];
 
-          // Calculate directional angle in degrees
-          const dy = p2.lat - p1.lat;
-          const dx = (p2.lng - p1.lng) * Math.cos(p1.lat * (Math.PI / 180));
-          const angleDeg = (Math.atan2(dy, dx) * (180 / Math.PI)) * -1 + 90;
+        const latLngs = [];
+        let totalMeters = 0;
 
-          const arrowIcon = L.divIcon({
-            className: 'route-directional-arrow',
+        dayLoopedStops.forEach((act, idx) => {
+          const latLng = L.latLng(act.coordinates.lat, act.coordinates.lng);
+          if (latLngs.length > 0) {
+            totalMeters += latLngs[latLngs.length - 1].distanceTo(latLng) * 1.28;
+          }
+          latLngs.push(latLng);
+
+          const isBasecamp = act.isBasecamp === true || (idx === 0 && !isMultiDayMode) || (isMultiDayMode && dayIdx === 0 && idx === 0);
+          const stopNum = isMultiDayMode ? (isBasecamp ? 0 : idx + (dayIdx === 0 ? 0 : 1)) : idx;
+          const markerKey = isMultiDayMode ? `d${dayIdx}_s${stopNum}` : `${stopNum}`;
+          const isSelected = !isMultiDayMode && selectedStopIdx === stopNum;
+
+          const meta = isBasecamp ? { icon: '🏨', label: 'Basecamp', bg: '#1E293B' } : getCategoryMeta(act);
+          const pinBg = isSelected ? '#10B981' : (isBasecamp ? '#1E293B' : (isMultiDayMode ? dayColorMeta.color : meta.bg));
+
+          let isCategoryMatch = true;
+          if (selectedCategory !== 'all') {
+            if (selectedCategory === 'dining') isCategoryMatch = !isBasecamp && meta.label === 'Dining';
+            else if (selectedCategory === 'attractions') isCategoryMatch = !isBasecamp && meta.label !== 'Dining';
+            else if (selectedCategory === 'landmark') isCategoryMatch = !isBasecamp && meta.label === 'Landmark';
+            else if (selectedCategory === 'nature') isCategoryMatch = !isBasecamp && meta.label === 'Nature';
+            else if (selectedCategory === 'shopping') isCategoryMatch = !isBasecamp && meta.label === 'Shopping';
+          }
+
+          const isFilterActive = selectedCategory !== 'all';
+          const isHighlightedByFilter = isFilterActive && isCategoryMatch && !isBasecamp;
+
+          const gradientBg = isSelected
+            ? 'linear-gradient(135deg, #10B981 0%, #047857 100%)'
+            : (isBasecamp
+              ? 'linear-gradient(135deg, #334155 0%, #0F172A 100%)'
+              : (isMultiDayMode
+                ? `linear-gradient(135deg, ${dayColorMeta.color} 0%, #1E293B 100%)`
+                : (meta.label === 'Dining' ? 'linear-gradient(135deg, #FF8A00 0%, #C2410C 100%)'
+                  : meta.label === 'Culture' ? 'linear-gradient(135deg, #A855F7 0%, #6D28D9 100%)'
+                    : meta.label === 'Nature' ? 'linear-gradient(135deg, #34D399 0%, #047857 100%)'
+                      : meta.label === 'Shopping' ? 'linear-gradient(135deg, #FB7185 0%, #BE123C 100%)'
+                        : meta.label === 'Landmark' ? 'linear-gradient(135deg, #2DD4BF 0%, #0F766E 100%)'
+                          : `linear-gradient(135deg, ${pinBg} 0%, #1D4ED8 100%)`)));
+
+          const customIcon = L.divIcon({
+            className: 'custom-tripwise-pin',
             html: `
-              <div style="
-                transform: rotate(${angleDeg}deg);
-                color: #ffffff;
-                font-size: 11px;
-                font-weight: 900;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 22px;
-                height: 22px;
-                background: #EC6735;
-                border: 2px solid #ffffff;
-                border-radius: 50%;
-                box-shadow: 0 3px 10px rgba(236,103,53,0.55);
-                opacity: ${selectedCategory !== 'all' ? '0.35' : '1'};
-              ">
-                ➤
-              </div>
-            `,
-            iconSize: [22, 22],
-            iconAnchor: [11, 11]
-          });
-
-          L.marker([midLat, midLng], { icon: arrowIcon, interactive: false }).addTo(layerGroupRef.current);
-
-          // Add floating Midpoint Transit Pill right along the route path
-          const p1Act = i < loopedStops.length ? loopedStops[i] : loopedStops[loopedStops.length - 1];
-          const p2Act = (i + 1) < loopedStops.length ? loopedStops[i + 1] : loopedStops[0];
-          const transit = getTransitTelemetry(p1Act.coordinates, p2Act.coordinates);
-          if (transit) {
-            const isReturnSegment = i === latLngs.length - 2;
-            const segmentPrefix = isReturnSegment ? '🔄 Return: ' : '';
-            const transitPillIcon = L.divIcon({
-              className: 'route-transit-pill',
-              html: `
+              <div style="position: relative; width: ${isSelected || isHighlightedByFilter ? '48px' : '40px'}; height: ${isSelected || isHighlightedByFilter ? '58px' : '48px'}; display: flex; align-items: flex-start; justify-content: center; transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); transform: ${isSelected ? 'scale(1.2) translateY(-6px)' : (isHighlightedByFilter ? 'scale(1.12) translateY(-3px)' : (isCategoryMatch ? 'scale(1)' : 'scale(0.72)'))}; opacity: ${isCategoryMatch ? '1' : '0.16'}; filter: ${isCategoryMatch ? 'none' : 'blur(0.5px) grayscale(90%)'}; z-index: ${isSelected || isHighlightedByFilter ? '1000' : (isCategoryMatch ? '100' : '10')}; cursor: pointer;">
+                
                 <div style="
+                  width: ${isSelected || isHighlightedByFilter ? '42px' : '36px'};
+                  height: ${isSelected || isHighlightedByFilter ? '42px' : '36px'};
+                  background: ${gradientBg};
+                  border-radius: 50% 50% 50% 0;
+                  transform: rotate(-45deg);
+                  border: ${isSelected ? '3.5px solid #ffffff' : (isHighlightedByFilter ? '3px solid #ffffff' : (isBasecamp ? '2.5px solid #F59E0B' : `2.5px solid ${isMultiDayMode ? dayColorMeta.color : '#ffffff'}`))};
+                  box-shadow: ${isSelected ? '0 10px 28px rgba(16, 185, 129, 0.85), inset 0 2px 4px rgba(255,255,255,0.45)' : (isHighlightedByFilter ? `0 0 24px ${pinBg}, 0 8px 22px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.45)` : (isBasecamp ? '0 6px 20px rgba(245, 158, 11, 0.5), inset 0 2px 4px rgba(255,255,255,0.3)' : '0 6px 18px rgba(0, 0, 0, 0.32), inset 0 2px 4px rgba(255,255,255,0.45)'))};
                   display: flex;
                   align-items: center;
-                  gap: 5px;
-                  background: ${isReturnSegment ? '#FFFBEB' : 'rgba(255, 255, 255, 0.96)'};
-                  padding: 3px 9px;
+                  justify-content: center;
+                ">
+                  <div style="
+                    transform: rotate(45deg);
+                    width: ${isSelected || isHighlightedByFilter ? '28px' : '24px'};
+                    height: ${isSelected || isHighlightedByFilter ? '28px' : '24px'};
+                    border-radius: 50%;
+                    background: rgba(255, 255, 255, 0.22);
+                    border: 1px solid rgba(255, 255, 255, 0.55);
+                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.18);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: ${isSelected || isHighlightedByFilter ? '16px' : '14px'};
+                  ">
+                    ${isBasecamp ? '🏨' : meta.icon}
+                  </div>
+                </div>
+
+                <div style="
+                  position: absolute;
+                  top: -5px;
+                  right: -4px;
+                  background: ${isBasecamp ? '#F59E0B' : (isMultiDayMode ? dayColorMeta.color : '#1C1B1B')};
+                  color: #FFFFFF;
+                  border: 2px solid #FFFFFF;
                   border-radius: 9999px;
-                  border: 1.5px solid ${isReturnSegment ? '#FCD34D' : transit.border};
-                  box-shadow: 0 4px 14px rgba(0,0,0,0.18);
-                  font-family: system-ui, -apple-system, sans-serif;
+                  padding: ${isBasecamp ? '0 5px' : '1px 6.5px'};
+                  min-width: 20px;
+                  height: 20px;
+                  box-shadow: 0 4px 12px rgba(0,0,0,0.45);
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
                   font-size: 11px;
+                  font-weight: 950;
+                  letter-spacing: -0.3px;
+                  z-index: 20;
+                ">
+                  ${isBasecamp ? '★' : stopNum}
+                </div>
+
+                <div style="
+                  position: absolute;
+                  bottom: -2px;
+                  width: ${isSelected || isHighlightedByFilter ? '20px' : '14px'};
+                  height: 5px;
+                  background: rgba(0,0,0,0.32);
+                  border-radius: 50%;
+                  filter: blur(2px);
+                  z-index: -1;
+                "></div>
+              </div>
+            `,
+            iconSize: isSelected || isHighlightedByFilter ? [48, 58] : [40, 48],
+            iconAnchor: isSelected || isHighlightedByFilter ? [24, 58] : [20, 48],
+            popupAnchor: [0, -42]
+          });
+
+          const marker = L.marker(latLng, { icon: customIcon }).addTo(layerGroupRef.current);
+          if (!isMultiDayMode) {
+            markersRef.current[stopNum] = marker;
+          } else {
+            markersRef.current[markerKey] = marker;
+          }
+
+          marker.on('click', () => {
+            if (!isMultiDayMode) {
+              setSelectedStopIdx(stopNum);
+              if (isBasecamp) setIsHotelRingActive(true);
+            }
+            mapRef.current.flyTo(latLng, 16, { duration: 1.2, easeLinearity: 0.25 });
+          });
+
+          marker.on('mouseover', () => {
+            setInternalHoveredIdx(stopNum);
+            onHoverStop(stopNum);
+            if (isBasecamp) setIsHotelRingActive(true);
+          });
+
+          marker.on('mouseout', () => {
+            setInternalHoveredIdx(null);
+            onHoverStop(null);
+            if (isBasecamp && selectedStopIdx !== 0 && selectedStopIdx !== dayLoopedStops.length - 1) {
+              setIsHotelRingActive(false);
+            }
+          });
+        });
+
+        let animatedPolyline = null;
+        if (latLngs.length > 1) {
+          L.polyline(latLngs, {
+            color: dayColorMeta.color,
+            weight: isMultiDayMode ? 4.5 : 6,
+            opacity: isMultiDayMode ? 0.45 : 0.25,
+            lineCap: 'round',
+            lineJoin: 'round'
+          }).addTo(layerGroupRef.current);
+
+          animatedPolyline = L.polyline(latLngs, {
+            color: dayColorMeta.color,
+            weight: isMultiDayMode ? 3.5 : 4,
+            opacity: selectedCategory !== 'all' ? 0.35 : (isMultiDayMode ? 0.9 : 0.95),
+            dashArray: isMultiDayMode ? '10, 10' : '14, 14',
+            lineCap: 'round',
+            lineJoin: 'round',
+            className: 'animated-route-flow'
+          }).addTo(layerGroupRef.current);
+
+          for (let i = 0; i < latLngs.length - 1; i++) {
+            const p1 = latLngs[i];
+            const p2 = latLngs[i + 1];
+            const midLat = (p1.lat + p2.lat) / 2;
+            const midLng = (p1.lng + p2.lng) / 2;
+
+            const dy = p2.lat - p1.lat;
+            const dx = (p2.lng - p1.lng) * Math.cos(p1.lat * (Math.PI / 180));
+            const angleDeg = (Math.atan2(dy, dx) * (180 / Math.PI)) * -1 + 90;
+
+            const arrowIcon = L.divIcon({
+              className: 'route-directional-arrow',
+              html: `
+                <div style="
+                  transform: rotate(${angleDeg}deg);
+                  color: #ffffff;
+                  font-size: ${isMultiDayMode ? '9px' : '11px'};
                   font-weight: 900;
-                  color: ${isReturnSegment ? '#92400E' : '#1C1B1B'};
-                  white-space: nowrap;
-                  transform: translateY(-24px);
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  width: ${isMultiDayMode ? '18px' : '22px'};
+                  height: ${isMultiDayMode ? '18px' : '22px'};
+                  background: ${dayColorMeta.color};
+                  border: 2px solid #ffffff;
+                  border-radius: 50%;
+                  box-shadow: 0 3px 10px rgba(0,0,0,0.35);
                   opacity: ${selectedCategory !== 'all' ? '0.35' : '1'};
                 ">
-                  <span>${transit.icon}</span>
-                  <span style="color: ${isReturnSegment ? '#D97706' : transit.color};">${segmentPrefix}${transit.label}</span>
-                  <span style="color: #64748B; font-size: 10px; font-weight: 700;">(${transit.distKm} km)</span>
+                  ➤
                 </div>
               `,
-              iconSize: [140, 26],
-              iconAnchor: [70, 13]
+              iconSize: isMultiDayMode ? [18, 18] : [22, 22],
+              iconAnchor: isMultiDayMode ? [9, 9] : [11, 11]
             });
-            L.marker([midLat, midLng], { icon: transitPillIcon, interactive: false }).addTo(layerGroupRef.current);
+
+            L.marker([midLat, midLng], { icon: arrowIcon, interactive: false }).addTo(layerGroupRef.current);
           }
         }
+        return { latLngs, totalMeters, stopsCount: validActs.length + (isMultiDayMode ? 0 : 1), animatedPolyline };
+      };
 
-        // Only auto-fit route bounds if user hasn't explicitly clicked and locked onto a specific stop
-        if (selectedStopIdx === null && selectedCategory === 'all') {
-          mapRef.current.fitBounds(animatedPolyline.getBounds(), {
+      if (showAllDaysOverview && allDays && allDays.length > 0) {
+        let allLatLngs = [];
+        let totalMetersAll = 0;
+        let totalStopsAll = 0;
+
+        allDays.forEach((dayObj, dIdx) => {
+          const res = plotSingleDayStops(dayObj?.activities || [], dIdx, true);
+          if (res.latLngs && res.latLngs.length > 0) {
+            allLatLngs = allLatLngs.concat(res.latLngs);
+            totalMetersAll += res.totalMeters;
+            totalStopsAll += res.stopsCount;
+          }
+        });
+
+        setRouteStats({
+          totalKm: (totalMetersAll / 1000).toFixed(1),
+          stopsCount: totalStopsAll
+        });
+
+        if (allLatLngs.length > 1 && selectedStopIdx === null && selectedCategory === 'all') {
+          mapRef.current.fitBounds(L.polyline(allLatLngs).getBounds(), {
+            padding: [60, 60],
+            maxZoom: 15,
+            animate: true
+          });
+        }
+      } else {
+        const currentDayIdx = typeof selectedDayIndex === 'number' ? selectedDayIndex : 0;
+        const res = plotSingleDayStops(activities, currentDayIdx, false);
+        setRouteStats({
+          totalKm: (res.totalMeters / 1000).toFixed(1),
+          stopsCount: res.stopsCount
+        });
+
+        if (res.animatedPolyline && selectedStopIdx === null && selectedCategory === 'all') {
+          mapRef.current.fitBounds(res.animatedPolyline.getBounds(), {
             padding: [60, 60],
             maxZoom: 16,
             animate: true
           });
+        } else if (res.latLngs.length === 1 && selectedStopIdx === null && selectedCategory === 'all') {
+          mapRef.current.setView(res.latLngs[0], 15, { animate: true });
         }
-      } else if (selectedStopIdx === null && latLngs.length === 1 && selectedCategory === 'all') {
-        mapRef.current.setView(latLngs[0], 15, { animate: true });
       }
     };
 
@@ -1023,7 +1036,7 @@ export default function InteractiveRouteMap({
       clearTimeout(timer1);
       clearTimeout(timer2);
     };
-  }, [isReady, activities, coordinates, selectedStopIdx, isFullscreen, selectedCategory]);
+  }, [isReady, activities, allDays, selectedDayIndex, showAllDaysOverview, coordinates, selectedStopIdx, isFullscreen, selectedCategory]);
 
   // Handle flyTo stop when clicked from interactive top strip or external button
   const handleFlyToStop = (stopIdx) => {
@@ -1143,6 +1156,22 @@ export default function InteractiveRouteMap({
           </div>
 
           <div className="flex items-center gap-2">
+            {/* View All Days Overview Toggle */}
+            {allDays && allDays.length > 1 && (
+              <button
+                type="button"
+                onClick={() => setShowAllDaysOverview(!showAllDaysOverview)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-black shadow-2xs transition-all cursor-pointer flex items-center gap-1.5 border ${
+                  showAllDaysOverview
+                    ? 'bg-linear-to-r from-[#EC6735] via-[#8B5CF6] to-[#10B981] text-white border-transparent ring-2 ring-[#EC6735]/40 scale-105 shadow-md'
+                    : 'bg-stone-100 dark:bg-stone-800 text-stone-800 dark:text-stone-200 border-stone-200 dark:border-stone-700 hover:bg-stone-200'
+                }`}
+              >
+                <span>🗺️</span>
+                <span>{showAllDaysOverview ? `Showing All ${allDays.length} Days` : `View All ${allDays.length} Days Overview`}</span>
+              </button>
+            )}
+
             {/* Fullscreen Toggle */}
             <button
               type="button"

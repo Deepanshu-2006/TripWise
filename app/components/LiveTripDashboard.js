@@ -34,12 +34,27 @@ export default function LiveTripDashboard({
   destination = "Global View",
   itinerary,
   isGenerating,
+  selectedDayIndex: propSelectedDayIndex = null,
+  onSelectDay = null,
+  hoveredStopIdx: propHoveredStopIdx = null,
+  onHoverStop = null,
   onSelectPrompt
 }) {
-  const [selectedDayIndex, setSelectedDayIndex] = useState(0);
+  const [internalSelectedDayIndex, setInternalSelectedDayIndex] = useState(0);
+  const selectedDayIndex = propSelectedDayIndex !== null ? propSelectedDayIndex : internalSelectedDayIndex;
+  const setSelectedDayIndex = (idx) => {
+    if (onSelectDay) onSelectDay(idx);
+    setInternalSelectedDayIndex(idx);
+  };
+
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('map'); // 'map' | 'activities'
-  const [hoveredStopIdx, setHoveredStopIdx] = useState(null);
+  const [internalHoveredStopIdx, setInternalHoveredStopIdx] = useState(null);
+  const hoveredStopIdx = propHoveredStopIdx !== null ? propHoveredStopIdx : internalHoveredStopIdx;
+  const setHoveredStopIdx = (idx) => {
+    if (onHoverStop) onHoverStop(idx);
+    setInternalHoveredStopIdx(idx);
+  };
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isFadingOutGlobe, setIsFadingOutGlobe] = useState(false);
   const prevIsGeneratingRef = React.useRef(isGenerating);
@@ -86,9 +101,13 @@ export default function LiveTripDashboard({
     }
   }, [isGenerating]);
 
-  // Reset day index when new itinerary arrives
+  // Reset day index only when a completely new destination itinerary is generated
+  const prevDestNameRef = React.useRef(itinerary?.destinationName);
   useEffect(() => {
-    setSelectedDayIndex(0);
+    if (itinerary && itinerary.destinationName !== prevDestNameRef.current) {
+      prevDestNameRef.current = itinerary.destinationName;
+      setSelectedDayIndex(0);
+    }
   }, [itinerary]);
 
   const displayDest = itinerary?.destinationName || destination || "Global View";
@@ -173,6 +192,8 @@ export default function LiveTripDashboard({
             }`}>
               <InteractiveRouteMap
                 activities={activities}
+                allDays={itinerary.days || []}
+                selectedDayIndex={selectedDayIndex || 0}
                 destinationName={displayDest}
                 coordinates={itinerary.coordinates || { lat: 41.9028, lng: 12.4964 }}
                 hoveredStopIdx={hoveredStopIdx}
