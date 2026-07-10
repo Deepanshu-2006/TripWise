@@ -199,26 +199,26 @@ export default function RealTimeAdjuster() {
                     <div className="lg:col-span-5 flex flex-col items-center justify-center py-6">
                         <div
                             ref={phoneRef}
-                            className="relative w-[296px] h-[580px] rounded-[54px] bg-[#1A191C] border-[3px] border-[#4A4950] transition-all duration-500"
+                            className="relative w-74 h-145 rounded-[54px] bg-[#1A191C] border-[3px] border-[#4A4950] transition-all duration-500"
                             style={{
                                 boxShadow: '0 0 0 1px #2C2B30, 0 0 0 4px #121114, 0 30px 70px -15px rgba(0, 0, 0, 0.6), 0 0 60px rgba(255, 91, 29, 0.12)',
                             }}
                         >
                             {/* Physical Hardware Side Buttons */}
                             {/* Left Side: Silent Switch */}
-                            <div className="absolute -left-[7px] top-24 w-[4px] h-6 bg-gradient-to-r from-[#2A292D] to-[#4A4950] rounded-l-sm border-l border-[#626168] shadow-sm" />
+                            <div className="absolute -left-1.75 top-24 w-1 h-6 bg-linear-to-r from-[#2A292D] to-[#4A4950] rounded-l-sm border-l border-[#626168] shadow-sm" />
                             {/* Left Side: Volume Up */}
-                            <div className="absolute -left-[7px] top-36 w-[4px] h-11 bg-gradient-to-r from-[#2A292D] to-[#4A4950] rounded-l-sm border-l border-[#626168] shadow-sm" />
+                            <div className="absolute -left-1.75 top-36 w-1 h-11 bg-linear-to-r from-[#2A292D] to-[#4A4950] rounded-l-sm border-l border-[#626168] shadow-sm" />
                             {/* Left Side: Volume Down */}
-                            <div className="absolute -left-[7px] top-51 w-[4px] h-11 bg-gradient-to-r from-[#2A292D] to-[#4A4950] rounded-l-sm border-l border-[#626168] shadow-sm" />
+                            <div className="absolute -left-1.75 top-51 w-1 h-11 bg-linear-to-r from-[#2A292D] to-[#4A4950] rounded-l-sm border-l border-[#626168] shadow-sm" />
                             {/* Right Side: Power Button */}
-                            <div className="absolute -right-[7px] top-40 w-[4px] h-16 bg-gradient-to-l from-[#2A292D] to-[#4A4950] rounded-r-sm border-r border-[#626168] shadow-sm" />
+                            <div className="absolute -right-1.75 top-40 w-1 h-16 bg-linear-to-l from-[#2A292D] to-[#4A4950] rounded-r-sm border-r border-[#626168] shadow-sm" />
 
                             {/* Antenna Bands */}
-                            <div className="absolute top-0 left-16 w-2 h-[3px] bg-[#0F0E11] z-10" />
-                            <div className="absolute top-0 right-16 w-2 h-[3px] bg-[#0F0E11] z-10" />
-                            <div className="absolute bottom-0 left-16 w-2 h-[3px] bg-[#0F0E11] z-10" />
-                            <div className="absolute bottom-0 right-16 w-2 h-[3px] bg-[#0F0E11] z-10" />
+                            <div className="absolute top-0 left-16 w-2 h-0.75 bg-[#0F0E11] z-10" />
+                            <div className="absolute top-0 right-16 w-2 h-0.75 bg-[#0F0E11] z-10" />
+                            <div className="absolute bottom-0 left-16 w-2 h-0.75 bg-[#0F0E11] z-10" />
+                            <div className="absolute bottom-0 right-16 w-2 h-0.75 bg-[#0F0E11] z-10" />
 
                             {/* Cursor arrow element (absolute relative to phone mockup wrapper) */}
                             <div
@@ -237,17 +237,17 @@ export default function RealTimeAdjuster() {
                             </div>
 
                             {/* Inner Screen Display */}
-                            <div className="absolute inset-[8px] bg-gradient-to-b from-[#111014] via-[#0A090C] to-[#070608] rounded-[45px] overflow-hidden border-[3px] border-[#0A090C] shadow-2xl flex flex-col justify-between text-white font-sans">
+                            <div className="absolute inset-2 bg-linear-to-b from-[#111014] via-[#0A090C] to-[#070608] rounded-[45px] overflow-hidden border-[3px] border-[#0A090C] shadow-2xl flex flex-col justify-between text-white font-sans">
                                 
                                 {/* Realistic Glass Reflection Overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-white/[0.08] pointer-events-none z-40" />
-                                <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-white/[0.06] to-transparent pointer-events-none z-40" />
+                                <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/3 to-white/8 pointer-events-none z-40" />
+                                <div className="absolute top-0 inset-x-0 h-32 bg-linear-to-b from-white/6 to-transparent pointer-events-none z-40" />
 
                                 {/* Earpiece Speaker Grille */}
-                                <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-12 h-[3px] bg-white/20 rounded-full z-30" />
+                                <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-12 h-0.75 bg-white/20 rounded-full z-30" />
 
                                 {/* iPhone 15 Pro Dynamic Island */}
-                                <div className="absolute top-3 left-1/2 -translate-x-1/2 w-28 h-7 rounded-full bg-black z-30 flex items-center justify-between px-2.5 border border-white/[0.1] shadow-[0_4px_12px_rgba(0,0,0,0.9)]">
+                                <div className="absolute top-3 left-1/2 -translate-x-1/2 w-28 h-7 rounded-full bg-black z-30 flex items-center justify-between px-2.5 border border-white/10 shadow-[0_4px_12px_rgba(0,0,0,0.9)]">
                                     {/* Front Camera Lens */}
                                     <div className="w-3 h-3 rounded-full bg-[#121116] border border-white/15 flex items-center justify-center shadow-inner">
                                         <div className="w-1.5 h-1.5 rounded-full bg-blue-500/50 shadow-[0_0_4px_#3b82f6]" />
@@ -295,7 +295,7 @@ export default function RealTimeAdjuster() {
 
                                 {/* Active prompt mockup card */}
                                 <div className="flex-1 flex flex-col justify-center px-5 py-2 relative z-10">
-                                    <div className="rounded-2xl border border-white/15 bg-gradient-to-b from-white/[0.08] to-white/[0.02] backdrop-blur-xl p-4 relative shadow-[0_12px_32px_rgba(0,0,0,0.5)]">
+                                    <div className="rounded-2xl border border-white/15 bg-linear-to-b from-white/8 to-white/2 backdrop-blur-xl p-4 relative shadow-[0_12px_32px_rgba(0,0,0,0.5)]">
                                         <div className="flex items-center justify-between mb-2.5">
                                             <label className="text-[9px] font-extrabold text-white/60 uppercase tracking-widest flex items-center gap-1">
                                                 <span className="text-[#FF5B1D]">✦</span> Custom Travel Request
@@ -319,7 +319,7 @@ export default function RealTimeAdjuster() {
                                         {/* Action Button */}
                                         <button
                                             ref={generateBtnRef}
-                                            className="generate-btn mt-4 w-full py-3.5 bg-gradient-to-r from-[#FF5B1D] to-[#E04F18] hover:from-[#FF7843] hover:to-[#FF5B1D] text-white rounded-xl font-mono text-[9px] font-bold tracking-widest uppercase flex items-center justify-center gap-2 select-none transition-all duration-300 shadow-[0_4px_20px_rgba(255,91,29,0.35)] active:scale-95 border border-white/20"
+                                            className="generate-btn mt-4 w-full py-3.5 bg-linear-to-r from-[#FF5B1D] to-[#E04F18] hover:from-[#FF7843] hover:to-[#FF5B1D] text-white rounded-xl font-mono text-[9px] font-bold tracking-widest uppercase flex items-center justify-center gap-2 select-none transition-all duration-300 shadow-[0_4px_20px_rgba(255,91,29,0.35)] active:scale-95 border border-white/20"
                                         >
                                             <span>Generate Itinerary</span>
                                             <span className="text-[11px] animate-bounce">✦</span>
@@ -333,7 +333,7 @@ export default function RealTimeAdjuster() {
                                         TripWise Tailor Engine v2.1
                                     </div>
                                     {/* iOS Home Indicator Bar */}
-                                    <div className="w-32 h-[4px] bg-white/40 rounded-full" />
+                                    <div className="w-32 h-1 bg-white/40 rounded-full" />
                                 </div>
                             </div>
                         </div>
