@@ -14,6 +14,8 @@
           "title": "Tower of London & Crown Jewels Fast-Track",
           "description": "Explore the ancient fortress and marvel at the royal regalia before afternoon crowds arrive.",
           "badge": "MUST SEE",
+          "duration": "2.5 hrs",
+          "cost": "£34.80 entry ticket",
           "coordinates": { "lat": 51.5081, "lng": -0.0759 }
         },
         {
@@ -22,6 +24,8 @@
           "title": "Borough Market Gourmet Tasting Lunch",
           "description": "Sample artisanal British cheeses, truffled scotch eggs, and fresh oysters at London's premier food market.",
           "badge": "LOCAL GEM",
+          "duration": "1.5 hrs",
+          "cost": "£25 - £45 tasting",
           "coordinates": { "lat": 51.5055, "lng": -0.0910 }
         },
         {
@@ -30,6 +34,8 @@
           "title": "Westminster Walk & London Eye Sunset Ride",
           "description": "Stroll past Big Ben and the Houses of Parliament before taking a private capsule ride across the London skyline.",
           "badge": "OPTIMIZED ROUTE",
+          "duration": "2 hrs",
+          "cost": "£38.00 Eye ticket",
           "coordinates": { "lat": 51.5033, "lng": -0.1195 }
         }
       ]
@@ -44,6 +50,8 @@
           "title": "British Museum VIP Highlights Tour",
           "description": "Discover the Rosetta Stone and Egyptian mummies with an expert art historian guiding your route.",
           "badge": "MUST SEE",
+          "duration": "3 hrs",
+          "cost": "Free / £15 audio tour",
           "coordinates": { "lat": 51.5194, "lng": -0.1270 }
         },
         {
@@ -52,6 +60,8 @@
           "title": "Afternoon Tea at The Wolseley in Piccadilly",
           "description": "Indulge in classic British finger sandwiches, warm scones with clotted cream, and premium loose-leaf tea.",
           "badge": "PREMIUM MATCH",
+          "duration": "2 hrs",
+          "cost": "£44.50 per person",
           "coordinates": { "lat": 51.5071, "lng": -0.1416 }
         },
         {
@@ -60,6 +70,8 @@
           "title": "Soho Jazz & West End Theater Performance",
           "description": "Wander the vibrant streets of Soho before catching an acclaimed musical in London's famous West End.",
           "badge": "LOCAL GEM",
+          "duration": "3 hrs",
+          "cost": "£45 - £85 ticket",
           "coordinates": { "lat": 51.5136, "lng": -0.1337 }
         }
       ]
@@ -74,6 +86,8 @@
           "title": "Tate Modern & Millennium Bridge Stroll",
           "description": "Explore contemporary masterpieces inside the iconic Bankside power station overlooking St Paul's Cathedral.",
           "badge": "MUST SEE",
+          "duration": "2.5 hrs",
+          "cost": "Free admission",
           "coordinates": { "lat": 51.5076, "lng": -0.0994 }
         },
         {
@@ -82,6 +96,8 @@
           "title": "Covent Garden Boutiques & Neal's Yard",
           "description": "Discover colorful secret courtyards, independent fashion designers, and street performers in Covent Garden.",
           "badge": "OPTIMIZED ROUTE",
+          "duration": "2 hrs",
+          "cost": "Free to explore",
           "coordinates": { "lat": 51.5117, "lng": -0.1240 }
         },
         {
@@ -90,6 +106,8 @@
           "title": "Fine Dining at Duck & Waffle (40th Floor)",
           "description": "Savor elevated British cuisine alongside breathtaking panoramic sunset views over the glittering London skyline.",
           "badge": "PREMIUM MATCH",
+          "duration": "2 hrs",
+          "cost": "£65 - £95 average",
           "coordinates": { "lat": 51.5161, "lng": -0.0809 }
         }
       ]
@@ -104,6 +122,8 @@
           "title": "Thames River Cruise to Royal Greenwich",
           "description": "Glide past Tower Bridge down to Greenwich to stand on the Prime Meridian Line at the Royal Observatory.",
           "badge": "MUST SEE",
+          "duration": "3.5 hrs",
+          "cost": "£16.50 Clipper pass",
           "coordinates": { "lat": 51.4769, "lng": -0.0005 }
         },
         {
@@ -112,6 +132,8 @@
           "title": "Historic Pub Lunch at The Trafalgar Tavern",
           "description": "Enjoy traditional beer-battered fish and chips right on the banks of the River Thames where Charles Dickens once dined.",
           "badge": "LOCAL GEM",
+          "duration": "1.5 hrs",
+          "cost": "£22 main + pint",
           "coordinates": { "lat": 51.4849, "lng": -0.0036 }
         },
         {
@@ -120,6 +142,8 @@
           "title": "Kensington Gardens & Hyde Park Stroll",
           "description": "Relax among tranquil Italian gardens, Kensington Palace grounds, and peaceful tree-lined pathways.",
           "badge": "OPTIMIZED ROUTE",
+          "duration": "1.5 hrs",
+          "cost": "Free admission",
           "coordinates": { "lat": 51.5073, "lng": -0.1793 }
         }
       ]
@@ -134,6 +158,8 @@
           "title": "Portobello Road Market & Pastel Mansions",
           "description": "Explore antique stalls and vibrant colorful streets in the charming neighborhood of Notting Hill.",
           "badge": "LOCAL GEM",
+          "duration": "2.5 hrs",
+          "cost": "Free to explore",
           "coordinates": { "lat": 51.5150, "lng": -0.2062 }
         },
         {
@@ -142,14 +168,18 @@
           "title": "Harrods & Knightsbridge Boutique Exploration",
           "description": "Wander through the legendary food halls and luxury designer galleries of world-famous Harrods.",
           "badge": "PREMIUM MATCH",
+          "duration": "2.5 hrs",
+          "cost": "Free entry / varies",
           "coordinates": { "lat": 51.4994, "lng": -0.1632 }
         },
         {
-          "time": "06:30 PM",
+          "time": "07:00 PM",
           "category": "Dining",
           "title": "Farewell Michelin Celebration Dinner in Mayfair",
           "description": "Conclude your London journey with unforgettable culinary artistry in chic, timeless Mayfair.",
           "badge": "PREMIUM MATCH",
+          "duration": "2.5 hrs",
+          "cost": "£120+ tasting menu",
           "coordinates": { "lat": 51.5086, "lng": -0.1472 }
         }
       ]

@@ -219,11 +219,23 @@ export default function ItineraryPage() {
                     <p className="text-xs md:text-sm text-[#5F5E5A] leading-relaxed">
                       {act.description}
                     </p>
-                    {act.coordinates && (
-                      <span className="inline-block mt-3 text-[11px] font-mono text-[#5F5E5A]/70 bg-[#FFF8F5] px-2 py-0.5 rounded border border-[rgba(28,27,27,0.06)]">
-                        📍 {act.coordinates.lat?.toFixed(4)}° N, {act.coordinates.lng?.toFixed(4)}° E
-                      </span>
-                    )}
+                    <div className="flex items-center flex-wrap gap-2 mt-3">
+                      {act.duration && (
+                        <span className="text-[11px] font-bold text-[#5F5E5A] bg-[#F5F2EE] px-2.5 py-1 rounded-md border border-[rgba(28,27,27,0.08)]">
+                          ⏱️ {act.duration}
+                        </span>
+                      )}
+                      {act.cost && (
+                        <span className="text-[11px] font-bold text-[#0D9488] bg-[#0D9488]/10 px-2.5 py-1 rounded-md border border-[#0D9488]/20">
+                          💰 {act.cost}
+                        </span>
+                      )}
+                      {act.coordinates && (
+                        <span className="text-[11px] font-mono text-[#5F5E5A]/70 bg-[#FFF8F5] px-2 py-1 rounded border border-[rgba(28,27,27,0.06)]">
+                          📍 {act.coordinates.lat?.toFixed(4)}° N, {act.coordinates.lng?.toFixed(4)}° E
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Custom Badge */}

@@ -45,8 +45,10 @@ const itinerarySchema = {
                   },
                   required: ['lat', 'lng'],
                 },
+                duration: { type: 'STRING' },
+                cost: { type: 'STRING' },
               },
-              required: ['time', 'category', 'title', 'description', 'badge', 'coordinates'],
+              required: ['time', 'category', 'title', 'description', 'badge', 'coordinates', 'duration', 'cost'],
             },
           },
         },
@@ -73,6 +75,8 @@ const fallbackItinerary = {
           title: "Colosseum VIP Fast-Track Exploration",
           description: "Step into the iconic amphitheater with skip-the-line access before peak midday crowds arrive.",
           badge: "MUST SEE",
+          duration: "3 hrs",
+          cost: "€32.00 VIP ticket + arena",
           coordinates: { lat: 41.8902, lng: 12.4922 }
         },
         {
@@ -81,6 +85,8 @@ const fallbackItinerary = {
           title: "Authentic Roman Pasta at Osteria da Fortunata",
           description: "Watch pasta chefs hand-roll fresh strozzapreti while savoring classic carbonara and cacio e pepe.",
           badge: "LOCAL GEM",
+          duration: "1.5 hrs",
+          cost: "€24 pasta + local wine",
           coordinates: { lat: 41.8958, lng: 12.4732 }
         },
         {
@@ -89,6 +95,8 @@ const fallbackItinerary = {
           title: "Pantheon Interior & Piazza Navona Sunset",
           description: "Marvel at the ancient dome's oculus in late afternoon light, followed by artisanal gelato near Bernini's fountains.",
           badge: "OPTIMIZED ROUTE",
+          duration: "2 hrs",
+          cost: "€5.00 entry + €4 gelato",
           coordinates: { lat: 41.8986, lng: 12.4769 }
         }
       ]
@@ -103,6 +111,8 @@ const fallbackItinerary = {
           title: "Vatican Museums & Sistine Chapel Early Entry",
           description: "Experience Michelangelo's masterpiece in tranquility before general admission doors open.",
           badge: "OPTIMIZED ROUTE",
+          duration: "3.5 hrs",
+          cost: "€30.00 early entry pass",
           coordinates: { lat: 41.9067, lng: 12.4536 }
         },
         {
@@ -111,6 +121,8 @@ const fallbackItinerary = {
           title: "Market Lunch at Mercato di Testaccio",
           description: "Feast on gourmet Roman street food, from tender panino con bollito to artisanal Sicilian cannoli.",
           badge: "BUDGET MATCH",
+          duration: "1.5 hrs",
+          cost: "€15 - €22 street market lunch",
           coordinates: { lat: 41.8785, lng: 12.4746 }
         },
         {
@@ -119,6 +131,8 @@ const fallbackItinerary = {
           title: "Sunset Aperitivo in Trastevere Alleyways",
           description: "Wander ivy-draped cobblestone streets and enjoy Aperol spritzes accompanied by complimentary local tapas.",
           badge: "LOCAL GEM",
+          duration: "2.5 hrs",
+          cost: "€12 - €16 aperitivo buffet",
           coordinates: { lat: 41.8894, lng: 12.4691 }
         }
       ]
@@ -133,6 +147,8 @@ const fallbackItinerary = {
           title: "Trevi Fountain & Spanish Steps Morning Stroll",
           description: "Toss a coin into the sparkling fountain early in the day, then climb the famous travertine steps.",
           badge: "MUST SEE",
+          duration: "2 hrs",
+          cost: "Free admission (€1 coin)",
           coordinates: { lat: 41.9009, lng: 12.4833 }
         },
         {
@@ -141,6 +157,8 @@ const fallbackItinerary = {
           title: "Rooftop Dining at Terrazza Borromini",
           description: "Enjoy gourmet Italian gastronomy with breathtaking 360-degree panoramic views overlooking Piazza Navona.",
           badge: "LOCAL GEM",
+          duration: "2 hrs",
+          cost: "€65 - €90 rooftop lunch",
           coordinates: { lat: 41.8989, lng: 12.4731 }
         },
         {
@@ -149,6 +167,8 @@ const fallbackItinerary = {
           title: "Villa Borghese Gardens & Sunset at Pincio Terrace",
           description: "Relax in Rome's most beloved park and watch the sun dip below the St. Peter's Basilica skyline.",
           badge: "OPTIMIZED ROUTE",
+          duration: "2 hrs",
+          cost: "Free to explore",
           coordinates: { lat: 41.9114, lng: 12.4797 }
         }
       ]
@@ -205,7 +225,8 @@ CRITICAL RULES FOR SPEED & QUALITY:
 2. For each day, provide exactly 3 activities across morning, afternoon, and evening/dining.
 3. Keep activity descriptions punchy, vivid, and concise (1 to 2 sentences max) to ensure ultra-fast JSON generation latency.
 4. Provide realistic GPS coordinates (lat, lng) for the destination center and every activity.
-5. Include custom badges like "MUST SEE", "LOCAL GEM", "OPTIMIZED ROUTE", or "BUDGET MATCH".`;
+5. Include custom badges like "MUST SEE", "LOCAL GEM", "OPTIMIZED ROUTE", or "BUDGET MATCH".
+6. For EVERY activity, you MUST provide the EXACT REAL-WORLD local time (e.g. "09:00 AM"), exact realistic visit duration (e.g. "2 hrs" or "1.5 hrs"), and exact verified real-world ticket price or average meal cost in local currency/USD/EUR/GBP (e.g. "£34.80 entry ticket", "€32.00 Colosseum pass", "¥3,500 lunch", or "Free admission"). NEVER use generic guesses or placeholders.`;
 
     const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
     let response = null;

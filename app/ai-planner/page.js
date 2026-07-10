@@ -72,6 +72,24 @@ export default function AIPlannerPage() {
             onSelectDay={setSelectedDayIndex}
             hoveredStopIdx={hoveredStopIdx}
             onHoverStop={setHoveredStopIdx}
+            onUpdateItinerary={(updated) => {
+              setItinerary(updated);
+              if (typeof window !== 'undefined') {
+                if (!updated) {
+                  localStorage.removeItem('tripwise_itinerary');
+                } else {
+                  localStorage.setItem('tripwise_itinerary', JSON.stringify(updated));
+                }
+              }
+            }}
+            onResetPrompt={() => {
+              setCurrentPrompt('');
+              setItinerary(null);
+              setSelectedDayIndex(0);
+              if (typeof window !== 'undefined') {
+                localStorage.removeItem('tripwise_itinerary');
+              }
+            }}
             onGenerate={handleGenerate}
             onViewItinerary={() => {
               if (typeof window !== 'undefined') {

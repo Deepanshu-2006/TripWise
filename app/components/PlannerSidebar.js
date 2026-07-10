@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // --- Icons ---
 const SpinnerIcon = () => (
@@ -148,6 +148,8 @@ export default function PlannerSidebar({
   onSelectDay = null,
   hoveredStopIdx: propHoveredStopIdx = null,
   onHoverStop = null,
+  onUpdateItinerary = null,
+  onResetPrompt = null,
   onGenerate,
   onViewItinerary
 }) {
@@ -182,6 +184,56 @@ export default function PlannerSidebar({
   const [activeRowIndex, setActiveRowIndex] = useState(-1);
   const [showFinalCTA, setShowFinalCTA] = useState(false);
   const [parsedIntent, setParsedIntent] = useState(null);
+
+  // Custom Stop Quick-Add State
+  const [isAddingStop, setIsAddingStop] = useState(false);
+  const [newStopTime, setNewStopTime] = useState('06:00 PM');
+  const [newStopCategory, setNewStopCategory] = useState('Highlight');
+  const [newStopTitle, setNewStopTitle] = useState('');
+  const [newStopDesc, setNewStopDesc] = useState('');
+
+  const handleAddCustomStop = () => {
+    if (!newStopTitle.trim() || !itinerary?.days?.[selectedDayIndex]) return;
+    const currentDays = [...itinerary.days];
+    const currentDay = { ...currentDays[selectedDayIndex] };
+    const currentActivities = [...(currentDay.activities || [])];
+    
+    const newStop = {
+      time: newStopTime || '06:00 PM',
+      title: newStopTitle.trim(),
+      category: newStopCategory || 'Highlight',
+      badge: newStopCategory === 'Food & Dining' || newStopCategory === 'Late Night Dining' ? 'Local Gem' : 'Custom Stop',
+      description: newStopDesc.trim() || `Custom activity added to Day ${selectedDayIndex + 1} schedule.`,
+      duration: '1.5 hrs',
+      cost: 'Varies',
+      lat: currentActivities[currentActivities.length - 1]?.lat ? currentActivities[currentActivities.length - 1].lat + 0.003 : (itinerary.coordinates?.lat || 51.5072) + 0.003,
+      lng: currentActivities[currentActivities.length - 1]?.lng ? currentActivities[currentActivities.length - 1].lng + 0.003 : (itinerary.coordinates?.lng || -0.1276) + 0.003,
+    };
+
+    currentActivities.push(newStop);
+    currentDay.activities = currentActivities;
+    currentDays[selectedDayIndex] = currentDay;
+
+    const updatedItinerary = {
+      ...itinerary,
+      days: currentDays
+    };
+
+    if (onUpdateItinerary) {
+      onUpdateItinerary(updatedItinerary);
+    } else if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('tripwise_itinerary', JSON.stringify(updatedItinerary));
+        window.dispatchEvent(new Event('storage'));
+      } catch (e) {
+        console.error('Failed to save updated itinerary:', e);
+      }
+    }
+
+    setIsAddingStop(false);
+    setNewStopTitle('');
+    setNewStopDesc('');
+  };
 
   // Check if confirmation state is needed
   const isMissingRequiredFields = 
@@ -297,16 +349,45 @@ export default function PlannerSidebar({
     return () => clearInterval(interval);
   }, [step, isGenerating, itinerary]);
 
+  const prevItineraryRef = useRef(itinerary);
+  const hasAutoLoadedRef = useRef(false);
+
   useEffect(() => {
-    if (itinerary && !isGenerating && step !== 'progress') {
-      setStep('progress');
-      setProgressPercent(100);
-      setActiveRowIndex(3);
-      setShowFinalCTA(true);
+    if (itinerary && !isGenerating) {
+      if (itinerary !== prevItineraryRef.current || !hasAutoLoadedRef.current) {
+        prevItineraryRef.current = itinerary;
+        hasAutoLoadedRef.current = true;
+        setStep('progress');
+        setProgressPercent(100);
+        setActiveRowIndex(3);
+        setShowFinalCTA(true);
+      }
+    } else if (!itinerary) {
+      prevItineraryRef.current = null;
     }
-  }, [itinerary, isGenerating, step]);
+  }, [itinerary, isGenerating]);
 
   // Handlers
+  const handleNewPrompt = () => {
+    setStep('input');
+    setUserPromptInput('');
+    setParsedIntent(null);
+    setShowFinalCTA(false);
+    setProgressPercent(0);
+    setActiveRowIndex(0);
+    if (onResetPrompt) {
+      onResetPrompt();
+    } else if (onUpdateItinerary) {
+      onUpdateItinerary(null);
+    } else if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('tripwise_itinerary');
+        window.dispatchEvent(new Event('storage'));
+      } catch (e) {
+        console.error('Error clearing itinerary:', e);
+      }
+    }
+  };
   const toggleInterest = (id) => {
     setSelectedInterests((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
@@ -363,13 +444,10 @@ export default function PlannerSidebar({
               TripWise AI Planner
             </span>
           </div>
-          {step !== 'input' && (
+          {step !== 'input' && !(step === 'progress' && showFinalCTA && itinerary) && (
             <button
               type="button"
-              onClick={() => {
-                setStep('input');
-                setUserPromptInput('');
-              }}
+              onClick={handleNewPrompt}
               className="text-xs font-semibold text-[#FF6B35] hover:underline cursor-pointer bg-transparent border-none"
             >
               ← New Prompt
@@ -634,7 +712,7 @@ export default function PlannerSidebar({
                   </div>
                   <button
                     type="button"
-                    onClick={() => setStep('input')}
+                    onClick={handleNewPrompt}
                     className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-white border border-[rgba(28,27,27,0.15)] text-[#4B4745] hover:bg-[#FFF8F5] hover:text-[#EC6735] transition-all cursor-pointer shadow-2xs shrink-0"
                   >
                     🔄 New Prompt
@@ -697,9 +775,103 @@ export default function PlannerSidebar({
                           </span>
                         </div>
                         <p className="text-xs text-[#4B4745] leading-relaxed pl-10.5">{act.description}</p>
+                        <div className="pl-10.5 flex items-center flex-wrap gap-1.5 pt-1">
+                          {act.duration && (
+                            <span className="text-[10px] font-bold text-[#5F5E5A] bg-[#F5F2EE] px-2 py-0.5 rounded-md flex items-center gap-1 border border-[rgba(28,27,27,0.06)]">
+                              ⏱️ {act.duration}
+                            </span>
+                          )}
+                          {act.cost && (
+                            <span className="text-[10px] font-bold text-[#0D9488] bg-[#0D9488]/10 px-2 py-0.5 rounded-md flex items-center gap-1">
+                              💰 {act.cost}
+                            </span>
+                          )}
+                          {(act.badge?.toLowerCase().includes('must') || act.title?.toLowerCase().includes('fast-track') || act.category?.toLowerCase().includes('attraction')) && (
+                            <span className="text-[10px] font-extrabold text-[#EC6735] bg-[#FFF2EA] px-2 py-0.5 rounded-md flex items-center gap-1 border border-[#EC6735]/20">
+                              🎟️ Fast-Track
+                            </span>
+                          )}
+                          {(act.category?.toLowerCase().includes('food') || act.badge?.toLowerCase().includes('gem') || act.title?.toLowerCase().includes('lunch')) && (
+                            <span className="text-[10px] font-extrabold text-[#854D0E] bg-[#FEF9C3] px-2 py-0.5 rounded-md flex items-center gap-1 border border-[#854D0E]/20">
+                              🍴 Gourmet Pick
+                            </span>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
+
+                  {/* Quick-Add Custom Stop Button & Inline Form */}
+                  {!isAddingStop ? (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setIsAddingStop(true); }}
+                      className="w-full py-3.5 px-4 rounded-2xl border-2 border-dashed border-[rgba(28,27,27,0.18)] hover:border-[#EC6735] bg-white/60 hover:bg-[#FFF8F5] text-[#4B4745] hover:text-[#EC6735] transition-all flex items-center justify-center gap-2 text-xs font-bold cursor-pointer shadow-2xs group shrink-0"
+                    >
+                      <span className="w-6 h-6 rounded-lg bg-[#EC6735]/10 text-[#EC6735] group-hover:bg-[#EC6735] group-hover:text-white flex items-center justify-center font-black transition-colors">+</span>
+                      <span>Add Custom Stop or Break to {itinerary.days?.[selectedDayIndex]?.dateLabel || `Day ${selectedDayIndex + 1}`}</span>
+                    </button>
+                  ) : (
+                    <div className="p-4 rounded-2xl border-2 border-[#EC6735] bg-[#FFF8F5] flex flex-col gap-3 shadow-md animate-fade-in shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-extrabold text-[#1C1B1B]">➕ Add Custom Stop to Day {selectedDayIndex + 1}</span>
+                        <button
+                          type="button"
+                          onClick={() => setIsAddingStop(false)}
+                          className="text-xs font-bold text-[#8CA3A8] hover:text-[#1C1B1B] cursor-pointer"
+                        >
+                          ✕ Cancel
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <input
+                          type="text"
+                          placeholder="Time (e.g. 06:00 PM)"
+                          value={newStopTime}
+                          onChange={(e) => setNewStopTime(e.target.value)}
+                          className="col-span-1 p-2 rounded-xl text-xs bg-white border border-[rgba(28,27,27,0.15)] font-bold text-[#1C1B1B] focus:outline-none focus:border-[#EC6735]"
+                        />
+                        <select
+                          value={newStopCategory}
+                          onChange={(e) => setNewStopCategory(e.target.value)}
+                          className="col-span-2 p-2 rounded-xl text-xs bg-white border border-[rgba(28,27,27,0.15)] font-bold text-[#1C1B1B] focus:outline-none focus:border-[#EC6735]"
+                        >
+                          <option value="Highlight">Category: Highlight</option>
+                          <option value="Food & Dining">Category: Food & Dining</option>
+                          <option value="Attractions">Category: Attractions</option>
+                          <option value="Landmarks">Category: Landmarks</option>
+                          <option value="Coffee & Cafe">Category: Coffee & Cafe</option>
+                          <option value="Late Night Dining">Category: Late Night Dining</option>
+                        </select>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Stop Title (e.g. Sunset Rooftop Cocktails at Aqua Shard)"
+                        value={newStopTitle}
+                        onChange={(e) => setNewStopTitle(e.target.value)}
+                        className="w-full p-2.5 rounded-xl text-xs bg-white border border-[rgba(28,27,27,0.15)] font-bold text-[#1C1B1B] focus:outline-none focus:border-[#EC6735]"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Short description or notes..."
+                        value={newStopDesc}
+                        onChange={(e) => setNewStopDesc(e.target.value)}
+                        className="w-full p-2.5 rounded-xl text-xs bg-white border border-[rgba(28,27,27,0.15)] text-[#4B4745] focus:outline-none focus:border-[#EC6735]"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddCustomStop}
+                        disabled={!newStopTitle.trim()}
+                        className={`w-full py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm ${
+                          newStopTitle.trim()
+                            ? 'bg-[#EC6735] text-white hover:opacity-95'
+                            : 'bg-stone-300 text-stone-500 cursor-not-allowed'
+                        }`}
+                      >
+                        ✅ Add Stop to Itinerary
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Bottom Action bar */}

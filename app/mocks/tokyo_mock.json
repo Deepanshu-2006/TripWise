@@ -1,96 +1,114 @@
 {
   "destinationName": "Tokyo, Japan",
-  "tagline": "Cyberpunk Nightlife & Michelin Ramen Alleys",
-  "estimatedCost": "$2,400",
+  "tagline": "Neon Skyscrapers, Ancient Temples & Michelin Gastronomy",
+  "estimatedCost": "$2,650",
   "coordinates": { "lat": 35.6762, "lng": 139.6503 },
   "days": [
     {
       "dayNumber": 1,
-      "dateLabel": "Day 1 - Neon Shinjuku & Cyberpunk Alleys",
+      "dateLabel": "Day 1 - Historic Asakusa & Digital Art Wonderland",
       "activities": [
         {
-          "time": "10:00 AM",
+          "time": "08:30 AM",
           "category": "Sightseeing",
-          "title": "Tokyo Metropolitan Government Building Observation",
-          "description": "Take the high-speed elevator to the 45th floor panoramic deck with clear views of Mount Fuji.",
-          "badge": "OPTIMIZED ROUTE",
-          "coordinates": { "lat": 35.6896, "lng": 139.6917 }
-        },
-        {
-          "time": "01:00 PM",
-          "category": "Dining",
-          "title": "Michelin Star Ramen Tasting at Nakiryu",
-          "description": "Slurp world-famous tantanmen ramen with rich nutty broth handcrafted by master noodle chefs.",
-          "badge": "LOCAL GEM",
-          "coordinates": { "lat": 35.7314, "lng": 139.7303 }
-        },
-        {
-          "time": "06:30 PM",
-          "category": "Nightlife",
-          "title": "Omoide Yokocho (Memory Lane) Izakaya Crawl",
-          "description": "Wander smoky lantern-lit alleys packed with tiny stalls serving yakitori and ice-cold draft beer.",
+          "title": "Senso-ji Temple & Nakamise Dori Shopping Street",
+          "description": "Visit Tokyo's oldest and most colorful Buddhist temple, passing beneath the giant red Kaminarimon lantern.",
           "badge": "MUST SEE",
-          "coordinates": { "lat": 35.6929, "lng": 139.6994 }
+          "duration": "2.5 hrs",
+          "cost": "Free admission",
+          "coordinates": { "lat": 35.7148, "lng": 139.7967 }
+        },
+        {
+          "time": "12:00 PM",
+          "category": "Dining",
+          "title": "Tsukiji Outer Market Fresh Sashimi & Wagyu Skewers",
+          "description": "Graze through bustling alleyways serving melt-in-your-mouth bluefin tuna bowls, tamagoyaki, and A5 Wagyu beef.",
+          "badge": "LOCAL GEM",
+          "duration": "1.5 hrs",
+          "cost": "¥3,500 seafood lunch",
+          "coordinates": { "lat": 35.6655, "lng": 139.7707 }
+        },
+        {
+          "time": "04:00 PM",
+          "category": "Culture",
+          "title": "teamLab Planets Immersive Digital Art Museum",
+          "description": "Walk barefoot through sparkling crystal universes and glowing water projections inside Toyosu's world-famous digital exhibit.",
+          "badge": "MUST SEE",
+          "duration": "2 hrs",
+          "cost": "¥4,200 timed ticket",
+          "coordinates": { "lat": 35.6491, "lng": 139.7898 }
         }
       ]
     },
     {
       "dayNumber": 2,
-      "dateLabel": "Day 2 - Digital Art & Shibuya Scramble",
+      "dateLabel": "Day 2 - Harajuku Fashion, Meiji Shrine & Shibuya Sky",
       "activities": [
         {
           "time": "09:30 AM",
-          "category": "Art",
-          "title": "teamLab Planets Immersive Digital Art Museum",
-          "description": "Walk barefoot through glowing water mazes and digital crystal rooms in Toyosu.",
-          "badge": "MUST SEE",
-          "coordinates": { "lat": 35.6496, "lng": 139.7898 }
-        },
-        {
-          "time": "02:00 PM",
-          "category": "Shopping",
-          "title": "Harajuku Takeshita Street & Omotesando Boutiques",
-          "description": "Explore eclectic pop fashion stalls, crepe stands, and sleek flagship architectural boutiques.",
-          "badge": "OPTIMIZED ROUTE",
-          "coordinates": { "lat": 35.6702, "lng": 139.7027 }
-        },
-        {
-          "time": "06:00 PM",
           "category": "Sightseeing",
-          "title": "Shibuya Scramble Crossing & Rooftop Sky View",
-          "description": "Watch thousands cross the world's busiest intersection simultaneously from Shibuya Sky terrace.",
+          "title": "Meiji Shrine & Forest Sanctuary Stroll",
+          "description": "Walk beneath massive cedar torii gates into Tokyo's most peaceful Shinto shrine nestled right in the city center.",
+          "badge": "OPTIMIZED ROUTE",
+          "duration": "2 hrs",
+          "cost": "Free admission",
+          "coordinates": { "lat": 35.6764, "lng": 139.6993 }
+        },
+        {
+          "time": "01:00 PM",
+          "category": "Shopping",
+          "title": "Takeshita Street Crepes & Omotesando Boutiques",
+          "description": "Experience Harajuku's wild youth street culture before exploring high-end architectural flagship stores on Omotesando.",
+          "badge": "LOCAL GEM",
+          "duration": "2.5 hrs",
+          "cost": "¥1,200 street crepes/coffee",
+          "coordinates": { "lat": 35.6715, "lng": 139.7030 }
+        },
+        {
+          "time": "05:00 PM",
+          "category": "Sightseeing",
+          "title": "Shibuya Crossing & Sunset at Shibuya Sky Observatory",
+          "description": "Cross the world's busiest intersection before riding up to the 360-degree open-air roofdeck for Mount Fuji sunset views.",
           "badge": "MUST SEE",
+          "duration": "2.5 hrs",
+          "cost": "¥2,500 Shibuya Sky pass",
           "coordinates": { "lat": 35.6595, "lng": 139.7004 }
         }
       ]
     },
     {
       "dayNumber": 3,
-      "dateLabel": "Day 3 - Historic Asakusa & Akihabara Tech",
+      "dateLabel": "Day 3 - Akihabara Electric Town & Shinjuku Nightlife",
       "activities": [
         {
-          "time": "09:00 AM",
-          "category": "History",
-          "title": "Senso-ji Temple & Nakamise Dori Street",
-          "description": "Pass through the giant Thunder Gate and shop for traditional crafts and fresh ningyoyaki cakes.",
-          "badge": "MUST SEE",
-          "coordinates": { "lat": 35.7148, "lng": 139.7967 }
-        },
-        {
-          "time": "01:30 PM",
-          "category": "Dining",
-          "title": "Tsukiji Outer Market Seafood Feast",
-          "description": "Savor melt-in-your-mouth otoro tuna sushi, wagyu skewers, and sweet tamagoyaki egg rolls.",
-          "badge": "BUDGET MATCH",
-          "coordinates": { "lat": 35.6655, "lng": 139.7708 }
-        },
-        {
-          "time": "05:00 PM",
-          "category": "Shopping",
-          "title": "Akihabara Electric Town & Retro Gaming Tour",
-          "description": "Immerse yourself in multi-story anime galleries, retro arcade halls, and cutting-edge electronics superstores.",
+          "time": "10:30 AM",
+          "category": "Culture",
+          "title": "Akihabara Anime, Gaming & Electronics Exploration",
+          "description": "Immerse yourself in retro arcade towers, electronics mega-stores, and vibrant pop-culture sanctuaries.",
           "badge": "LOCAL GEM",
+          "duration": "3 hrs",
+          "cost": "Free to explore / arcade coins",
           "coordinates": { "lat": 35.6984, "lng": 139.7731 }
+        },
+        {
+          "time": "02:00 PM",
+          "category": "Dining",
+          "title": "Michelin-Starred Tonkatsu at Ginza Bairin",
+          "description": "Savor premium Berkshire pork cutlets fried to golden perfection with sweet tonkatsu sauce and fluffy cabbage.",
+          "badge": "PREMIUM MATCH",
+          "duration": "1.5 hrs",
+          "cost": "¥3,800 specialty set meal",
+          "coordinates": { "lat": 35.6700, "lng": 139.7633 }
+        },
+        {
+          "time": "07:00 PM",
+          "category": "Nightlife",
+          "title": "Omoide Yokocho (Memory Lane) Izakaya Crawl",
+          "description": "Feast on charcoal-grilled yakitori and chilled Japanese beer inside atmospheric red-lantern alleyways in Shinjuku.",
+          "badge": "MUST SEE",
+          "duration": "2.5 hrs",
+          "cost": "¥4,500 izakaya food & drinks",
+          "coordinates": { "lat": 35.6929, "lng": 139.6995 }
         }
       ]
     }

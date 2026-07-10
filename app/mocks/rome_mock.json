@@ -14,6 +14,8 @@
           "title": "Colosseum VIP Fast-Track Exploration",
           "description": "Step into the iconic amphitheater with skip-the-line access before peak midday crowds arrive.",
           "badge": "MUST SEE",
+          "duration": "3 hrs",
+          "cost": "€32.00 VIP ticket + arena",
           "coordinates": { "lat": 41.8902, "lng": 12.4922 }
         },
         {
@@ -22,6 +24,8 @@
           "title": "Authentic Roman Pasta at Osteria da Fortunata",
           "description": "Watch pasta chefs hand-roll fresh strozzapreti while savoring classic carbonara and cacio e pepe.",
           "badge": "LOCAL GEM",
+          "duration": "1.5 hrs",
+          "cost": "€24 pasta + local wine",
           "coordinates": { "lat": 41.8958, "lng": 12.4732 }
         },
         {
@@ -30,6 +34,8 @@
           "title": "Pantheon Interior & Piazza Navona Sunset",
           "description": "Marvel at the ancient dome's oculus in late afternoon light, followed by artisanal gelato near Bernini's fountains.",
           "badge": "OPTIMIZED ROUTE",
+          "duration": "2 hrs",
+          "cost": "€5.00 entry + €4 gelato",
           "coordinates": { "lat": 41.8986, "lng": 12.4769 }
         }
       ]
@@ -44,6 +50,8 @@
           "title": "Vatican Museums & Sistine Chapel Early Entry",
           "description": "Experience Michelangelo's masterpiece in tranquility before general admission doors open.",
           "badge": "OPTIMIZED ROUTE",
+          "duration": "3.5 hrs",
+          "cost": "€30.00 early entry pass",
           "coordinates": { "lat": 41.9067, "lng": 12.4536 }
         },
         {
@@ -52,6 +60,8 @@
           "title": "Market Lunch at Mercato di Testaccio",
           "description": "Feast on gourmet Roman street food, from tender panino con bollito to artisanal Sicilian cannoli.",
           "badge": "BUDGET MATCH",
+          "duration": "1.5 hrs",
+          "cost": "€15 - €22 street market lunch",
           "coordinates": { "lat": 41.8785, "lng": 12.4746 }
         },
         {
@@ -60,6 +70,8 @@
           "title": "Sunset Aperitivo in Trastevere Alleyways",
           "description": "Wander ivy-draped cobblestone streets and enjoy Aperol spritzes accompanied by complimentary local tapas.",
           "badge": "LOCAL GEM",
+          "duration": "2.5 hrs",
+          "cost": "€12 - €16 aperitivo buffet",
           "coordinates": { "lat": 41.8894, "lng": 12.4691 }
         }
       ]
@@ -74,6 +86,8 @@
           "title": "Trevi Fountain & Spanish Steps Morning Stroll",
           "description": "Toss a coin into the sparkling fountain early in the day, then climb the famous travertine steps.",
           "badge": "MUST SEE",
+          "duration": "2 hrs",
+          "cost": "Free admission (€1 coin)",
           "coordinates": { "lat": 41.9009, "lng": 12.4833 }
         },
         {
@@ -82,6 +96,8 @@
           "title": "Rooftop Dining at Terrazza Borromini",
           "description": "Enjoy gourmet Italian gastronomy with breathtaking 360-degree panoramic views overlooking Piazza Navona.",
           "badge": "LOCAL GEM",
+          "duration": "2 hrs",
+          "cost": "€65 - €90 rooftop lunch",
           "coordinates": { "lat": 41.8989, "lng": 12.4731 }
         },
         {
@@ -90,7 +106,9 @@
           "title": "Villa Borghese Gardens & Sunset at Pincio Terrace",
           "description": "Relax in Rome's most beloved park and watch the sun dip below the St. Peter's Basilica skyline.",
           "badge": "OPTIMIZED ROUTE",
-          "coordinates": { "lat": 41.9114, "lng": 12.4797 }
+          "duration": "2 hrs",
+          "cost": "Free to explore",
+          "coordinates": { "lat": 41.9128, "lng": 12.4852 }
         }
       ]
     }
