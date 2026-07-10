@@ -169,7 +169,9 @@ const getKnownRealWalkablePlaces = (baseLat, baseLng, destName = '') => {
 export default function InteractiveRouteMap({
   activities = [],
   destinationName = 'Your Destination',
-  coordinates = null
+  coordinates = null,
+  hoveredStopIdx: propHoveredIdx = null,
+  onHoverStop = () => {}
 }) {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
@@ -188,6 +190,9 @@ export default function InteractiveRouteMap({
   const [telemetry, setTelemetry] = useState(null);
   const [isHotelRingActive, setIsHotelRingActive] = useState(false);
   const [realWalkablePlaces, setRealWalkablePlaces] = useState([]);
+  const [internalHoveredIdx, setInternalHoveredIdx] = useState(null);
+
+  const activeHoverIdx = propHoveredIdx !== null && propHoveredIdx !== undefined ? propHoveredIdx : internalHoveredIdx;
 
   useEffect(() => {
     setSelectedCategory('all');
@@ -848,12 +853,16 @@ export default function InteractiveRouteMap({
         });
 
         marker.on('mouseover', () => {
+          setInternalHoveredIdx(stopIdx);
+          onHoverStop(stopIdx);
           if (isBasecamp) {
             setIsHotelRingActive(true);
           }
         });
 
         marker.on('mouseout', () => {
+          setInternalHoveredIdx(null);
+          onHoverStop(null);
           if (isBasecamp && selectedStopIdx !== 0 && selectedStopIdx !== loopedStops.length - 1) {
             setIsHotelRingActive(false);
           }
@@ -1244,20 +1253,28 @@ export default function InteractiveRouteMap({
                 }
               }
 
+              const isHovered = activeHoverIdx === idx;
+
               return (
                 <React.Fragment key={idx}>
                   {transitConnector}
                   <button
                     type="button"
                     onClick={() => handleFlyToStop(idx)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all shrink-0 flex items-center gap-2 shadow-2xs cursor-pointer border ${isSelected
+                    onMouseEnter={() => { setInternalHoveredIdx(idx); onHoverStop(idx); }}
+                    onMouseLeave={() => { setInternalHoveredIdx(null); onHoverStop(null); }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all shrink-0 flex items-center gap-2 shadow-2xs cursor-pointer border ${
+                      isHovered
+                        ? 'ring-4 ring-[#EC6735]/40 border-2 border-[#EC6735] bg-[#FFF8F5] text-[#EC6735] scale-105 shadow-xl z-20 font-black'
+                        : isSelected
                         ? (isBasecamp ? 'bg-[#1E293B] text-white border-[#334155] scale-102 shadow-md z-10' : 'bg-[#10B981] text-white border-[#059669] scale-102 shadow-md z-10')
                         : (selectedCategory !== 'all' && !isCategoryMatch
                           ? 'bg-stone-50/60 text-stone-400 border-stone-100 opacity-45 scale-95 hover:opacity-85'
                           : 'bg-stone-50 text-stone-800 border-stone-200 hover:bg-stone-100')
                       }`}
                   >
-                    <span className={`w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black ${isSelected ? 'bg-black/15 text-white' : (isBasecamp ? 'bg-amber-500/20 text-amber-600' : 'bg-stone-200 text-stone-700')
+                    <span className={`w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black ${
+                      isHovered ? 'bg-[#EC6735] text-white shadow-sm' : isSelected ? 'bg-black/15 text-white' : (isBasecamp ? 'bg-amber-500/20 text-amber-600' : 'bg-stone-200 text-stone-700')
                       }`}>
                       {isBasecamp ? '🏨' : idx}
                     </span>

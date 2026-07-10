@@ -144,9 +144,27 @@ export default function PlannerSidebar({
   },
   isGenerating = false,
   itinerary = null,
+  selectedDayIndex: propSelectedDayIndex = null,
+  onSelectDay = null,
+  hoveredStopIdx: propHoveredStopIdx = null,
+  onHoverStop = null,
   onGenerate,
   onViewItinerary
 }) {
+  const [internalSelectedDayIndex, setInternalSelectedDayIndex] = useState(0);
+  const selectedDayIndex = propSelectedDayIndex !== null ? propSelectedDayIndex : internalSelectedDayIndex;
+  const handleDaySelect = (idx) => {
+    if (onSelectDay) onSelectDay(idx);
+    setInternalSelectedDayIndex(idx);
+  };
+
+  const [internalHoveredStopIdx, setInternalHoveredStopIdx] = useState(null);
+  const hoveredStopIdx = propHoveredStopIdx !== null ? propHoveredStopIdx : internalHoveredStopIdx;
+  const handleHoverStop = (idx) => {
+    if (onHoverStop) onHoverStop(idx);
+    setInternalHoveredStopIdx(idx);
+  };
+
   // State: 'input' | 'parsing' | 'confirming' | 'progress'
   // If a prompt was passed in (e.g. from demo controls or homepage), start at 'parsing'; otherwise start at 'input'
   const [step, setStep] = useState(() => (rawPrompt ? 'parsing' : 'input'));
@@ -278,6 +296,15 @@ export default function PlannerSidebar({
 
     return () => clearInterval(interval);
   }, [step, isGenerating, itinerary]);
+
+  useEffect(() => {
+    if (itinerary && !isGenerating && step !== 'progress') {
+      setStep('progress');
+      setProgressPercent(100);
+      setActiveRowIndex(3);
+      setShowFinalCTA(true);
+    }
+  }, [itinerary, isGenerating, step]);
 
   // Handlers
   const toggleInterest = (id) => {
@@ -590,72 +617,169 @@ export default function PlannerSidebar({
           </div>
         )}
 
-        {/* STATE 3: Progress Tracker */}
+        {/* STATE 3: Progress Tracker OR Live Day Schedule Cards (`showFinalCTA && itinerary`) */}
         {step === 'progress' && (
           <div className="flex flex-col gap-6 animate-fade-in">
-            <div>
-              <span className="text-xs font-semibold uppercase tracking-wider text-secondary-text block mb-2">
-                Building your itinerary
-              </span>
-              {/* Thin horizontal progress bar */}
-              <div className="w-full h-1.5 rounded-full bg-[rgba(28,27,27,0.06)] border border-[rgba(28,27,27,0.04)] overflow-hidden">
-                <div
-                  className="h-full bg-accent-orange transition-all duration-100 ease-linear"
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Status Rows */}
-            <div className="flex flex-col gap-4 mt-2">
-              {STATUS_ROWS.map((row, index) => {
-                const isRevealed = activeRowIndex >= index;
-                const isDone = activeRowIndex > index;
-
-                if (!isRevealed) return null;
-
-                return (
-                  <div
-                    key={row.id}
-                    className={`flex items-center gap-3 transition-opacity duration-300 ${
-                      isDone
-                        ? 'text-(--foreground) font-semibold opacity-100'
-                        : 'text-secondary-text opacity-85'
-                    }`}
-                  >
-                    <div
-                      className={`p-1.5 rounded-lg border transition-colors ${
-                        isDone
-                          ? 'bg-(--accent-orange-tint)/40 border-(--accent-orange)/60 text-accent-orange'
-                          : 'bg-bg-white border-[rgba(28,27,27,0.1)] text-secondary-text shadow-2xs'
-                      }`}
-                    >
-                      {row.icon}
-                    </div>
-                    <span className="text-xs md:text-sm leading-snug">
-                      {row.label}
-                    </span>
+            {showFinalCTA && itinerary ? (
+              /* LIVE ITINERARY CARDS WORKSPACE IN LEFT SIDEBAR */
+              <div className="flex flex-col gap-5 animate-fade-in">
+                <div className="flex items-center justify-between border-b border-[rgba(28,27,27,0.1)] pb-3">
+                  <div>
+                    <h3 className="text-lg md:text-xl font-black text-[#1C1B1B] leading-tight">
+                      {itinerary.destinationName || 'Your Custom Itinerary'}
+                    </h3>
+                    <p className="text-xs font-bold text-[#EC6735] mt-0.5">
+                      ⚡ {itinerary.days?.[selectedDayIndex]?.dateLabel || `Day ${selectedDayIndex + 1}`} • {itinerary.days?.[selectedDayIndex]?.activities?.length || 0} Stops
+                    </p>
                   </div>
-                );
-              })}
-            </div>
+                  <button
+                    type="button"
+                    onClick={() => setStep('input')}
+                    className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-white border border-[rgba(28,27,27,0.15)] text-[#4B4745] hover:bg-[#FFF8F5] hover:text-[#EC6735] transition-all cursor-pointer shadow-2xs shrink-0"
+                  >
+                    🔄 New Prompt
+                  </button>
+                </div>
 
-            {/* Final Button Revealed after last row visible for ~1.3s */}
-            {showFinalCTA && (
-              <div className="mt-6 animate-fade-in">
-                <button
-                  type="button"
-                  onClick={onViewItinerary || (() => {
-                    if (typeof window !== 'undefined') {
-                      window.location.href = '/itinerary';
-                    }
+                {/* Day Selector Pills */}
+                {itinerary.days && itinerary.days.length > 1 && (
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                    {itinerary.days.map((day, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleDaySelect(idx)}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap shadow-2xs ${
+                          selectedDayIndex === idx
+                            ? 'bg-[#1C1B1B] text-white shadow-md border border-[#1C1B1B]'
+                            : 'bg-white text-[#4B4745] hover:bg-[#FFFDFB] border border-[rgba(28,27,27,0.1)]'
+                        }`}
+                      >
+                        Day {day.dayNumber || idx + 1}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Day Schedule Activities Cards List */}
+                <div className="flex flex-col gap-3 px-1 py-1 max-h-[calc(100vh-280px)] overflow-y-auto overflow-x-hidden">
+                  {itinerary.days?.[selectedDayIndex]?.activities?.map((act, idx) => {
+                    const stopNum = idx + 1;
+                    const isHovered = hoveredStopIdx === stopNum;
+                    return (
+                      <div
+                        key={idx}
+                        onMouseEnter={() => handleHoverStop(stopNum)}
+                        onMouseLeave={() => handleHoverStop(null)}
+                        onClick={() => handleHoverStop(stopNum)}
+                        className={`w-full box-border p-4 rounded-2xl border transition-all duration-200 flex flex-col gap-2.5 cursor-pointer ${
+                          isHovered
+                            ? 'bg-[#FFF8F5] border-[#EC6735] border-2 ring-2 sm:ring-4 ring-[#EC6735]/25 -translate-y-0.5 shadow-xl z-20 font-bold'
+                            : 'bg-white border-[rgba(28,27,27,0.1)] shadow-2xs hover:border-[rgba(28,27,27,0.25)] hover:shadow-md'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className={`w-8 h-8 rounded-xl font-black text-xs flex items-center justify-center shrink-0 border ${
+                              isHovered
+                                ? 'bg-[#EC6735] text-white border-[#EC6735] shadow-sm animate-pulse'
+                                : 'bg-[#FFF2EA] text-[#EC6735] border-[#EC6735]/20'
+                            }`}>
+                              {stopNum}
+                            </div>
+                            <div>
+                              <span className="text-xs font-bold text-[#EC6735]">{act.time}</span>
+                              <h4 className="text-sm font-extrabold text-[#1C1B1B] leading-snug">{act.title}</h4>
+                            </div>
+                          </div>
+                          <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-[#F5ECE6] text-[#4B4745] uppercase tracking-wider shrink-0">
+                            {act.badge || act.category || 'Stop'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-[#4B4745] leading-relaxed pl-10.5">{act.description}</p>
+                      </div>
+                    );
                   })}
-                  className="w-full py-3.5 px-6 rounded-xl font-semibold bg-accent-orange text-bg-white hover:opacity-90 active:scale-[0.99] transition-all duration-150 cursor-pointer flex items-center justify-center gap-2 text-sm md:text-base shadow-md shadow-(--accent-orange)/20"
-                >
-                  <span>View my itinerary</span>
-                  <ArrowRightIcon />
-                </button>
+                </div>
+
+                {/* Bottom Action bar */}
+                <div className="pt-3 border-t border-[rgba(28,27,27,0.08)] flex items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    onClick={onViewItinerary || (() => { if (typeof window !== 'undefined') window.location.href = '/itinerary'; })}
+                    className="w-full py-3 px-4 rounded-xl font-bold bg-[#EC6735] text-white hover:opacity-95 transition-all text-xs flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                  >
+                    <span>📄 Open Full Summary & Printable View</span>
+                    <ArrowRightIcon />
+                  </button>
+                </div>
               </div>
+            ) : (
+              /* progress bar & status checkmarks during generation */
+              <>
+                <div>
+                  <span className="text-xs font-semibold uppercase tracking-wider text-secondary-text block mb-2">
+                    Building your itinerary
+                  </span>
+                  <div className="w-full h-1.5 rounded-full bg-[rgba(28,27,27,0.06)] border border-[rgba(28,27,27,0.04)] overflow-hidden">
+                    <div
+                      className="h-full bg-accent-orange transition-all duration-100 ease-linear"
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-4 mt-2">
+                  {STATUS_ROWS.map((row, index) => {
+                    const isRevealed = activeRowIndex >= index;
+                    const isDone = activeRowIndex > index;
+
+                    if (!isRevealed) return null;
+
+                    return (
+                      <div
+                        key={row.id}
+                        className={`flex items-center gap-3 transition-opacity duration-300 ${
+                          isDone
+                            ? 'text-(--foreground) font-semibold opacity-100'
+                            : 'text-secondary-text opacity-85'
+                        }`}
+                      >
+                        <div
+                          className={`p-1.5 rounded-lg border transition-colors ${
+                            isDone
+                              ? 'bg-(--accent-orange-tint)/40 border-(--accent-orange)/60 text-accent-orange'
+                              : 'bg-bg-white border-[rgba(28,27,27,0.1)] text-secondary-text shadow-2xs'
+                          }`}
+                        >
+                          {row.icon}
+                        </div>
+                        <span className="text-xs md:text-sm leading-snug">
+                          {row.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Final Button Revealed after last row visible for ~1.3s */}
+                {showFinalCTA && (
+                  <div className="mt-6 animate-fade-in">
+                    <button
+                      type="button"
+                      onClick={onViewItinerary || (() => {
+                        if (typeof window !== 'undefined') {
+                          window.location.href = '/itinerary';
+                        }
+                      })}
+                      className="w-full py-3.5 px-6 rounded-xl font-semibold bg-accent-orange text-bg-white hover:opacity-90 active:scale-[0.99] transition-all duration-150 cursor-pointer flex items-center justify-center gap-2 text-sm md:text-base shadow-md shadow-(--accent-orange)/20"
+                    >
+                      <span>View my itinerary</span>
+                      <ArrowRightIcon />
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}

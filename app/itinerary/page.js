@@ -1,12 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import Header from '../components/Header';
+
+const InteractiveRouteMap = dynamic(() => import('../components/InteractiveRouteMap'), { ssr: false });
 
 export default function ItineraryPage() {
   const [itinerary, setItinerary] = useState(null);
   const [activeDay, setActiveDay] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [hoveredStopIdx, setHoveredStopIdx] = useState(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -131,22 +135,23 @@ export default function ItineraryPage() {
             </div>
           </div>
 
-          {/* GPS Coordinates Card */}
-          <div className="bg-white p-6 rounded-2xl border border-[rgba(28,27,27,0.08)] shadow-sm">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-[#5F5E5A] mb-2">
-              GeoEngine Routing
+          {/* Live GeoEngine Route Map */}
+          <div className="bg-white p-6 rounded-2xl border border-[rgba(28,27,27,0.08)] shadow-sm sticky top-28">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-[#5F5E5A] mb-2 flex items-center justify-between">
+              <span>GeoEngine Route Map</span>
+              <span className="text-[10px] text-[#EC6735] font-black">⚡ Live Hover Sync</span>
             </h3>
             <p className="text-xs font-mono text-[#1C1B1B] mb-3">
               Center: {itinerary.coordinates?.lat?.toFixed(4) || '41.9028'}° N, {itinerary.coordinates?.lng?.toFixed(4) || '12.4964'}° E
             </p>
-            <div className="w-full h-32 rounded-xl bg-[#F5ECE6] border border-[rgba(28,27,27,0.08)] flex items-center justify-center relative overflow-hidden">
-              <div className="absolute inset-0 opacity-20 pointer-events-none" style={{
-                backgroundImage: `radial-gradient(#EC6735 1.5px, transparent 1.5px)`,
-                backgroundSize: '16px 16px'
-              }} />
-              <div className="w-10 h-10 rounded-full bg-[#EC6735] text-white flex items-center justify-center shadow-lg z-10 animate-pulse">
-                📍
-              </div>
+            <div className="w-full h-96 rounded-xl border border-[rgba(28,27,27,0.08)] overflow-hidden relative shadow-inner">
+              <InteractiveRouteMap
+                activities={currentDayData?.activities || []}
+                destinationName={itinerary.destinationName || 'Your Journey'}
+                coordinates={itinerary.coordinates || { lat: 41.9028, lng: 12.4964 }}
+                hoveredStopIdx={hoveredStopIdx}
+                onHoverStop={setHoveredStopIdx}
+              />
             </div>
           </div>
         </div>
@@ -176,14 +181,27 @@ export default function ItineraryPage() {
               const badgeBg = isDining ? 'bg-[#EC6735]/10 border-[#EC6735]/30 text-[#EC6735]' : isHotel ? 'bg-green-500/10 border-green-500/30 text-green-700' : 'bg-blue-500/10 border-blue-500/30 text-blue-700';
               const dotColor = isDining ? 'bg-[#EC6735]' : isHotel ? 'bg-green-500' : 'bg-blue-500';
 
+              const stopNum = idx + 1;
+              const isHovered = hoveredStopIdx === stopNum;
+
               return (
                 <div
                   key={idx}
-                  className="relative p-6 rounded-2xl border border-[rgba(28,27,27,0.08)] bg-white shadow-sm flex flex-col md:flex-row items-start justify-between gap-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:border-[#EC6735]/30"
+                  onMouseEnter={() => setHoveredStopIdx(stopNum)}
+                  onMouseLeave={() => setHoveredStopIdx(null)}
+                  className={`relative p-6 rounded-2xl border bg-white shadow-sm flex flex-col md:flex-row items-start justify-between gap-4 transition-all duration-300 cursor-pointer ${
+                    isHovered
+                      ? 'ring-4 ring-[#EC6735]/40 border-2 border-[#EC6735] bg-[#FFF8F5] -translate-y-1 shadow-xl z-20 font-bold'
+                      : 'border-[rgba(28,27,27,0.08)] hover:-translate-y-0.5 hover:shadow-md hover:border-[#EC6735]/30'
+                  }`}
                 >
                   {/* Step Number Dot */}
-                  <div className="absolute -left-10 top-6 w-6 h-6 rounded-full bg-[#FFF8F5] border-2 border-[#1C1B1B]/20 flex items-center justify-center z-10 text-[10px] font-black shadow-sm">
-                    {idx + 1}
+                  <div className={`absolute -left-10 top-6 w-6 h-6 rounded-full border-2 flex items-center justify-center z-10 text-[10px] font-black shadow-sm transition-transform ${
+                    isHovered
+                      ? 'bg-[#EC6735] text-white border-[#EC6735] scale-125 animate-pulse'
+                      : 'bg-[#FFF8F5] border-[#1C1B1B]/20'
+                  }`}>
+                    {stopNum}
                   </div>
 
                   <div className="flex-1 min-w-0">

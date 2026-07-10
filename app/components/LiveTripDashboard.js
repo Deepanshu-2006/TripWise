@@ -39,6 +39,7 @@ export default function LiveTripDashboard({
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('map'); // 'map' | 'activities'
+  const [hoveredStopIdx, setHoveredStopIdx] = useState(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isFadingOutGlobe, setIsFadingOutGlobe] = useState(false);
   const prevIsGeneratingRef = React.useRef(isGenerating);
@@ -113,30 +114,9 @@ export default function LiveTripDashboard({
         </div>
 
         <div className="flex items-center gap-2">
-          {itinerary && !isTransitioning && !isGenerating && (
-            <div className="flex bg-white/90 backdrop-blur-md p-1 rounded-xl border border-[rgba(28,27,27,0.1)] shadow-2xs">
-              <button
-                type="button"
-                onClick={() => setActiveTab('map')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'map' ? 'bg-[#EC6735] text-white shadow-xs' : 'text-[#4B4745] hover:text-[#1C1B1B]'
-                  }`}
-              >
-                🗺️ Route Map
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('activities')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'activities' ? 'bg-[#EC6735] text-white shadow-xs' : 'text-[#4B4745] hover:text-[#1C1B1B]'
-                  }`}
-              >
-                📋 Day Schedule
-              </button>
-            </div>
-          )}
-
           <div className="bg-[#1C1B1B] text-white px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-wide shadow-sm flex items-center gap-1.5">
             <span>⚡</span>
-            <span>{isGenerating ? 'Satellite Triangulation' : isTransitioning ? 'Target Lock' : itinerary ? 'AI Optimized' : 'Live Radar'}</span>
+            <span>{isGenerating ? 'Satellite Triangulation' : isTransitioning ? 'Target Lock' : itinerary ? 'AI Optimized Route' : 'Live Radar'}</span>
           </div>
         </div>
       </div>
@@ -154,7 +134,7 @@ export default function LiveTripDashboard({
           />
         ) : (
           /* STATE 2: GENERATED ITINERARY VIEW (MOUNTED IMMEDIATELY UNDERNEATH DURING TRANSITION FOR 0-LAG TILE LOAD) */
-          <div className="relative w-full flex flex-col gap-5 animate-fade-in">
+          <div className="relative w-full flex flex-col gap-4 animate-fade-in">
             {/* Cinematic 3D Globe Overlay during Target Lock Phase */}
             {isTransitioning && (
               <div
@@ -172,71 +152,32 @@ export default function LiveTripDashboard({
               </div>
             )}
 
-            {/* Day Selector Tabs */}
-            <div className={`flex items-center justify-between border-b border-[rgba(28,27,27,0.1)] pb-3 flex-wrap gap-2 transition-opacity duration-800 ${
+            {/* Clean Day Label Badge above map */}
+            <div className={`flex items-center justify-between border-b border-[rgba(28,27,27,0.08)] pb-2.5 transition-opacity duration-800 ${
               isTransitioning && !isFadingOutGlobe ? 'opacity-0 pointer-events-none' : 'opacity-100'
             }`}>
-              <div className="flex items-center gap-2 overflow-x-auto py-1">
-                {itinerary.days?.map((day, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setSelectedDayIndex(idx)}
-                    className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap shadow-2xs ${selectedDayIndex === idx
-                      ? 'bg-[#1C1B1B] text-white shadow-md scale-[1.02]'
-                      : 'bg-white text-[#4B4745] hover:bg-[#FFFDFB] border border-[rgba(28,27,27,0.1)]'
-                      }`}
-                  >
-                    <span>Day {day.dayNumber || idx + 1}</span>
-                  </button>
-                ))}
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-extrabold text-[#1C1B1B]">📍 Day Route Map</span>
+                <span className="text-xs font-bold text-[#EC6735] bg-[#FFF2EA] px-2.5 py-0.5 rounded-md">
+                  ✨ {currentDay?.dateLabel || `Day ${selectedDayIndex + 1}`}
+                </span>
               </div>
-
-              <div className="text-xs font-bold text-[#4B4745] bg-white px-3 py-1.5 rounded-lg border border-[rgba(28,27,27,0.08)] shadow-2xs">
-                ✨ {currentDay?.dateLabel || `Day ${selectedDayIndex + 1}`}
+              <div className="text-[11px] font-bold text-[#8CA3A8] hidden sm:block">
+                ⚡ Hover stops on left or pins on map to sync
               </div>
             </div>
 
-            {/* Content: Either Route Map or Activity Cards */}
+            {/* Content: Route Map */}
             <div className={`w-full transition-all duration-800 ${
               isTransitioning && !isFadingOutGlobe ? 'opacity-0 pointer-events-none scale-98' : 'opacity-100'
             }`}>
-              {activeTab === 'map' ? (
-                <InteractiveRouteMap
-                  activities={activities}
-                  destinationName={displayDest}
-                  coordinates={itinerary.coordinates || { lat: 41.9028, lng: 12.4964 }}
-                />
-              ) : (
-                /* Day Schedule Cards */
-                <div className="w-full h-80 md:h-96 overflow-y-auto pr-2 flex flex-col gap-3">
-                  {activities.map((act, idx) => (
-                    <div key={idx} className="bg-white p-4 rounded-2xl border border-[rgba(28,27,27,0.1)] shadow-2xs hover:shadow-md transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                      <div className="flex items-start gap-3.5">
-                        <div className="w-10 h-10 rounded-xl bg-[#FFF2EA] text-[#EC6735] font-black text-sm flex items-center justify-center shrink-0 border border-[#EC6735]/20">
-                          {idx + 1}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs font-bold text-[#EC6735]">{act.time}</span>
-                            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-[#F5ECE6] text-[#4B4745] uppercase tracking-wider">
-                              {act.badge || act.category || 'Highlight'}
-                            </span>
-                          </div>
-                          <h4 className="text-sm md:text-base font-extrabold text-[#1C1B1B] mt-1">{act.title}</h4>
-                          <p className="text-xs text-[#4B4745] mt-1 leading-relaxed">{act.description}</p>
-                        </div>
-                      </div>
-
-                      <div className="shrink-0 self-end sm:self-center">
-                        <span className="text-xs font-bold text-[#0D9488] bg-[#0D9488]/10 px-3 py-1.5 rounded-lg border border-[#0D9488]/20">
-                          📍 View Map Pin
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <InteractiveRouteMap
+                activities={activities}
+                destinationName={displayDest}
+                coordinates={itinerary.coordinates || { lat: 41.9028, lng: 12.4964 }}
+                hoveredStopIdx={hoveredStopIdx}
+                onHoverStop={setHoveredStopIdx}
+              />
             </div>
           </div>
         )}

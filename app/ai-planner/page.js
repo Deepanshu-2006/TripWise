@@ -9,9 +9,25 @@ export default function AIPlannerPage() {
   const [currentPrompt, setCurrentPrompt] = useState('');
   const [itinerary, setItinerary] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedDayIndex, setSelectedDayIndex] = useState(0);
+  const [hoveredStopIdx, setHoveredStopIdx] = useState(null);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('tripwise_itinerary');
+      if (stored) {
+        try {
+          setItinerary(JSON.parse(stored));
+        } catch (e) {
+          console.error("Failed to parse itinerary from localStorage", e);
+        }
+      }
+    }
+  }, []);
 
   const handleGenerate = async (selections) => {
     setIsGenerating(true);
+    setSelectedDayIndex(0);
     try {
       const response = await fetch('/api/generate-trip', {
         method: 'POST',
@@ -52,6 +68,10 @@ export default function AIPlannerPage() {
             rawPrompt={currentPrompt}
             isGenerating={isGenerating}
             itinerary={itinerary}
+            selectedDayIndex={selectedDayIndex}
+            onSelectDay={setSelectedDayIndex}
+            hoveredStopIdx={hoveredStopIdx}
+            onHoverStop={setHoveredStopIdx}
             onGenerate={handleGenerate}
             onViewItinerary={() => {
               if (typeof window !== 'undefined') {
@@ -67,6 +87,10 @@ export default function AIPlannerPage() {
             destination={itinerary?.destinationName || currentPrompt}
             itinerary={itinerary}
             isGenerating={isGenerating}
+            selectedDayIndex={selectedDayIndex}
+            onSelectDay={setSelectedDayIndex}
+            hoveredStopIdx={hoveredStopIdx}
+            onHoverStop={setHoveredStopIdx}
             onSelectPrompt={(promptText) => {
               setCurrentPrompt(promptText);
             }}
