@@ -269,10 +269,23 @@ export default function InteractiveGlobe({
             {activeStepText || 'Triangulating optimal GPS coordinates & scenic routes...'}
           </p>
         </div>
-      ) : null}
+      ) : (
+        <div className="text-center max-w-md mx-auto mb-2 animate-fade-in">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-[#6B6B6B] bg-[#F7F5F2] px-3.5 py-1.5 rounded-full border border-[#ECE8E2] shadow-sm inline-flex items-center gap-1.5 mb-2">
+            <span>🌍</span>
+            <span>Interactive 3D Globe</span>
+          </span>
+          <h3 className="text-lg md:text-xl font-bold text-[#1F1F1F] tracking-tight">
+            Explore Global Destinations
+          </h3>
+          <p className="text-xs text-[#6B6B6B] mt-1">
+            Enter your trip details on the left to generate an AI route & itinerary.
+          </p>
+        </div>
+      )}
 
       {/* 3D Canvas Container */}
-      <div className="relative w-full h-80 sm:h-105 md:h-115 flex items-center justify-center my-1">
+      <div className="relative w-full h-[340px] sm:h-[420px] md:h-[480px] lg:h-[520px] flex items-center justify-center my-1">
         <div ref={containerRef} className="w-full h-full max-w-3xl flex items-center justify-center cursor-grab active:cursor-grabbing" />
       </div>
     </div>
