@@ -204,8 +204,85 @@ export default function InteractiveRouteMap({
   const [realWalkablePlaces, setRealWalkablePlaces] = useState([]);
   const [internalHoveredIdx, setInternalHoveredIdx] = useState(null);
   const [showAllDaysOverview, setShowAllDaysOverview] = useState(false);
+  const [showMapControls, setShowMapControls] = useState(false);
+  const [showFabMenu, setShowFabMenu] = useState(false);
+  const [showShareToast, setShowShareToast] = useState(false);
+  const [isRouteSyncing, setIsRouteSyncing] = useState(false);
 
   const activeHoverIdx = propHoveredIdx !== null && propHoveredIdx !== undefined ? propHoveredIdx : internalHoveredIdx;
+
+  useEffect(() => {
+    setIsRouteSyncing(true);
+    const timer = setTimeout(() => setIsRouteSyncing(false), 550);
+    return () => clearTimeout(timer);
+  }, [selectedDayIndex, selectedCategory, activities, mapStyle, showAllDaysOverview]);
+
+  // Inject premium Apple/Linear animation keyframes & styles right on mount
+  useEffect(() => {
+    if (typeof window === 'undefined' || document.querySelector('#tripwise-premium-map-animations')) return;
+    const style = document.createElement('style');
+    style.id = 'tripwise-premium-map-animations';
+    style.innerHTML = `
+      @keyframes tripwiseRadarRingSweep {
+        0% { stroke-opacity: 0.45; fill-opacity: 0.08; }
+        50% { stroke-opacity: 0.95; fill-opacity: 0.18; stroke-width: 3.5px; }
+        100% { stroke-opacity: 0.45; fill-opacity: 0.08; }
+      }
+      @keyframes tripwiseMarkerPulse {
+        0%, 100% {
+          filter: drop-shadow(0 10px 25px rgba(255, 122, 26, 0.45));
+          transform: scale(1.15) translateY(-4px);
+        }
+        50% {
+          filter: drop-shadow(0 14px 30px rgba(255, 122, 26, 0.7));
+          transform: scale(1.20) translateY(-6px);
+        }
+      }
+      @keyframes tripwiseMarkerBounce {
+        0% { transform: scale(1.15) translateY(-4px); }
+        25% { transform: scale(1.18) translateY(-14px); }
+        50% { transform: scale(1.15) translateY(-4px); }
+        75% { transform: scale(1.16) translateY(-8px); }
+        100% { transform: scale(1.15) translateY(-4px); }
+      }
+      @keyframes tripwiseRouteGlowPulse {
+        0%, 100% { filter: drop-shadow(0 0 5px rgba(255, 122, 26, 0.35)); }
+        50% { filter: drop-shadow(0 0 12px rgba(255, 122, 26, 0.65)); }
+      }
+      @keyframes tripwiseMarkerAppear {
+        0% { transform: scale(0.35) translateY(14px); opacity: 0; }
+        100% { transform: scale(1) translateY(0); opacity: 1; }
+      }
+      @keyframes tripwiseWeatherFloat {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-3px); }
+      }
+      @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(250%); }
+      }
+      .animated-radar-ring {
+        animation: tripwiseRadarRingSweep 2.8s infinite ease-in-out !important;
+      }
+      .tripwise-marker-selected {
+        animation: tripwiseMarkerPulse 2.4s infinite ease-in-out;
+      }
+      .tripwise-marker-bounce {
+        animation: tripwiseMarkerBounce 0.65s cubic-bezier(0.34, 1.56, 0.64, 1), tripwiseMarkerPulse 2.4s 0.65s infinite ease-in-out !important;
+      }
+      .animated-route-glow {
+        animation: tripwiseRouteGlowPulse 3s infinite ease-in-out !important;
+      }
+      .animate-weather-float {
+        animation: tripwiseWeatherFloat 3.5s infinite ease-in-out;
+        display: inline-block;
+      }
+      .leaflet-control-zoom {
+        display: none !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }, []);
 
   useEffect(() => {
     setSelectedCategory('all');
@@ -335,18 +412,18 @@ export default function InteractiveRouteMap({
   const categoryFilters = [
     {
       id: 'all',
-      label: 'All Stops',
+      label: 'All',
       icon: '⭐',
       count: nonBasecampStopsCount,
-      activeBg: 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/25 border-emerald-500 scale-105 ring-2 ring-emerald-500/20',
+      activeBg: 'bg-[#FF7A1A] text-white shadow-sm border-[#FF7A1A] font-extrabold',
       badgeBg: 'bg-white/20 text-white'
     },
     {
       id: 'dining',
-      label: 'Food & Dining',
-      icon: '🍽️',
+      label: 'Food',
+      icon: '🍝',
       count: loopedStops.filter((act, idx) => !(act.isBasecamp === true || idx === 0) && getCategoryMeta(act).label === 'Dining').length,
-      activeBg: 'bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-md shadow-orange-500/25 border-orange-400 scale-105 ring-2 ring-orange-500/20',
+      activeBg: 'bg-[#FF7A1A] text-white shadow-sm border-[#FF7A1A] font-extrabold',
       badgeBg: 'bg-white/20 text-white'
     },
     {
@@ -354,23 +431,23 @@ export default function InteractiveRouteMap({
       label: 'Attractions',
       icon: '🏛️',
       count: loopedStops.filter((act, idx) => !(act.isBasecamp === true || idx === 0) && getCategoryMeta(act).label !== 'Dining').length,
-      activeBg: 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/25 border-purple-400 scale-105 ring-2 ring-purple-500/20',
+      activeBg: 'bg-[#FF7A1A] text-white shadow-sm border-[#FF7A1A] font-extrabold',
       badgeBg: 'bg-white/20 text-white'
     },
     {
       id: 'landmark',
-      label: 'Landmarks',
-      icon: '📸',
+      label: 'Cafes',
+      icon: '☕',
       count: loopedStops.filter((act, idx) => !(act.isBasecamp === true || idx === 0) && getCategoryMeta(act).label === 'Landmark').length,
-      activeBg: 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-md shadow-teal-500/25 border-teal-400 scale-105 ring-2 ring-teal-500/20',
+      activeBg: 'bg-[#FF7A1A] text-white shadow-sm border-[#FF7A1A] font-extrabold',
       badgeBg: 'bg-white/20 text-white'
     },
     {
       id: 'nature',
-      label: 'Nature & Parks',
-      icon: '🌲',
+      label: 'Parks',
+      icon: '🌳',
       count: loopedStops.filter((act, idx) => !(act.isBasecamp === true || idx === 0) && getCategoryMeta(act).label === 'Nature').length,
-      activeBg: 'bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-md shadow-emerald-500/25 border-emerald-400 scale-105 ring-2 ring-emerald-500/20',
+      activeBg: 'bg-[#FF7A1A] text-white shadow-sm border-[#FF7A1A] font-extrabold',
       badgeBg: 'bg-white/20 text-white'
     },
     {
@@ -378,7 +455,7 @@ export default function InteractiveRouteMap({
       label: 'Shopping',
       icon: '🛍️',
       count: loopedStops.filter((act, idx) => !(act.isBasecamp === true || idx === 0) && getCategoryMeta(act).label === 'Shopping').length,
-      activeBg: 'bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-md shadow-pink-500/25 border-pink-400 scale-105 ring-2 ring-pink-500/20',
+      activeBg: 'bg-[#FF7A1A] text-white shadow-sm border-[#FF7A1A] font-extrabold',
       badgeBg: 'bg-white/20 text-white'
     }
   ];
@@ -638,8 +715,6 @@ export default function InteractiveRouteMap({
       attributionControl: false
     }).setView(defaultCenter, 13);
 
-    window.L.control.zoom({ position: 'topright' }).addTo(map);
-
     const styleObj = MAP_STYLES[mapStyle];
     const tileLayer = window.L.tileLayer(styleObj.url, {
       maxZoom: styleObj.maxZoom,
@@ -817,27 +892,29 @@ export default function InteractiveRouteMap({
                         : meta.label === 'Landmark' ? 'linear-gradient(135deg, #2DD4BF 0%, #0F766E 100%)'
                           : `linear-gradient(135deg, ${pinBg} 0%, #1D4ED8 100%)`)));
 
+          const isOtherStop = !isSelected && !isHighlightedByFilter && isCategoryMatch;
           const customIcon = L.divIcon({
-            className: 'custom-tripwise-pin',
+            className: `custom-tripwise-pin ${isSelected ? 'tripwise-marker-bounce' : ''}`,
             html: `
-              <div style="position: relative; width: ${isSelected || isHighlightedByFilter ? '48px' : '40px'}; height: ${isSelected || isHighlightedByFilter ? '58px' : '48px'}; display: flex; align-items: flex-start; justify-content: center; transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); transform: ${isSelected ? 'scale(1.2) translateY(-6px)' : (isHighlightedByFilter ? 'scale(1.12) translateY(-3px)' : (isCategoryMatch ? 'scale(1)' : 'scale(0.72)'))}; opacity: ${isCategoryMatch ? '1' : '0.16'}; filter: ${isCategoryMatch ? 'none' : 'blur(0.5px) grayscale(90%)'}; z-index: ${isSelected || isHighlightedByFilter ? '1000' : (isCategoryMatch ? '100' : '10')}; cursor: pointer;">
+              <div style="position: relative; width: ${isSelected ? '52px' : '40px'}; height: ${isSelected ? '64px' : '48px'}; display: flex; align-items: flex-start; justify-content: center; transition: all 0.38s cubic-bezier(0.34, 1.56, 0.64, 1); transform: ${isSelected ? 'scale(1.15) translateY(-4px)' : (isHighlightedByFilter ? 'scale(1.04)' : (isOtherStop ? 'scale(0.85)' : 'scale(0.70)'))}; opacity: ${isSelected ? '1' : (isCategoryMatch ? '0.75' : '0.20')}; filter: ${isCategoryMatch ? 'none' : 'blur(0.5px) grayscale(85%)'}; z-index: ${isSelected || isHighlightedByFilter ? '1000' : (isCategoryMatch ? '100' : '10')}; cursor: pointer; animation: tripwiseMarkerAppear 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) ${idx * 0.045}s both;">
                 
                 <div style="
-                  width: ${isSelected || isHighlightedByFilter ? '42px' : '36px'};
-                  height: ${isSelected || isHighlightedByFilter ? '42px' : '36px'};
+                  width: ${isSelected ? '44px' : '36px'};
+                  height: ${isSelected ? '44px' : '36px'};
                   background: ${gradientBg};
                   border-radius: 50% 50% 50% 0;
                   transform: rotate(-45deg);
-                  border: ${isSelected ? '3.5px solid #ffffff' : (isHighlightedByFilter ? '3px solid #ffffff' : (isBasecamp ? '2.5px solid #F59E0B' : `2.5px solid ${isMultiDayMode ? dayColorMeta.color : '#ffffff'}`))};
-                  box-shadow: ${isSelected ? '0 10px 28px rgba(16, 185, 129, 0.85), inset 0 2px 4px rgba(255,255,255,0.45)' : (isHighlightedByFilter ? `0 0 24px ${pinBg}, 0 8px 22px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.45)` : (isBasecamp ? '0 6px 20px rgba(245, 158, 11, 0.5), inset 0 2px 4px rgba(255,255,255,0.3)' : '0 6px 18px rgba(0, 0, 0, 0.32), inset 0 2px 4px rgba(255,255,255,0.45)'))};
+                  border: ${isSelected ? '3px solid #ffffff' : (isHighlightedByFilter ? '2.5px solid #ffffff' : (isBasecamp ? '2.5px solid #F59E0B' : '2px solid #ffffff'))};
+                  box-shadow: ${isSelected ? '0 10px 25px -4px rgba(0, 0, 0, 0.22), 0 0 24px rgba(255, 122, 26, 0.55)' : (isHighlightedByFilter ? `0 0 16px ${pinBg}, 0 6px 16px rgba(0,0,0,0.3)` : '0 4px 14px rgba(0, 0, 0, 0.22)')};
                   display: flex;
                   align-items: center;
                   justify-content: center;
+                  transition: all 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
                 ">
                   <div style="
                     transform: rotate(45deg);
-                    width: ${isSelected || isHighlightedByFilter ? '28px' : '24px'};
-                    height: ${isSelected || isHighlightedByFilter ? '28px' : '24px'};
+                    width: ${isSelected ? '27px' : '24px'};
+                    height: ${isSelected ? '27px' : '24px'};
                     border-radius: 50%;
                     background: rgba(255, 255, 255, 0.22);
                     border: 1px solid rgba(255, 255, 255, 0.55);
@@ -845,7 +922,7 @@ export default function InteractiveRouteMap({
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: ${isSelected || isHighlightedByFilter ? '16px' : '14px'};
+                    font-size: ${isSelected ? '15px' : '14px'};
                   ">
                     ${isBasecamp ? '🏨' : meta.icon}
                   </div>
@@ -855,7 +932,7 @@ export default function InteractiveRouteMap({
                   position: absolute;
                   top: -5px;
                   right: -4px;
-                  background: ${isBasecamp ? '#F59E0B' : (isMultiDayMode ? dayColorMeta.color : '#1C1B1B')};
+                  background: ${isBasecamp ? '#F59E0B' : (isMultiDayMode ? dayColorMeta.color : '#FF7A1A')};
                   color: #FFFFFF;
                   border: 2px solid #FFFFFF;
                   border-radius: 9999px;
@@ -867,7 +944,7 @@ export default function InteractiveRouteMap({
                   align-items: center;
                   justify-content: center;
                   font-size: 11px;
-                  font-weight: 950;
+                  font-weight: 700;
                   letter-spacing: -0.3px;
                   z-index: 20;
                 ">
@@ -877,17 +954,17 @@ export default function InteractiveRouteMap({
                 <div style="
                   position: absolute;
                   bottom: -2px;
-                  width: ${isSelected || isHighlightedByFilter ? '20px' : '14px'};
+                  width: ${isSelected ? '24px' : '14px'};
                   height: 5px;
-                  background: rgba(0,0,0,0.32);
+                  background: rgba(0,0,0,0.28);
                   border-radius: 50%;
                   filter: blur(2px);
                   z-index: -1;
                 "></div>
               </div>
             `,
-            iconSize: isSelected || isHighlightedByFilter ? [48, 58] : [40, 48],
-            iconAnchor: isSelected || isHighlightedByFilter ? [24, 58] : [20, 48],
+            iconSize: isSelected ? [52, 62] : [40, 48],
+            iconAnchor: isSelected ? [26, 62] : [20, 48],
             popupAnchor: [0, -42]
           });
 
@@ -923,24 +1000,29 @@ export default function InteractiveRouteMap({
 
         let animatedPolyline = null;
         if (latLngs.length > 1) {
+          const routeColor = isMultiDayMode ? dayColorMeta.color : '#FF6B2C';
+          const routeGlow = isMultiDayMode ? dayColorMeta.glow : 'rgba(255, 107, 44, 0.45)';
+
+          // Layer 1: Slight glowing aura beneath the route (Point 3)
           L.polyline(latLngs, {
-            color: dayColorMeta.color,
-            weight: isMultiDayMode ? 4.5 : 6,
-            opacity: isMultiDayMode ? 0.45 : 0.25,
+            color: routeGlow,
+            weight: isMultiDayMode ? 8 : 10,
+            opacity: selectedCategory !== 'all' ? 0.15 : 0.40,
+            lineCap: 'round',
+            lineJoin: 'round',
+            className: 'animated-route-glow'
+          }).addTo(layerGroupRef.current);
+
+          // Layer 2: Clean solid premium route line (Point 3: 3.5–4px thickness, rounded caps)
+          animatedPolyline = L.polyline(latLngs, {
+            color: routeColor,
+            weight: 4,
+            opacity: selectedCategory !== 'all' ? 0.35 : 0.96,
             lineCap: 'round',
             lineJoin: 'round'
           }).addTo(layerGroupRef.current);
 
-          animatedPolyline = L.polyline(latLngs, {
-            color: dayColorMeta.color,
-            weight: isMultiDayMode ? 3.5 : 4,
-            opacity: selectedCategory !== 'all' ? 0.35 : (isMultiDayMode ? 0.9 : 0.95),
-            dashArray: isMultiDayMode ? '10, 10' : '14, 14',
-            lineCap: 'round',
-            lineJoin: 'round',
-            className: 'animated-route-flow'
-          }).addTo(layerGroupRef.current);
-
+          // Layer 3: Animated/Directional arrows indicating travel direction
           for (let i = 0; i < latLngs.length - 1; i++) {
             const p1 = latLngs[i];
             const p2 = latLngs[i + 1];
@@ -964,7 +1046,7 @@ export default function InteractiveRouteMap({
                   justify-content: center;
                   width: ${isMultiDayMode ? '18px' : '22px'};
                   height: ${isMultiDayMode ? '18px' : '22px'};
-                  background: ${dayColorMeta.color};
+                  background: ${routeColor};
                   border: 2px solid #ffffff;
                   border-radius: 50%;
                   box-shadow: 0 3px 10px rgba(0,0,0,0.35);
@@ -978,6 +1060,48 @@ export default function InteractiveRouteMap({
             });
 
             L.marker([midLat, midLng], { icon: arrowIcon, interactive: false }).addTo(layerGroupRef.current);
+          }
+
+          // Layer 4: Tiny animated travel dot moving elegantly along the route (Point 3)
+          if (latLngs.length > 1 && window.L && !isMultiDayMode) {
+            const dotIcon = L.divIcon({
+              className: 'travel-animated-dot',
+              html: `
+                <div style="
+                  width: 12px;
+                  height: 12px;
+                  background: #FFFFFF;
+                  border: 2.5px solid ${routeColor};
+                  border-radius: 50%;
+                  box-shadow: 0 0 12px ${routeColor}, 0 2px 6px rgba(0,0,0,0.4);
+                "></div>
+              `,
+              iconSize: [12, 12],
+              iconAnchor: [6, 6]
+            });
+            const dotMarker = L.marker([latLngs[0].lat, latLngs[0].lng], { icon: dotIcon, interactive: false, zIndexOffset: 2000 }).addTo(layerGroupRef.current);
+            let progress = 0;
+            const animateDot = () => {
+              if (!dotMarker._map || !latLngs || latLngs.length < 2) return;
+              progress += 0.003;
+              if (progress >= 1) progress = 0;
+              const totalSegment = latLngs.length - 1;
+              const exactPos = progress * totalSegment;
+              const idx = Math.floor(exactPos);
+              const t = exactPos - idx;
+              const p1 = latLngs[idx];
+              const p2 = latLngs[Math.min(idx + 1, latLngs.length - 1)];
+              if (p1 && p2) {
+                const curLat = p1.lat + (p2.lat - p1.lat) * t;
+                const curLng = p1.lng + (p2.lng - p1.lng) * t;
+                dotMarker.setLatLng([curLat, curLng]);
+              }
+              dotMarker._animationFrame = requestAnimationFrame(animateDot);
+            };
+            animateDot();
+            dotMarker.on('remove', () => {
+              if (dotMarker._animationFrame) cancelAnimationFrame(dotMarker._animationFrame);
+            });
           }
         }
         return { latLngs, totalMeters, stopsCount: validActs.length + (isMultiDayMode ? 0 : 1), animatedPolyline };
@@ -1104,106 +1228,142 @@ export default function InteractiveRouteMap({
   };
 
   const mapJSX = (
-    <div className={`overflow-hidden border border-stone-200 shadow-md bg-white flex flex-col transition-all duration-300 ${isFullscreen ? 'fixed inset-0 z-999999 w-screen h-screen rounded-none shadow-2xl m-0 p-0' : 'relative w-full rounded-3xl h-115 md:h-135'
-      }`}>
-      {/* Top Header: Controls & Quick Stop Selector Bar (Outside the map canvas so popups NEVER overlap!) */}
-      <div className="bg-white border-b border-stone-200 p-3 flex flex-col gap-2.5 z-30 shrink-0">
-        {/* Row 1: Map Styles, Fit Route, Fullscreen Toggle */}
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Layer Dropdown */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowLayerMenu(!showLayerMenu)}
-                className="bg-stone-100 px-3.5 py-1.5 rounded-xl text-xs font-extrabold text-[#1C1B1B] shadow-2xs border border-stone-200 flex items-center gap-2 hover:bg-stone-200 transition-all cursor-pointer"
-              >
-                <span>{MAP_STYLES[mapStyle].icon}</span>
-                <span>{MAP_STYLES[mapStyle].name.split(' ')[0]}</span>
-                <span className="text-[10px] text-stone-400">▼</span>
-              </button>
+    <div className={`relative w-full h-full min-h-100 overflow-hidden rounded-[24px] border border-[#ECE8E2] shadow-[0_16px_48px_rgba(0,0,0,0.06)] bg-[#FFFFFF] transition-all duration-300 ${
+      isFullscreen ? 'fixed inset-0 z-999999 w-screen h-screen rounded-none shadow-2xl m-0 p-0' : ''
+    }`}>
+      {/* Subtle inner highlight overlay */}
+      <div className="absolute inset-0 rounded-[24px] pointer-events-none z-20 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)]" />
 
-              {showLayerMenu && (
-                <div className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-xl border border-stone-200 p-1.5 w-48 flex flex-col gap-1 z-50 animate-fade-in">
+      <div ref={mapContainerRef} className="w-full h-full absolute inset-0 z-10" />
+
+      {/* Clean, minimal AI Optimizing / Route Syncing indicator */}
+      {isRouteSyncing && (
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-60 pointer-events-none animate-fade-in">
+          <div className="bg-[#FFFFFF]/95 backdrop-blur-2xl px-4 py-1.5 rounded-full border border-[#FF6B2C]/40 shadow-[0_8px_32px_rgba(255,107,44,0.18)] flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#FF6B2C] animate-ping" />
+            <span className="text-[11px] font-semibold tracking-tight text-[#1F1F1F]">✨ AI Optimizing Waypoints & Route...</span>
+          </div>
+        </div>
+      )}
+
+      {/* 1. Sleek Top-Right Controls Strip (Premium White Glass Controls rgba(255,255,255,0.92)) */}
+      <div className="absolute top-5 right-5 z-50 flex items-center gap-2 pointer-events-auto">
+        {/* Quick Actions Glassmorphic Pill */}
+        <div className="flex items-center gap-1 bg-[rgba(255,255,255,0.92)] backdrop-blur-md p-1 rounded-[14px] border border-[rgba(0,0,0,0.06)] shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
+          <button
+            type="button"
+            onClick={handleFitRoute}
+            className="h-8 px-3 rounded-[12px] text-[11px] font-medium bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)] hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-1.5 cursor-pointer active:scale-95"
+            title="Fit Entire Route"
+          >
+            <span className="text-xs">🎯</span>
+            <span className="hidden lg:inline font-medium">Fit Route</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsHotelRingActive(!isHotelRingActive)}
+            className={`h-8 px-3 rounded-[12px] text-[11px] font-medium transition-all duration-300 flex items-center gap-1.5 cursor-pointer hover:-translate-y-0.5 active:scale-95 ${
+              isHotelRingActive
+                ? 'bg-[#FF6B2C] text-white font-semibold shadow-[0_4px_16px_rgba(255,107,44,0.3)] border border-[#FF6B2C]'
+                : 'bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)]'
+            }`}
+            title="Toggle 15-min walk geofence around Basecamp Hotel"
+          >
+            <span className="text-xs">📏</span>
+            <span className="hidden lg:inline font-medium">15-Min Walk</span>
+          </button>
+
+          {allDays && allDays.length > 1 && (
+            <button
+              type="button"
+              onClick={() => setShowAllDaysOverview(!showAllDaysOverview)}
+              className={`h-8 px-3 rounded-[12px] text-[11px] font-medium transition-all duration-300 flex items-center gap-1.5 cursor-pointer hover:-translate-y-0.5 active:scale-95 ${
+                showAllDaysOverview
+                  ? 'bg-[#FF6B2C] text-white font-semibold shadow-[0_4px_16px_rgba(255,107,44,0.3)] border border-[#FF6B2C]'
+                  : 'bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)]'
+              }`}
+              title="Toggle all days route comparison"
+            >
+              <span className="text-xs">🗺️</span>
+              <span className="hidden lg:inline font-medium">All Days</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => {
+              setIsFullscreen(!isFullscreen);
+              setTimeout(() => mapRef.current?.invalidateSize(), 350);
+            }}
+            className="h-8 w-8 px-0 rounded-[12px] text-[11px] font-medium bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)] transition-all duration-300 flex items-center justify-center cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0"
+            title={isFullscreen ? "Exit Fullscreen" : "Expand Map Fullscreen"}
+          >
+            <span className="text-xs">{isFullscreen ? '✕' : '⛶'}</span>
+          </button>
+        </div>
+
+        {/* Map Style & GeoEngine Dropdown */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowMapControls(!showMapControls)}
+            className={`h-8 px-3 rounded-[12px] text-[11px] font-medium transition-all duration-300 flex items-center gap-1.5 cursor-pointer border shadow-[0_4px_16px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 active:scale-95 ${
+              showMapControls
+                ? 'bg-[#FF6B2C] text-white border-[#FF6B2C] font-semibold shadow-[0_4px_16px_rgba(255,107,44,0.3)]'
+                : 'bg-[rgba(255,255,255,0.92)] backdrop-blur-md text-[#1F1F1F] border-[rgba(0,0,0,0.06)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]'
+            }`}
+          >
+            <span className="text-xs">{MAP_STYLES[mapStyle]?.icon || '🗺️'}</span>
+            <span className="hidden md:inline font-medium">{MAP_STYLES[mapStyle]?.name?.split(' ')[0] || 'Streets'}</span>
+            <span className="text-[10px] opacity-70">▼</span>
+          </button>
+
+          {showMapControls && (
+            <div className="absolute top-full right-0 mt-2.5 bg-[#FFFFFF] backdrop-blur-xl rounded-[16px] shadow-[0_16px_48px_rgba(0,0,0,0.12)] border border-[#ECE8E2] p-4 w-56 flex flex-col gap-3 z-50 animate-fade-in text-left">
+              <div>
+                <span className="text-[10px] font-semibold text-[#8B8B8B] uppercase tracking-wider px-1 block mb-1.5">Map Style</span>
+                <div className="grid grid-cols-2 gap-1.5">
                   {Object.entries(MAP_STYLES).map(([key, style]) => (
                     <button
                       key={key}
                       type="button"
                       onClick={() => {
                         setMapStyle(key);
-                        setShowLayerMenu(false);
+                        setShowMapControls(false);
                       }}
-                      className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold w-full text-left transition-all cursor-pointer ${mapStyle === key ? 'bg-[#EC6735] text-white shadow-xs' : 'text-stone-700 hover:bg-stone-100'
-                        }`}
+                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-medium transition-all duration-200 cursor-pointer hover:scale-[1.02] active:scale-95 ${
+                        mapStyle === key
+                          ? 'bg-[#FF6B2C] text-white shadow-xs font-semibold'
+                          : 'bg-[#F7F5F2] text-[#1F1F1F] hover:bg-[#ECE8E2]'
+                      }`}
                     >
-                      <span>{style.icon}</span>
-                      <span>{style.name}</span>
+                      <span className="text-xs">{style.icon}</span>
+                      <span className="truncate">{style.name.split(' ')[0]}</span>
                     </button>
                   ))}
                 </div>
-              )}
+              </div>
+
+              <div className="h-px bg-[#ECE8E2] my-0.5" />
+
+              {/* GeoEngine Telemetry Badge */}
+              <div className="bg-[#F7F5F2] p-2.5 rounded-[14px] border border-[#ECE8E2] flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#2FA66A] animate-pulse shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-[11px] font-semibold text-[#1F1F1F] truncate">TripWise GeoEngine v2.5</div>
+                  <div className="text-[10px] font-normal text-[#6B6B6B] truncate">Satellite Geodesic & Overpass API</div>
+                </div>
+              </div>
             </div>
-
-            {/* Fit Entire Route Button */}
-            <button
-              type="button"
-              onClick={handleFitRoute}
-              className="bg-stone-100 px-3.5 py-1.5 rounded-xl text-xs font-extrabold text-[#0D9488] shadow-2xs border border-stone-200 hover:bg-[#0D9488]/10 transition-all cursor-pointer flex items-center gap-1.5"
-            >
-              <span>🎯</span>
-              <span>Fit Route</span>
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* View All Days Overview Toggle */}
-            {allDays && allDays.length > 1 && (
-              <button
-                type="button"
-                onClick={() => setShowAllDaysOverview(!showAllDaysOverview)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-black shadow-2xs transition-all cursor-pointer flex items-center gap-1.5 border ${
-                  showAllDaysOverview
-                    ? 'bg-linear-to-r from-[#EC6735] via-[#8B5CF6] to-[#10B981] text-white border-transparent ring-2 ring-[#EC6735]/40 scale-105 shadow-md'
-                    : 'bg-stone-100 dark:bg-stone-800 text-stone-800 dark:text-stone-200 border-stone-200 dark:border-stone-700 hover:bg-stone-200'
-                }`}
-              >
-                <span>🗺️</span>
-                <span>{showAllDaysOverview ? `Showing All ${allDays.length} Days` : `View All ${allDays.length} Days Overview`}</span>
-              </button>
-            )}
-
-            {/* Fullscreen Toggle */}
-            <button
-              type="button"
-              onClick={() => {
-                setIsFullscreen(!isFullscreen);
-                setTimeout(() => mapRef.current?.invalidateSize(), 350);
-              }}
-              className="bg-stone-100 px-3 py-1.5 rounded-xl text-xs font-extrabold text-[#1C1B1B] shadow-2xs border border-stone-200 hover:bg-stone-200 transition-all cursor-pointer flex items-center gap-1"
-            >
-              <span>{isFullscreen ? '✕ Exit Fullscreen' : '⛶ Expand Map'}</span>
-            </button>
-          </div>
+          )}
         </div>
+      </div>
 
-        {/* Row 2: Category Filter Pills (Smoothly fades non-matching pins & zooms camera to matching stops) */}
-        {availableCategoryFilters.length > 1 && (
-          <div className="flex items-center gap-2 overflow-x-auto pt-1 pb-2 no-scrollbar border-b border-stone-100">
-            <div className="flex items-center gap-1.5 shrink-0">
-              <span className="text-[11px] font-black text-stone-400 uppercase tracking-wider flex items-center gap-1">
-                <span>🎛️</span>
-                <span>Category:</span>
-              </span>
-              {selectedCategory !== 'all' && (
-                <button
-                  type="button"
-                  onClick={() => handleCategorySelect('all')}
-                  className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
-                >
-                  <span>✕ Clear</span>
-                </button>
-              )}
-            </div>
+      {/* 2. Compact iOS-Segmented Filter Chips (Premium White Glass Controls rgba(255,255,255,0.92)) */}
+      {availableCategoryFilters.length > 1 && (
+        <div className="absolute top-5 left-5 z-40 max-w-[calc(100%-360px)] overflow-x-auto no-scrollbar pointer-events-auto">
+          <div className="bg-[rgba(255,255,255,0.92)] backdrop-blur-md p-1 rounded-[14px] border border-[rgba(0,0,0,0.06)] shadow-[0_4px_20px_rgba(0,0,0,0.06)] flex items-center gap-1">
             {availableCategoryFilters.map((filter) => {
               const isSelected = selectedCategory === filter.id;
               return (
@@ -1211,548 +1371,396 @@ export default function InteractiveRouteMap({
                   key={filter.id}
                   type="button"
                   onClick={() => handleCategorySelect(filter.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer border shadow-2xs ${isSelected
-                      ? (filter.activeBg || 'bg-[#1C1B1B] text-white border-[#1C1B1B] scale-105 shadow-md')
-                      : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100 hover:border-stone-300 hover:text-stone-950'
-                    }`}
+                  className={`h-8 px-3 rounded-[12px] text-[11px] font-medium tracking-tight transition-all duration-300 shrink-0 flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                    isSelected
+                      ? 'bg-[#FF6B2C] text-white shadow-[0_4px_12px_rgba(255,107,44,0.25)] font-semibold scale-[1.02]'
+                      : 'bg-transparent text-[#1F1F1F] hover:bg-[#F7F5F2] hover:text-[#FF6B2C] hover:-translate-y-0.5'
+                  }`}
                 >
-                  <span className="text-sm">{filter.icon}</span>
-                  <span>{filter.label}</span>
+                  <span className="text-xs">{filter.icon}</span>
+                  <span className="font-medium">{filter.label}</span>
                   {typeof filter.count === 'number' && (
-                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${isSelected ? 'bg-white/25 text-white shadow-2xs' : 'bg-stone-200 text-stone-600'
-                      }`}>
+                    <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-semibold leading-none ${
+                      isSelected ? 'bg-white/25 text-white' : 'bg-[#ECE8E2] text-[#6B6B6B]'
+                    }`}>
                       {filter.count}
                     </span>
                   )}
                 </button>
               );
             })}
-            {/* 📏 15-Minute Hotel Walkable Circle (Isochrone Ring Toggle) */}
-            <button
-              type="button"
-              onClick={() => setIsHotelRingActive(!isHotelRingActive)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 flex items-center gap-1.5 cursor-pointer border shadow-2xs ml-1 ${
-                isHotelRingActive || selectedStopIdx === 0 || selectedStopIdx === loopedStops.length - 1
-                  ? 'bg-linear-to-r from-[#10B981] to-[#0D9488] text-white border-emerald-400 scale-105 shadow-md shadow-emerald-500/25 ring-2 ring-emerald-400/30'
-                  : 'bg-stone-50 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-700 hover:bg-stone-100 hover:border-stone-300'
-              }`}
-              title="Draw 1.5 km (~15-min walk) Geofence Ring centered on Basecamp Hotel"
-            >
-              <span className="text-sm">📏</span>
-              <span>15-Min Walk Circle</span>
-              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
-                isHotelRingActive || selectedStopIdx === 0 || selectedStopIdx === loopedStops.length - 1
-                  ? 'bg-white/25 text-white shadow-2xs'
-                  : 'bg-stone-200 dark:bg-stone-700 text-stone-600 dark:text-stone-300'
-              }`}>
-                {stopsInsideRing.length} inside
-              </span>
-            </button>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Row 3: Looped Quick Stop Selector Strip (Clicking any chip flies to that stop) */}
-        {loopedStops.length > 0 && (
-          <div className="flex items-center gap-2 overflow-x-auto pt-0.5 pb-1 no-scrollbar">
-            {loopedStops.map((act, idx) => {
-              const isBasecamp = act.isBasecamp === true || idx === 0;
-              const meta = isBasecamp ? { icon: '🏨', label: 'Basecamp', bg: '#1E293B' } : getCategoryMeta(act);
-              const isSelected = selectedStopIdx === idx;
+      {/* 3. Bottom Info Cards (Sleek Dark Cards per user request) */}
+      <div className="absolute bottom-5 inset-x-5 z-40 flex items-center justify-between pointer-events-none gap-2">
+        {/* Left Card: Route Stats */}
+        <div className="pointer-events-auto bg-[#18181B]/95 backdrop-blur-md px-4 py-2 rounded-[18px] border border-[#27272A] shadow-[0_8px_30px_rgba(0,0,0,0.35)] text-xs font-semibold text-white flex items-center gap-2.5 transition-all duration-300 hover:scale-[1.02] hover:border-[#FF6B2C]/50">
+          <span>🚶 {routeStats.totalKm} km</span>
+          <span className="text-white/30">•</span>
+          <span className="text-white/80 font-medium">{Math.round(routeStats.totalKm * 15 + 15)}m walk</span>
+          <span className="text-white/30">•</span>
+          <span>{routeStats.stopsCount} Stops</span>
+        </div>
 
-              let isCategoryMatch = true;
-              if (selectedCategory !== 'all') {
-                if (selectedCategory === 'dining') isCategoryMatch = !isBasecamp && meta.label === 'Dining';
-                else if (selectedCategory === 'attractions') isCategoryMatch = !isBasecamp && meta.label !== 'Dining';
-                else if (selectedCategory === 'landmark') isCategoryMatch = !isBasecamp && meta.label === 'Landmark';
-                else if (selectedCategory === 'nature') isCategoryMatch = !isBasecamp && meta.label === 'Nature';
-                else if (selectedCategory === 'shopping') isCategoryMatch = !isBasecamp && meta.label === 'Shopping';
-              }
-
-              let transitConnector = null;
-              if (idx > 0 && loopedStops[idx - 1]?.coordinates && act?.coordinates && typeof window !== 'undefined' && window.L) {
-                const transit = getTransitTelemetry(loopedStops[idx - 1].coordinates, act.coordinates);
-                if (transit) {
-                  transitConnector = (
-                    <div className={`shrink-0 px-2.5 py-1 rounded-lg bg-stone-100 border border-stone-200 text-[10px] font-extrabold text-stone-600 flex items-center gap-1 shadow-2xs transition-opacity ${selectedCategory !== 'all' && !isCategoryMatch ? 'opacity-40' : 'opacity-100'
-                      }`}>
-                      <span>{transit.icon}</span>
-                      <span>{transit.label}</span>
-                    </div>
-                  );
-                }
-              }
-
-              const isHovered = activeHoverIdx === idx;
-
-              return (
-                <React.Fragment key={idx}>
-                  {transitConnector}
-                  <button
-                    type="button"
-                    onClick={() => handleFlyToStop(idx)}
-                    onMouseEnter={() => { setInternalHoveredIdx(idx); onHoverStop(idx); }}
-                    onMouseLeave={() => { setInternalHoveredIdx(null); onHoverStop(null); }}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all shrink-0 flex items-center gap-2 shadow-2xs cursor-pointer border ${
-                      isHovered
-                        ? 'ring-4 ring-[#EC6735]/40 border-2 border-[#EC6735] bg-[#FFF8F5] text-[#EC6735] scale-105 shadow-xl z-20 font-black'
-                        : isSelected
-                        ? (isBasecamp ? 'bg-[#1E293B] text-white border-[#334155] scale-102 shadow-md z-10' : 'bg-[#10B981] text-white border-[#059669] scale-102 shadow-md z-10')
-                        : (selectedCategory !== 'all' && !isCategoryMatch
-                          ? 'bg-stone-50/60 text-stone-400 border-stone-100 opacity-45 scale-95 hover:opacity-85'
-                          : 'bg-stone-50 text-stone-800 border-stone-200 hover:bg-stone-100')
-                      }`}
-                  >
-                    <span className={`w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black ${
-                      isHovered ? 'bg-[#EC6735] text-white shadow-sm' : isSelected ? 'bg-black/15 text-white' : (isBasecamp ? 'bg-amber-500/20 text-amber-600' : 'bg-stone-200 text-stone-700')
-                      }`}>
-                      {isBasecamp ? '🏨' : idx}
-                    </span>
-                    <span className="text-xs">{isBasecamp ? '⭐' : meta.icon}</span>
-                    <span className="truncate max-w-32 sm:max-w-48">{act.title || (isBasecamp ? 'Basecamp Hotel' : `Stop ${idx}`)}</span>
-                  </button>
-                </React.Fragment>
-              );
-            })}
-
-            {/* Final Return Loop Badge right at the end of the strip */}
-            {loopedStops.length > 1 && typeof window !== 'undefined' && window.L && (() => {
-              const returnTransit = getTransitTelemetry(loopedStops[loopedStops.length - 1].coordinates, basecampStop.coordinates);
-              return returnTransit ? (
-                <React.Fragment>
-                  <div className="shrink-0 px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-[10px] font-extrabold text-amber-800 flex items-center gap-1 shadow-2xs">
-                    <span>🔄 Return: {returnTransit.icon}</span>
-                    <span>{returnTransit.label}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleFlyToStop(0)}
-                    className="px-2.5 py-1.5 rounded-xl text-xs font-extrabold bg-stone-100 border border-stone-200 text-stone-700 hover:bg-stone-200 transition-all shrink-0 flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <span>🏨</span>
-                    <span>Return to Base</span>
-                  </button>
-                </React.Fragment>
-              ) : null;
-            })()}
+        {/* Right Card: Weather & Sunset Telemetry */}
+        {telemetry && (
+          <div className="pointer-events-auto mr-14 bg-[#18181B]/95 backdrop-blur-md px-4 py-2 rounded-[18px] border border-[#27272A] shadow-[0_8px_30px_rgba(0,0,0,0.35)] text-xs font-semibold text-white flex items-center gap-2.5 transition-all duration-300 hover:scale-[1.02] hover:border-[#FF6B2C]/50">
+            <span className="animate-weather-float">{telemetry.icon}</span>
+            <span>{telemetry.temp}</span>
+            <span className="text-white/30">•</span>
+            <span className="text-white/80 font-medium">Sunset {telemetry.sunset}</span>
           </div>
         )}
       </div>
 
-      {/* Map Container (Pure, unobstructed 100% canvas space) */}
-      <div className="relative w-full flex-1 min-h-65 z-10">
-        <div ref={mapContainerRef} className="w-full h-full" />
+      {/* Share/Export Toast Notification */}
+      {showShareToast && (
+        <div className="absolute top-16 right-4 z-60 bg-[#1C1B1B] text-white px-4 py-2.5 rounded-2xl shadow-2xl border border-white/20 text-xs font-bold flex items-center gap-2 animate-bounce">
+          <span>✅</span>
+          <span>Trip link copied to clipboard!</span>
+        </div>
+      )}
 
-        {/* Floating "Bottom Peek Drawer" / Stop Detail Card (When Clicking a Pin or Top Chip) */}
-        {selectedStopIdx !== null && loopedStops[selectedStopIdx] && (() => {
-          const act = loopedStops[selectedStopIdx];
-          const isBase = act.isBasecamp === true || selectedStopIdx === 0;
-          const meta = isBase ? { icon: '🏨', label: 'Basecamp Hub', bg: '#1E293B' } : getCategoryMeta(act);
-          const stopNumberLabel = isBase ? 'Stop 0 (Basecamp)' : `Stop ${selectedStopIdx} of ${loopedStops.length - 1}`;
-          
-          // Calculate transit from previous stop or to next stop
-          let prevTransit = null;
-          if (selectedStopIdx > 0 && loopedStops[selectedStopIdx - 1]?.coordinates) {
-            prevTransit = getTransitTelemetry(loopedStops[selectedStopIdx - 1].coordinates, act.coordinates);
-          }
-          let nextTransit = null;
-          if (selectedStopIdx < loopedStops.length - 1 && loopedStops[selectedStopIdx + 1]?.coordinates) {
-            nextTransit = getTransitTelemetry(act.coordinates, loopedStops[selectedStopIdx + 1].coordinates);
-          } else if (selectedStopIdx > 0 && loopedStops[0]?.coordinates) {
-            nextTransit = getTransitTelemetry(act.coordinates, loopedStops[0].coordinates);
-          }
+      {/* 4. Circular Floating Action Button (Bottom Right - Point 2 & 6: 16-20px consistent spacing) */}
+      <div className="absolute bottom-5 right-5 z-50 pointer-events-auto">
+        {showFabMenu && (
+          <div className="absolute bottom-14 right-0 mb-2 bg-[#FFFFFF] backdrop-blur-xl rounded-3xl shadow-[0_16px_48px_rgba(0,0,0,0.12)] border border-[#ECE8E2] p-2.5 w-52 flex flex-col gap-1 z-50 animate-fade-in text-left">
+            <button
+              type="button"
+              onClick={() => {
+                setShowFabMenu(false);
+                const addStopBtn = document.getElementById('btn-add-custom-stop');
+                if (addStopBtn) {
+                  addStopBtn.click();
+                  addStopBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                  alert(`➕ Select a location on the map or use the + Custom Stop button on the left panel to add a waypoint.`);
+                }
+              }}
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-xs font-bold text-[#1F1F1F] hover:bg-[#F7F5F2] transition-all cursor-pointer"
+            >
+              <span className="w-6 h-6 rounded-xl bg-[#FFF2EA] text-[#FF6B2C] flex items-center justify-center font-black">➕</span>
+              <span>Add Stop</span>
+            </button>
 
-          // Dynamic rating & duration metadata
-          const rating = isBase ? '4.9 ★ • Top Rated Hotel' : `4.${(selectedStopIdx % 3) + 7} ★ • ${(selectedStopIdx * 142) + 840} reviews`;
-          const estDuration = isBase ? 'Full Day Central Hub' : (act.time || 'Approx. 1.5 - 2 hours');
-          const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${act.coordinates.lat},${act.coordinates.lng}`;
-          const appleMapsUrl = `http://maps.apple.com/?daddr=${act.coordinates.lat},${act.coordinates.lng}`;
+            <button
+              type="button"
+              onClick={() => {
+                setShowFabMenu(false);
+                const aiInput = document.getElementById('ai-copilot-input') || document.querySelector('input[placeholder*="Refine"]');
+                if (aiInput) {
+                  aiInput.focus();
+                  aiInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                  alert(`✨ Use the sleek AI Assistant Prompt Bar next to your day schedule to instantly modify waypoints with AI!`);
+                }
+              }}
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-xs font-bold text-[#1F1F1F] hover:bg-[#F7F5F2] transition-all cursor-pointer"
+            >
+              <span className="w-6 h-6 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center font-black">✨</span>
+              <span>Generate with AI</span>
+            </button>
 
-          // Dedicated Short Compact Floating Box on the Right specifically for Inline Mode (!isFullscreen)
-          if (!isFullscreen) {
-            return (
-              <div className="absolute bottom-2.5 right-2.5 sm:right-13 z-500 bg-white/95 dark:bg-stone-900/95 backdrop-blur-xl p-2.5 sm:p-3 rounded-2xl border-2 border-stone-200/90 dark:border-stone-700/90 shadow-2xl animate-fade-in pointer-events-auto transition-all w-72 sm:w-77 max-w-[92%] max-h-73.75 flex flex-col justify-between">
-                {/* Fixed Top Header: Category Pill, Stop Number, Title, and Close Button */}
-                <div className="shrink-0 mb-1">
-                  <div className="flex items-center justify-between gap-1.5 mb-1">
-                    <div className="flex items-center gap-1 min-w-0">
-                      <span className="text-[10px] font-black px-2 py-0.5 rounded-lg text-white flex items-center gap-1 shadow-2xs shrink-0 truncate" style={{ background: meta.bg }}>
-                        <span>{meta.icon}</span>
-                        <span className="truncate">{meta.label}</span>
-                      </span>
-                      <span className="text-[10px] font-extrabold text-[#FF6B35] bg-[#FF6B35]/10 px-2 py-0.5 rounded-lg border border-[#FF6B35]/20 shrink-0">
-                        {stopNumberLabel}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => setSelectedStopIdx(null)}
-                      className="w-5.5 h-5.5 rounded-full bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-600 dark:text-stone-300 flex items-center justify-center font-black text-[11px] transition-all shadow-xs shrink-0 ml-1"
-                      title="Close Drawer"
-                    >
-                      ✕
-                    </button>
-                  </div>
+            <button
+              type="button"
+              onClick={() => {
+                setShowFabMenu(false);
+                setIsRouteSyncing(true);
+                setTimeout(() => setIsRouteSyncing(false), 700);
+                handleFitRoute();
+              }}
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-xs font-bold text-[#1F1F1F] hover:bg-[#F7F5F2] transition-all cursor-pointer"
+            >
+              <span className="w-6 h-6 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-black">⚡</span>
+              <span>Optimize Route</span>
+            </button>
 
-                  <h3 className="text-xs sm:text-sm font-black text-stone-900 dark:text-white leading-tight line-clamp-1">
-                    {act.title || (isBase ? 'Basecamp Hotel & Central Hub' : `Trip Stop #${selectedStopIdx}`)}
-                  </h3>
-                </div>
+            <div className="h-px bg-[#ECE8E2] my-1" />
 
-                {/* Middle Scrollable Content Zone */}
-                <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar flex flex-col gap-1.5 py-0.5 pr-0.5">
-                  {/* Rating & Suggested Time Pill */}
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-stone-600 dark:text-stone-300 shrink-0">
-                    <span className="flex items-center gap-0.5 text-amber-500 font-extrabold">
-                      <span>⭐</span>
-                      <span>{rating.split(' • ')[0]}</span>
-                    </span>
-                    <span className="text-stone-300 dark:text-stone-600">•</span>
-                    <span className="flex items-center gap-0.5 text-teal-600 dark:text-teal-400 font-extrabold truncate">
-                      <span>🕒</span>
-                      <span className="truncate">{estDuration}</span>
-                    </span>
-                  </div>
+            <button
+              type="button"
+              onClick={() => {
+                setShowFabMenu(false);
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
+                  destination: destinationName,
+                  totalKm: routeStats.totalKm,
+                  stopsCount: routeStats.stopsCount,
+                  waypoints: loopedStops.map((s, idx) => ({ stopNumber: idx, title: s.title || s.name, coordinates: s.coordinates }))
+                }, null, 2));
+                const downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", dataStr);
+                downloadAnchor.setAttribute("download", `TripWise-Route-${destinationName.replace(/\s+/g, '_')}.json`);
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                downloadAnchor.remove();
+              }}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-bold text-[#6B6B6B] hover:bg-[#F7F5F2] hover:text-[#1F1F1F] transition-all cursor-pointer"
+            >
+              <span className="w-6 h-6 rounded-xl bg-[#F7F5F2] text-[#6B6B6B] flex items-center justify-center font-black">📤</span>
+              <span>Export Route</span>
+            </button>
 
-                  {/* 🏨 Hotel 15-Min Walkable Geofence Ring Telemetry */}
-                  {isBase && (
-                    <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300/80 dark:border-emerald-700/80 text-[10px] shadow-2xs shrink-0">
-                      <div className="flex items-center justify-between font-black text-emerald-900 dark:text-emerald-200 mb-0.5">
-                        <span className="flex items-center gap-1">
-                          <span>📏</span>
-                          <span>15-Min Walk Circle (1.5 km)</span>
-                        </span>
-                        <span className="bg-emerald-500 text-white px-1.5 py-0.2 rounded text-[8px] font-black">ACTIVE</span>
-                      </div>
-                      <p className="text-emerald-700 dark:text-emerald-300 font-medium leading-tight">
-                        <b>{stopsInsideRing.length} of {validActivities.length} attractions</b> are within easy walking distance!
-                      </p>
-                    </div>
-                  )}
+            <button
+              type="button"
+              onClick={() => {
+                setShowFabMenu(false);
+                if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                  navigator.clipboard.writeText(window.location.href);
+                  setShowShareToast(true);
+                  setTimeout(() => setShowShareToast(false), 3000);
+                }
+              }}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-bold text-[#6B6B6B] hover:bg-[#F7F5F2] hover:text-[#1F1F1F] transition-all cursor-pointer"
+            >
+              <span className="w-6 h-6 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-black">🔗</span>
+              <span>Share Trip</span>
+            </button>
+          </div>
+        )}
 
-                  {/* Real Walkable Coffee & Dining Pills */}
-                  {isBase && realWalkablePlaces.length > 0 && (
-                    <div className="pt-1.5 border-t border-emerald-300/80 dark:border-emerald-700/80 shrink-0">
-                      <div className="text-[9px] font-black text-emerald-950 dark:text-emerald-200 uppercase tracking-wider mb-1 flex items-center justify-between">
-                        <span>📍 Real 15-Min Walkable Perks ({realWalkablePlaces.length})</span>
-                        <span className="text-[8px] text-emerald-700 dark:text-emerald-400 font-extrabold bg-emerald-100 dark:bg-emerald-900/60 px-1 py-0.2 rounded">Live Pins</span>
-                      </div>
-                      <div className="flex flex-col gap-1 max-h-24 overflow-y-auto pr-0.5 no-scrollbar">
-                        {realWalkablePlaces.map((pl) => (
-                          <div
-                            key={pl.id}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (mapRef.current && pl.coordinates) {
-                                mapRef.current.flyTo([pl.coordinates.lat, pl.coordinates.lng], 17, { duration: 1.0 });
-                              }
-                            }}
-                            className="p-1 rounded-lg bg-white/95 dark:bg-stone-900/95 hover:bg-emerald-100/50 dark:hover:bg-emerald-900/40 border border-emerald-200/80 dark:border-emerald-800/60 flex items-center justify-between gap-1 cursor-pointer transition-all shadow-2xs group"
-                          >
-                            <div className="flex items-center gap-1 min-w-0">
-                              <span className="text-[11px] shrink-0">{pl.type === 'coffee' ? '☕' : '🍷'}</span>
-                              <div className="min-w-0">
-                                <div className="font-extrabold text-stone-900 dark:text-white truncate text-[9px] leading-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors">
-                                  {pl.name}
-                                </div>
-                                <div className="text-[8px] text-stone-500 dark:text-stone-400 truncate font-semibold">
-                                  {pl.type === 'coffee' ? 'Coffee' : 'Dining'} • <span className="text-amber-500">⭐ {pl.rating}</span>
-                                </div>
-                              </div>
-                            </div>
-                            <span className="bg-emerald-50 dark:bg-emerald-900/80 border border-emerald-200 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 font-black text-[8px] px-1 py-0.2 rounded shrink-0">
-                              🚶 {pl.walkMins}m
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+        <button
+          type="button"
+          onClick={() => setShowFabMenu(!showFabMenu)}
+          className="w-11 h-11 bg-[#FF6B2C] hover:bg-[#E65D20] text-white rounded-full shadow-[0_8px_24px_rgba(255,107,44,0.35)] hover:shadow-[0_12px_28px_rgba(255,107,44,0.5)] border-2 border-white/80 flex items-center justify-center text-2xl font-light transition-all duration-300 hover:scale-[1.06] active:scale-95 cursor-pointer"
+          title="Route Actions Menu"
+        >
+          <span className={`transition-transform duration-300 ease-out flex items-center justify-center ${showFabMenu ? 'rotate-45 scale-110' : ''}`}>+</span>
+        </button>
+      </div>
 
-                  {!isBase && act.description && (
-                    <p className="text-[10px] font-medium text-stone-600 dark:text-stone-300 leading-snug line-clamp-2 pr-1">
-                      {act.description}
-                    </p>
-                  )}
+      {/* 5. Custom Glassmorphic Zoom Controls (Zoom -> Dark) */}
+      <div className="absolute bottom-20 right-5 z-50 flex flex-col gap-1.5 pointer-events-auto bg-[#18181B]/95 backdrop-blur-md p-1.5 rounded-[16px] border border-[#27272A] shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
+        <button
+          type="button"
+          onClick={() => mapRef.current?.zoomIn()}
+          className="w-8 h-8 rounded-[12px] bg-[#27272A]/80 text-white border border-white/10 hover:border-[#FF6B2C]/80 hover:text-[#FF6B2C] shadow-[0_2px_8px_rgba(0,0,0,0.2)] transition-all duration-200 flex items-center justify-center text-sm font-bold cursor-pointer hover:scale-[1.04] active:scale-95"
+          title="Zoom In"
+        >
+          +
+        </button>
+        <button
+          type="button"
+          onClick={() => mapRef.current?.zoomOut()}
+          className="w-8 h-8 rounded-[12px] bg-[#27272A]/80 text-white border border-white/10 hover:border-[#FF6B2C]/80 hover:text-[#FF6B2C] shadow-[0_2px_8px_rgba(0,0,0,0.2)] transition-all duration-200 flex items-center justify-center text-sm font-bold cursor-pointer hover:scale-[1.04] active:scale-95"
+          title="Zoom Out"
+        >
+          −
+        </button>
+      </div>
 
-                  {/* 1-line Transit connection pill */}
-                  {(nextTransit || prevTransit) && (
-                    <div className="flex items-center justify-between p-1 rounded-xl bg-stone-100/80 dark:bg-stone-800/80 border border-stone-200/80 dark:border-stone-700/80 text-[9px] shrink-0">
-                      <span className="font-extrabold text-stone-700 dark:text-stone-200 flex items-center gap-1 truncate min-w-0">
-                        <span>{nextTransit ? nextTransit.icon : prevTransit?.icon}</span>
-                        <span className="truncate">
-                          {nextTransit
-                            ? `Next: ${nextTransit.label}`
-                            : `From prev: ${prevTransit.label}`
-                          }
-                        </span>
-                      </span>
-                      <span className="font-black text-stone-900 dark:text-white bg-white dark:bg-stone-900 px-1.5 py-0.2 rounded shadow-2xs shrink-0 ml-1">
-                        {nextTransit ? nextTransit.distKm : prevTransit?.distKm} km
-                      </span>
-                    </div>
-                  )}
-                </div>
+      {/* Floating Stop Detail Card (When Clicking a Pin or Top Chip) */}
+      {selectedStopIdx !== null && loopedStops[selectedStopIdx] && (() => {
+        const act = loopedStops[selectedStopIdx];
+        const isBase = act.isBasecamp === true || selectedStopIdx === 0;
+        const meta = isBase ? { icon: '🏨', label: 'Basecamp Hub', bg: '#1E293B' } : getCategoryMeta(act);
+        const stopNumberLabel = isBase ? 'Stop 0 (Basecamp)' : `Stop ${selectedStopIdx} of ${loopedStops.length - 1}`;
+        
+        let prevTransit = null;
+        if (selectedStopIdx > 0 && loopedStops[selectedStopIdx - 1]?.coordinates) {
+          prevTransit = getTransitTelemetry(loopedStops[selectedStopIdx - 1].coordinates, act.coordinates);
+        }
+        let nextTransit = null;
+        if (selectedStopIdx < loopedStops.length - 1 && loopedStops[selectedStopIdx + 1]?.coordinates) {
+          nextTransit = getTransitTelemetry(act.coordinates, loopedStops[selectedStopIdx + 1].coordinates);
+        }
 
-                {/* Fixed Bottom Footer: Navigation + Google Maps Button */}
-                <div className="shrink-0 pt-1.5 border-t border-stone-200 dark:border-stone-700/80 flex items-center justify-between gap-1">
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => handleFlyToStop((selectedStopIdx - 1 + loopedStops.length) % loopedStops.length)}
-                      className="px-2 py-0.5 rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-100 text-[11px] font-black transition-all flex items-center gap-0.5"
-                      title="Previous Stop"
-                    >
-                      <span>⬅️</span>
-                      <span>Prev</span>
-                    </button>
-                    <button
-                      onClick={() => handleFlyToStop((selectedStopIdx + 1) % loopedStops.length)}
-                      className="px-2 py-0.5 rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-100 text-[11px] font-black transition-all flex items-center gap-0.5"
-                      title="Next Stop"
-                    >
-                      <span>Next</span>
-                      <span>➔</span>
-                    </button>
-                  </div>
+        const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+          `${act.title || 'Stop'} ${act.location || destinationName}`
+        )}`;
+        const appleMapsUrl = `https://maps.apple.com/?q=${encodeURIComponent(
+          act.title || 'Stop'
+        )}&sll=${act.coordinates.lat},${act.coordinates.lng}`;
 
-                  <a
-                    href={googleMapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group px-2.5 py-0.5 rounded-lg bg-linear-to-r from-[#10B981] to-[#059669] hover:from-[#059669] hover:to-[#047857] text-white text-[11px] font-black tracking-wide transition-all duration-300 shadow-sm hover:shadow-md hover:shadow-emerald-500/30 flex items-center gap-1 border border-emerald-400/30 active:scale-95 shrink-0"
-                  >
-                    <span className="text-xs group-hover:-translate-y-0.5 group-hover:scale-11 transition-transform duration-300">📍</span>
-                    <span>Google Maps</span>
-                  </a>
-                </div>
-              </div>
-            );
-          }
-
-          // Full Screen Mode (isFullscreen === true): Vertical Luxury Card
+        if (!isFullscreen) {
           return (
-            <div className="absolute bottom-4 right-4 sm:right-13 left-4 sm:left-auto sm:w-96 max-w-[94%] max-h-[calc(100vh-130px)] z-500 bg-white/95 dark:bg-stone-900/95 backdrop-blur-xl p-3.5 sm:p-4 rounded-3xl border-2 border-stone-200/90 dark:border-stone-700/90 shadow-2xl animate-fade-in pointer-events-auto transition-all flex flex-col justify-between">
-              {/* Header: Category Badge, Stop Number & Close Button */}
-              <div className="shrink-0 mb-1.5">
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="text-xs px-2.5 py-1 font-black rounded-xl text-white flex items-center gap-1 shadow-sm shrink-0 truncate" style={{ background: meta.bg }}>
-                      <span>{meta.icon}</span>
-                      <span className="truncate">{meta.label}</span>
-                    </span>
-                    <span className="text-[11px] px-2.5 py-1 font-extrabold text-[#FF6B35] bg-[#FF6B35]/10 rounded-xl border border-[#FF6B35]/20 shrink-0">
-                      {stopNumberLabel}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => setSelectedStopIdx(null)}
-                    className="w-6 h-6 rounded-full bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-600 dark:text-stone-300 flex items-center justify-center font-black text-xs transition-all shadow-xs shrink-0 ml-1"
-                    title="Close Drawer"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                {/* Stop Title */}
-                <h3 className="text-base font-black text-stone-900 dark:text-white leading-tight truncate mb-1">
-                  {act.title || (isBase ? 'Basecamp Hotel & Central Hub' : `Trip Stop #${selectedStopIdx}`)}
-                </h3>
-
-                {/* Rating & Suggested Time Pill */}
-                <div className="flex items-center gap-2 text-[11px] font-bold text-stone-600 dark:text-stone-300">
-                  <span className="flex items-center gap-1 text-amber-500 font-extrabold">
-                    <span>⭐</span>
-                    <span>{rating}</span>
+            <div className="absolute bottom-16 right-4 sm:right-6 left-4 sm:left-auto sm:w-96 z-500 bg-[#18181B]/96 backdrop-blur-xl p-4 rounded-3xl border border-[#27272A] shadow-[0_16px_48px_rgba(0,0,0,0.45)] animate-fade-in pointer-events-auto transition-all">
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-xs px-2.5 py-1 font-black rounded-xl text-white flex items-center gap-1 shadow-sm shrink-0 truncate" style={{ background: meta.bg }}>
+                    <span>{meta.icon}</span>
+                    <span className="truncate">{meta.label}</span>
                   </span>
-                  <span className="text-stone-300 dark:text-stone-600">•</span>
-                  <span className="flex items-center gap-1 text-teal-600 dark:text-teal-400 font-extrabold truncate">
-                    <span>🕒</span>
-                    <span className="truncate">{estDuration}</span>
+                  <span className="text-[11px] px-2.5 py-1 font-extrabold text-[#FF6B2C] bg-[#FFF2EA]/10 rounded-xl border border-[#FF6B2C]/30 shrink-0">
+                    {stopNumberLabel}
                   </span>
                 </div>
+                <button
+                  onClick={() => setSelectedStopIdx(null)}
+                  className="w-6 h-6 rounded-full bg-[#27272A] hover:bg-[#3F3F46] text-white/70 hover:text-white flex items-center justify-center font-black text-xs transition-all shadow-xs shrink-0 ml-1"
+                  title="Close Card"
+                >
+                  ✕
+                </button>
               </div>
 
-              {/* Middle Scrollable Content Zone */}
-              <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar flex flex-col gap-2 py-1 pr-0.5">
-                {/* 🏨 Hotel 15-Min Walkable Geofence Ring Telemetry */}
-                {isBase && (
-                  <div className="p-2.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300/80 dark:border-emerald-700/80 text-xs shadow-xs shrink-0">
-                    <div className="flex items-center justify-between font-black text-emerald-900 dark:text-emerald-200 mb-1">
-                      <span className="flex items-center gap-1.5">
-                        <span>📏</span>
-                        <span>15-Min Walk Circle (1.5 km)</span>
+              <h4 className="text-base font-black text-white leading-snug mb-1">
+                {act.title || (isBase ? `${destinationName} Basecamp Hotel` : `Waypoint ${selectedStopIdx}`)}
+              </h4>
+
+              <p className="text-xs font-semibold text-white/70 leading-relaxed mb-3 line-clamp-3">
+                {act.description || (isBase ? `Recommended luxury or boutique lodging hub positioned strategically near ${destinationName}.` : 'Key stop along your personalized route.')}
+              </p>
+
+              {(prevTransit || nextTransit) && (
+                <div className="bg-[#27272A]/60 p-2 rounded-xl mb-3 flex flex-col gap-1.5 text-xs border border-white/10">
+                  {prevTransit && (
+                    <div className="flex items-center justify-between text-white font-bold">
+                      <span className="flex items-center gap-1 text-[11px] text-white/60">
+                        <span>⬅️ From {selectedStopIdx === 1 ? 'Basecamp' : `Stop #${selectedStopIdx - 1}`}</span>
                       </span>
-                      <span className="bg-emerald-500 text-white px-2 py-0.5 rounded text-[10px] font-black">ACTIVE</span>
+                      <span className="px-2 py-0.5 bg-[#18181B] rounded-lg shadow-2xs font-extrabold text-[#FF6B2C] flex items-center gap-1">
+                        <span>{prevTransit.icon}</span>
+                        <span>{prevTransit.label}</span>
+                      </span>
                     </div>
-                    <p className="text-emerald-700 dark:text-emerald-300 font-medium leading-relaxed">
-                      <b>{stopsInsideRing.length} of {validActivities.length} attractions</b> on your itinerary fall inside this easy walking circle directly from your hotel bed!
-                    </p>
-                    {/* Real Walkable Coffee & Dining Pills */}
-                    {realWalkablePlaces.length > 0 && (
-                      <div className="mt-2.5 pt-2 border-t border-emerald-300/80 dark:border-emerald-700/80">
-                        <div className="text-[10px] font-black text-emerald-950 dark:text-emerald-200 uppercase tracking-wider mb-1.5 flex items-center justify-between">
-                          <span>📍 Real 15-Min Walkable Perks ({realWalkablePlaces.length})</span>
-                          <span className="text-[9px] text-emerald-700 dark:text-emerald-400 font-extrabold bg-emerald-100 dark:bg-emerald-900/60 px-1.5 py-0.5 rounded">Live Map Pins</span>
-                        </div>
-                        <div className="flex flex-col gap-1.5 max-h-36 overflow-y-auto pr-1 no-scrollbar">
-                          {realWalkablePlaces.map((pl) => (
-                            <div
-                              key={pl.id}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (mapRef.current && pl.coordinates) {
-                                  mapRef.current.flyTo([pl.coordinates.lat, pl.coordinates.lng], 17, { duration: 1.0 });
-                                }
-                              }}
-                              className="p-2 rounded-xl bg-white/95 dark:bg-stone-900/95 hover:bg-emerald-100/50 dark:hover:bg-emerald-900/40 border border-emerald-200/80 dark:border-emerald-800/60 flex items-center justify-between gap-2 cursor-pointer transition-all shadow-2xs group"
-                            >
-                              <div className="flex items-center gap-2 min-w-0">
-                                <span className="text-sm shrink-0">{pl.type === 'coffee' ? '☕' : '🍷'}</span>
-                                <div className="min-w-0">
-                                  <div className="font-extrabold text-stone-900 dark:text-white truncate text-xs leading-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors">
-                                    {pl.name}
-                                  </div>
-                                  <div className="text-[10px] text-stone-500 dark:text-stone-400 truncate font-semibold">
-                                    {pl.type === 'coffee' ? 'Morning Coffee' : 'Late-Night Dining'} • <span className="text-amber-500">⭐ {pl.rating}</span>
-                                  </div>
-                                </div>
-                              </div>
-                              <span className="bg-emerald-50 dark:bg-emerald-900/80 border border-emerald-200 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 font-black text-[10px] px-2 py-0.5 rounded shrink-0">
-                                🚶 {pl.walkMins}m
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                  )}
+                  {nextTransit && (
+                    <div className="flex items-center justify-between text-white font-bold">
+                      <span className="flex items-center gap-1 text-[11px] text-white/60">
+                        <span>To {selectedStopIdx === loopedStops.length - 2 ? 'Return Base' : `Stop #${selectedStopIdx + 1}`} ➔</span>
+                      </span>
+                      <span className="px-2 py-0.5 bg-[#18181B] rounded-lg shadow-2xs font-extrabold text-[#2FA66A] flex items-center gap-1">
+                        <span>{nextTransit.icon}</span>
+                        <span>{nextTransit.label}</span>
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
 
-                {/* Description */}
-                {act.description && (
-                  <p className="text-xs font-medium text-stone-600 dark:text-stone-300 leading-relaxed bg-stone-50 dark:bg-stone-800/60 rounded-2xl border border-stone-200/60 dark:border-stone-700/60 line-clamp-3 p-2.5 shrink-0">
-                    {act.description}
-                  </p>
-                )}
-
-                {/* Transit Pills Grid */}
-                {(prevTransit || nextTransit) && (
-                  <div className="grid gap-1.5 grid-cols-1 sm:grid-cols-2 shrink-0">
-                    {prevTransit && (
-                      <div className="flex items-center justify-between p-2 rounded-xl bg-stone-100/80 dark:bg-stone-800/80 border border-stone-200/80 dark:border-stone-700/80 text-[10px]">
-                        <span className="font-extrabold text-stone-700 dark:text-stone-200 flex items-center gap-1 truncate">
-                          <span>{prevTransit.icon}</span>
-                          <span className="truncate">From {selectedStopIdx === 1 ? 'Stop 0' : `Stop ${selectedStopIdx - 1}`}: {prevTransit.label}</span>
-                        </span>
-                        <span className="font-black text-stone-900 dark:text-white bg-white dark:bg-stone-900 px-1.5 py-0.5 rounded shadow-2xs shrink-0 ml-1">{prevTransit.distKm} km</span>
-                      </div>
-                    )}
-                    {nextTransit && (
-                      <div className="flex items-center justify-between p-2 rounded-xl bg-stone-100/80 dark:bg-stone-800/80 border border-stone-200/80 dark:border-stone-700/80 text-[10px]">
-                        <span className="font-extrabold text-stone-700 dark:text-stone-200 flex items-center gap-1 truncate">
-                          <span>{nextTransit.icon}</span>
-                          <span className="truncate">To {selectedStopIdx === loopedStops.length - 1 ? 'Base' : `Stop ${selectedStopIdx + 1}`}: <b>{nextTransit.label}</b></span>
-                        </span>
-                        <span className="font-black text-stone-900 dark:text-white bg-white dark:bg-stone-900 px-1.5 py-0.5 rounded shadow-2xs shrink-0 ml-1">{nextTransit.distKm} km</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Bottom Action Bar: Prev / Next Navigation + GPS Buttons */}
-              <div className="shrink-0 flex items-center justify-between gap-2 pt-2.5 border-t border-stone-200 dark:border-stone-700/80 mt-1">
-                {/* Step Through Route Buttons */}
+              <div className="flex items-center justify-between pt-2 border-t border-white/10 gap-2">
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => handleFlyToStop((selectedStopIdx - 1 + loopedStops.length) % loopedStops.length)}
-                    className="px-2.5 py-1.5 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-100 text-xs font-black transition-all flex items-center gap-1"
+                    className="px-2.5 py-1.5 rounded-xl bg-[#27272A] hover:bg-[#3F3F46] text-white text-[11px] font-black transition-all flex items-center gap-0.5"
                     title="Previous Stop"
                   >
-                    <span>⬅️</span>
-                    <span className="hidden sm:inline">Prev</span>
+                    <span>⬅️ Prev</span>
                   </button>
                   <button
                     onClick={() => handleFlyToStop((selectedStopIdx + 1) % loopedStops.length)}
-                    className="px-2.5 py-1.5 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-100 text-xs font-black transition-all flex items-center gap-1"
+                    className="px-2.5 py-1.5 rounded-xl bg-[#27272A] hover:bg-[#3F3F46] text-white text-[11px] font-black transition-all flex items-center gap-0.5"
                     title="Next Stop"
                   >
-                    <span className="hidden sm:inline">Next</span>
-                    <span>➔</span>
+                    <span>Next ➔</span>
                   </button>
                 </div>
 
-                {/* Direct Navigation Links */}
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1">
                   <a
                     href={googleMapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group px-3 py-1.5 rounded-xl bg-linear-to-r from-[#10B981] to-[#059669] hover:from-[#059669] hover:to-[#047857] text-white text-xs font-black tracking-wide transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-emerald-500/30 flex items-center gap-1.5 border border-emerald-400/30 active:scale-95 shrink-0"
+                    className="px-2.5 py-1.5 rounded-xl bg-[#2FA66A] hover:bg-[#258a57] text-white text-[11px] font-black transition-all shadow-sm flex items-center gap-1 shrink-0"
                   >
-                    <span className="text-sm group-hover:-translate-y-0.5 group-hover:scale-11 transition-transform duration-300">📍</span>
-                    <span>Google Maps</span>
-                  </a>
-                  <a
-                    href={appleMapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-2.5 py-1.5 rounded-xl bg-[#1C1B1B] dark:bg-stone-700 hover:bg-stone-800 text-white text-xs font-black transition-all shadow-md flex items-center gap-1 hover:scale-105 shrink-0"
-                    title="Open in Apple Maps"
-                  >
-                    <span>🍎</span>
+                    <span>📍 Google Maps</span>
                   </a>
                 </div>
               </div>
             </div>
           );
-        })()}
+        }
 
-        {/* Loading Overlay while Leaflet fetches */}
-        {!isReady && (
-          <div className="absolute inset-0 bg-stone-100/90 backdrop-blur-xs z-20 flex flex-col items-center justify-center text-center p-6">
-            <div className="w-8 h-8 rounded-full border-2 border-dashed border-[#FF6B35] animate-spin mb-3" />
-            <span className="text-xs font-extrabold text-stone-700">Loading Real-World Map Tiles...</span>
-          </div>
-        )}
-      </div>
+        return (
+          <div className="absolute bottom-16 right-4 sm:right-13 left-4 sm:left-auto sm:w-96 max-w-[94%] max-h-[calc(100vh-130px)] z-500 bg-[#18181B]/96 backdrop-blur-xl p-4 rounded-3xl border border-[#27272A] shadow-[0_16px_48px_rgba(0,0,0,0.45)] animate-fade-in pointer-events-auto transition-all flex flex-col justify-between">
+            <div className="shrink-0 mb-1.5">
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-xs px-2.5 py-1 font-black rounded-xl text-white flex items-center gap-1 shadow-sm shrink-0 truncate" style={{ background: meta.bg }}>
+                    <span>{meta.icon}</span>
+                    <span className="truncate">{meta.label}</span>
+                  </span>
+                  <span className="text-[11px] px-2.5 py-1 font-extrabold text-[#FF6B2C] bg-[#FFF2EA]/10 rounded-xl border border-[#FF6B2C]/30 shrink-0">
+                    {stopNumberLabel}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setSelectedStopIdx(null)}
+                  className="w-6 h-6 rounded-full bg-[#27272A] hover:bg-[#3F3F46] text-white/70 hover:text-white flex items-center justify-center font-black text-xs transition-all shadow-xs shrink-0 ml-1"
+                  title="Close Drawer"
+                >
+                  ✕
+                </button>
+              </div>
 
-      {/* Bottom Footer: Telemetry & Route Stats Bar (Outside map area so zero overlap!) */}
-      <div className="bg-[#1C1B1B] text-white px-4 py-2.5 text-xs font-semibold flex items-center justify-between shrink-0 flex-wrap gap-2.5 z-30">
-        <div className="flex items-center gap-2.5 truncate flex-wrap">
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] animate-pulse shrink-0" />
-            <span className="font-extrabold tracking-wide truncate">📍 {destinationName}</span>
+              <h4 className="text-base font-black text-white leading-snug mb-1">
+                {act.title || (isBase ? `${destinationName} Basecamp Hotel` : `Waypoint ${selectedStopIdx}`)}
+              </h4>
+
+              <p className="text-xs font-semibold text-white/70 leading-relaxed mb-3 line-clamp-3">
+                {act.description || (isBase ? `Recommended luxury or boutique lodging hub positioned strategically near ${destinationName}.` : 'Key stop along your personalized route.')}
+              </p>
+
+              {(prevTransit || nextTransit) && (
+                <div className="bg-[#27272A]/60 p-2 rounded-xl mb-3 flex flex-col gap-1.5 text-xs border border-white/10">
+                  {prevTransit && (
+                    <div className="flex items-center justify-between text-white font-bold">
+                      <span className="flex items-center gap-1 text-[11px] text-white/60">
+                        <span>⬅️ From {selectedStopIdx === 1 ? 'Basecamp' : `Stop #${selectedStopIdx - 1}`}</span>
+                      </span>
+                      <span className="px-2 py-0.5 bg-[#18181B] rounded-lg shadow-2xs font-extrabold text-[#FF6B2C] flex items-center gap-1">
+                        <span>{prevTransit.icon}</span>
+                        <span>{prevTransit.label}</span>
+                      </span>
+                    </div>
+                  )}
+                  {nextTransit && (
+                    <div className="flex items-center justify-between text-white font-bold">
+                      <span className="flex items-center gap-1 text-[11px] text-white/60">
+                        <span>To {selectedStopIdx === loopedStops.length - 2 ? 'Return Base' : `Stop #${selectedStopIdx + 1}`} ➔</span>
+                      </span>
+                      <span className="px-2 py-0.5 bg-[#18181B] rounded-lg shadow-2xs font-extrabold text-[#2FA66A] flex items-center gap-1">
+                        <span>{nextTransit.icon}</span>
+                        <span>{nextTransit.label}</span>
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-white/10 gap-2 shrink-0">
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => handleFlyToStop((selectedStopIdx - 1 + loopedStops.length) % loopedStops.length)}
+                  className="px-2.5 py-1.5 rounded-xl bg-[#27272A] hover:bg-[#3F3F46] text-white text-[11px] font-black transition-all flex items-center gap-0.5"
+                  title="Previous Stop"
+                >
+                  <span>⬅️ Prev</span>
+                </button>
+                <button
+                  onClick={() => handleFlyToStop((selectedStopIdx + 1) % loopedStops.length)}
+                  className="px-2.5 py-1.5 rounded-xl bg-[#27272A] hover:bg-[#3F3F46] text-white text-[11px] font-black transition-all flex items-center gap-0.5"
+                  title="Next Stop"
+                >
+                  <span>Next ➔</span>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <a
+                  href={googleMapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-2.5 py-1.5 rounded-xl bg-[#2FA66A] hover:bg-[#258a57] text-white text-[11px] font-black transition-all shadow-sm flex items-center gap-1 shrink-0"
+                >
+                  <span>📍 Google Maps</span>
+                </a>
+              </div>
+            </div>
           </div>
-          <span className="text-stone-500 hidden sm:inline">|</span>
-          <div className="flex items-center gap-1 text-[#FF8C61] font-extrabold shrink-0">
-            <span>🚗</span>
-            <span>{routeStats.totalKm} km path</span>
-          </div>
-          <span className="text-stone-500 hidden sm:inline">|</span>
-          <span className="text-stone-300 hidden sm:inline">{routeStats.stopsCount} Waypoints</span>
+        );
+      })()}
+
+      {/* Loading Overlay while Leaflet fetches */}
+      {!isReady && (
+        <div className="absolute inset-0 bg-[#FAF8F5]/90 backdrop-blur-xs z-20 flex flex-col items-center justify-center text-center p-6">
+          <div className="w-8 h-8 rounded-full border-2 border-dashed border-[#FF6B2C] animate-spin mb-3" />
+          <span className="text-xs font-extrabold text-[#1F1F1F]">Loading Real-World Map Tiles...</span>
         </div>
-
-        {/* Live Weather & Time Telemetry Badge inside Bottom Bar */}
-        {telemetry ? (
-          <div className="flex items-center gap-2 bg-stone-800/90 px-3 py-1 rounded-xl border border-stone-700/80 text-[11px] font-extrabold text-stone-100 shadow-inner shrink-0">
-            <span className="text-sm">{telemetry.icon}</span>
-            <span className="text-white font-black">{telemetry.city} • <span className="text-[#FF6B35]">{telemetry.temp}</span></span>
-            <span className="text-stone-500">•</span>
-            <span className="text-stone-300 flex items-center gap-1 font-bold">
-              <span>🕒</span>
-              <span>{telemetry.localTime}</span>
-            </span>
-            <span className="text-stone-500">•</span>
-            <span className="text-amber-400 font-bold flex items-center gap-1">
-              <span>🌅</span>
-              <span>Sunset at {telemetry.sunset}</span>
-            </span>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 text-[11px] font-bold text-stone-300 shrink-0">
-            <span>Click any pin or top chip to fly inside</span>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 
