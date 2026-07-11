@@ -132,8 +132,8 @@ export default function LiveTripDashboard({
         ) : null}
 
         {/* Post-Generation / Loaded Dashboard View */}
-        {(!isGenerating && (!isTransitioning || isFadingOutGlobe)) && (
-          <div className="w-full h-full flex flex-col flex-1 min-h-0 animate-fade-in">
+        {(itinerary && !isGenerating && (!isTransitioning || isFadingOutGlobe)) && (
+          <div className="w-full h-full flex flex-col flex-1 min-h-0 animate-fade-in relative z-10">
             {/* Cinematic Camera Plunge Overlay */}
             {isTransitioning && isFadingOutGlobe && (
               <div className="absolute inset-0 z-50 pointer-events-none animate-fade-out">
