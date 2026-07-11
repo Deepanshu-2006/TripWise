@@ -851,13 +851,31 @@ export default function InteractiveRouteMap({
 
         const latLngs = [];
         let totalMeters = 0;
+        const plottedMarkerCoords = []; // Track marker positions to eliminate pin overlap
 
         dayLoopedStops.forEach((act, idx) => {
-          const latLng = L.latLng(act.coordinates.lat, act.coordinates.lng);
+          const rawLatLng = L.latLng(act.coordinates.lat, act.coordinates.lng);
           if (latLngs.length > 0) {
-            totalMeters += latLngs[latLngs.length - 1].distanceTo(latLng) * 1.28;
+            totalMeters += latLngs[latLngs.length - 1].distanceTo(rawLatLng) * 1.28;
           }
-          latLngs.push(latLng);
+          latLngs.push(rawLatLng); // Polyline uses exact building coordinates
+
+          // 1. Skip creating a duplicate closing hotel pin at the end of single-day loop so pins don't stack right on top of each other
+          if (!isMultiDayMode && idx === dayLoopedStops.length - 1 && dayLoopedStops.length > 2 && act.isBasecamp) {
+            return;
+          }
+
+          // 2. Micro-offset close or identical coordinates (< ~60 meters) so every pin badge is cleanly side-by-side
+          let markerLat = act.coordinates.lat;
+          let markerLng = act.coordinates.lng;
+          let offsetStep = 1;
+          while (plottedMarkerCoords.some(c => Math.abs(c.lat - markerLat) < 0.00055 && Math.abs(c.lng - markerLng) < 0.00055)) {
+            markerLat += 0.00065 * offsetStep;
+            markerLng += 0.00075 * offsetStep;
+            offsetStep++;
+          }
+          plottedMarkerCoords.push({ lat: markerLat, lng: markerLng });
+          const latLng = L.latLng(markerLat, markerLng);
 
           const isBasecamp = act.isBasecamp === true || (idx === 0 && !isMultiDayMode) || (isMultiDayMode && dayIdx === 0 && idx === 0);
           const stopNum = isMultiDayMode ? (isBasecamp ? 0 : idx + (dayIdx === 0 ? 0 : 1)) : idx;
@@ -1128,7 +1146,8 @@ export default function InteractiveRouteMap({
 
         if (allLatLngs.length > 1 && selectedStopIdx === null && selectedCategory === 'all') {
           mapRef.current.fitBounds(L.polyline(allLatLngs).getBounds(), {
-            padding: [60, 60],
+            paddingTopLeft: [75, 120],
+            paddingBottomRight: [75, 95],
             maxZoom: 15,
             animate: true
           });
@@ -1143,8 +1162,9 @@ export default function InteractiveRouteMap({
 
         if (res.animatedPolyline && selectedStopIdx === null && selectedCategory === 'all') {
           mapRef.current.fitBounds(res.animatedPolyline.getBounds(), {
-            padding: [60, 60],
-            maxZoom: 16,
+            paddingTopLeft: [75, 120],
+            paddingBottomRight: [75, 95],
+            maxZoom: 15,
             animate: true
           });
         } else if (res.latLngs.length === 1 && selectedStopIdx === null && selectedCategory === 'all') {
@@ -1184,7 +1204,7 @@ export default function InteractiveRouteMap({
     });
     if (latLngs.length > 0 && window.L) {
       const bounds = window.L.latLngBounds(latLngs);
-      mapRef.current.fitBounds(bounds, { padding: [60, 60], maxZoom: 16, animate: true, duration: 1.0 });
+      mapRef.current.fitBounds(bounds, { paddingTopLeft: [75, 120], paddingBottomRight: [75, 95], maxZoom: 15, animate: true, duration: 1.0 });
     }
   };
 
@@ -1222,7 +1242,7 @@ export default function InteractiveRouteMap({
         mapRef.current.flyTo(matchingLatLngs[0], 16, { duration: 1.1, easeLinearity: 0.25 });
       } else {
         const bounds = window.L.latLngBounds(matchingLatLngs);
-        mapRef.current.fitBounds(bounds, { padding: [60, 60], maxZoom: 16, animate: true, duration: 1.0 });
+        mapRef.current.fitBounds(bounds, { paddingTopLeft: [75, 120], paddingBottomRight: [75, 95], maxZoom: 15, animate: true, duration: 1.0 });
       }
     }
   };
@@ -1246,152 +1266,157 @@ export default function InteractiveRouteMap({
         </div>
       )}
 
-      {/* 1. Sleek Top-Right Controls Strip (Premium White Glass Controls rgba(255,255,255,0.92)) */}
-      <div className="absolute top-5 right-5 z-50 flex items-center gap-2 pointer-events-auto">
-        {/* Quick Actions Glassmorphic Pill */}
-        <div className="flex items-center gap-1 bg-[rgba(255,255,255,0.92)] backdrop-blur-md p-1 rounded-[14px] border border-[rgba(0,0,0,0.06)] shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
-          <button
-            type="button"
-            onClick={handleFitRoute}
-            className="h-8 px-3 rounded-[12px] text-[11px] font-medium bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)] hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-1.5 cursor-pointer active:scale-95"
-            title="Fit Entire Route"
-          >
-            <span className="text-xs">🎯</span>
-            <span className="hidden lg:inline font-medium">Fit Route</span>
-          </button>
+      {/* 1. Unified Sleek Top Bar (Top-Left Filter Chips & Top-Right Controls in single Flex row with zero overlap) */}
+      <div className="absolute top-5 inset-x-5 z-50 flex items-center justify-between gap-2 pointer-events-none">
+        {/* Left Side: Compact iOS-Segmented Filter Chips */}
+        {availableCategoryFilters.length > 1 ? (
+          <div className="pointer-events-auto min-w-0 max-w-[calc(100%-260px)] 2xl:max-w-[calc(100%-460px)] overflow-x-auto no-scrollbar">
+            <div className="bg-[rgba(255,255,255,0.92)] backdrop-blur-md p-1 rounded-[14px] border border-[rgba(0,0,0,0.06)] shadow-[0_4px_20px_rgba(0,0,0,0.06)] flex items-center gap-1 w-max">
+              {availableCategoryFilters.map((filter) => {
+                const isSelected = selectedCategory === filter.id;
+                return (
+                  <button
+                    key={filter.id}
+                    type="button"
+                    onClick={() => handleCategorySelect(filter.id)}
+                    className={`h-8 px-3 rounded-[12px] text-[11px] font-medium tracking-tight transition-all duration-300 shrink-0 flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                      isSelected
+                        ? 'bg-[#FF6B2C] text-white shadow-[0_4px_12px_rgba(255,107,44,0.25)] font-semibold scale-[1.02]'
+                        : 'bg-transparent text-[#1F1F1F] hover:bg-[#F7F5F2] hover:text-[#FF6B2C] hover:-translate-y-0.5'
+                    }`}
+                  >
+                    <span className="text-xs">{filter.icon}</span>
+                    <span className="font-medium">{filter.label}</span>
+                    {typeof filter.count === 'number' && (
+                      <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-semibold leading-none ${
+                        isSelected ? 'bg-white/25 text-white' : 'bg-[#ECE8E2] text-[#6B6B6B]'
+                      }`}>
+                        {filter.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div />
+        )}
 
-          <button
-            type="button"
-            onClick={() => setIsHotelRingActive(!isHotelRingActive)}
-            className={`h-8 px-3 rounded-[12px] text-[11px] font-medium transition-all duration-300 flex items-center gap-1.5 cursor-pointer hover:-translate-y-0.5 active:scale-95 ${
-              isHotelRingActive
-                ? 'bg-[#FF6B2C] text-white font-semibold shadow-[0_4px_16px_rgba(255,107,44,0.3)] border border-[#FF6B2C]'
-                : 'bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)]'
-            }`}
-            title="Toggle 15-min walk geofence around Basecamp Hotel"
-          >
-            <span className="text-xs">📏</span>
-            <span className="hidden lg:inline font-medium">15-Min Walk</span>
-          </button>
-
-          {allDays && allDays.length > 1 && (
+        {/* Right Side: Sleek Map Controls Strip */}
+        <div className="pointer-events-auto shrink-0 flex items-center gap-2">
+          {/* Quick Actions Glassmorphic Pill */}
+          <div className="flex items-center gap-1 bg-[rgba(255,255,255,0.92)] backdrop-blur-md p-1 rounded-[14px] border border-[rgba(0,0,0,0.06)] shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
             <button
               type="button"
-              onClick={() => setShowAllDaysOverview(!showAllDaysOverview)}
+              onClick={handleFitRoute}
+              className="h-8 px-3 rounded-[12px] text-[11px] font-medium bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)] hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-1.5 cursor-pointer active:scale-95"
+              title="Fit Entire Route"
+            >
+              <span className="text-xs">🎯</span>
+              <span className="hidden 2xl:inline font-medium">Fit Route</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsHotelRingActive(!isHotelRingActive)}
               className={`h-8 px-3 rounded-[12px] text-[11px] font-medium transition-all duration-300 flex items-center gap-1.5 cursor-pointer hover:-translate-y-0.5 active:scale-95 ${
-                showAllDaysOverview
+                isHotelRingActive
                   ? 'bg-[#FF6B2C] text-white font-semibold shadow-[0_4px_16px_rgba(255,107,44,0.3)] border border-[#FF6B2C]'
                   : 'bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)]'
               }`}
-              title="Toggle all days route comparison"
+              title="Toggle 15-min walk geofence around Basecamp Hotel"
             >
-              <span className="text-xs">🗺️</span>
-              <span className="hidden lg:inline font-medium">All Days</span>
+              <span className="text-xs">📏</span>
+              <span className="hidden 2xl:inline font-medium">15-Min Walk</span>
             </button>
-          )}
 
-          <button
-            type="button"
-            onClick={() => {
-              setIsFullscreen(!isFullscreen);
-              setTimeout(() => mapRef.current?.invalidateSize(), 350);
-            }}
-            className="h-8 w-8 px-0 rounded-[12px] text-[11px] font-medium bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)] transition-all duration-300 flex items-center justify-center cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0"
-            title={isFullscreen ? "Exit Fullscreen" : "Expand Map Fullscreen"}
-          >
-            <span className="text-xs">{isFullscreen ? '✕' : '⛶'}</span>
-          </button>
-        </div>
+            {allDays && allDays.length > 1 && (
+              <button
+                type="button"
+                onClick={() => setShowAllDaysOverview(!showAllDaysOverview)}
+                className={`h-8 px-3 rounded-[12px] text-[11px] font-medium transition-all duration-300 flex items-center gap-1.5 cursor-pointer hover:-translate-y-0.5 active:scale-95 ${
+                  showAllDaysOverview
+                    ? 'bg-[#FF6B2C] text-white font-semibold shadow-[0_4px_16px_rgba(255,107,44,0.3)] border border-[#FF6B2C]'
+                    : 'bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)]'
+                }`}
+                title="Toggle all days route comparison"
+              >
+                <span className="text-xs">🗺️</span>
+                <span className="hidden 2xl:inline font-medium">All Days</span>
+              </button>
+            )}
 
-        {/* Map Style & GeoEngine Dropdown */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setShowMapControls(!showMapControls)}
-            className={`h-8 px-3 rounded-[12px] text-[11px] font-medium transition-all duration-300 flex items-center gap-1.5 cursor-pointer border shadow-[0_4px_16px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 active:scale-95 ${
-              showMapControls
-                ? 'bg-[#FF6B2C] text-white border-[#FF6B2C] font-semibold shadow-[0_4px_16px_rgba(255,107,44,0.3)]'
-                : 'bg-[rgba(255,255,255,0.92)] backdrop-blur-md text-[#1F1F1F] border-[rgba(0,0,0,0.06)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]'
-            }`}
-          >
-            <span className="text-xs">{MAP_STYLES[mapStyle]?.icon || '🗺️'}</span>
-            <span className="hidden md:inline font-medium">{MAP_STYLES[mapStyle]?.name?.split(' ')[0] || 'Streets'}</span>
-            <span className="text-[10px] opacity-70">▼</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsFullscreen(!isFullscreen);
+                setTimeout(() => mapRef.current?.invalidateSize(), 350);
+              }}
+              className="h-8 w-8 px-0 rounded-[12px] text-[11px] font-medium bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)] transition-all duration-300 flex items-center justify-center cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0"
+              title={isFullscreen ? "Exit Fullscreen" : "Expand Map Fullscreen"}
+            >
+              <span className="text-xs">{isFullscreen ? '✕' : '⛶'}</span>
+            </button>
+          </div>
 
-          {showMapControls && (
-            <div className="absolute top-full right-0 mt-2.5 bg-[#FFFFFF] backdrop-blur-xl rounded-[16px] shadow-[0_16px_48px_rgba(0,0,0,0.12)] border border-[#ECE8E2] p-4 w-56 flex flex-col gap-3 z-50 animate-fade-in text-left">
-              <div>
-                <span className="text-[10px] font-semibold text-[#8B8B8B] uppercase tracking-wider px-1 block mb-1.5">Map Style</span>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {Object.entries(MAP_STYLES).map(([key, style]) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => {
-                        setMapStyle(key);
-                        setShowMapControls(false);
-                      }}
-                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-medium transition-all duration-200 cursor-pointer hover:scale-[1.02] active:scale-95 ${
-                        mapStyle === key
-                          ? 'bg-[#FF6B2C] text-white shadow-xs font-semibold'
-                          : 'bg-[#F7F5F2] text-[#1F1F1F] hover:bg-[#ECE8E2]'
-                      }`}
-                    >
-                      <span className="text-xs">{style.icon}</span>
-                      <span className="truncate">{style.name.split(' ')[0]}</span>
-                    </button>
-                  ))}
+          {/* Map Style & GeoEngine Dropdown */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowMapControls(!showMapControls)}
+              className={`h-8 px-3 rounded-[12px] text-[11px] font-medium transition-all duration-300 flex items-center gap-1.5 cursor-pointer border shadow-[0_4px_16px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 active:scale-95 ${
+                showMapControls
+                  ? 'bg-[#FF6B2C] text-white border-[#FF6B2C] font-semibold shadow-[0_4px_16px_rgba(255,107,44,0.3)]'
+                  : 'bg-[rgba(255,255,255,0.92)] backdrop-blur-md text-[#1F1F1F] border-[rgba(0,0,0,0.06)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]'
+              }`}
+            >
+              <span className="text-xs">{MAP_STYLES[mapStyle]?.icon || '🗺️'}</span>
+              <span className="hidden md:inline font-medium">{MAP_STYLES[mapStyle]?.name?.split(' ')[0] || 'Streets'}</span>
+              <span className="text-[10px] opacity-70">▼</span>
+            </button>
+
+            {showMapControls && (
+              <div className="absolute top-full right-0 mt-2.5 bg-[#FFFFFF] backdrop-blur-xl rounded-[16px] shadow-[0_16px_48px_rgba(0,0,0,0.12)] border border-[#ECE8E2] p-4 w-56 flex flex-col gap-3 z-50 animate-fade-in text-left">
+                <div>
+                  <span className="text-[10px] font-semibold text-[#8B8B8B] uppercase tracking-wider px-1 block mb-1.5">Map Style</span>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {Object.entries(MAP_STYLES).map(([key, style]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => {
+                          setMapStyle(key);
+                          setShowMapControls(false);
+                        }}
+                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-medium transition-all duration-200 cursor-pointer hover:scale-[1.02] active:scale-95 ${
+                          mapStyle === key
+                            ? 'bg-[#FF6B2C] text-white shadow-xs font-semibold'
+                            : 'bg-[#F7F5F2] text-[#1F1F1F] hover:bg-[#ECE8E2]'
+                        }`}
+                      >
+                        <span className="text-xs">{style.icon}</span>
+                        <span className="truncate">{style.name.split(' ')[0]}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="h-px bg-[#ECE8E2] my-0.5" />
+
+                {/* GeoEngine Telemetry Badge */}
+                <div className="bg-[#F7F5F2] p-2.5 rounded-[14px] border border-[#ECE8E2] flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#2FA66A] animate-pulse shrink-0" />
+                  <div className="min-w-0">
+                    <div className="text-[11px] font-semibold text-[#1F1F1F] truncate">TripWise GeoEngine v2.5</div>
+                    <div className="text-[10px] font-normal text-[#6B6B6B] truncate">Satellite Geodesic & Overpass API</div>
+                  </div>
                 </div>
               </div>
-
-              <div className="h-px bg-[#ECE8E2] my-0.5" />
-
-              {/* GeoEngine Telemetry Badge */}
-              <div className="bg-[#F7F5F2] p-2.5 rounded-[14px] border border-[#ECE8E2] flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#2FA66A] animate-pulse shrink-0" />
-                <div className="min-w-0">
-                  <div className="text-[11px] font-semibold text-[#1F1F1F] truncate">TripWise GeoEngine v2.5</div>
-                  <div className="text-[10px] font-normal text-[#6B6B6B] truncate">Satellite Geodesic & Overpass API</div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* 2. Compact iOS-Segmented Filter Chips (Premium White Glass Controls rgba(255,255,255,0.92)) */}
-      {availableCategoryFilters.length > 1 && (
-        <div className="absolute top-5 left-5 z-40 max-w-[calc(100%-360px)] overflow-x-auto no-scrollbar pointer-events-auto">
-          <div className="bg-[rgba(255,255,255,0.92)] backdrop-blur-md p-1 rounded-[14px] border border-[rgba(0,0,0,0.06)] shadow-[0_4px_20px_rgba(0,0,0,0.06)] flex items-center gap-1">
-            {availableCategoryFilters.map((filter) => {
-              const isSelected = selectedCategory === filter.id;
-              return (
-                <button
-                  key={filter.id}
-                  type="button"
-                  onClick={() => handleCategorySelect(filter.id)}
-                  className={`h-8 px-3 rounded-[12px] text-[11px] font-medium tracking-tight transition-all duration-300 shrink-0 flex items-center gap-1.5 cursor-pointer active:scale-95 ${
-                    isSelected
-                      ? 'bg-[#FF6B2C] text-white shadow-[0_4px_12px_rgba(255,107,44,0.25)] font-semibold scale-[1.02]'
-                      : 'bg-transparent text-[#1F1F1F] hover:bg-[#F7F5F2] hover:text-[#FF6B2C] hover:-translate-y-0.5'
-                  }`}
-                >
-                  <span className="text-xs">{filter.icon}</span>
-                  <span className="font-medium">{filter.label}</span>
-                  {typeof filter.count === 'number' && (
-                    <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-semibold leading-none ${
-                      isSelected ? 'bg-white/25 text-white' : 'bg-[#ECE8E2] text-[#6B6B6B]'
-                    }`}>
-                      {filter.count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+            )}
           </div>
         </div>
-      )}
+      </div>
 
       {/* 3. Bottom Info Cards (Sleek Dark Cards per user request) */}
       <div className="absolute bottom-5 inset-x-5 z-40 flex items-center justify-between pointer-events-none gap-2">
