@@ -864,7 +864,7 @@ export default function PlannerSidebar({
                         }`}
                       >
                         {selectedDayIndex === idx && (
-                          <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/15 to-transparent pointer-events-none" />
+                          <span className="absolute inset-0 rounded-xl bg-linear-to-r from-white/15 to-transparent pointer-events-none" />
                         )}
                         Day {day.dayNumber || idx + 1}
                       </button>
@@ -890,7 +890,7 @@ export default function PlannerSidebar({
                 {/* Unified Floating Modify / Copilot Drawer with Smooth Pop Animation */}
                 <div className={`w-full transition-all duration-500 ease-in-out overflow-hidden ${
                   showCopilotDrawer || isRefiningDay || refineExplanation
-                    ? 'max-h-[460px] opacity-100 mt-1 mb-2'
+                    ? 'max-h-115 opacity-100 mt-1 mb-2'
                     : 'max-h-0 opacity-0 mt-0 mb-0 pointer-events-none'
                 }`}>
                   <div className="w-full bg-linear-to-r from-[#1C1B1B] via-[#2A2626] to-[#1C1B1B] p-3 rounded-2xl shadow-lg border border-[rgba(255,255,255,0.12)] flex flex-col gap-2.5 relative">
@@ -1089,7 +1089,7 @@ export default function PlannerSidebar({
                 }`}>
                   {/* Point 5: Subtle orange vertical timeline connecting stops */}
                   {itinerary.days?.[selectedDayIndex]?.activities?.length > 1 && (
-                    <div className="absolute left-[34px] top-8 bottom-8 w-[2px] bg-gradient-to-b from-[#FF7A1A]/75 via-[#FF7A1A]/40 to-[#FF7A1A]/15 pointer-events-none z-0" />
+                    <div className="absolute left-8.5 top-8 bottom-8 w-0.5 bg-linear-to-b from-[#FF7A1A]/75 via-[#FF7A1A]/40 to-[#FF7A1A]/15 pointer-events-none z-0" />
                   )}
 
                   {itinerary.days?.[selectedDayIndex]?.activities?.map((act, idx) => {
@@ -1177,7 +1177,7 @@ export default function PlannerSidebar({
                   <button
                     type="button"
                     onClick={onViewItinerary || (() => { if (typeof window !== 'undefined') window.location.href = '/itinerary'; })}
-                    className="group w-full h-12 px-5 rounded-2xl font-bold bg-gradient-to-r from-[#FF6B2C] to-[#E65D20] text-white hover:from-[#FF7A3D] hover:to-[#FF6B2C] transition-all duration-300 ease-out text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-[0_8px_24px_rgba(255,107,44,0.3)] hover:shadow-[0_12px_32px_rgba(255,107,44,0.5)] hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                    className="group w-full h-12 px-5 rounded-2xl font-bold bg-linear-to-r from-[#FF6B2C] to-[#E65D20] text-white hover:from-[#FF7A3D] hover:to-[#FF6B2C] transition-all duration-300 ease-out text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-[0_8px_24px_rgba(255,107,44,0.3)] hover:shadow-[0_12px_32px_rgba(255,107,44,0.5)] hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
                   >
                     <span>📄 Open Full Summary & Printable View</span>
                     <span className="transition-transform duration-300 ease-out group-hover:translate-x-1.5 flex items-center">
