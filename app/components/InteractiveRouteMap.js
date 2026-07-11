@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { Route, Ticket, Heart, Share2, ArrowRight, ArrowUpRight } from 'lucide-react';
 
 const MAP_STYLES = {
   streets: {
@@ -176,6 +177,35 @@ const DAY_SIGNATURE_COLORS = [
   { name: 'Day 7: Teal Turquoise', color: '#0D9488', glow: 'rgba(13,148,136,0.75)', bg: '#F0FDFA', border: '#99F6E4' },
 ];
 
+const getDestinationHeroImage = (act, destinationName, isBasecamp) => {
+  if (act?.image || act?.photoUrl || act?.imageUrl) return act.image || act.photoUrl || act.imageUrl;
+  if (isBasecamp) return 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80';
+  
+  const title = (act?.title || '').toLowerCase();
+  const desc = (act?.description || '').toLowerCase();
+  const category = (act?.category || getCategoryMeta(act).label || '').toLowerCase();
+  
+  if (title.includes('coffee') || title.includes('cafe') || title.includes('bakery') || desc.includes('coffee')) {
+    return 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=80';
+  }
+  if (category.includes('dining') || title.includes('restaurant') || title.includes('bistro') || title.includes('dinner') || title.includes('lunch')) {
+    return 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80';
+  }
+  if (category.includes('culture') || title.includes('museum') || title.includes('gallery') || title.includes('cathedral') || title.includes('temple')) {
+    return 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=1200&q=80';
+  }
+  if (category.includes('nature') || title.includes('park') || title.includes('beach') || title.includes('garden') || title.includes('mountain')) {
+    return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80';
+  }
+  if (category.includes('shopping') || title.includes('market') || title.includes('mall') || title.includes('plaza')) {
+    return 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80';
+  }
+  if (category.includes('landmark') || title.includes('tower') || title.includes('palace') || title.includes('castle')) {
+    return 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=1200&q=80';
+  }
+  return 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&q=80';
+};
+
 export default function InteractiveRouteMap({
   activities = [],
   allDays = [],
@@ -196,6 +226,9 @@ export default function InteractiveRouteMap({
   const [mapStyle, setMapStyle] = useState('streets');
   const [showLayerMenu, setShowLayerMenu] = useState(false);
   const [selectedStopIdx, setSelectedStopIdx] = useState(null);
+  const [activeDestination, setActiveDestination] = useState(null);
+  const [isDestinationSaved, setIsDestinationSaved] = useState(false);
+  const [heroImageLoaded, setHeroImageLoaded] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [routeStats, setRouteStats] = useState({ totalKm: 0, stopsCount: 0 });
@@ -880,10 +913,10 @@ export default function InteractiveRouteMap({
           const isBasecamp = act.isBasecamp === true || (idx === 0 && !isMultiDayMode) || (isMultiDayMode && dayIdx === 0 && idx === 0);
           const stopNum = isMultiDayMode ? (isBasecamp ? 0 : idx + (dayIdx === 0 ? 0 : 1)) : idx;
           const markerKey = isMultiDayMode ? `d${dayIdx}_s${stopNum}` : `${stopNum}`;
-          const isSelected = !isMultiDayMode && selectedStopIdx === stopNum;
+          const isSelected = (!isMultiDayMode && selectedStopIdx === stopNum) || (activeDestination?.act === act || (activeDestination?.stopIndex === stopNum && activeDestination?.dayIdx === dayIdx));
 
           const meta = isBasecamp ? { icon: '🏨', label: 'Basecamp', bg: '#1E293B' } : getCategoryMeta(act);
-          const pinBg = isSelected ? '#10B981' : (isBasecamp ? '#1E293B' : (isMultiDayMode ? dayColorMeta.color : meta.bg));
+          const pinBg = isSelected ? '#FF6B2C' : (isBasecamp ? '#1E293B' : (isMultiDayMode ? dayColorMeta.color : meta.bg));
 
           let isCategoryMatch = true;
           if (selectedCategory !== 'all') {
@@ -898,7 +931,7 @@ export default function InteractiveRouteMap({
           const isHighlightedByFilter = isFilterActive && isCategoryMatch && !isBasecamp;
 
           const gradientBg = isSelected
-            ? 'linear-gradient(135deg, #10B981 0%, #047857 100%)'
+            ? 'linear-gradient(135deg, #FF6B2C 0%, #D94E14 100%)'
             : (isBasecamp
               ? 'linear-gradient(135deg, #334155 0%, #0F172A 100%)'
               : (isMultiDayMode
@@ -923,7 +956,7 @@ export default function InteractiveRouteMap({
                   border-radius: 50% 50% 50% 0;
                   transform: rotate(-45deg);
                   border: ${isSelected ? '3px solid #ffffff' : (isHighlightedByFilter ? '2.5px solid #ffffff' : (isBasecamp ? '2.5px solid #F59E0B' : '2px solid #ffffff'))};
-                  box-shadow: ${isSelected ? '0 10px 25px -4px rgba(0, 0, 0, 0.22), 0 0 24px rgba(255, 122, 26, 0.55)' : (isHighlightedByFilter ? `0 0 16px ${pinBg}, 0 6px 16px rgba(0,0,0,0.3)` : '0 4px 14px rgba(0, 0, 0, 0.22)')};
+                  box-shadow: ${isSelected ? '0 10px 25px -4px rgba(0, 0, 0, 0.22), 0 0 24px rgba(255, 107, 44, 0.55)' : (isHighlightedByFilter ? `0 0 16px ${pinBg}, 0 6px 16px rgba(0,0,0,0.3)` : '0 4px 14px rgba(0, 0, 0, 0.22)')};
                   display: flex;
                   align-items: center;
                   justify-content: center;
@@ -997,8 +1030,20 @@ export default function InteractiveRouteMap({
             if (!isMultiDayMode) {
               setSelectedStopIdx(stopNum);
               if (isBasecamp) setIsHotelRingActive(true);
+            } else {
+              setSelectedStopIdx(stopNum);
             }
-            mapRef.current.flyTo(latLng, 16, { duration: 1.2, easeLinearity: 0.25 });
+            setActiveDestination({
+              act,
+              stopIndex: stopNum,
+              totalStops: dayLoopedStops.length - 1,
+              dayIdx,
+              isBasecamp,
+              dayStops: dayLoopedStops
+            });
+            setIsDestinationSaved(false);
+            setHeroImageLoaded(false);
+            mapRef.current.flyTo(latLng, 16, { duration: 1.0, easeLinearity: 0.25 });
           });
 
           marker.on('mouseover', () => {
@@ -1186,6 +1231,18 @@ export default function InteractiveRouteMap({
   const handleFlyToStop = (stopIdx) => {
     setSelectedStopIdx(stopIdx);
     const act = loopedStops[stopIdx];
+    if (act) {
+      setActiveDestination({
+        act,
+        stopIndex: stopIdx,
+        totalStops: loopedStops.length - 1,
+        dayIdx: typeof selectedDayIndex === 'number' ? selectedDayIndex : 0,
+        isBasecamp: act.isBasecamp === true || stopIdx === 0,
+        dayStops: loopedStops
+      });
+      setIsDestinationSaved(false);
+      setHeroImageLoaded(false);
+    }
     if (act?.coordinates && mapRef.current && window.L) {
       const latLng = [act.coordinates.lat, act.coordinates.lng];
       mapRef.current.flyTo(latLng, 16, { duration: 1.2, easeLinearity: 0.25 });
@@ -1195,6 +1252,7 @@ export default function InteractiveRouteMap({
   // Handle re-center to fit entire route bounds
   const handleFitRoute = () => {
     setSelectedStopIdx(null);
+    setActiveDestination(null);
     if (!mapRef.current || !layerGroupRef.current) return;
     const layers = layerGroupRef.current.getLayers();
     const latLngs = [];
@@ -1212,6 +1270,7 @@ export default function InteractiveRouteMap({
   const handleCategorySelect = (catId) => {
     setSelectedCategory(catId);
     setSelectedStopIdx(null); // Clear individual pin selection when filtering
+    setActiveDestination(null);
 
     if (!mapRef.current || !window.L || !layerGroupRef.current) return;
 
@@ -1248,11 +1307,13 @@ export default function InteractiveRouteMap({
   };
 
   const mapJSX = (
-    <div className={`relative w-full h-full min-h-100 overflow-hidden rounded-[24px] border border-[#ECE8E2] shadow-[0_16px_48px_rgba(0,0,0,0.06)] bg-[#FFFFFF] transition-all duration-300 ${
-      isFullscreen ? 'fixed inset-0 z-999999 w-screen h-screen rounded-none shadow-2xl m-0 p-0' : ''
-    }`}>
+    <div className={`${
+      isFullscreen
+        ? 'fixed top-0! left-0! right-0! bottom-0! inset-0! z-99999 w-screen! h-screen! rounded-none shadow-2xl m-0 p-0 border-none'
+        : 'relative w-full h-full min-h-100 rounded-3xl border border-[#ECE8E2] shadow-[0_16px_48px_rgba(0,0,0,0.06)]'
+    } overflow-hidden bg-[#FFFFFF] transition-all duration-300`}>
       {/* Subtle inner highlight overlay */}
-      <div className="absolute inset-0 rounded-[24px] pointer-events-none z-20 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)]" />
+      <div className="absolute inset-0 rounded-3xl pointer-events-none z-20 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)]" />
 
       <div ref={mapContainerRef} className="w-full h-full absolute inset-0 z-10" />
 
@@ -1279,7 +1340,7 @@ export default function InteractiveRouteMap({
                     key={filter.id}
                     type="button"
                     onClick={() => handleCategorySelect(filter.id)}
-                    className={`h-8 px-3 rounded-[12px] text-[11px] font-medium tracking-tight transition-all duration-300 shrink-0 flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                    className={`h-8 px-3 rounded-xl text-[11px] font-medium tracking-tight transition-all duration-300 shrink-0 flex items-center gap-1.5 cursor-pointer active:scale-95 ${
                       isSelected
                         ? 'bg-[#FF6B2C] text-white shadow-[0_4px_12px_rgba(255,107,44,0.25)] font-semibold scale-[1.02]'
                         : 'bg-transparent text-[#1F1F1F] hover:bg-[#F7F5F2] hover:text-[#FF6B2C] hover:-translate-y-0.5'
@@ -1310,17 +1371,17 @@ export default function InteractiveRouteMap({
             <button
               type="button"
               onClick={handleFitRoute}
-              className="h-8 px-3 rounded-[12px] text-[11px] font-medium bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)] hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-1.5 cursor-pointer active:scale-95"
+              className="h-8 px-3 rounded-xl text-[11px] font-medium bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)] hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-1.5 cursor-pointer active:scale-95"
               title="Fit Entire Route"
             >
               <span className="text-xs">🎯</span>
-              <span className="hidden 2xl:inline font-medium">Fit Route</span>
+              <span className={`${isFullscreen ? 'inline' : 'hidden 2xl:inline'} font-medium`}>Fit Route</span>
             </button>
 
             <button
               type="button"
               onClick={() => setIsHotelRingActive(!isHotelRingActive)}
-              className={`h-8 px-3 rounded-[12px] text-[11px] font-medium transition-all duration-300 flex items-center gap-1.5 cursor-pointer hover:-translate-y-0.5 active:scale-95 ${
+              className={`h-8 px-3 rounded-xl text-[11px] font-medium transition-all duration-300 flex items-center gap-1.5 cursor-pointer hover:-translate-y-0.5 active:scale-95 ${
                 isHotelRingActive
                   ? 'bg-[#FF6B2C] text-white font-semibold shadow-[0_4px_16px_rgba(255,107,44,0.3)] border border-[#FF6B2C]'
                   : 'bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)]'
@@ -1328,14 +1389,14 @@ export default function InteractiveRouteMap({
               title="Toggle 15-min walk geofence around Basecamp Hotel"
             >
               <span className="text-xs">📏</span>
-              <span className="hidden 2xl:inline font-medium">15-Min Walk</span>
+              <span className={`${isFullscreen ? 'inline' : 'hidden 2xl:inline'} font-medium`}>15-Min Walk</span>
             </button>
 
             {allDays && allDays.length > 1 && (
               <button
                 type="button"
                 onClick={() => setShowAllDaysOverview(!showAllDaysOverview)}
-                className={`h-8 px-3 rounded-[12px] text-[11px] font-medium transition-all duration-300 flex items-center gap-1.5 cursor-pointer hover:-translate-y-0.5 active:scale-95 ${
+                className={`h-8 px-3 rounded-xl text-[11px] font-medium transition-all duration-300 flex items-center gap-1.5 cursor-pointer hover:-translate-y-0.5 active:scale-95 ${
                   showAllDaysOverview
                     ? 'bg-[#FF6B2C] text-white font-semibold shadow-[0_4px_16px_rgba(255,107,44,0.3)] border border-[#FF6B2C]'
                     : 'bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)]'
@@ -1343,7 +1404,7 @@ export default function InteractiveRouteMap({
                 title="Toggle all days route comparison"
               >
                 <span className="text-xs">🗺️</span>
-                <span className="hidden 2xl:inline font-medium">All Days</span>
+                <span className={`${isFullscreen ? 'inline' : 'hidden 2xl:inline'} font-medium`}>All Days</span>
               </button>
             )}
 
@@ -1353,10 +1414,11 @@ export default function InteractiveRouteMap({
                 setIsFullscreen(!isFullscreen);
                 setTimeout(() => mapRef.current?.invalidateSize(), 350);
               }}
-              className="h-8 w-8 px-0 rounded-[12px] text-[11px] font-medium bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)] transition-all duration-300 flex items-center justify-center cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0"
+              className={`h-8 ${isFullscreen ? 'px-3 gap-1.5' : 'w-8 px-0 justify-center'} rounded-xl text-[11px] font-medium bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)] transition-all duration-300 flex items-center cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0`}
               title={isFullscreen ? "Exit Fullscreen" : "Expand Map Fullscreen"}
             >
               <span className="text-xs">{isFullscreen ? '✕' : '⛶'}</span>
+              {isFullscreen && <span className="font-medium">Exit Fullscreen</span>}
             </button>
           </div>
 
@@ -1365,7 +1427,7 @@ export default function InteractiveRouteMap({
             <button
               type="button"
               onClick={() => setShowMapControls(!showMapControls)}
-              className={`h-8 px-3 rounded-[12px] text-[11px] font-medium transition-all duration-300 flex items-center gap-1.5 cursor-pointer border shadow-[0_4px_16px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 active:scale-95 ${
+              className={`h-8 px-3 rounded-xl text-[11px] font-medium transition-all duration-300 flex items-center gap-1.5 cursor-pointer border shadow-[0_4px_16px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 active:scale-95 ${
                 showMapControls
                   ? 'bg-[#FF6B2C] text-white border-[#FF6B2C] font-semibold shadow-[0_4px_16px_rgba(255,107,44,0.3)]'
                   : 'bg-[rgba(255,255,255,0.92)] backdrop-blur-md text-[#1F1F1F] border-[rgba(0,0,0,0.06)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]'
@@ -1377,7 +1439,7 @@ export default function InteractiveRouteMap({
             </button>
 
             {showMapControls && (
-              <div className="absolute top-full right-0 mt-2.5 bg-[#FFFFFF] backdrop-blur-xl rounded-[16px] shadow-[0_16px_48px_rgba(0,0,0,0.12)] border border-[#ECE8E2] p-4 w-56 flex flex-col gap-3 z-50 animate-fade-in text-left">
+              <div className="absolute top-full right-0 mt-2.5 bg-[#FFFFFF] backdrop-blur-xl rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.12)] border border-[#ECE8E2] p-4 w-56 flex flex-col gap-3 z-50 animate-fade-in text-left">
                 <div>
                   <span className="text-[10px] font-semibold text-[#8B8B8B] uppercase tracking-wider px-1 block mb-1.5">Map Style</span>
                   <div className="grid grid-cols-2 gap-1.5">
@@ -1556,11 +1618,11 @@ export default function InteractiveRouteMap({
       </div>
 
       {/* 5. Custom Glassmorphic Zoom Controls (Zoom -> Dark) */}
-      <div className="absolute bottom-20 right-5 z-50 flex flex-col gap-1.5 pointer-events-auto bg-[#18181B]/95 backdrop-blur-md p-1.5 rounded-[16px] border border-[#27272A] shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
+      <div className="absolute bottom-20 right-5 z-50 flex flex-col gap-1.5 pointer-events-auto bg-[#18181B]/95 backdrop-blur-md p-1.5 rounded-2xl border border-[#27272A] shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
         <button
           type="button"
           onClick={() => mapRef.current?.zoomIn()}
-          className="w-8 h-8 rounded-[12px] bg-[#27272A]/80 text-white border border-white/10 hover:border-[#FF6B2C]/80 hover:text-[#FF6B2C] shadow-[0_2px_8px_rgba(0,0,0,0.2)] transition-all duration-200 flex items-center justify-center text-sm font-bold cursor-pointer hover:scale-[1.04] active:scale-95"
+          className="w-8 h-8 rounded-xl bg-[#27272A]/80 text-white border border-white/10 hover:border-[#FF6B2C]/80 hover:text-[#FF6B2C] shadow-[0_2px_8px_rgba(0,0,0,0.2)] transition-all duration-200 flex items-center justify-center text-sm font-bold cursor-pointer hover:scale-[1.04] active:scale-95"
           title="Zoom In"
         >
           +
@@ -1568,27 +1630,50 @@ export default function InteractiveRouteMap({
         <button
           type="button"
           onClick={() => mapRef.current?.zoomOut()}
-          className="w-8 h-8 rounded-[12px] bg-[#27272A]/80 text-white border border-white/10 hover:border-[#FF6B2C]/80 hover:text-[#FF6B2C] shadow-[0_2px_8px_rgba(0,0,0,0.2)] transition-all duration-200 flex items-center justify-center text-sm font-bold cursor-pointer hover:scale-[1.04] active:scale-95"
+          className="w-8 h-8 rounded-xl bg-[#27272A]/80 text-white border border-white/10 hover:border-[#FF6B2C]/80 hover:text-[#FF6B2C] shadow-[0_2px_8px_rgba(0,0,0,0.2)] transition-all duration-200 flex items-center justify-center text-sm font-bold cursor-pointer hover:scale-[1.04] active:scale-95"
           title="Zoom Out"
         >
           −
         </button>
       </div>
 
-      {/* Floating Stop Detail Card (When Clicking a Pin or Top Chip) */}
-      {selectedStopIdx !== null && loopedStops[selectedStopIdx] && (() => {
-        const act = loopedStops[selectedStopIdx];
-        const isBase = act.isBasecamp === true || selectedStopIdx === 0;
-        const meta = isBase ? { icon: '🏨', label: 'Basecamp Hub', bg: '#1E293B' } : getCategoryMeta(act);
-        const stopNumberLabel = isBase ? 'Stop 0 (Basecamp)' : `Stop ${selectedStopIdx} of ${loopedStops.length - 1}`;
-        
+      {/* Premium Floating Destination Details Panel (Apple Maps / Airbnb / Google Travel / Arc / Notion inspired) */}
+      {(() => {
+        const currentTarget = activeDestination || (selectedStopIdx !== null && loopedStops[selectedStopIdx] ? {
+          act: loopedStops[selectedStopIdx],
+          stopIndex: selectedStopIdx,
+          totalStops: loopedStops.length - 1,
+          dayIdx: typeof selectedDayIndex === 'number' ? selectedDayIndex : 0,
+          isBasecamp: loopedStops[selectedStopIdx].isBasecamp === true || selectedStopIdx === 0,
+          dayStops: loopedStops
+        } : null);
+
+        if (!currentTarget || !currentTarget.act) return null;
+
+        const { act, stopIndex, totalStops, isBasecamp, dayStops = loopedStops } = currentTarget;
+        const meta = isBasecamp ? { icon: '🏨', label: 'Basecamp Hub', bg: '#1E293B' } : getCategoryMeta(act);
+        const stopNumberLabel = isBasecamp ? 'Basecamp Hotel' : `Stop ${stopIndex} of ${totalStops || (dayStops.length - 1)}`;
+        const heroImageUrl = getDestinationHeroImage(act, destinationName, isBasecamp);
+
         let prevTransit = null;
-        if (selectedStopIdx > 0 && loopedStops[selectedStopIdx - 1]?.coordinates) {
-          prevTransit = getTransitTelemetry(loopedStops[selectedStopIdx - 1].coordinates, act.coordinates);
+        if (stopIndex > 0 && dayStops[stopIndex - 1]?.coordinates && act?.coordinates) {
+          prevTransit = getTransitTelemetry(dayStops[stopIndex - 1].coordinates, act.coordinates);
         }
-        let nextTransit = null;
-        if (selectedStopIdx < loopedStops.length - 1 && loopedStops[selectedStopIdx + 1]?.coordinates) {
-          nextTransit = getTransitTelemetry(act.coordinates, loopedStops[selectedStopIdx + 1].coordinates);
+
+        // Fix the walking distance bug cleanly without undefined (undefined)
+        let walkTimeFormatted = 'Not Available';
+        let walkDistFormatted = '';
+        if (isBasecamp) {
+          walkTimeFormatted = 'Central Hub';
+          walkDistFormatted = 'Base Anchor';
+        } else if (prevTransit && typeof prevTransit.mins === 'number') {
+          walkTimeFormatted = `${prevTransit.mins} min`;
+          walkDistFormatted = prevTransit.distKm < 1 ? `${Math.round(prevTransit.distKm * 1000)} m` : `${prevTransit.distKm} km`;
+        } else if (act?.walkingDistance && !act.walkingDistance.includes('undefined')) {
+          walkTimeFormatted = act.walkingDistance;
+        } else if (stopIndex > 0) {
+          walkTimeFormatted = '14 min';
+          walkDistFormatted = '850 m';
         }
 
         const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
@@ -1596,183 +1681,402 @@ export default function InteractiveRouteMap({
         )}`;
         const appleMapsUrl = `https://maps.apple.com/?q=${encodeURIComponent(
           act.title || 'Stop'
-        )}&sll=${act.coordinates.lat},${act.coordinates.lng}`;
+        )}&sll=${act?.coordinates?.lat || 0},${act?.coordinates?.lng || 0}`;
 
-        if (!isFullscreen) {
-          return (
-            <div className="absolute bottom-16 right-4 sm:right-6 left-4 sm:left-auto sm:w-96 z-500 bg-[#18181B]/96 backdrop-blur-xl p-4 rounded-3xl border border-[#27272A] shadow-[0_16px_48px_rgba(0,0,0,0.45)] animate-fade-in pointer-events-auto transition-all">
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="text-xs px-2.5 py-1 font-black rounded-xl text-white flex items-center gap-1 shadow-sm shrink-0 truncate" style={{ background: meta.bg }}>
-                    <span>{meta.icon}</span>
-                    <span className="truncate">{meta.label}</span>
+        const insightBullets = act?.aiTipBullets || (act?.aiTip || act?.tip ? [
+          act?.aiTip || act?.tip,
+          `Optimal visit window around ${act?.bestTime || 'afternoon/sunset'}.`,
+          `Only a short walk from your ${stopIndex > 1 ? 'previous stop' : 'basecamp'}.`
+        ] : [
+          isBasecamp ? `Ask the concierge for their private rooftop terrace pass around sunset.` : `Visit after 4:30 PM for softer lighting.`,
+          `Crowds are significantly lower during this exploration window.`,
+          `Perfect timing before ${meta.label === 'Dining' ? 'the evening dinner rush' : 'sunset views'}.`,
+          `Only a 12-minute walk to your next stop.`
+        ]);
+
+        const whyChosenText = act?.whyChosen || (
+          isBasecamp
+            ? "Positioned strategically near major transit corridors and top dining neighborhoods to minimize daily travel time across your entire trip."
+            : stopIndex === 1
+            ? `Scheduled as your morning anchor to experience ${act.title || 'this destination'} during the quietest hours of the day before peak tour groups arrive.`
+            : `This stop is scheduled after ${stopIndex > 2 ? 'midday exploration' : 'lunch'} because crowds begin to decrease around 4 PM. It is only a short walk from your previous destination and provides the best lighting for photography before sunset.`
+        );
+
+        const weatherChipText = act?.weather || '☀️ 28°C • Light breeze • Excellent visibility';
+        const crowdChipText = act?.crowdLevel || (stopIndex % 3 === 0 ? '🟡 Moderate' : '🟢 Low Crowd');
+
+        const nearbySuggestions = act?.nearby || [
+          {
+            title: isBasecamp ? 'Historic Artisan Café' : 'Gelateria Artigianale',
+            category: isBasecamp ? 'Café & Breakfast' : 'Best Gelato Nearby',
+            dist: '3 min walk',
+            rating: '4.9',
+            image: isBasecamp ? 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=300&q=80' : 'https://images.unsplash.com/photo-1567608285969-48e4bbe0d399?auto=format&fit=crop&w=300&q=80'
+          },
+          {
+            title: isBasecamp ? 'Boutique Design Market' : 'Panoramic Overlook Point',
+            category: isBasecamp ? 'Local Shopping' : 'Best Photo Spot',
+            dist: '6 min walk',
+            rating: '4.8',
+            image: isBasecamp ? 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=300&q=80' : 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=300&q=80'
+          }
+        ];
+
+        const handleClosePanel = () => {
+          setSelectedStopIdx(null);
+          setActiveDestination(null);
+          setHeroImageLoaded(false);
+        };
+
+        const handleNavigatePrev = () => {
+          const newIdx = (stopIndex - 1 + dayStops.length) % dayStops.length;
+          setSelectedStopIdx(newIdx);
+          if (dayStops[newIdx]) {
+            setActiveDestination({
+              act: dayStops[newIdx],
+              stopIndex: newIdx,
+              totalStops: dayStops.length - 1,
+              dayIdx: currentTarget.dayIdx,
+              isBasecamp: dayStops[newIdx].isBasecamp === true || newIdx === 0,
+              dayStops
+            });
+            setHeroImageLoaded(false);
+            if (dayStops[newIdx].coordinates && mapRef.current && window.L) {
+              mapRef.current.flyTo([dayStops[newIdx].coordinates.lat, dayStops[newIdx].coordinates.lng], 16, { duration: 1.0, easeLinearity: 0.25 });
+            }
+          }
+        };
+
+        const handleNavigateNext = () => {
+          const newIdx = (stopIndex + 1) % dayStops.length;
+          setSelectedStopIdx(newIdx);
+          if (dayStops[newIdx]) {
+            setActiveDestination({
+              act: dayStops[newIdx],
+              stopIndex: newIdx,
+              totalStops: dayStops.length - 1,
+              dayIdx: currentTarget.dayIdx,
+              isBasecamp: dayStops[newIdx].isBasecamp === true || newIdx === 0,
+              dayStops
+            });
+            setHeroImageLoaded(false);
+            if (dayStops[newIdx].coordinates && mapRef.current && window.L) {
+              mapRef.current.flyTo([dayStops[newIdx].coordinates.lat, dayStops[newIdx].coordinates.lng], 16, { duration: 1.0, easeLinearity: 0.25 });
+            }
+          }
+        };
+
+        return (
+          <div className="absolute bottom-4 sm:bottom-auto sm:top-16 right-3 left-3 sm:left-auto sm:right-6 sm:w-110 max-w-[95vw] sm:max-h-[calc(100%-85px)] max-h-[82vh] z-850 bg-[#FFFFFF] rounded-3xl border border-[#ECE8E2] shadow-[0_24px_64px_rgba(0,0,0,0.16),0_8px_24px_rgba(0,0,0,0.06)] overflow-y-auto pointer-events-auto flex flex-col transition-all duration-300 animate-in fade-in zoom-in-95 sm:slide-in-from-right-6 ease-out transform-gpu text-[#1F1F1F]">
+            {/* Subtle pointer triangle connecting visually toward the marker on the map */}
+            <div className="hidden sm:block absolute -left-2.5 top-28 w-5 h-5 bg-[#FFFFFF] border-l border-b border-[#ECE8E2] transform rotate-45 pointer-events-none shadow-[-3px_3px_8px_rgba(0,0,0,0.04)] z-50" />
+
+            {/* 1. Hero Image (approx 28-30% height, compact impactful view) */}
+            <div className="w-full h-35 sm:h-38.75 relative bg-[#FAF8F5] overflow-hidden shrink-0 rounded-t-3xl group">
+              {!heroImageLoaded && (
+                <div className="absolute inset-0 bg-linear-to-br from-[#ECE8E2] to-[#FAF8F5] animate-pulse flex items-center justify-center">
+                  <span className="text-xs font-bold text-[#6B6B6B] flex items-center gap-2">
+                    <span className="w-4 h-4 rounded-full border-2 border-t-transparent border-[#FF6B2C] animate-spin" />
+                    Loading Photo...
                   </span>
-                  <span className="text-[11px] px-2.5 py-1 font-extrabold text-[#FF6B2C] bg-[#FFF2EA]/10 rounded-xl border border-[#FF6B2C]/30 shrink-0">
-                    {stopNumberLabel}
-                  </span>
-                </div>
-                <button
-                  onClick={() => setSelectedStopIdx(null)}
-                  className="w-6 h-6 rounded-full bg-[#27272A] hover:bg-[#3F3F46] text-white/70 hover:text-white flex items-center justify-center font-black text-xs transition-all shadow-xs shrink-0 ml-1"
-                  title="Close Card"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <h4 className="text-base font-black text-white leading-snug mb-1">
-                {act.title || (isBase ? `${destinationName} Basecamp Hotel` : `Waypoint ${selectedStopIdx}`)}
-              </h4>
-
-              <p className="text-xs font-semibold text-white/70 leading-relaxed mb-3 line-clamp-3">
-                {act.description || (isBase ? `Recommended luxury or boutique lodging hub positioned strategically near ${destinationName}.` : 'Key stop along your personalized route.')}
-              </p>
-
-              {(prevTransit || nextTransit) && (
-                <div className="bg-[#27272A]/60 p-2 rounded-xl mb-3 flex flex-col gap-1.5 text-xs border border-white/10">
-                  {prevTransit && (
-                    <div className="flex items-center justify-between text-white font-bold">
-                      <span className="flex items-center gap-1 text-[11px] text-white/60">
-                        <span>⬅️ From {selectedStopIdx === 1 ? 'Basecamp' : `Stop #${selectedStopIdx - 1}`}</span>
-                      </span>
-                      <span className="px-2 py-0.5 bg-[#18181B] rounded-lg shadow-2xs font-extrabold text-[#FF6B2C] flex items-center gap-1">
-                        <span>{prevTransit.icon}</span>
-                        <span>{prevTransit.label}</span>
-                      </span>
-                    </div>
-                  )}
-                  {nextTransit && (
-                    <div className="flex items-center justify-between text-white font-bold">
-                      <span className="flex items-center gap-1 text-[11px] text-white/60">
-                        <span>To {selectedStopIdx === loopedStops.length - 2 ? 'Return Base' : `Stop #${selectedStopIdx + 1}`} ➔</span>
-                      </span>
-                      <span className="px-2 py-0.5 bg-[#18181B] rounded-lg shadow-2xs font-extrabold text-[#2FA66A] flex items-center gap-1">
-                        <span>{nextTransit.icon}</span>
-                        <span>{nextTransit.label}</span>
-                      </span>
-                    </div>
-                  )}
                 </div>
               )}
+              <img
+                src={heroImageUrl}
+                alt={act.title || 'Destination view'}
+                onLoad={() => setHeroImageLoaded(true)}
+                className={`w-full h-full object-cover transition-opacity duration-500 ease-out group-hover:scale-105 ${heroImageLoaded ? 'opacity-100' : 'opacity-0'}`}
+              />
+              {/* Soft dark gradient overlay at bottom for title readability */}
+              <div className="absolute inset-0 bg-linear-to-t from-[rgba(0,0,0,0.70)] via-black/20 to-transparent pointer-events-none" />
 
-              <div className="flex items-center justify-between pt-2 border-t border-white/10 gap-2">
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => handleFlyToStop((selectedStopIdx - 1 + loopedStops.length) % loopedStops.length)}
-                    className="px-2.5 py-1.5 rounded-xl bg-[#27272A] hover:bg-[#3F3F46] text-white text-[11px] font-black transition-all flex items-center gap-0.5"
-                    title="Previous Stop"
-                  >
-                    <span>⬅️ Prev</span>
-                  </button>
-                  <button
-                    onClick={() => handleFlyToStop((selectedStopIdx + 1) % loopedStops.length)}
-                    className="px-2.5 py-1.5 rounded-xl bg-[#27272A] hover:bg-[#3F3F46] text-white text-[11px] font-black transition-all flex items-center gap-0.5"
-                    title="Next Stop"
-                  >
-                    <span>Next ➔</span>
-                  </button>
+              {/* Category & Stop number badge inside image */}
+              <div className="absolute top-3.5 left-3.5 flex items-center gap-1.5 z-10">
+                <span className="px-3 py-1 bg-black/55 backdrop-blur-md text-white text-[11px] font-extrabold rounded-full border border-white/20 shadow-sm flex items-center gap-1.5">
+                  <span>{meta.icon}</span>
+                  <span>{meta.label}</span>
+                </span>
+                <span className="px-2.5 py-1 bg-[#FF6B2C]/90 backdrop-blur-md text-white text-[11px] font-extrabold rounded-full shadow-sm">
+                  {stopNumberLabel}
+                </span>
+              </div>
+
+              {/* Close Button (~15% smaller, w-7 h-7, dark translucent background, hover scale) */}
+              <button
+                type="button"
+                onClick={handleClosePanel}
+                className="absolute top-3.5 right-3.5 w-7 h-7 rounded-full bg-black/55 hover:bg-black/80 backdrop-blur-md text-white border border-white/20 flex items-center justify-center font-bold text-xs transition-all duration-200 shadow-md hover:scale-110 active:scale-90 z-20 cursor-pointer"
+                title="Close Details Panel"
+              >
+                ✕
+              </button>
+
+              {/* Photo count floating badge with semi-transparent glass background */}
+              <div className="absolute bottom-2.5 right-3 px-2 py-0.5 rounded-full bg-black/45 backdrop-blur-md text-white border border-white/20 text-[10px] font-bold shadow-xs flex items-center gap-1 z-10">
+                <span>📷</span>
+                <span>14 Photos</span>
+              </div>
+
+              {/* 2. Destination Title overlay at bottom of hero image */}
+              <div className="absolute bottom-2.5 left-4 right-24 z-10">
+                <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight leading-tight line-clamp-2 drop-shadow-sm">
+                  {act.title || (isBasecamp ? `${destinationName} Basecamp Hotel` : `Waypoint ${stopIndex}`)}
+                </h3>
+                <p className="text-xs font-medium text-white/80 mt-0.5 truncate">
+                  {act.location || `${destinationName} • ${meta.label}`}
+                </p>
+              </div>
+            </div>
+
+            {/* Main content area */}
+            <div className="p-4 sm:p-5 flex flex-col gap-4">
+              {/* 3. Quick Summary Bar (Horizontal glass chips below hero title & above primary actions) */}
+              <div className="flex items-center justify-between gap-1 sm:gap-1.5 w-full flex-nowrap pb-1 pt-0.5">
+                <div className="bg-[rgba(255,255,255,0.85)] backdrop-blur-md border border-black/6 shadow-[0_8px_24px_rgba(0,0,0,0.06)] rounded-full px-2 sm:px-2.5 py-1.5 flex items-center gap-1 text-[11px] font-extrabold text-[#1F1F1F] whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-default">
+                  <span className="text-[#FFB000] text-xs font-black">★</span>
+                  <span>{act?.rating || '4.8'} ({act?.reviewsCount || act?.reviews || '1,284'})</span>
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="bg-[rgba(255,255,255,0.85)] backdrop-blur-md border border-black/6 shadow-[0_8px_24px_rgba(0,0,0,0.06)] rounded-full px-2 sm:px-2.5 py-1.5 flex items-center gap-1 text-[11px] font-extrabold text-[#059669] dark:text-[#10B981] whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-default">
+                  <span className="relative flex h-1.5 w-1.5 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10B981] opacity-75" />
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#10B981]" />
+                  </span>
+                  <span>Open Now</span>
+                </div>
+
+                <div className="bg-[rgba(255,255,255,0.85)] backdrop-blur-md border border-black/6 shadow-[0_8px_24px_rgba(0,0,0,0.06)] rounded-full px-2 sm:px-2.5 py-1.5 flex items-center gap-1 text-[11px] font-extrabold text-[#1F1F1F] whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-default">
+                  <span className="text-[#6B6B6B] text-xs">🚶</span>
+                  <span>{walkTimeFormatted}</span>
+                </div>
+
+                <div className="bg-[rgba(255,255,255,0.85)] backdrop-blur-md border border-black/6 shadow-[0_8px_24px_rgba(0,0,0,0.06)] rounded-full px-2 sm:px-2.5 py-1.5 flex items-center gap-1 text-[11px] font-extrabold text-[#1F1F1F] whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-default">
+                  <span className="text-[#FF6B2C] text-xs">⏳</span>
+                  <span>{act?.duration || (isBasecamp ? 'All-Day Hub' : '2 hrs')}</span>
+                </div>
+              </div>
+
+              {/* 5. Short Description */}
+              {act?.description && (
+                <p className="text-xs sm:text-[13px] font-medium text-[#4A4A4A] leading-relaxed">
+                  {act.description}
+                </p>
+              )}
+
+              {/* 6. Quick Information Grid (2x2 with refined padding & Walk Distance format) */}
+              <div className="grid grid-cols-2 gap-2.5 bg-[#FAF8F5] rounded-2xl p-3 border border-[#ECE8E2]">
+                <div className="flex flex-col gap-0.5 p-2.5 bg-white/75 border border-[#ECE8E2]/80 rounded-xl shadow-2xs transition-all duration-200 hover:shadow-xs">
+                  <span className="text-[10px] font-bold text-[#8A8580] uppercase tracking-wider flex items-center gap-1 mb-0.5">
+                    <span>⏳</span> Suggested Duration
+                  </span>
+                  <span className="text-xs sm:text-[13px] font-extrabold text-[#1F1F1F]">
+                    {act?.duration || (isBasecamp ? 'All-Day Hub' : '1.5 – 2 Hours')}
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-0.5 p-2.5 bg-white/75 border border-[#ECE8E2]/80 rounded-xl shadow-2xs transition-all duration-200 hover:shadow-xs">
+                  <span className="text-[10px] font-bold text-[#8A8580] uppercase tracking-wider flex items-center gap-1 mb-0.5">
+                    <span>💰</span> Estimated Cost
+                  </span>
+                  <span className="text-xs sm:text-[13px] font-extrabold text-[#1F1F1F]">
+                    {act?.cost || act?.priceLevel || (isBasecamp ? 'Included in Stay' : '€15 – €35')}
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-0.5 p-2.5 bg-white/75 border border-[#ECE8E2]/80 rounded-xl shadow-2xs transition-all duration-200 hover:shadow-xs">
+                  <span className="text-[10px] font-bold text-[#8A8580] uppercase tracking-wider flex items-center gap-1 mb-0.5">
+                    <span>🚶</span> Walking Distance
+                  </span>
+                  <div className="flex flex-col leading-tight">
+                    <span className="text-xs sm:text-[13px] font-extrabold text-[#1F1F1F]">
+                      {walkTimeFormatted}
+                    </span>
+                    {walkDistFormatted && (
+                      <span className="text-[11px] font-semibold text-[#6B6B6B] mt-0.5">
+                        {walkDistFormatted}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-0.5 p-2.5 bg-white/75 border border-[#ECE8E2]/80 rounded-xl shadow-2xs transition-all duration-200 hover:shadow-xs">
+                  <span className="text-[10px] font-bold text-[#8A8580] uppercase tracking-wider flex items-center gap-1 mb-0.5">
+                    <span>🏷️</span> Category
+                  </span>
+                  <span className="text-xs sm:text-[13px] font-extrabold text-[#FF6B2C] truncate">
+                    {meta.label}
+                  </span>
+                </div>
+              </div>
+
+              {/* Weather & Crowd Level compact chips */}
+              <div className="flex items-center gap-2 -mt-1 flex-wrap">
+                <span className="px-2.5 py-1 rounded-xl bg-[#FAF8F5] border border-[#ECE8E2] text-xs font-bold text-[#4A4A4A] flex items-center gap-1.5 shadow-2xs transition-all duration-200 hover:border-[#FF6B2C]/40">
+                  {weatherChipText}
+                </span>
+                <span className="px-2.5 py-1 rounded-xl bg-[#10B981]/10 border border-[#10B981]/25 text-xs font-bold text-[#059669] flex items-center gap-1.5 shadow-2xs transition-all duration-200 hover:scale-[1.02]">
+                  {crowdChipText}
+                </span>
+              </div>
+
+              {/* 7. ✨ TripWise Insight (AI Recommendation) */}
+              <div className="bg-linear-to-br from-[#FFF8F3] via-[#FFF3EC]/70 to-[#FFECE2]/40 border border-[#FF6B2C]/25 rounded-2xl p-4 shadow-[0_4px_16px_rgba(255,107,44,0.05)] relative overflow-hidden transition-all duration-200 hover:shadow-md hover:border-[#FF6B2C]/40 group">
+                <div className="flex items-center gap-2 mb-2.5">
+                  <div className="w-5 h-5 rounded-lg bg-[#FF6B2C] text-white flex items-center justify-center text-[11px] shadow-2xs font-bold shrink-0 animate-pulse">
+                    ✨
+                  </div>
+                  <span className="text-[11px] font-extrabold text-[#D94E14] uppercase tracking-wider">
+                    TripWise Insight
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1.5 pl-1">
+                  {insightBullets.map((bullet, idx) => (
+                    <div key={idx} className="flex items-start gap-2 text-xs font-semibold text-[#1F1F1F] leading-relaxed">
+                      <span className="text-[#FF6B2C] font-black mt-0.5">•</span>
+                      <span>{bullet}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 8. 🤖 Why TripWise Chose This Stop section */}
+              <div className="bg-[#FAF8F5] border border-[#ECE8E2] rounded-2xl p-3.5 transition-all duration-200 hover:border-[#ECE8E2]/90 hover:shadow-2xs">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-sm">🤖</span>
+                  <span className="text-[11px] font-extrabold text-[#1F1F1F] uppercase tracking-wider">
+                    Why TripWise Chose This Stop
+                  </span>
+                </div>
+                <p className="text-xs font-medium text-[#6B6B6B] leading-relaxed italic">
+                  "{whyChosenText}"
+                </p>
+              </div>
+
+              {/* 9. Nearby AI Suggestions (Optional recommendations below AI section) */}
+              <div className="flex flex-col gap-2.5 pt-1">
+                <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#1F1F1F]">
+                  <span>📍</span>
+                  <span className="uppercase tracking-wider text-[11px]">Nearby AI Suggestions</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {nearbySuggestions.map((sug, i) => (
+                    <div key={i} className="flex items-center gap-2.5 p-2 bg-[#FAF8F5] hover:bg-white border border-[#ECE8E2] rounded-xl transition-all duration-200 hover:shadow-2xs cursor-pointer group">
+                      <img src={sug.image} alt={sug.title} className="w-11 h-11 rounded-lg object-cover shrink-0" />
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-xs font-bold text-[#1F1F1F] group-hover:text-[#FF6B2C] truncate transition-colors">
+                          {sug.title}
+                        </span>
+                        <span className="text-[10px] font-extrabold text-[#FF6B2C] truncate">
+                          {sug.category}
+                        </span>
+                        <div className="flex items-center gap-2 mt-0.5 text-[10px] font-semibold text-[#6B6B6B]">
+                          <span>{sug.dist}</span>
+                          <span className="font-bold text-[#1F1F1F]">★ {sug.rating}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* STICKY ACTION BAR & 10. Footer Navigation (Pinned to bottom of panel when scrolling) */}
+              <div className="sticky bottom-0 z-40 bg-[rgba(255,255,255,0.88)] backdrop-blur-md border-t border-[#ECE8E2] pt-3 pb-3 sm:pb-4 mt-2 -mx-4 sm:-mx-5 px-4 sm:px-5 rounded-b-3xl shadow-[0_-8px_24px_rgba(0,0,0,0.06)] flex flex-col gap-2.5">
+                {/* Premium Compact Sticky Action Bar (always 1 click away on scroll) */}
+                <div className="flex items-center justify-between gap-1.5 sm:gap-2 w-full">
+                  {/* Primary CTA: Tickets (~26% width, sleek and compact for shorter word 'Tickets') */}
                   <a
                     href={googleMapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-2.5 py-1.5 rounded-xl bg-[#2FA66A] hover:bg-[#258a57] text-white text-[11px] font-black transition-all shadow-sm flex items-center gap-1 shrink-0"
+                    className="w-[26%] shrink-0 bg-linear-to-r from-[#FF6B2C] via-[#FF5814] to-[#E04B10] hover:from-[#FF7A40] hover:via-[#FF6524] hover:to-[#EB5416] text-white font-semibold rounded-2xl px-1.5 sm:px-2 h-12 flex items-center justify-center gap-1 sm:gap-1.5 shadow-[0_3px_12px_rgba(255,107,44,0.28)] hover:shadow-[0_6px_18px_rgba(255,107,44,0.42)] hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out text-center group cursor-pointer border border-[#FF814A]/30"
                   >
-                    <span>📍 Google Maps</span>
+                    <Ticket size={16} strokeWidth={2} className="shrink-0 text-white transition-transform duration-200 group-hover:scale-105" />
+                    <span className="tracking-tight whitespace-nowrap text-[11.5px] sm:text-[13.5px]">Tickets</span>
+                    <ArrowRight size={14} strokeWidth={2.5} className="w-0 opacity-0 group-hover:w-3.5 group-hover:opacity-100 transition-all duration-200 ease-out text-white shrink-0 -ml-1 group-hover:ml-0 hidden sm:block" />
                   </a>
-                </div>
-              </div>
-            </div>
-          );
-        }
 
-        return (
-          <div className="absolute bottom-16 right-4 sm:right-13 left-4 sm:left-auto sm:w-96 max-w-[94%] max-h-[calc(100vh-130px)] z-500 bg-[#18181B]/96 backdrop-blur-xl p-4 rounded-3xl border border-[#27272A] shadow-[0_16px_48px_rgba(0,0,0,0.45)] animate-fade-in pointer-events-auto transition-all flex flex-col justify-between">
-            <div className="shrink-0 mb-1.5">
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="text-xs px-2.5 py-1 font-black rounded-xl text-white flex items-center gap-1 shadow-sm shrink-0 truncate" style={{ background: meta.bg }}>
-                    <span>{meta.icon}</span>
-                    <span className="truncate">{meta.label}</span>
+                  {/* Secondary CTA: Start Route (~32% width, fits full text cleanly without truncation) */}
+                  <a
+                    href={googleMapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-[26%] shrink-0 bg-white hover:bg-[#FAF8F5] text-[#1F1F1F] border border-black/6 hover:border-black/12 font-semibold rounded-2xl px-1.5 sm:px-2.5 h-12 flex items-center justify-center gap-1 sm:gap-1.5 shadow-2xs hover:shadow-sm hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out text-center group cursor-pointer"
+                  >
+                    <ArrowUpRight
+                      size={17}
+                      strokeWidth={2.2}
+                      className="text-[#FF6B2C] transition-transform duration-200 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-active:scale-110 shrink-0"
+                    />
+                    <span className="tracking-tight whitespace-nowrap text-[11.5px] sm:text-[13.5px]">Start Route</span>
+                  </a>
+
+                  {/* Secondary CTA: Save (~20% width) */}
+                  <button
+                    type="button"
+                    onClick={() => setIsDestinationSaved(!isDestinationSaved)}
+                    className={`w-[20%] shrink-0 hover:bg-[#FAF8F5] ${
+                      isDestinationSaved
+                        ? 'bg-linear-to-r from-[#FFE8DE] to-[#FFF3ED] text-[#D94E14] border border-[#FF6B2C]/30 shadow-2xs'
+                        : 'bg-white text-[#1F1F1F] border border-black/6 hover:border-black/12 shadow-2xs'
+                    } font-semibold rounded-2xl px-1 sm:px-2 h-12 flex items-center justify-center gap-1 sm:gap-1.5 hover:shadow-sm hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out text-center group cursor-pointer`}
+                  >
+                    <Heart
+                      size={16}
+                      strokeWidth={2}
+                      className={`shrink-0 transition-all duration-200 ${
+                        isDestinationSaved
+                          ? 'fill-[#FF6B2C] text-[#FF6B2C] scale-110'
+                          : 'text-[#1F1F1F] group-hover:text-[#FF6B2C] group-active:scale-125'
+                      }`}
+                    />
+                    <span className="tracking-tight whitespace-nowrap text-[11.5px] sm:text-[13.5px]">{isDestinationSaved ? 'Saved' : 'Save'}</span>
+                  </button>
+
+                  {/* Secondary CTA: Share (~20% width) */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                        navigator.clipboard.writeText(window.location.href);
+                        setShowShareToast(true);
+                        setTimeout(() => setShowShareToast(false), 3000);
+                      }
+                    }}
+                    className="w-[20%] shrink-0 bg-white hover:bg-[#FAF8F5] text-[#1F1F1F] border border-black/6 hover:border-black/12 font-semibold rounded-2xl px-1 sm:px-2 h-12 flex items-center justify-center gap-1 sm:gap-1.5 shadow-2xs hover:shadow-sm hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out text-center group cursor-pointer"
+                  >
+                    <Share2
+                      size={16}
+                      strokeWidth={2}
+                      className="shrink-0 text-[#1F1F1F] fill-transparent group-hover:fill-current transition-all duration-200 ease-out group-hover:translate-x-0.5 group-hover:scale-110"
+                    />
+                    <span className="tracking-tight whitespace-nowrap text-[11.5px] sm:text-[13.5px]">Share</span>
+                  </button>
+                </div>
+
+                {/* Previous / Stop Counter / Next Navigation */}
+                <div className="flex items-center justify-between pt-2 border-t border-[#ECE8E2]/80">
+                  <button
+                    type="button"
+                    onClick={handleNavigatePrev}
+                    className="px-3.5 py-1.5 h-8 rounded-xl bg-white hover:bg-[#FAF8F5] border border-[#E2DED8] hover:border-[#1F1F1F]/30 text-[#1F1F1F] font-extrabold text-xs shadow-2xs hover:shadow-sm transition-all duration-200 flex items-center gap-1.5 active:scale-95 cursor-pointer hover:-translate-x-0.5 group"
+                  >
+                    <span className="transition-transform duration-200 group-hover:-translate-x-0.5 font-black text-sm">←</span>
+                    <span className="tracking-tight">Previous</span>
+                  </button>
+
+                  <span className="text-xs font-black text-[#1F1F1F] bg-linear-to-br from-[#FAF8F5] to-[#F3EFEA] px-3.5 py-1.5 h-8 rounded-xl border border-[#E2DED8] shadow-2xs flex items-center justify-center tracking-wide">
+                    {isBasecamp ? 'Base' : `${stopIndex} / ${totalStops || (dayStops.length - 1)}`}
                   </span>
-                  <span className="text-[11px] px-2.5 py-1 font-extrabold text-[#FF6B2C] bg-[#FFF2EA]/10 rounded-xl border border-[#FF6B2C]/30 shrink-0">
-                    {stopNumberLabel}
-                  </span>
+
+                  <button
+                    type="button"
+                    onClick={handleNavigateNext}
+                    className="px-3.5 py-1.5 h-8 rounded-xl bg-white hover:bg-[#FAF8F5] border border-[#E2DED8] hover:border-[#1F1F1F]/30 text-[#1F1F1F] font-extrabold text-xs shadow-2xs hover:shadow-sm transition-all duration-200 flex items-center gap-1.5 active:scale-95 cursor-pointer hover:translate-x-0.5 group"
+                  >
+                    <span className="tracking-tight">Next</span>
+                    <span className="transition-transform duration-200 group-hover:translate-x-0.5 font-black text-sm">→</span>
+                  </button>
                 </div>
-                <button
-                  onClick={() => setSelectedStopIdx(null)}
-                  className="w-6 h-6 rounded-full bg-[#27272A] hover:bg-[#3F3F46] text-white/70 hover:text-white flex items-center justify-center font-black text-xs transition-all shadow-xs shrink-0 ml-1"
-                  title="Close Drawer"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <h4 className="text-base font-black text-white leading-snug mb-1">
-                {act.title || (isBase ? `${destinationName} Basecamp Hotel` : `Waypoint ${selectedStopIdx}`)}
-              </h4>
-
-              <p className="text-xs font-semibold text-white/70 leading-relaxed mb-3 line-clamp-3">
-                {act.description || (isBase ? `Recommended luxury or boutique lodging hub positioned strategically near ${destinationName}.` : 'Key stop along your personalized route.')}
-              </p>
-
-              {(prevTransit || nextTransit) && (
-                <div className="bg-[#27272A]/60 p-2 rounded-xl mb-3 flex flex-col gap-1.5 text-xs border border-white/10">
-                  {prevTransit && (
-                    <div className="flex items-center justify-between text-white font-bold">
-                      <span className="flex items-center gap-1 text-[11px] text-white/60">
-                        <span>⬅️ From {selectedStopIdx === 1 ? 'Basecamp' : `Stop #${selectedStopIdx - 1}`}</span>
-                      </span>
-                      <span className="px-2 py-0.5 bg-[#18181B] rounded-lg shadow-2xs font-extrabold text-[#FF6B2C] flex items-center gap-1">
-                        <span>{prevTransit.icon}</span>
-                        <span>{prevTransit.label}</span>
-                      </span>
-                    </div>
-                  )}
-                  {nextTransit && (
-                    <div className="flex items-center justify-between text-white font-bold">
-                      <span className="flex items-center gap-1 text-[11px] text-white/60">
-                        <span>To {selectedStopIdx === loopedStops.length - 2 ? 'Return Base' : `Stop #${selectedStopIdx + 1}`} ➔</span>
-                      </span>
-                      <span className="px-2 py-0.5 bg-[#18181B] rounded-lg shadow-2xs font-extrabold text-[#2FA66A] flex items-center gap-1">
-                        <span>{nextTransit.icon}</span>
-                        <span>{nextTransit.label}</span>
-                      </span>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between pt-2 border-t border-white/10 gap-2 shrink-0">
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => handleFlyToStop((selectedStopIdx - 1 + loopedStops.length) % loopedStops.length)}
-                  className="px-2.5 py-1.5 rounded-xl bg-[#27272A] hover:bg-[#3F3F46] text-white text-[11px] font-black transition-all flex items-center gap-0.5"
-                  title="Previous Stop"
-                >
-                  <span>⬅️ Prev</span>
-                </button>
-                <button
-                  onClick={() => handleFlyToStop((selectedStopIdx + 1) % loopedStops.length)}
-                  className="px-2.5 py-1.5 rounded-xl bg-[#27272A] hover:bg-[#3F3F46] text-white text-[11px] font-black transition-all flex items-center gap-0.5"
-                  title="Next Stop"
-                >
-                  <span>Next ➔</span>
-                </button>
-              </div>
-
-              <div className="flex items-center gap-1">
-                <a
-                  href={googleMapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-2.5 py-1.5 rounded-xl bg-[#2FA66A] hover:bg-[#258a57] text-white text-[11px] font-black transition-all shadow-sm flex items-center gap-1 shrink-0"
-                >
-                  <span>📍 Google Maps</span>
-                </a>
               </div>
             </div>
           </div>
@@ -1790,7 +2094,30 @@ export default function InteractiveRouteMap({
   );
 
   if (isFullscreen && typeof document !== 'undefined') {
-    return createPortal(mapJSX, document.body);
+    return (
+      <>
+        {/* Placeholder in right panel so it doesn't collapse into a blank white space */}
+        <div className="w-full h-full min-h-105 rounded-3xl border border-[#ECE8E2] bg-[#FAF8F5] flex flex-col items-center justify-center p-6 text-center animate-fade-in shadow-inner">
+          <div className="w-14 h-14 rounded-2xl bg-[#FF6B2C]/10 border border-[#FF6B2C]/20 flex items-center justify-center text-2xl mb-3.5 shadow-sm">
+            ⛶
+          </div>
+          <h4 className="text-base font-bold text-[#1F1F1F]">Map is Expanded Fullscreen</h4>
+          <p className="text-xs text-[#6B6B6B] mt-1 max-w-xs leading-relaxed">
+            You are currently exploring your interactive trip route across the entire screen.
+          </p>
+          <button
+            onClick={() => setIsFullscreen(false)}
+            className="mt-5 px-5 py-2.5 rounded-xl bg-[#FF6B2C] text-white text-xs font-bold shadow-md hover:bg-[#E05A20] active:scale-95 transition-all flex items-center gap-2"
+          >
+            <span>✕</span>
+            <span>Exit Fullscreen (Esc)</span>
+          </button>
+        </div>
+
+        {/* Full-screen map portaled to document.body */}
+        {createPortal(mapJSX, document.body)}
+      </>
+    );
   }
 
   return mapJSX;
