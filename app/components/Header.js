@@ -1,9 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 
 function Header() {
     const [isScrolled, setIsScrolled] = useState(false)
+    const pathname = usePathname()
+    const isLightPage = pathname?.startsWith('/itinerary') || pathname?.startsWith('/planner')
 
     useEffect(() => {
         const handleScroll = () => {
@@ -30,20 +33,25 @@ function Header() {
     }, [])
 
     return (
-        <header className={`fixed left-0 right-0 z-50 transition-all duration-500 ease-in-out mx-auto backdrop-blur-md border border-white/10 rounded-full ${isScrolled
-                ? "top-2 max-w-4xl w-[calc(100%-4rem)] bg-[#0C0C0E]/95 shadow-2xl shadow-black/40"
-                : "top-4 max-w-7xl w-[calc(100%-2rem)] bg-[#0C0C0E]/90 shadow-xl shadow-black/20"
-            }`}>
-            <div className="px-6 flex items-center justify-between md:grid md:grid-cols-3 transition-all duration-500 ease-in-out h-15">
+        <header className={`fixed left-0 right-0 z-50 transition-all duration-500 ease-out mx-auto backdrop-blur-2xl border rounded-full ${
+            isScrolled
+                ? isLightPage
+                    ? "top-2.5 max-w-5xl w-[calc(100%-2.5rem)] bg-white/95 border-[#ECE8E2] shadow-[0_16px_48px_rgba(0,0,0,0.08)] hover:border-[#FF6B2C]/30"
+                    : "top-2.5 max-w-5xl w-[calc(100%-2.5rem)] bg-[#111111]/92 border-white/20 shadow-[0_16px_48px_rgba(0,0,0,0.38)] hover:border-white/30"
+                : isLightPage
+                    ? "top-3 max-w-[1400px] w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)] bg-white/90 border-[#ECE8E2] shadow-[0_12px_40px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.1)] hover:border-[#FF6B2C]/30"
+                    : "top-3 max-w-[1400px] w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)] bg-[#111111]/85 border-white/15 shadow-[0_12px_40px_rgba(0,0,0,0.25)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.35)] hover:border-white/25"
+        }`}>
+            <div className="px-6 md:px-8 flex items-center justify-between md:grid md:grid-cols-3 transition-all duration-500 ease-in-out h-15">
                 {/* Left Side: Destinations & AI Planner (Desktop) */}
-                <div className={`hidden md:flex items-center justify-start transition-all duration-500 ${isScrolled ? "gap-5" : "gap-8"
-                    }`}>
+                <div className={`hidden md:flex items-center justify-start transition-all duration-500 ${isScrolled ? "gap-6" : "gap-8"}`}>
                     {['Destinations', 'AI Planner'].map((item) => (
                         <a
                             key={item}
                             href={item === 'AI Planner' ? '/ai-planner' : `#${item.toLowerCase().replace(' ', '-')}`}
-                            className={`font-mono text-[11px] font-bold text-white/60 hover:text-[#fe7717] transition-all duration-500 relative py-2 nav-link-underline uppercase whitespace-nowrap ${isScrolled ? "tracking-widest" : "tracking-[0.16em]"
-                                }`}
+                            className={`font-mono text-[11px] font-bold ${isLightPage ? 'text-[#1F1F1F]/80 hover:text-[#FF6B2C]' : 'text-white/70 hover:text-[#FF7A1A]'} transition-all duration-300 relative py-2 nav-link-underline uppercase whitespace-nowrap ${
+                                isScrolled ? "tracking-widest" : "tracking-[0.16em]"
+                            }`}
                         >
                             {item}
                         </a>
@@ -82,8 +90,8 @@ function Header() {
                             marginLeft: isScrolled ? "0px" : "8px"
                         }}
                     >
-                        <span className="font-sans font-extrabold text-[22px] tracking-tight leading-none text-white select-none whitespace-nowrap">
-                            Trip<span className="text-[#fe7717]">Wise</span>
+                        <span className={`font-sans font-extrabold text-[22px] tracking-tight leading-none ${isLightPage ? 'text-[#1F1F1F]' : 'text-white'} select-none whitespace-nowrap`}>
+                            Trip<span className="text-[#FF6B2C]">Wise</span>
                         </span>
                         <span className="font-sans font-bold text-[8px] tracking-[0.2em] text-[#8CA3A8] select-none whitespace-nowrap mt-1 leading-none">
                             AI TRIP PLANNER
@@ -100,7 +108,7 @@ function Header() {
                             <a
                                 key={item}
                                 href={`#${item.toLowerCase().replace(' ', '-')}`}
-                                className={`font-mono text-[11px] font-bold text-white/60 hover:text-[#fe7717] transition-all duration-500 relative py-2 nav-link-underline uppercase whitespace-nowrap ${isScrolled ? "tracking-widest" : "tracking-[0.16em]"
+                                className={`font-mono text-[11px] font-bold ${isLightPage ? 'text-[#1F1F1F]/80 hover:text-[#FF6B2C]' : 'text-white/60 hover:text-[#fe7717]'} transition-all duration-500 relative py-2 nav-link-underline uppercase whitespace-nowrap ${isScrolled ? "tracking-widest" : "tracking-[0.16em]"
                                     }`}
                             >
                                 {item}
@@ -109,7 +117,7 @@ function Header() {
                     </div>
                     <a
                         href="/ai-planner"
-                        className="px-5 py-2.5 bg-[#fe7717] hover:bg-[#ff8833] text-[#1C1B1B] font-extrabold text-xs rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg shadow-[#fe7717]/20 uppercase tracking-wider whitespace-nowrap"
+                        className="px-5 py-2.5 bg-gradient-to-r from-[#FF6B2C] to-[#FF7A3D] hover:from-[#FF7A3D] hover:to-[#FF6B2C] text-white font-extrabold text-xs rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md hover:shadow-[0_8px_24px_rgba(255,107,44,0.35)] uppercase tracking-wider whitespace-nowrap"
                     >
                         Plan My Trip
                     </a>
