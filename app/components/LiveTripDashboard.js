@@ -115,87 +115,123 @@ export default function LiveTripDashboard({
   const activities = currentDay?.activities || [];
 
   return (
-    <div className="w-full h-full bg-[#FFF8F5] relative overflow-hidden flex flex-col justify-between p-6 md:p-8 select-none border-l border-[rgba(28,27,27,0.08)]">
-      {/* Subtle Grid & Topographic Texture */}
-      <div className="absolute inset-0 opacity-30 pointer-events-none" style={{
-        backgroundImage: `radial-gradient(#EC6735 1.5px, transparent 1.5px), radial-gradient(#8CA3A8 1px, transparent 1px)`,
-        backgroundSize: '32px 32px, 64px 64px',
-        backgroundPosition: '0 0, 16px 16px'
-      }} />
-
-      {/* Top Bar: Telemetry & Controls */}
-      <div className="relative z-10 flex items-center justify-between gap-4 flex-wrap">
-        <div className="bg-white/95 backdrop-blur-md px-4 py-2 rounded-full border border-[rgba(28,27,27,0.1)] flex items-center gap-2.5 text-xs font-bold text-[#1C1B1B] shadow-sm">
-          <span className={`w-2.5 h-2.5 rounded-full ${isGenerating ? 'bg-[#EC6735] animate-ping' : 'bg-[#0D9488] animate-pulse'}`} />
-          <span className="tracking-wide">TripWise GeoEngine v2.5</span>
-          <span className="text-[#8CA3A8]">|</span>
-          <span className="text-[#EC6735] truncate max-w-48 sm:max-w-xs">{displayDest}</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <div className="bg-[#1C1B1B] text-white px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-wide shadow-sm flex items-center gap-1.5">
-            <span>⚡</span>
-            <span>{isGenerating ? 'Satellite Triangulation' : isTransitioning ? 'Target Lock' : itinerary ? 'AI Optimized Route' : 'Live Radar'}</span>
+    <div className="w-full h-full bg-[#FFFFFF] text-[#1F1F1F] relative overflow-hidden flex flex-col justify-between p-4 md:p-5 select-none transition-colors duration-500">
+      {/* Main Container */}
+      <div className="w-full h-full flex flex-col relative z-10 min-h-0">
+        {/* Cinematic Globe Overlay during generation */}
+        {isGenerating || !itinerary || (isTransitioning && !isFadingOutGlobe) ? (
+          <div className="w-full h-full flex-1 min-h-0 flex items-center justify-center animate-fade-in">
+            <InteractiveGlobe
+              isGenerating={isGenerating}
+              isTransitioning={isTransitioning}
+              activeStepText={GENERATION_STEPS[activeStepIndex]}
+              destinationName={displayDest}
+              targetCoordinates={itinerary?.coordinates || { lat: 41.9028, lng: 12.4964 }}
+            />
           </div>
-        </div>
-      </div>
+        ) : null}
 
-      {/* Main Center Dashboard Area */}
-      <div className="relative z-10 my-auto flex flex-col items-center justify-center w-full max-w-4xl mx-auto py-2">
-        {isGenerating || !itinerary ? (
-          /* STATE 1: IDLE / HYPER-SCANNING DURING GENERATION */
-          <InteractiveGlobe
-            isGenerating={isGenerating}
-            isTransitioning={false}
-            activeStepText={GENERATION_STEPS[activeStepIndex]}
-            destinationName={displayDest}
-            targetCoordinates={itinerary?.coordinates || { lat: 35.0116, lng: 135.7681 }}
-          />
-        ) : (
-          /* STATE 2: GENERATED ITINERARY VIEW (MOUNTED IMMEDIATELY UNDERNEATH DURING TRANSITION FOR 0-LAG TILE LOAD) */
-          <div className="relative w-full flex flex-col gap-4 animate-fade-in">
-            {/* Cinematic 3D Globe Overlay during Target Lock Phase */}
-            {isTransitioning && (
-              <div
-                className={`absolute inset-0 z-40 flex items-center justify-center bg-[#FFF8F5]/95 backdrop-blur-xs rounded-3xl transition-all duration-800 ease-in-out pointer-events-none ${
-                  isFadingOutGlobe ? 'opacity-0 scale-110' : 'opacity-100 scale-100'
-                }`}
-              >
+        {/* Post-Generation / Loaded Dashboard View */}
+        {(!isGenerating && (!isTransitioning || isFadingOutGlobe)) && (
+          <div className="w-full h-full flex flex-col flex-1 min-h-0 animate-fade-in">
+            {/* Cinematic Camera Plunge Overlay */}
+            {isTransitioning && isFadingOutGlobe && (
+              <div className="absolute inset-0 z-50 pointer-events-none animate-fade-out">
                 <InteractiveGlobe
                   isGenerating={false}
                   isTransitioning={true}
                   activeStepText="Target Locked!"
                   destinationName={displayDest}
-                  targetCoordinates={itinerary.coordinates || { lat: 35.0116, lng: 135.7681 }}
+                  targetCoordinates={itinerary?.coordinates || { lat: 35.0116, lng: 135.7681 }}
                 />
               </div>
             )}
 
-            {/* Clean Day Label Badge above map */}
-            <div className={`flex items-center justify-between border-b border-[rgba(28,27,27,0.08)] pb-2.5 transition-opacity duration-800 ${
+            {/* Single Clean Minimal Header Strip */}
+            <div className={`flex items-center justify-between shrink-0 mb-2.5 md:mb-3 transition-opacity duration-800 ${
               isTransitioning && !isFadingOutGlobe ? 'opacity-0 pointer-events-none' : 'opacity-100'
             }`}>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-extrabold text-[#1C1B1B]">📍 Day Route Map</span>
-                <span className="text-xs font-bold text-[#EC6735] bg-[#FFF2EA] px-2.5 py-0.5 rounded-md">
-                  ✨ {currentDay?.dateLabel || `Day ${selectedDayIndex + 1}`}
-                </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Clean Destination Badge */}
+                <div className="flex items-center gap-1.5 bg-[#FFFFFF] px-3 py-1 rounded-[16px] border border-[#ECE8E2] shadow-[0_4px_16px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_6px_20px_rgba(0,0,0,0.07)]">
+                  <span className="text-xs">📍</span>
+                  <span className="text-xs font-semibold text-[#1F1F1F] tracking-tight">
+                    {displayDest.replace(/\s*\(\s*Demo Mode\s*\)/i, '').trim()}
+                  </span>
+                </div>
+
+                {/* Day selector dropdown/pill */}
+                {itinerary && itinerary.days && itinerary.days.length > 0 ? (
+                  <div className="relative group/day">
+                    <div className="flex items-center gap-1.5 bg-[#FF6B2C]/10 hover:bg-[#FF6B2C]/16 text-[#FF6B2C] px-3 py-1 rounded-[16px] border border-[#FF6B2C]/30 transition-all duration-250 cursor-pointer shadow-[0_4px_16px_rgba(255,107,44,0.08)] hover:scale-[1.02]">
+                      {(() => {
+                        const rawLabel = currentDay?.dateLabel || `Day ${selectedDayIndex + 1}`;
+                        const parts = rawLabel.split(/\s*[-:|]\s*/);
+                        const dayNum = /^Day\s*\d+/i.test(parts[0]) ? parts[0].trim() : `Day ${selectedDayIndex + 1}`;
+                        let subtitle = parts.length > 1 ? parts.slice(1).join(' ').replace(/Treasures|Vibe|Tour|Exploration|Highlights/gi, '').replace(/\s+/g, ' ').replace(/\s+&\s+$/, '').trim() : null;
+                        if (!subtitle && parts.length > 1) subtitle = parts.slice(1).join(' ').trim();
+                        return (
+                          <>
+                            <span className="text-xs font-bold tracking-tight">{dayNum} ▼</span>
+                            {subtitle && (
+                              <>
+                                <span className="text-[#FF6B2C]/40 font-light">•</span>
+                                <span className="text-xs font-medium text-[#6B6B6B] tracking-tight truncate max-w-[160px] sm:max-w-[210px]">
+                                  {subtitle}
+                                </span>
+                              </>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                    
+                    <select
+                      value={selectedDayIndex}
+                      onChange={(e) => {
+                        const newIdx = parseInt(e.target.value, 10);
+                        setSelectedDayIndex(newIdx);
+                        if (onSelectDay) onSelectDay(newIdx);
+                      }}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer text-xs"
+                      title={currentDay?.dateLabel || `Day ${selectedDayIndex + 1}`}
+                    >
+                      {itinerary.days.map((d, idx) => (
+                        <option key={idx} value={idx} className="bg-white text-[#1F1F1F] font-bold">
+                          {d.dateLabel || `Day ${idx + 1}`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <span className="text-xs font-bold text-[#FF6B2C] bg-[#FFF2EA] px-3 py-1 rounded-[16px] border border-[#FFDBC8]">
+                    Day {selectedDayIndex + 1}
+                  </span>
+                )}
               </div>
-              <div className="text-[11px] font-bold text-[#8CA3A8] hidden sm:block">
-                ⚡ Hover stops on left or pins on map to sync
+
+              {/* AI Badge as an active breathing system status in pure light theme */}
+              <div className="flex items-center gap-2">
+                <div className="relative group overflow-hidden bg-[#FFFFFF] text-[#1F1F1F] px-3.5 py-1.5 rounded-[16px] text-xs font-bold shadow-[0_4px_16px_rgba(255,107,44,0.12)] flex items-center gap-1.5 border border-[#ECE8E2] transition-all duration-300 hover:-translate-y-0.5 hover:scale-105 hover:shadow-[0_6px_24px_rgba(255,107,44,0.22)] hover:border-[#FF6B2C]/40 cursor-default">
+                  {/* Gentle shimmer overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-[shimmer_3.5s_infinite_ease-in-out] pointer-events-none" />
+                  <span className="text-[#FF6B2C] animate-pulse inline-block text-xs font-black">⚡</span>
+                  <span className="tracking-tight font-bold text-[#1F1F1F]">AI Optimized</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#2FA66A] animate-ping ml-0.5" />
+                </div>
               </div>
             </div>
 
-            {/* Content: Route Map */}
-            <div className={`w-full transition-all duration-800 ${
+            {/* Content: Route Map filling exact remaining vertical space */}
+            <div className={`w-full flex-1 min-h-0 transition-all duration-800 ${
               isTransitioning && !isFadingOutGlobe ? 'opacity-0 pointer-events-none scale-98' : 'opacity-100'
             }`}>
               <InteractiveRouteMap
                 activities={activities}
-                allDays={itinerary.days || []}
+                allDays={itinerary?.days || []}
                 selectedDayIndex={selectedDayIndex || 0}
                 destinationName={displayDest}
-                coordinates={itinerary.coordinates || { lat: 41.9028, lng: 12.4964 }}
+                coordinates={itinerary?.coordinates || { lat: 41.9028, lng: 12.4964 }}
                 hoveredStopIdx={hoveredStopIdx}
                 onHoverStop={setHoveredStopIdx}
               />
