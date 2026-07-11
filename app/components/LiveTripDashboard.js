@@ -153,7 +153,7 @@ export default function LiveTripDashboard({
             }`}>
               <div className="flex items-center gap-2 flex-wrap">
                 {/* Clean Destination Badge */}
-                <div className="flex items-center gap-1.5 bg-[#FFFFFF] px-3 py-1 rounded-[16px] border border-[#ECE8E2] shadow-[0_4px_16px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_6px_20px_rgba(0,0,0,0.07)]">
+                <div className="flex items-center gap-1.5 bg-[#FFFFFF] px-3 py-1 rounded-2xl border border-[#ECE8E2] shadow-[0_4px_16px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_6px_20px_rgba(0,0,0,0.07)]">
                   <span className="text-xs">📍</span>
                   <span className="text-xs font-semibold text-[#1F1F1F] tracking-tight">
                     {displayDest.replace(/\s*\(\s*Demo Mode\s*\)/i, '').trim()}
@@ -163,7 +163,7 @@ export default function LiveTripDashboard({
                 {/* Day selector dropdown/pill */}
                 {itinerary && itinerary.days && itinerary.days.length > 0 ? (
                   <div className="relative group/day">
-                    <div className="flex items-center gap-1.5 bg-[#FF6B2C]/10 hover:bg-[#FF6B2C]/16 text-[#FF6B2C] px-3 py-1 rounded-[16px] border border-[#FF6B2C]/30 transition-all duration-250 cursor-pointer shadow-[0_4px_16px_rgba(255,107,44,0.08)] hover:scale-[1.02]">
+                    <div className="flex items-center gap-1.5 bg-[#FF6B2C]/10 hover:bg-[#FF6B2C]/16 text-[#FF6B2C] px-3 py-1 rounded-2xl border border-[#FF6B2C]/30 transition-all duration-250 cursor-pointer shadow-[0_4px_16px_rgba(255,107,44,0.08)] hover:scale-[1.02]">
                       {(() => {
                         const rawLabel = currentDay?.dateLabel || `Day ${selectedDayIndex + 1}`;
                         const parts = rawLabel.split(/\s*[-:|]\s*/);
@@ -176,7 +176,7 @@ export default function LiveTripDashboard({
                             {subtitle && (
                               <>
                                 <span className="text-[#FF6B2C]/40 font-light">•</span>
-                                <span className="text-xs font-medium text-[#6B6B6B] tracking-tight truncate max-w-[160px] sm:max-w-[210px]">
+                                <span className="text-xs font-medium text-[#6B6B6B] tracking-tight truncate max-w-40 sm:max-w-52.5">
                                   {subtitle}
                                 </span>
                               </>
@@ -204,7 +204,7 @@ export default function LiveTripDashboard({
                     </select>
                   </div>
                 ) : (
-                  <span className="text-xs font-bold text-[#FF6B2C] bg-[#FFF2EA] px-3 py-1 rounded-[16px] border border-[#FFDBC8]">
+                  <span className="text-xs font-bold text-[#FF6B2C] bg-[#FFF2EA] px-3 py-1 rounded-2xl border border-[#FFDBC8]">
                     Day {selectedDayIndex + 1}
                   </span>
                 )}
@@ -212,9 +212,9 @@ export default function LiveTripDashboard({
 
               {/* AI Badge as an active breathing system status in pure light theme */}
               <div className="flex items-center gap-2">
-                <div className="relative group overflow-hidden bg-[#FFFFFF] text-[#1F1F1F] px-3.5 py-1.5 rounded-[16px] text-xs font-bold shadow-[0_4px_16px_rgba(255,107,44,0.12)] flex items-center gap-1.5 border border-[#ECE8E2] transition-all duration-300 hover:-translate-y-0.5 hover:scale-105 hover:shadow-[0_6px_24px_rgba(255,107,44,0.22)] hover:border-[#FF6B2C]/40 cursor-default">
+                <div className="relative group overflow-hidden bg-[#FFFFFF] text-[#1F1F1F] px-3.5 py-1.5 rounded-2xl text-xs font-bold shadow-[0_4px_16px_rgba(255,107,44,0.12)] flex items-center gap-1.5 border border-[#ECE8E2] transition-all duration-300 hover:-translate-y-0.5 hover:scale-105 hover:shadow-[0_6px_24px_rgba(255,107,44,0.22)] hover:border-[#FF6B2C]/40 cursor-default">
                   {/* Gentle shimmer overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-[shimmer_3.5s_infinite_ease-in-out] pointer-events-none" />
+                  <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-[shimmer_3.5s_infinite_ease-in-out] pointer-events-none" />
                   <span className="text-[#FF6B2C] animate-pulse inline-block text-xs font-black">⚡</span>
                   <span className="tracking-tight font-bold text-[#1F1F1F]">AI Optimized</span>
                   <span className="w-1.5 h-1.5 rounded-full bg-[#2FA66A] animate-ping ml-0.5" />

@@ -144,7 +144,7 @@ export default function ItineraryPage() {
             <p className="text-xs font-mono text-[#1C1B1B] mb-3">
               Center: {itinerary.coordinates?.lat?.toFixed(4) || '41.9028'}° N, {itinerary.coordinates?.lng?.toFixed(4) || '12.4964'}° E
             </p>
-            <div className="w-full h-[520px] rounded-xl border border-[rgba(28,27,27,0.08)] overflow-hidden relative shadow-inner">
+            <div className="w-full h-130 rounded-xl border border-[rgba(28,27,27,0.08)] overflow-hidden relative shadow-inner">
               <InteractiveRouteMap
                 activities={currentDayData?.activities || []}
                 allDays={itinerary.days || []}
