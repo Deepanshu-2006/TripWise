@@ -39,8 +39,8 @@ function Header() {
                     ? "top-2.5 max-w-5xl w-[calc(100%-2.5rem)] bg-white/95 border-[#ECE8E2] shadow-[0_16px_48px_rgba(0,0,0,0.08)] hover:border-[#FF6B2C]/30"
                     : "top-2.5 max-w-5xl w-[calc(100%-2.5rem)] bg-[#111111]/92 border-white/20 shadow-[0_16px_48px_rgba(0,0,0,0.38)] hover:border-white/30"
                 : isLightPage
-                    ? "top-3 max-w-[1400px] w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)] bg-white/90 border-[#ECE8E2] shadow-[0_12px_40px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.1)] hover:border-[#FF6B2C]/30"
-                    : "top-3 max-w-[1400px] w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)] bg-[#111111]/85 border-white/15 shadow-[0_12px_40px_rgba(0,0,0,0.25)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.35)] hover:border-white/25"
+                    ? "top-3 max-w-350 w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)] bg-white/90 border-[#ECE8E2] shadow-[0_12px_40px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.1)] hover:border-[#FF6B2C]/30"
+                    : "top-3 max-w-350 w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)] bg-[#111111]/85 border-white/15 shadow-[0_12px_40px_rgba(0,0,0,0.25)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.35)] hover:border-white/25"
         }`}>
             <div className="px-6 md:px-8 flex items-center justify-between md:grid md:grid-cols-3 transition-all duration-500 ease-in-out h-15">
                 {/* Left Side: Destinations & AI Planner (Desktop) */}
@@ -117,7 +117,7 @@ function Header() {
                     </div>
                     <a
                         href="/ai-planner"
-                        className="px-5 py-2.5 bg-gradient-to-r from-[#FF6B2C] to-[#FF7A3D] hover:from-[#FF7A3D] hover:to-[#FF6B2C] text-white font-extrabold text-xs rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md hover:shadow-[0_8px_24px_rgba(255,107,44,0.35)] uppercase tracking-wider whitespace-nowrap"
+                        className="px-5 py-2.5 bg-linear-to-r from-[#FF6B2C] to-[#FF7A3D] hover:from-[#FF7A3D] hover:to-[#FF6B2C] text-white font-extrabold text-xs rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md hover:shadow-[0_8px_24px_rgba(255,107,44,0.35)] uppercase tracking-wider whitespace-nowrap"
                     >
                         Plan My Trip
                     </a>

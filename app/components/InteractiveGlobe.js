@@ -285,7 +285,7 @@ export default function InteractiveGlobe({
       )}
 
       {/* 3D Canvas Container */}
-      <div className="relative w-full h-[340px] sm:h-[420px] md:h-[480px] lg:h-[520px] flex items-center justify-center my-1">
+      <div className="relative w-full h-85 sm:h-105 md:h-120 lg:h-130 flex items-center justify-center my-1">
         <div ref={containerRef} className="w-full h-full max-w-3xl flex items-center justify-center cursor-grab active:cursor-grabbing" />
       </div>
     </div>
