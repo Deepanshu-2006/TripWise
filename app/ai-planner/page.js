@@ -57,62 +57,64 @@ export default function AIPlannerPage() {
   };
 
   return (
-    <div className="w-full h-screen min-h-160 flex flex-col bg-[#FFF8F5] text-[#1C1B1B] overflow-hidden pt-24">
+    <div className="w-full h-screen min-h-160 flex flex-col bg-[#FAF8F5] text-[#1F1F1F] overflow-hidden pt-20 sm:pt-22">
       <Header />
       
-      {/* Split-Screen Layout (Subheader removed as requested) */}
-      <div className="flex-1 flex w-full h-full overflow-hidden">
-        {/* Left 40% Sidebar */}
-        <div className="w-full md:w-[42%] lg:w-[40%] xl:w-[38%] h-full overflow-y-auto shrink-0 bg-[#FAF3EE]">
-          <PlannerSidebar
-            rawPrompt={currentPrompt}
-            isGenerating={isGenerating}
-            itinerary={itinerary}
-            selectedDayIndex={selectedDayIndex}
-            onSelectDay={setSelectedDayIndex}
-            hoveredStopIdx={hoveredStopIdx}
-            onHoverStop={setHoveredStopIdx}
-            onUpdateItinerary={(updated) => {
-              setItinerary(updated);
-              if (typeof window !== 'undefined') {
-                if (!updated) {
-                  localStorage.removeItem('tripwise_itinerary');
-                } else {
-                  localStorage.setItem('tripwise_itinerary', JSON.stringify(updated));
+      {/* Unified Parent Container (Wrap BOTH Itinerary Panel and Map Section inside one shared parent container) */}
+      <div className="flex-1 w-full h-full overflow-hidden p-3 sm:p-4 md:p-6 pb-4 sm:pb-6 flex flex-col min-h-0">
+        <div className="flex-1 flex w-full h-full min-h-0 bg-[#FFFFFF] rounded-[24px] border border-[#ECE8E2] shadow-[0_20px_60px_rgba(0,0,0,0.06)] overflow-hidden relative">
+          {/* Left Panel: Itinerary & Prompt Controls */}
+          <div className="w-full md:w-[42%] lg:w-[40%] xl:w-[38%] h-full overflow-y-auto shrink-0 bg-[#F7F5F2] border-r border-[#ECE8E2] flex flex-col">
+            <PlannerSidebar
+              rawPrompt={currentPrompt}
+              isGenerating={isGenerating}
+              itinerary={itinerary}
+              selectedDayIndex={selectedDayIndex}
+              onSelectDay={setSelectedDayIndex}
+              hoveredStopIdx={hoveredStopIdx}
+              onHoverStop={setHoveredStopIdx}
+              onUpdateItinerary={(updated) => {
+                setItinerary(updated);
+                if (typeof window !== 'undefined') {
+                  if (!updated) {
+                    localStorage.removeItem('tripwise_itinerary');
+                  } else {
+                    localStorage.setItem('tripwise_itinerary', JSON.stringify(updated));
+                  }
                 }
-              }
-            }}
-            onResetPrompt={() => {
-              setCurrentPrompt('');
-              setItinerary(null);
-              setSelectedDayIndex(0);
-              if (typeof window !== 'undefined') {
-                localStorage.removeItem('tripwise_itinerary');
-              }
-            }}
-            onGenerate={handleGenerate}
-            onViewItinerary={() => {
-              if (typeof window !== 'undefined') {
-                window.location.href = '/itinerary';
-              }
-            }}
-          />
-        </div>
+              }}
+              onResetPrompt={() => {
+                setCurrentPrompt('');
+                setItinerary(null);
+                setSelectedDayIndex(0);
+                if (typeof window !== 'undefined') {
+                  localStorage.removeItem('tripwise_itinerary');
+                }
+              }}
+              onGenerate={handleGenerate}
+              onViewItinerary={() => {
+                if (typeof window !== 'undefined') {
+                  window.location.href = '/itinerary';
+                }
+              }}
+            />
+          </div>
 
-        {/* Right 60% Map View & Interactive Dashboard */}
-        <div className="hidden md:block flex-1 h-full overflow-hidden">
-          <LiveTripDashboard
-            destination={itinerary?.destinationName || currentPrompt}
-            itinerary={itinerary}
-            isGenerating={isGenerating}
-            selectedDayIndex={selectedDayIndex}
-            onSelectDay={setSelectedDayIndex}
-            hoveredStopIdx={hoveredStopIdx}
-            onHoverStop={setHoveredStopIdx}
-            onSelectPrompt={(promptText) => {
-              setCurrentPrompt(promptText);
-            }}
-          />
+          {/* Right Panel: Map View & Interactive Dashboard */}
+          <div className="hidden md:flex flex-1 h-full overflow-hidden flex-col bg-[#FFFFFF]">
+            <LiveTripDashboard
+              destination={itinerary?.destinationName || currentPrompt}
+              itinerary={itinerary}
+              isGenerating={isGenerating}
+              selectedDayIndex={selectedDayIndex}
+              onSelectDay={setSelectedDayIndex}
+              hoveredStopIdx={hoveredStopIdx}
+              onHoverStop={setHoveredStopIdx}
+              onSelectPrompt={(promptText) => {
+                setCurrentPrompt(promptText);
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>
