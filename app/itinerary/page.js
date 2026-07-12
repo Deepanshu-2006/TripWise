@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import Header from '../components/Header';
@@ -25,6 +25,75 @@ export default function ItineraryPage() {
   const [hoveredStopIdx, setHoveredStopIdx] = useState(null);
   const [selectedStopIdx, setSelectedStopIdx] = useState(null);
   const [savedStops, setSavedStops] = useState({});
+  const selectedStopIdxRef = useRef(selectedStopIdx);
+  selectedStopIdxRef.current = selectedStopIdx;
+  const isUserScrollingRef = useRef(false);
+  const scrollTimeoutRef = useRef(null);
+
+  const handleSelectStop = useCallback((idx, opts = {}) => {
+    setSelectedStopIdx(idx);
+    const dayIdx = (activeDay || 1) - 1;
+    if (!opts.isScrollSync && typeof document !== 'undefined' && idx !== null && idx !== undefined) {
+      const cardEl = document.getElementById(`itinerary-card-${dayIdx}-${idx}`);
+      if (cardEl) {
+        cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [activeDay]);
+
+  // Track manual user scrolling vs programmatic scrollIntoView
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleUserScroll = () => {
+      isUserScrollingRef.current = true;
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+      scrollTimeoutRef.current = setTimeout(() => {
+        isUserScrollingRef.current = false;
+      }, 400);
+    };
+    window.addEventListener('wheel', handleUserScroll, { passive: true });
+    window.addEventListener('touchmove', handleUserScroll, { passive: true });
+    return () => {
+      window.removeEventListener('wheel', handleUserScroll);
+      window.removeEventListener('touchmove', handleUserScroll);
+    };
+  }, []);
+
+  // Automatically scroll card into view when selectedStopIdx changes externally (e.g. Map pin click)
+  useEffect(() => {
+    if (isUserScrollingRef.current) return;
+    const dayIdx = (activeDay || 1) - 1;
+    if (selectedStopIdx !== null && selectedStopIdx !== undefined && typeof document !== 'undefined') {
+      const cardEl = document.getElementById(`itinerary-card-${dayIdx}-${selectedStopIdx}`);
+      if (cardEl) {
+        cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [selectedStopIdx, activeDay]);
+
+  // IntersectionObserver to sync map and active stop during user scroll without reconnection loops
+  useEffect(() => {
+    const dayIdx = (activeDay || 1) - 1;
+    if (typeof document === 'undefined' || !itinerary?.days?.[dayIdx]?.activities) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (!isUserScrollingRef.current) return;
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.55) {
+          const stopIdxAttr = entry.target.getAttribute('data-stop-idx');
+          if (stopIdxAttr !== null) {
+            const stopNum = parseInt(stopIdxAttr, 10);
+            if (!isNaN(stopNum) && stopNum !== selectedStopIdxRef.current) {
+              handleSelectStop(stopNum, { isScrollSync: true });
+            }
+          }
+        }
+      });
+    }, { threshold: [0.55, 0.75] });
+
+    const cards = document.querySelectorAll(`[data-day-idx="${dayIdx}"]`);
+    cards.forEach((c) => observer.observe(c));
+    return () => observer.disconnect();
+  }, [activeDay, itinerary, handleSelectStop]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -142,8 +211,10 @@ export default function ItineraryPage() {
                 selectedDayIndex={(activeDay || 1) - 1}
                 destinationName={itinerary.destinationName || 'Your Journey'}
                 coordinates={itinerary.coordinates || { lat: 41.9028, lng: 12.4964 }}
-                hoveredStopIdx={hoveredStopIdx || selectedStopIdx}
+                hoveredStopIdx={hoveredStopIdx}
                 onHoverStop={setHoveredStopIdx}
+                selectedStopIdx={selectedStopIdx}
+                onSelectStop={handleSelectStop}
               />
             </div>
           </div>
@@ -291,10 +362,15 @@ export default function ItineraryPage() {
                   )}
 
                   {/* Activity Card Container with Timeline Node */}
-                  <div className="relative pb-6">
+                  <div
+                    id={`itinerary-card-${(activeDay || 1) - 1}-${stopNum}`}
+                    data-day-idx={(activeDay || 1) - 1}
+                    data-stop-idx={stopNum}
+                    className="relative pb-6"
+                  >
                     {/* Point 1 & Point 8: Timeline Node Circle */}
                     <div
-                      onClick={() => setSelectedStopIdx(selectedStopIdx === stopNum ? null : stopNum)}
+                      onClick={() => handleSelectStop(isActive ? null : stopNum)}
                       className={`absolute -left-6 sm:-left-8 top-6 w-8 sm:w-10 h-8 sm:h-10 rounded-full border-2 flex items-center justify-center z-20 text-xs sm:text-sm font-black cursor-pointer transition-all duration-300 ${
                         isActive || isHovered
                           ? 'bg-[#EC6735] text-white border-[#EC6735] scale-110 shadow-lg shadow-[#EC6735]/35'
@@ -308,10 +384,10 @@ export default function ItineraryPage() {
                     <div
                       onMouseEnter={() => setHoveredStopIdx(stopNum)}
                       onMouseLeave={() => setHoveredStopIdx(null)}
-                      onClick={() => setSelectedStopIdx(selectedStopIdx === stopNum ? null : stopNum)}
+                      onClick={() => handleSelectStop(isActive ? null : stopNum)}
                       className={`relative ml-6 sm:ml-8 p-5 sm:p-6 rounded-3xl border transition-all duration-300 ease-out group/card cursor-pointer select-none ${
                         isActive
-                          ? 'bg-[#FFF8F5] border-l-4 border-l-[#EC6735] border-[#EC6735] shadow-xl shadow-[#EC6735]/15 -translate-y-1 z-10'
+                          ? 'bg-[#FFF8F5] border-2 border-[#EC6735] shadow-[0_12px_36px_rgba(236,103,53,0.18)] scale-[1.01] -translate-y-1 z-10'
                           : isHovered
                           ? 'bg-white border-[#EC6735] shadow-[0_16px_36px_rgba(236,103,53,0.14)] -translate-y-1.5 z-10'
                           : 'bg-white border-[rgba(28,27,27,0.08)] shadow-[0_4px_16px_rgba(0,0,0,0.03)] hover:-translate-y-1 hover:shadow-lg hover:border-[#EC6735]/60'

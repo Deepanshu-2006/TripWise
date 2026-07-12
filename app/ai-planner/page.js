@@ -11,6 +11,7 @@ export default function AIPlannerPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const [hoveredStopIdx, setHoveredStopIdx] = useState(null);
+  const [selectedStopIdx, setSelectedStopIdx] = useState(null);
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -28,6 +29,7 @@ export default function AIPlannerPage() {
   const handleGenerate = async (selections) => {
     setIsGenerating(true);
     setSelectedDayIndex(0);
+    setSelectedStopIdx(null);
     try {
       const response = await fetch('/api/generate-trip', {
         method: 'POST',
@@ -73,6 +75,8 @@ export default function AIPlannerPage() {
               onSelectDay={setSelectedDayIndex}
               hoveredStopIdx={hoveredStopIdx}
               onHoverStop={setHoveredStopIdx}
+              selectedStopIdx={selectedStopIdx}
+              onSelectStop={setSelectedStopIdx}
               onUpdateItinerary={(updated) => {
                 setItinerary(updated);
                 if (typeof window !== 'undefined') {
@@ -87,6 +91,7 @@ export default function AIPlannerPage() {
                 setCurrentPrompt('');
                 setItinerary(null);
                 setSelectedDayIndex(0);
+                setSelectedStopIdx(null);
                 if (typeof window !== 'undefined') {
                   localStorage.removeItem('tripwise_itinerary');
                 }
@@ -110,6 +115,8 @@ export default function AIPlannerPage() {
               onSelectDay={setSelectedDayIndex}
               hoveredStopIdx={hoveredStopIdx}
               onHoverStop={setHoveredStopIdx}
+              selectedStopIdx={selectedStopIdx}
+              onSelectStop={setSelectedStopIdx}
               onSelectPrompt={(promptText) => {
                 setCurrentPrompt(promptText);
               }}

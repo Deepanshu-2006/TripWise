@@ -38,13 +38,21 @@ export default function LiveTripDashboard({
   onSelectDay = null,
   hoveredStopIdx: propHoveredStopIdx = null,
   onHoverStop = null,
+  selectedStopIdx: propSelectedStopIdx = null,
+  onSelectStop = null,
   onSelectPrompt
 }) {
   const [internalSelectedDayIndex, setInternalSelectedDayIndex] = useState(0);
+  const [internalSelectedStopIdx, setInternalSelectedStopIdx] = useState(null);
   const selectedDayIndex = propSelectedDayIndex !== null ? propSelectedDayIndex : internalSelectedDayIndex;
+  const selectedStopIdx = propSelectedStopIdx !== null && propSelectedStopIdx !== undefined ? propSelectedStopIdx : internalSelectedStopIdx;
   const setSelectedDayIndex = (idx) => {
     if (onSelectDay) onSelectDay(idx);
     setInternalSelectedDayIndex(idx);
+  };
+  const setSelectedStopIdx = (idx) => {
+    if (onSelectStop) onSelectStop(idx);
+    setInternalSelectedStopIdx(idx);
   };
 
   const [activeStepIndex, setActiveStepIndex] = useState(0);
@@ -234,6 +242,8 @@ export default function LiveTripDashboard({
                 coordinates={itinerary?.coordinates || { lat: 41.9028, lng: 12.4964 }}
                 hoveredStopIdx={hoveredStopIdx}
                 onHoverStop={setHoveredStopIdx}
+                selectedStopIdx={selectedStopIdx}
+                onSelectStop={setSelectedStopIdx}
               />
             </div>
           </div>

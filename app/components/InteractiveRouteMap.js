@@ -213,7 +213,9 @@ export default function InteractiveRouteMap({
   destinationName = 'Your Destination',
   coordinates = null,
   hoveredStopIdx: propHoveredIdx = null,
-  onHoverStop = () => {}
+  onHoverStop = () => {},
+  selectedStopIdx: propSelectedStopIdx = null,
+  onSelectStop = () => {}
 }) {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
@@ -221,11 +223,12 @@ export default function InteractiveRouteMap({
   const tileLayerRef = useRef(null);
   const markersRef = useRef({});
   const walkableRingLayerRef = useRef(null);
+  const lastFlewStopRef = useRef(null);
 
   const [isReady, setIsReady] = useState(false);
   const [mapStyle, setMapStyle] = useState('streets');
   const [showLayerMenu, setShowLayerMenu] = useState(false);
-  const [selectedStopIdx, setSelectedStopIdx] = useState(null);
+  const [internalSelectedStopIdx, setInternalSelectedStopIdx] = useState(null);
   const [activeDestination, setActiveDestination] = useState(null);
   const [isDestinationSaved, setIsDestinationSaved] = useState(false);
   const [heroImageLoaded, setHeroImageLoaded] = useState(false);
@@ -243,12 +246,60 @@ export default function InteractiveRouteMap({
   const [isRouteSyncing, setIsRouteSyncing] = useState(false);
 
   const activeHoverIdx = propHoveredIdx !== null && propHoveredIdx !== undefined ? propHoveredIdx : internalHoveredIdx;
+  const selectedStopIdx = propSelectedStopIdx !== null && propSelectedStopIdx !== undefined ? propSelectedStopIdx : internalSelectedStopIdx;
+
+  const setSelectedStopIdx = (idx) => {
+    if (onSelectStop) onSelectStop(idx);
+    setInternalSelectedStopIdx(idx);
+  };
 
   useEffect(() => {
     setIsRouteSyncing(true);
     const timer = setTimeout(() => setIsRouteSyncing(false), 550);
     return () => clearTimeout(timer);
   }, [selectedDayIndex, selectedCategory, activities, mapStyle, showAllDaysOverview]);
+
+  // CAMERA & POPUP SYNC WHEN ACTIVE STOP CHANGES via Itinerary Click or Scroll (INTERACTION 2 & 3 / MAP CAMERA)
+  useEffect(() => {
+    if (!isReady || !mapRef.current || selectedStopIdx === null || selectedStopIdx === undefined || selectedStopIdx === lastFlewStopRef.current) return;
+    lastFlewStopRef.current = selectedStopIdx;
+    const isBasecamp = selectedStopIdx === 0;
+    const targetAct = isBasecamp
+      ? { title: `${destinationName} Basecamp Hotel`, coordinates: coordinates || activities?.[0]?.coordinates || { lat: 41.9028, lng: 12.4964 }, isBasecamp: true }
+      : activities?.[selectedStopIdx - 1];
+
+    if (targetAct && targetAct.coordinates && typeof targetAct.coordinates.lat === 'number' && typeof targetAct.coordinates.lng === 'number') {
+      const latLng = window.L?.latLng(targetAct.coordinates.lat, targetAct.coordinates.lng);
+      if (latLng && mapRef.current) {
+        const currentZoom = mapRef.current.getZoom();
+        if (currentZoom >= 14 && !isBasecamp) {
+          mapRef.current.panTo(latLng, { animate: true, duration: 0.45, easeLinearity: 0.25 });
+        } else {
+          mapRef.current.flyTo(latLng, 16, { duration: 0.55, easeLinearity: 0.25 });
+        }
+
+        setActiveDestination({
+          act: targetAct,
+          stopIndex: selectedStopIdx,
+          totalStops: activities.length,
+          dayIdx: selectedDayIndex,
+          isBasecamp,
+          dayStops: [ { isBasecamp: true, coordinates: coordinates || activities?.[0]?.coordinates }, ...activities ]
+        });
+        setIsDestinationSaved(false);
+        setHeroImageLoaded(false);
+
+        // Trigger one pulse animation on active pin
+        const marker = markersRef.current[selectedStopIdx] || markersRef.current[`d${selectedDayIndex}_s${selectedStopIdx}`];
+        if (marker && marker._icon) {
+          marker._icon.classList.remove('tripwise-pin-pulse-once');
+          void marker._icon.offsetWidth;
+          marker._icon.classList.add('tripwise-pin-pulse-once');
+          if (marker.setZIndexOffset) marker.setZIndexOffset(1000);
+        }
+      }
+    }
+  }, [selectedStopIdx, isReady, selectedDayIndex, destinationName, activities, coordinates]);
 
   // Inject premium Apple/Linear animation keyframes & styles right on mount
   useEffect(() => {
@@ -956,7 +1007,7 @@ export default function InteractiveRouteMap({
           const customIcon = L.divIcon({
             className: `custom-tripwise-pin ${isSelected ? 'tripwise-marker-bounce' : ''}`,
             html: `
-              <div style="position: relative; width: ${isSelected ? '52px' : '40px'}; height: ${isSelected ? '64px' : '48px'}; display: flex; align-items: flex-start; justify-content: center; transition: all 0.38s cubic-bezier(0.34, 1.56, 0.64, 1); transform: ${isSelected ? 'scale(1.15) translateY(-4px)' : (isHighlightedByFilter ? 'scale(1.04)' : (isOtherStop ? 'scale(0.85)' : 'scale(0.70)'))}; opacity: ${isSelected ? '1' : (isCategoryMatch ? '0.75' : '0.20')}; filter: ${isCategoryMatch ? 'none' : 'blur(0.5px) grayscale(85%)'}; z-index: ${isSelected || isHighlightedByFilter ? '1000' : (isCategoryMatch ? '100' : '10')}; cursor: pointer; animation: tripwiseMarkerAppear 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) ${idx * 0.045}s both;">
+              <div style="position: relative; width: ${isSelected ? '52px' : '40px'}; height: ${isSelected ? '64px' : '48px'}; display: flex; align-items: flex-start; justify-content: center; transition: all 0.38s cubic-bezier(0.34, 1.56, 0.64, 1); transform: ${isSelected ? 'scale(1.25) translateY(-4px)' : (isHighlightedByFilter ? 'scale(1.04)' : (isOtherStop ? 'scale(0.85)' : 'scale(0.70)'))}; opacity: ${isSelected ? '1' : (selectedStopIdx !== null ? '0.70' : (isCategoryMatch ? '0.85' : '0.20'))}; filter: ${isCategoryMatch ? 'none' : 'blur(0.5px) grayscale(85%)'}; z-index: ${isSelected || isHighlightedByFilter ? '1000' : (isCategoryMatch ? '100' : '10')}; cursor: pointer; animation: tripwiseMarkerAppear 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) ${idx * 0.045}s both;">
                 
                 <div style="
                   width: ${isSelected ? '44px' : '36px'};
@@ -965,7 +1016,7 @@ export default function InteractiveRouteMap({
                   border-radius: 50% 50% 50% 0;
                   transform: rotate(-45deg);
                   border: ${isSelected ? '3px solid #ffffff' : (isHighlightedByFilter ? '2.5px solid #ffffff' : (isBasecamp ? '2.5px solid #F59E0B' : '2px solid #ffffff'))};
-                  box-shadow: ${isSelected ? '0 10px 25px -4px rgba(0, 0, 0, 0.22), 0 0 24px rgba(255, 107, 44, 0.55)' : (isHighlightedByFilter ? `0 0 16px ${pinBg}, 0 6px 16px rgba(0,0,0,0.3)` : '0 4px 14px rgba(0, 0, 0, 0.22)')};
+                  box-shadow: ${isSelected ? '0 10px 25px -4px rgba(0, 0, 0, 0.22), 0 0 24px rgba(255, 107, 44, 0.6)' : (isHighlightedByFilter ? `0 0 16px ${pinBg}, 0 6px 16px rgba(0,0,0,0.3)` : '0 4px 14px rgba(0, 0, 0, 0.22)')};
                   display: flex;
                   align-items: center;
                   justify-content: center;
@@ -1018,14 +1069,12 @@ export default function InteractiveRouteMap({
                   height: 5px;
                   background: rgba(0,0,0,0.28);
                   border-radius: 50%;
-                  filter: blur(2px);
-                  z-index: -1;
+                  filter: blur(1.5px);
                 "></div>
               </div>
             `,
-            iconSize: isSelected ? [52, 62] : [40, 48],
-            iconAnchor: isSelected ? [26, 62] : [20, 48],
-            popupAnchor: [0, -42]
+            iconSize: isSelected ? [52, 64] : [40, 48],
+            iconAnchor: isSelected ? [26, 60] : [20, 44]
           });
 
           const marker = L.marker(latLng, { icon: customIcon }).addTo(layerGroupRef.current);
@@ -1052,7 +1101,7 @@ export default function InteractiveRouteMap({
             });
             setIsDestinationSaved(false);
             setHeroImageLoaded(false);
-            mapRef.current.flyTo(latLng, 16, { duration: 1.0, easeLinearity: 0.25 });
+            mapRef.current.flyTo(latLng, 16, { duration: 0.5, easeLinearity: 0.25 });
           });
 
           marker.on('mouseover', () => {
@@ -1070,12 +1119,12 @@ export default function InteractiveRouteMap({
           });
         });
 
+        // Layer 1: Subtle route glow backdrop
         let animatedPolyline = null;
-        if (latLngs.length > 1) {
+        if (latLngs.length > 1 && window.L) {
           const routeColor = isMultiDayMode ? dayColorMeta.color : '#FF6B2C';
           const routeGlow = isMultiDayMode ? dayColorMeta.glow : 'rgba(255, 107, 44, 0.45)';
 
-          // Layer 1: Slight glowing aura beneath the route (Point 3)
           L.polyline(latLngs, {
             color: routeGlow,
             weight: isMultiDayMode ? 8 : 10,
@@ -1085,14 +1134,36 @@ export default function InteractiveRouteMap({
             className: 'animated-route-glow'
           }).addTo(layerGroupRef.current);
 
-          // Layer 2: Clean solid premium route line (Point 3: 3.5–4px thickness, rounded caps)
-          animatedPolyline = L.polyline(latLngs, {
-            color: routeColor,
-            weight: 4,
-            opacity: selectedCategory !== 'all' ? 0.35 : 0.96,
-            lineCap: 'round',
-            lineJoin: 'round'
-          }).addTo(layerGroupRef.current);
+          // Layer 2: Clean solid premium route line (Point 3: Completed vs Upcoming route split)
+          if (selectedStopIdx !== null && !isMultiDayMode && selectedStopIdx > 0 && selectedStopIdx < latLngs.length) {
+            const completedLatLngs = latLngs.slice(0, selectedStopIdx + 1);
+            const upcomingLatLngs = latLngs.slice(selectedStopIdx);
+            
+            L.polyline(completedLatLngs, {
+              color: '#D95524',
+              weight: 4,
+              opacity: 0.45,
+              dashArray: '5, 8',
+              lineCap: 'round',
+              lineJoin: 'round'
+            }).addTo(layerGroupRef.current);
+
+            animatedPolyline = L.polyline(upcomingLatLngs, {
+              color: '#EC6735',
+              weight: 5,
+              opacity: 1.0,
+              lineCap: 'round',
+              lineJoin: 'round'
+            }).addTo(layerGroupRef.current);
+          } else {
+            animatedPolyline = L.polyline(latLngs, {
+              color: routeColor,
+              weight: 4,
+              opacity: selectedCategory !== 'all' ? 0.35 : 0.96,
+              lineCap: 'round',
+              lineJoin: 'round'
+            }).addTo(layerGroupRef.current);
+          }
 
           // Layer 3: Animated/Directional arrows indicating travel direction
           for (let i = 0; i < latLngs.length - 1; i++) {
@@ -1257,7 +1328,45 @@ export default function InteractiveRouteMap({
       clearTimeout(timer1);
       clearTimeout(timer2);
     };
-  }, [isReady, activities, allDays, selectedDayIndex, showAllDaysOverview, coordinates, selectedStopIdx, isFullscreen, selectedCategory]);
+  }, [isReady, activities, allDays, selectedDayIndex, showAllDaysOverview, coordinates, isFullscreen, selectedCategory]);
+
+  // LIGHTWEIGHT DOM/STYLE UPDATE ON PIN HIGHLIGHT DURING SCROLL (Zero layer destruction / zero jitter)
+  useEffect(() => {
+    if (!isReady || !markersRef.current || typeof window === 'undefined') return;
+
+    Object.entries(markersRef.current).forEach(([key, marker]) => {
+      if (!marker || !marker._icon) return;
+      const keyStr = String(key);
+      let stopNum = null;
+      if (keyStr.startsWith('d')) {
+        const parts = keyStr.split('_s');
+        if (parts.length === 2) stopNum = parseInt(parts[1], 10);
+      } else {
+        stopNum = parseInt(keyStr, 10);
+      }
+      if (stopNum === null || isNaN(stopNum)) return;
+
+      const isSelected = (!showAllDaysOverview && selectedStopIdx === stopNum);
+      const isOtherStop = !isSelected && selectedStopIdx !== null && selectedStopIdx !== undefined;
+
+      const innerContainer = marker._icon.firstElementChild;
+      if (innerContainer) {
+        if (isSelected) {
+          innerContainer.style.transform = 'scale(1.25) translateY(-4px)';
+          innerContainer.style.opacity = '1';
+          innerContainer.style.zIndex = '1000';
+          if (marker.setZIndexOffset) marker.setZIndexOffset(1000);
+          marker._icon.classList.add('tripwise-marker-bounce');
+        } else {
+          innerContainer.style.transform = isOtherStop ? 'scale(0.85)' : 'scale(1.04)';
+          innerContainer.style.opacity = (selectedStopIdx !== null && selectedStopIdx !== undefined) ? '0.70' : '1.0';
+          innerContainer.style.zIndex = '100';
+          if (marker.setZIndexOffset) marker.setZIndexOffset(0);
+          marker._icon.classList.remove('tripwise-marker-bounce');
+        }
+      }
+    });
+  }, [selectedStopIdx, isReady, showAllDaysOverview]);
 
   // Handle flyTo stop when clicked from interactive top strip or external button
   const handleFlyToStop = (stopIdx) => {

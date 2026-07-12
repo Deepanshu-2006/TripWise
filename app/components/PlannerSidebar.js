@@ -160,6 +160,8 @@ export default function PlannerSidebar({
   onSelectDay = null,
   hoveredStopIdx: propHoveredStopIdx = null,
   onHoverStop = null,
+  selectedStopIdx: propSelectedStopIdx = null,
+  onSelectStop = null,
   onUpdateItinerary = null,
   onResetPrompt = null,
   onGenerate,
@@ -182,6 +184,76 @@ export default function PlannerSidebar({
     if (onHoverStop) onHoverStop(idx);
     setInternalHoveredStopIdx(idx);
   };
+
+  const [internalSelectedStopIdx, setInternalSelectedStopIdx] = useState(null);
+  const selectedStopIdx = propSelectedStopIdx !== null && propSelectedStopIdx !== undefined ? propSelectedStopIdx : internalSelectedStopIdx;
+  const selectedStopIdxRef = useRef(selectedStopIdx);
+  selectedStopIdxRef.current = selectedStopIdx;
+  const isUserScrollingRef = useRef(false);
+  const scrollTimeoutRef = useRef(null);
+
+  const handleSelectStop = useCallback((idx, opts = {}) => {
+    if (onSelectStop) onSelectStop(idx);
+    setInternalSelectedStopIdx(idx);
+    if (!opts.isScrollSync && typeof document !== 'undefined' && idx !== null && idx !== undefined) {
+      const cardEl = document.getElementById(`itinerary-card-${selectedDayIndex}-${idx}`);
+      if (cardEl) {
+        cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [onSelectStop, selectedDayIndex]);
+
+  // Track manual user scrolling vs programmatic scrollIntoView
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleUserScroll = () => {
+      isUserScrollingRef.current = true;
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+      scrollTimeoutRef.current = setTimeout(() => {
+        isUserScrollingRef.current = false;
+      }, 400);
+    };
+    window.addEventListener('wheel', handleUserScroll, { passive: true });
+    window.addEventListener('touchmove', handleUserScroll, { passive: true });
+    return () => {
+      window.removeEventListener('wheel', handleUserScroll);
+      window.removeEventListener('touchmove', handleUserScroll);
+    };
+  }, []);
+
+  // Automatically scroll card into view when selectedStopIdx changes externally (e.g. Map pin click)
+  useEffect(() => {
+    if (isUserScrollingRef.current) return;
+    if (selectedStopIdx !== null && selectedStopIdx !== undefined && typeof document !== 'undefined') {
+      const cardEl = document.getElementById(`itinerary-card-${selectedDayIndex}-${selectedStopIdx}`);
+      if (cardEl) {
+        cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [selectedStopIdx, selectedDayIndex]);
+
+  // IntersectionObserver to sync map and active stop during user scroll without reconnection loops
+  useEffect(() => {
+    if (typeof document === 'undefined' || !itinerary?.days?.[selectedDayIndex]?.activities) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (!isUserScrollingRef.current) return;
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.55) {
+          const stopIdxAttr = entry.target.getAttribute('data-stop-idx');
+          if (stopIdxAttr !== null) {
+            const stopNum = parseInt(stopIdxAttr, 10);
+            if (!isNaN(stopNum) && stopNum !== selectedStopIdxRef.current) {
+              handleSelectStop(stopNum, { isScrollSync: true });
+            }
+          }
+        }
+      });
+    }, { threshold: [0.55, 0.75] });
+
+    const cards = document.querySelectorAll(`[data-day-idx="${selectedDayIndex}"]`);
+    cards.forEach((c) => observer.observe(c));
+    return () => observer.disconnect();
+  }, [selectedDayIndex, itinerary, handleSelectStop]);
 
   // Drag and Drop Stop Reordering State & Handlers
   const [draggedStopIdx, setDraggedStopIdx] = useState(null);
@@ -1135,6 +1207,7 @@ export default function PlannerSidebar({
                       {itinerary.days?.[selectedDayIndex]?.activities?.map((act, idx) => {
                         const stopNum = idx + 1;
                         const isHovered = hoveredStopIdx === stopNum;
+                        const isSelected = selectedStopIdx === stopNum;
                         const categoryStyle = getCategoryStyling(act);
                         const ratingData = getActivityRating(act, idx);
                         const costInfo = formatCost(act);
@@ -1149,6 +1222,8 @@ export default function PlannerSidebar({
                             animate={{ opacity: 1, y: 0, transition: { duration: 0.26, delay: idx * 0.06, ease: [0.22, 1, 0.36, 1] } }}
                             exit={{ opacity: 0, y: -10, transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] } }}
                             className="flex flex-col"
+                            data-day-idx={selectedDayIndex}
+                            data-stop-idx={stopNum}
                           >
                             {/* Point 1 & 10: Transport Connector Between Stops */}
                             {idx > 0 && transport && (
@@ -1162,6 +1237,7 @@ export default function PlannerSidebar({
 
                             {/* Drag & Interactive Activity Card */}
                             <div
+                              id={`itinerary-card-${selectedDayIndex}-${stopNum}`}
                               draggable={true}
                               onDragStart={(e) => handleDragStart(e, idx)}
                               onDragOver={(e) => handleDragOver(e, idx)}
@@ -1170,12 +1246,17 @@ export default function PlannerSidebar({
                               onDragEnd={handleDragEnd}
                               onMouseEnter={() => handleHoverStop(stopNum)}
                               onMouseLeave={() => handleHoverStop(null)}
-                              onClick={() => handleHoverStop(stopNum)}
+                              onClick={() => {
+                                handleSelectStop(isSelected ? null : stopNum);
+                                handleHoverStop(stopNum);
+                              }}
                               className={`w-full box-border p-4 rounded-2xl border transition-all duration-300 ease-out flex flex-col gap-3 cursor-pointer select-none relative z-10 ${
                                 dragOverStopIdx === idx
                                   ? 'border-[#FF6B2C] border-2 bg-[#FFF8F5] scale-[1.02] ring-4 ring-[#FF6B2C]/30 shadow-2xl z-30'
                                   : draggedStopIdx === idx
                                   ? 'opacity-40 border-dashed border-[#FF6B2C] scale-95'
+                                  : isSelected
+                                  ? 'border-[#EC6735] border-2 bg-[#FFF8F5] shadow-[0_12px_36px_rgba(236,103,53,0.18)] scale-[1.01] z-20'
                                   : isHovered || hoveredStopIdx === stopNum
                                   ? 'border-[#FF6B2C] bg-white shadow-[0_12px_28px_rgba(255,107,44,0.16)] -translate-y-1 z-20'
                                   : 'border-[#ECE8E2] bg-white shadow-2xs hover:border-[#FF6B2C]/60 hover:shadow-md hover:-translate-y-0.5'
@@ -1185,8 +1266,8 @@ export default function PlannerSidebar({
                                 {/* Stop Number Circle / Timeline Node */}
                                 <div className="flex flex-col items-center shrink-0 pt-0.5">
                                   <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-black transition-all ${
-                                    isHovered
-                                      ? 'bg-[#FF6B2C] text-white border-[#FF6B2C] shadow-md scale-110'
+                                    isSelected || isHovered
+                                      ? 'bg-[#EC6735] text-white border-[#EC6735] shadow-md scale-110'
                                       : 'bg-[#FFF2EA] text-[#FF6B2C] border-[#FF6B2C]/30'
                                   }`}>
                                     {stopNum}
