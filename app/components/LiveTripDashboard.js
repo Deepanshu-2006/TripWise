@@ -44,8 +44,8 @@ export default function LiveTripDashboard({
 }) {
   const [internalSelectedDayIndex, setInternalSelectedDayIndex] = useState(0);
   const [internalSelectedStopIdx, setInternalSelectedStopIdx] = useState(null);
-  const selectedDayIndex = propSelectedDayIndex !== null ? propSelectedDayIndex : internalSelectedDayIndex;
-  const selectedStopIdx = propSelectedStopIdx !== null && propSelectedStopIdx !== undefined ? propSelectedStopIdx : internalSelectedStopIdx;
+  const selectedDayIndex = propSelectedDayIndex !== undefined ? propSelectedDayIndex : internalSelectedDayIndex;
+  const selectedStopIdx = propSelectedStopIdx !== undefined ? propSelectedStopIdx : internalSelectedStopIdx;
   const setSelectedDayIndex = (idx) => {
     if (onSelectDay) onSelectDay(idx);
     setInternalSelectedDayIndex(idx);
@@ -58,11 +58,23 @@ export default function LiveTripDashboard({
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('map'); // 'map' | 'activities'
   const [internalHoveredStopIdx, setInternalHoveredStopIdx] = useState(null);
-  const hoveredStopIdx = propHoveredStopIdx !== null ? propHoveredStopIdx : internalHoveredStopIdx;
+  const hoveredStopIdx = propHoveredStopIdx !== undefined ? propHoveredStopIdx : internalHoveredStopIdx;
   const setHoveredStopIdx = (idx) => {
     if (onHoverStop) onHoverStop(idx);
     setInternalHoveredStopIdx(idx);
   };
+
+  useEffect(() => {
+    if (propSelectedDayIndex !== undefined) setInternalSelectedDayIndex(propSelectedDayIndex);
+  }, [propSelectedDayIndex]);
+
+  useEffect(() => {
+    if (propSelectedStopIdx !== undefined) setInternalSelectedStopIdx(propSelectedStopIdx);
+  }, [propSelectedStopIdx]);
+
+  useEffect(() => {
+    if (propHoveredStopIdx !== undefined) setInternalHoveredStopIdx(propHoveredStopIdx);
+  }, [propHoveredStopIdx]);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isFadingOutGlobe, setIsFadingOutGlobe] = useState(false);
   const prevIsGeneratingRef = React.useRef(isGenerating);

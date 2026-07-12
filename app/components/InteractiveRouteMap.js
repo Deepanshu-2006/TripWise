@@ -3,6 +3,13 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Route, Ticket, Heart, Share2, ArrowRight, ArrowUpRight, ArrowUp } from 'lucide-react';
+import {
+  getActivityThumbnail,
+  getActivityRating,
+  getCategoryStyling,
+  getAiInsight,
+  formatCost
+} from './itineraryHelpers';
 
 const MAP_STYLES = {
   streets: {
@@ -37,23 +44,15 @@ const MAP_STYLES = {
 
 // Smart Category & Icon detection from stop details
 const getCategoryMeta = (activity, fallbackColor = '#FF6B35') => {
-  const text = ((activity?.title || '') + ' ' + (activity?.description || '') + ' ' + (activity?.badge || '') + ' ' + (activity?.category || '')).toLowerCase();
-  if (/restaurant|cafe|coffee|lunch|dinner|breakfast|food|dining|sushi|pizza|trattoria|izakaya|bar|bistro|culinary|eat|tasting/.test(text)) {
-    return { icon: '🍽️', label: 'Dining', bg: '#FF6B35' };
+  if (activity && activity.isBasecamp === true) {
+    return { icon: '🏨', label: 'Basecamp Hub', bg: '#1E293B' };
   }
-  if (/museum|shrine|temple|castle|palace|cathedral|church|monument|history|heritage|culture|art|gallery|exhibition|historical/.test(text)) {
-    return { icon: '🏛️', label: 'Culture', bg: '#8B5CF6' };
-  }
-  if (/park|garden|nature|forest|mountain|lake|river|beach|scenic|viewpoint|hike|hiking|trail|waterfall|botanical/.test(text)) {
-    return { icon: '🌲', label: 'Nature', bg: '#10B981' };
-  }
-  if (/shop|market|bazaar|mall|boutique|fashion|souvenir|retail|shopping|outlet/.test(text)) {
-    return { icon: '🛍️', label: 'Shopping', bg: '#EC4899' };
-  }
-  if (/photo|tower|observatory|skyline|landmark|bridge|iconic|spot|attraction|highlights/.test(text)) {
-    return { icon: '📸', label: 'Landmark', bg: '#0D9488' };
-  }
-  return { icon: '📍', label: activity?.badge || 'Attraction', bg: fallbackColor };
+  const style = getCategoryStyling(activity || {});
+  return {
+    icon: style.icon,
+    label: style.name,
+    bg: style.dotClass || fallbackColor
+  };
 };
 
 // Helper to compute realistic transit mode and estimated duration between two stops
@@ -177,33 +176,10 @@ const DAY_SIGNATURE_COLORS = [
   { name: 'Day 7: Teal Turquoise', color: '#0D9488', glow: 'rgba(13,148,136,0.75)', bg: '#F0FDFA', border: '#99F6E4' },
 ];
 
-const getDestinationHeroImage = (act, destinationName, isBasecamp) => {
-  if (act?.image || act?.photoUrl || act?.imageUrl) return act.image || act.photoUrl || act.imageUrl;
-  if (isBasecamp) return 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80';
-  
-  const title = (act?.title || '').toLowerCase();
-  const desc = (act?.description || '').toLowerCase();
-  const category = (act?.category || getCategoryMeta(act).label || '').toLowerCase();
-  
-  if (title.includes('coffee') || title.includes('cafe') || title.includes('bakery') || desc.includes('coffee')) {
-    return 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=80';
-  }
-  if (category.includes('dining') || title.includes('restaurant') || title.includes('bistro') || title.includes('dinner') || title.includes('lunch')) {
-    return 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80';
-  }
-  if (category.includes('culture') || title.includes('museum') || title.includes('gallery') || title.includes('cathedral') || title.includes('temple')) {
-    return 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=1200&q=80';
-  }
-  if (category.includes('nature') || title.includes('park') || title.includes('beach') || title.includes('garden') || title.includes('mountain')) {
-    return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80';
-  }
-  if (category.includes('shopping') || title.includes('market') || title.includes('mall') || title.includes('plaza')) {
-    return 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80';
-  }
-  if (category.includes('landmark') || title.includes('tower') || title.includes('palace') || title.includes('castle')) {
-    return 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=1200&q=80';
-  }
-  return 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&q=80';
+const getDestinationHeroImage = (act, destinationName, isBasecamp, stopIdx = 0) => {
+  if (act?.image || act?.photoUrl || act?.imageUrl || act?.thumbnail) return act.image || act.photoUrl || act.imageUrl || act.thumbnail;
+  if (isBasecamp || act?.isBasecamp) return 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80';
+  return getActivityThumbnail(act, stopIdx);
 };
 
 export default function InteractiveRouteMap({
@@ -245,13 +221,25 @@ export default function InteractiveRouteMap({
   const [showShareToast, setShowShareToast] = useState(false);
   const [isRouteSyncing, setIsRouteSyncing] = useState(false);
 
-  const activeHoverIdx = propHoveredIdx !== null && propHoveredIdx !== undefined ? propHoveredIdx : internalHoveredIdx;
-  const selectedStopIdx = propSelectedStopIdx !== null && propSelectedStopIdx !== undefined ? propSelectedStopIdx : internalSelectedStopIdx;
+  const activeHoverIdx = propHoveredIdx !== undefined ? propHoveredIdx : internalHoveredIdx;
+  const selectedStopIdx = propSelectedStopIdx !== undefined ? propSelectedStopIdx : internalSelectedStopIdx;
 
   const setSelectedStopIdx = (idx) => {
     if (onSelectStop) onSelectStop(idx);
     setInternalSelectedStopIdx(idx);
   };
+
+  useEffect(() => {
+    if (propSelectedStopIdx !== undefined) {
+      setInternalSelectedStopIdx(propSelectedStopIdx);
+    }
+  }, [propSelectedStopIdx]);
+
+  useEffect(() => {
+    if (propHoveredIdx !== undefined) {
+      setInternalHoveredIdx(propHoveredIdx);
+    }
+  }, [propHoveredIdx]);
 
   useEffect(() => {
     setIsRouteSyncing(true);
@@ -261,7 +249,12 @@ export default function InteractiveRouteMap({
 
   // CAMERA & POPUP SYNC WHEN ACTIVE STOP CHANGES via Itinerary Click or Scroll (INTERACTION 2 & 3 / MAP CAMERA)
   useEffect(() => {
-    if (!isReady || !mapRef.current || selectedStopIdx === null || selectedStopIdx === undefined || selectedStopIdx === lastFlewStopRef.current) return;
+    if (selectedStopIdx === null || selectedStopIdx === undefined) {
+      lastFlewStopRef.current = null;
+      setActiveDestination(null);
+      return;
+    }
+    if (!isReady || !mapRef.current || selectedStopIdx === lastFlewStopRef.current) return;
     lastFlewStopRef.current = selectedStopIdx;
     const isBasecamp = selectedStopIdx === 0;
     const targetAct = isBasecamp
@@ -810,6 +803,11 @@ export default function InteractiveRouteMap({
     walkableRingLayerRef.current = window.L.layerGroup().addTo(map);
     mapRef.current = map;
 
+    map.on('click', () => {
+      setSelectedStopIdx(null);
+      setActiveDestination(null);
+    });
+
     return () => {
       if (mapRef.current) {
         try {
@@ -1084,7 +1082,10 @@ export default function InteractiveRouteMap({
             markersRef.current[markerKey] = marker;
           }
 
-          marker.on('click', () => {
+          marker.on('click', (e) => {
+            if (e && e.originalEvent && e.originalEvent.stopPropagation) {
+              e.originalEvent.stopPropagation();
+            }
             if (!isMultiDayMode) {
               setSelectedStopIdx(stopNum);
               if (isBasecamp) setIsHotelRingActive(true);
@@ -1792,9 +1793,12 @@ export default function InteractiveRouteMap({
         if (!currentTarget || !currentTarget.act) return null;
 
         const { act, stopIndex, totalStops, isBasecamp, dayStops = loopedStops } = currentTarget;
-        const meta = isBasecamp ? { icon: '🏨', label: 'Basecamp Hub', bg: '#1E293B' } : getCategoryMeta(act);
-        const stopNumberLabel = isBasecamp ? 'Basecamp Hotel' : `Stop ${stopIndex} of ${totalStops || (dayStops.length - 1)}`;
-        const heroImageUrl = getDestinationHeroImage(act, destinationName, isBasecamp);
+        const meta = isBasecamp ? { icon: '🏨', label: 'Basecamp Hub', bg: '#1E293B' } : getCategoryStyling(act);
+        const stopNumberLabel = isBasecamp ? 'Anchor Hub' : `Stop ${stopIndex} of ${totalStops || (dayStops.length - 1)}`;
+        const heroImageUrl = getDestinationHeroImage(act, destinationName, isBasecamp, stopIndex);
+        const ratingInfo = getActivityRating(act, stopIndex || 0);
+        const costInfo = formatCost(act);
+        const aiTipText = getAiInsight(act, stopIndex || 0);
 
         let prevTransit = null;
         if (stopIndex > 0 && dayStops[stopIndex - 1]?.coordinates && act?.coordinates) {
@@ -1824,16 +1828,11 @@ export default function InteractiveRouteMap({
           act.title || 'Stop'
         )}&sll=${act?.coordinates?.lat || 0},${act?.coordinates?.lng || 0}`;
 
-        const insightBullets = act?.aiTipBullets || (act?.aiTip || act?.tip ? [
-          act?.aiTip || act?.tip,
-          `Optimal visit window around ${act?.bestTime || 'afternoon/sunset'}.`,
+        const insightBullets = act?.aiTipBullets || [
+          aiTipText,
+          `Optimal visit window around ${act?.time || act?.bestTime || 'morning/afternoon'}.`,
           `Only a short walk from your ${stopIndex > 1 ? 'previous stop' : 'basecamp'}.`
-        ] : [
-          isBasecamp ? `Ask the concierge for their private rooftop terrace pass around sunset.` : `Visit after 4:30 PM for softer lighting.`,
-          `Crowds are significantly lower during this exploration window.`,
-          `Perfect timing before ${meta.label === 'Dining' ? 'the evening dinner rush' : 'sunset views'}.`,
-          `Only a 12-minute walk to your next stop.`
-        ]);
+        ];
 
         const whyChosenText = act?.whyChosen || (
           isBasecamp
@@ -1867,6 +1866,26 @@ export default function InteractiveRouteMap({
           setSelectedStopIdx(null);
           setActiveDestination(null);
           setHeroImageLoaded(false);
+          // Fly map back to show full route overview
+          if (mapRef.current && layerGroupRef.current && window.L) {
+            const layers = layerGroupRef.current.getLayers();
+            const latLngs = [];
+            layers.forEach((layer) => {
+              if (layer.getLatLng) latLngs.push(layer.getLatLng());
+              else if (layer.getLatLngs) latLngs.push(...layer.getLatLngs());
+            });
+            if (latLngs.length > 0) {
+              const bounds = window.L.latLngBounds(latLngs);
+              mapRef.current.flyToBounds(bounds, {
+                paddingTopLeft: [75, 120],
+                paddingBottomRight: [75, 95],
+                maxZoom: 15,
+                animate: true,
+                duration: 0.8,
+                easeLinearity: 0.25
+              });
+            }
+          }
         };
 
         const handleNavigatePrev = () => {
@@ -1975,7 +1994,7 @@ export default function InteractiveRouteMap({
               <div className="flex items-center justify-between gap-1 sm:gap-1.5 w-full flex-nowrap pb-1 pt-0.5">
                 <div className="bg-[rgba(255,255,255,0.85)] backdrop-blur-md border border-black/6 shadow-[0_8px_24px_rgba(0,0,0,0.06)] rounded-full px-2 sm:px-2.5 py-1.5 flex items-center gap-1 text-[11px] font-extrabold text-[#1F1F1F] whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-default">
                   <span className="text-[#FFB000] text-xs font-black">★</span>
-                  <span>{act?.rating || '4.8'} ({act?.reviewsCount || act?.reviews || '1,284'})</span>
+                  <span>{ratingInfo.rating} ({ratingInfo.reviews})</span>
                 </div>
 
                 <div className="bg-[rgba(255,255,255,0.85)] backdrop-blur-md border border-black/6 shadow-[0_8px_24px_rgba(0,0,0,0.06)] rounded-full px-2 sm:px-2.5 py-1.5 flex items-center gap-1 text-[11px] font-extrabold text-[#059669] dark:text-[#10B981] whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-default">
@@ -2020,7 +2039,7 @@ export default function InteractiveRouteMap({
                     <span>💰</span> Estimated Cost
                   </span>
                   <span className="text-xs sm:text-[13px] font-extrabold text-[#1F1F1F]">
-                    {act?.cost || act?.priceLevel || (isBasecamp ? 'Included in Stay' : '€15 – €35')}
+                    {isBasecamp ? 'Included in Stay' : costInfo.title.replace('💰 ', '')}
                   </span>
                 </div>
 
@@ -2129,10 +2148,11 @@ export default function InteractiveRouteMap({
                     href={googleMapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 min-w-0 bg-linear-to-r from-[#FF6B2C] via-[#FF5814] to-[#E04B10] hover:from-[#FF7A40] hover:via-[#FF6524] hover:to-[#EB5416] text-white font-semibold rounded-xl px-2 h-10 flex items-center justify-center gap-1 sm:gap-1.5 shadow-[0_3px_12px_rgba(255,107,44,0.28)] hover:shadow-[0_6px_18px_rgba(255,107,44,0.42)] hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out text-center group cursor-pointer border border-[#FF814A]/30"
+                    className="flex-1 min-w-0 bg-linear-to-r from-[#FF6B2C] via-[#FF5814] to-[#E04B10] hover:from-[#FF7A40] hover:via-[#FF6524] hover:to-[#EB5416] text-white font-semibold rounded-xl px-2 h-10 flex items-center justify-center shadow-[0_3px_12px_rgba(255,107,44,0.28)] hover:shadow-[0_6px_18px_rgba(255,107,44,0.42)] hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out text-center group cursor-pointer border border-[#FF814A]/30"
                   >
-                    <Ticket size={15} strokeWidth={2.2} className="shrink-0 text-white transition-transform duration-200 group-hover:scale-105" />
+                    <Ticket size={15} strokeWidth={2.2} className="shrink-0 text-white mr-1 sm:mr-1.5 transition-transform duration-200 group-hover:scale-105 group-hover:-rotate-12" />
                     <span className="tracking-tight whitespace-nowrap text-xs sm:text-[13px]">Tickets</span>
+                    <ArrowRight size={14} strokeWidth={2.6} className="shrink-0 text-white max-w-0 opacity-0 -translate-x-1.5 overflow-hidden transition-all duration-200 ease-out group-hover:max-w-4 group-hover:opacity-100 group-hover:translate-x-0 group-hover:ml-1" />
                   </a>
 
                   {/* Secondary CTA: Start Route (with Upright Arrow instead of diagonal icon) */}
@@ -2140,12 +2160,12 @@ export default function InteractiveRouteMap({
                     href={googleMapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 min-w-0 bg-white hover:bg-[#FAF8F5] text-[#1F1F1F] border border-black/6 hover:border-black/12 font-semibold rounded-xl px-2 h-10 flex items-center justify-center gap-1 sm:gap-1.5 shadow-2xs hover:shadow-sm hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out text-center group cursor-pointer"
+                    className="flex-[1.2] min-w-0 bg-white hover:bg-[#FAF8F5] text-[#1F1F1F] border border-black/6 hover:border-black/12 font-semibold rounded-xl px-2 h-10 flex items-center justify-center gap-1 sm:gap-1.5 shadow-2xs hover:shadow-sm hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out text-center group cursor-pointer"
                   >
-                    <ArrowUp
-                      size={16}
-                      strokeWidth={2.4}
-                      className="text-[#FF6B2C] transition-transform duration-200 ease-out group-hover:-translate-y-0.5 group-active:scale-110 shrink-0"
+                    <ArrowUpRight
+                      size={15}
+                      strokeWidth={2.2}
+                      className="text-[#FF6B2C] transition-transform duration-200 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-active:scale-110 shrink-0"
                     />
                     <span className="tracking-tight whitespace-nowrap text-xs sm:text-[13px]">Start Route</span>
                   </a>
@@ -2154,7 +2174,7 @@ export default function InteractiveRouteMap({
                   <button
                     type="button"
                     onClick={() => setIsDestinationSaved(!isDestinationSaved)}
-                    className={`flex-1 min-w-0 hover:bg-[#FAF8F5] ${
+                    className={`flex-[0.9] min-w-0 hover:bg-[#FAF8F5] ${
                       isDestinationSaved
                         ? 'bg-linear-to-r from-[#FFE8DE] to-[#FFF3ED] text-[#D94E14] border border-[#FF6B2C]/30 shadow-2xs'
                         : 'bg-white text-[#1F1F1F] border border-black/6 hover:border-black/12 shadow-2xs'
@@ -2182,7 +2202,7 @@ export default function InteractiveRouteMap({
                         setTimeout(() => setShowShareToast(false), 3000);
                       }
                     }}
-                    className="flex-1 min-w-0 bg-white hover:bg-[#FAF8F5] text-[#1F1F1F] border border-black/6 hover:border-black/12 font-semibold rounded-xl px-2 h-10 flex items-center justify-center gap-1 sm:gap-1.5 shadow-2xs hover:shadow-sm hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out text-center group cursor-pointer"
+                    className="flex-[0.9] min-w-0 bg-white hover:bg-[#FAF8F5] text-[#1F1F1F] border border-black/6 hover:border-black/12 font-semibold rounded-xl px-2 h-10 flex items-center justify-center gap-1 sm:gap-1.5 shadow-2xs hover:shadow-sm hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out text-center group cursor-pointer"
                   >
                     <Share2
                       size={15}

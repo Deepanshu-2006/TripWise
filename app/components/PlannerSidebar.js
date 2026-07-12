@@ -168,7 +168,7 @@ export default function PlannerSidebar({
   onViewItinerary
 }) {
   const [internalSelectedDayIndex, setInternalSelectedDayIndex] = useState(0);
-  const selectedDayIndex = propSelectedDayIndex !== null ? propSelectedDayIndex : internalSelectedDayIndex;
+  const selectedDayIndex = propSelectedDayIndex !== undefined ? propSelectedDayIndex : internalSelectedDayIndex;
   const [isDayChanging, setIsDayChanging] = useState(false);
 
   const handleDaySelect = (idx) => {
@@ -179,16 +179,28 @@ export default function PlannerSidebar({
   };
 
   const [internalHoveredStopIdx, setInternalHoveredStopIdx] = useState(null);
-  const hoveredStopIdx = propHoveredStopIdx !== null ? propHoveredStopIdx : internalHoveredStopIdx;
+  const hoveredStopIdx = propHoveredStopIdx !== undefined ? propHoveredStopIdx : internalHoveredStopIdx;
   const handleHoverStop = (idx) => {
     if (onHoverStop) onHoverStop(idx);
     setInternalHoveredStopIdx(idx);
   };
 
   const [internalSelectedStopIdx, setInternalSelectedStopIdx] = useState(null);
-  const selectedStopIdx = propSelectedStopIdx !== null && propSelectedStopIdx !== undefined ? propSelectedStopIdx : internalSelectedStopIdx;
+  const selectedStopIdx = propSelectedStopIdx !== undefined ? propSelectedStopIdx : internalSelectedStopIdx;
   const selectedStopIdxRef = useRef(selectedStopIdx);
   selectedStopIdxRef.current = selectedStopIdx;
+
+  useEffect(() => {
+    if (propSelectedDayIndex !== undefined) setInternalSelectedDayIndex(propSelectedDayIndex);
+  }, [propSelectedDayIndex]);
+
+  useEffect(() => {
+    if (propSelectedStopIdx !== undefined) setInternalSelectedStopIdx(propSelectedStopIdx);
+  }, [propSelectedStopIdx]);
+
+  useEffect(() => {
+    if (propHoveredStopIdx !== undefined) setInternalHoveredStopIdx(propHoveredStopIdx);
+  }, [propHoveredStopIdx]);
   const isUserScrollingRef = useRef(false);
   const scrollTimeoutRef = useRef(null);
 

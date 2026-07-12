@@ -202,19 +202,35 @@ export function getIconBadges(act, idx = 0) {
   // Primary Badge from user or category
   if (act?.badge) {
     let icon = '⭐';
-    if (text.includes('local') || text.includes('gem') || text.includes('secret')) icon = '💎';
-    else if (text.includes('route') || text.includes('optimiz') || text.includes('easy')) icon = '🗺️';
-    else if (text.includes('gourmet') || text.includes('pick') || text.includes('food') || text.includes('chef')) icon = '🍝';
-    else if (text.includes('fast') || text.includes('track') || text.includes('vip') || text.includes('skip')) icon = '⚡';
-    else if (text.includes('must')) icon = '⭐';
+    let badgeText = act.badge;
+    if (text.includes('local') || text.includes('gem') || text.includes('secret')) {
+      icon = '💎';
+      if (badgeText.toUpperCase() === 'LOCAL GEM') badgeText = 'Local Gem';
+    } else if (text.includes('route') || text.includes('optimiz') || text.includes('easy')) {
+      icon = '🗺️';
+      if (badgeText.toUpperCase().includes('OPTIM')) badgeText = 'Optimized Route';
+    } else if (text.includes('gourmet') || text.includes('pick') || text.includes('food') || text.includes('chef')) {
+      icon = '🍝';
+      if (badgeText.toUpperCase() === 'GOURMET PICK') badgeText = 'Gourmet Pick';
+    } else if (text.includes('fast') || text.includes('track') || text.includes('vip') || text.includes('skip')) {
+      icon = '⚡';
+      if (badgeText.toUpperCase() === 'FAST TRACK') badgeText = 'Fast Track';
+    } else if (text.includes('must') || text.includes('see') || text.includes('star')) {
+      icon = '⭐';
+      if (badgeText.toUpperCase() === 'MUST SEE') badgeText = 'Must See';
+    } else if (text.includes('budget')) {
+      icon = '💰';
+      if (badgeText.toUpperCase() === 'BUDGET MATCH') badgeText = 'Budget Match';
+    }
 
     let colorClass = 'bg-amber-500/10 text-amber-800 border-amber-500/30';
     if (icon === '💎') colorClass = 'bg-emerald-500/10 text-emerald-800 border-emerald-500/30';
     else if (icon === '🗺️') colorClass = 'bg-blue-500/10 text-blue-800 border-blue-500/30';
     else if (icon === '🍝') colorClass = 'bg-[#EC6735]/10 text-[#EC6735] border-[#EC6735]/30';
     else if (icon === '⚡') colorClass = 'bg-purple-500/10 text-purple-800 border-purple-500/30';
+    else if (icon === '💰') colorClass = 'bg-teal-500/10 text-teal-800 border-teal-500/30';
 
-    badges.push({ icon, text: act.badge, colorClass });
+    badges.push({ icon, text: badgeText, colorClass });
   } else {
     // Generate smart defaults based on index or type
     if (idx === 0 || text.includes('colosseum') || text.includes('vatican') || text.includes('attraction')) {
@@ -230,11 +246,12 @@ export function getIconBadges(act, idx = 0) {
     }
   }
 
-  // Add a secondary badge if appropriate to enrich the display
+  // Add a secondary badge if appropriate without duplicating existing concepts
   if (badges.length === 1 && idx % 2 === 0) {
-    if (badges[0].text !== 'Optimized Route') {
+    const existingText = badges[0].text.toLowerCase();
+    if (!existingText.includes('optim') && !existingText.includes('route')) {
       badges.push({ icon: '🗺️', text: 'Optimized Route', colorClass: 'bg-blue-500/10 text-blue-800 border-blue-500/30' });
-    } else {
+    } else if (!existingText.includes('fast') && !existingText.includes('track')) {
       badges.push({ icon: '⚡', text: 'Fast Track', colorClass: 'bg-purple-500/10 text-purple-800 border-purple-500/30' });
     }
   }
