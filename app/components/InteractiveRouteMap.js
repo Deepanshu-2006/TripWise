@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Route, Ticket, Heart, Share2, ArrowRight, ArrowUpRight } from 'lucide-react';
+import { Route, Ticket, Heart, Share2, ArrowRight, ArrowUpRight, ArrowUp } from 'lucide-react';
 
 const MAP_STYLES = {
   streets: {
@@ -1190,11 +1190,13 @@ export default function InteractiveRouteMap({
         });
 
         if (allLatLngs.length > 1 && selectedStopIdx === null && selectedCategory === 'all') {
-          mapRef.current.fitBounds(L.polyline(allLatLngs).getBounds(), {
+          mapRef.current.flyToBounds(L.polyline(allLatLngs).getBounds(), {
             paddingTopLeft: [75, 120],
             paddingBottomRight: [75, 95],
             maxZoom: 15,
-            animate: true
+            animate: true,
+            duration: 0.8,
+            easeLinearity: 0.25
           });
         }
       } else {
@@ -1206,14 +1208,16 @@ export default function InteractiveRouteMap({
         });
 
         if (res.animatedPolyline && selectedStopIdx === null && selectedCategory === 'all') {
-          mapRef.current.fitBounds(res.animatedPolyline.getBounds(), {
+          mapRef.current.flyToBounds(res.animatedPolyline.getBounds(), {
             paddingTopLeft: [75, 120],
             paddingBottomRight: [75, 95],
             maxZoom: 15,
-            animate: true
+            animate: true,
+            duration: 0.8,
+            easeLinearity: 0.25
           });
         } else if (res.latLngs.length === 1 && selectedStopIdx === null && selectedCategory === 'all') {
-          mapRef.current.setView(res.latLngs[0], 15, { animate: true });
+          mapRef.current.flyTo(res.latLngs[0], 15, { animate: true, duration: 0.8 });
         }
       }
     };
@@ -1262,7 +1266,7 @@ export default function InteractiveRouteMap({
     });
     if (latLngs.length > 0 && window.L) {
       const bounds = window.L.latLngBounds(latLngs);
-      mapRef.current.fitBounds(bounds, { paddingTopLeft: [75, 120], paddingBottomRight: [75, 95], maxZoom: 15, animate: true, duration: 1.0 });
+      mapRef.current.flyToBounds(bounds, { paddingTopLeft: [75, 120], paddingBottomRight: [75, 95], maxZoom: 15, animate: true, duration: 0.8, easeLinearity: 0.25 });
     }
   };
 
@@ -1298,10 +1302,10 @@ export default function InteractiveRouteMap({
 
     if (matchingLatLngs.length > 0 && window.L) {
       if (matchingLatLngs.length === 1) {
-        mapRef.current.flyTo(matchingLatLngs[0], 16, { duration: 1.1, easeLinearity: 0.25 });
+        mapRef.current.flyTo(matchingLatLngs[0], 16, { duration: 0.8, easeLinearity: 0.25 });
       } else {
         const bounds = window.L.latLngBounds(matchingLatLngs);
-        mapRef.current.fitBounds(bounds, { paddingTopLeft: [75, 120], paddingBottomRight: [75, 95], maxZoom: 15, animate: true, duration: 1.0 });
+        mapRef.current.flyToBounds(bounds, { paddingTopLeft: [75, 120], paddingBottomRight: [75, 95], maxZoom: 15, animate: true, duration: 0.8, easeLinearity: 0.25 });
       }
     }
   };
@@ -1983,56 +1987,55 @@ export default function InteractiveRouteMap({
               <div className="sticky bottom-0 z-40 bg-[rgba(255,255,255,0.88)] backdrop-blur-md border-t border-[#ECE8E2] pt-3 pb-3 sm:pb-4 mt-2 -mx-4 sm:-mx-5 px-4 sm:px-5 rounded-b-3xl shadow-[0_-8px_24px_rgba(0,0,0,0.06)] flex flex-col gap-2.5">
                 {/* Premium Compact Sticky Action Bar (always 1 click away on scroll) */}
                 <div className="flex items-center justify-between gap-1.5 sm:gap-2 w-full">
-                  {/* Primary CTA: Tickets (~26% width, sleek and compact for shorter word 'Tickets') */}
+                  {/* Primary CTA: Tickets (reduced px & height for ultra-sleek compact look) */}
                   <a
                     href={googleMapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-[26%] shrink-0 bg-linear-to-r from-[#FF6B2C] via-[#FF5814] to-[#E04B10] hover:from-[#FF7A40] hover:via-[#FF6524] hover:to-[#EB5416] text-white font-semibold rounded-2xl px-1.5 sm:px-2 h-12 flex items-center justify-center gap-1 sm:gap-1.5 shadow-[0_3px_12px_rgba(255,107,44,0.28)] hover:shadow-[0_6px_18px_rgba(255,107,44,0.42)] hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out text-center group cursor-pointer border border-[#FF814A]/30"
+                    className="flex-1 min-w-0 bg-linear-to-r from-[#FF6B2C] via-[#FF5814] to-[#E04B10] hover:from-[#FF7A40] hover:via-[#FF6524] hover:to-[#EB5416] text-white font-semibold rounded-xl px-2 h-10 flex items-center justify-center gap-1 sm:gap-1.5 shadow-[0_3px_12px_rgba(255,107,44,0.28)] hover:shadow-[0_6px_18px_rgba(255,107,44,0.42)] hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out text-center group cursor-pointer border border-[#FF814A]/30"
                   >
-                    <Ticket size={16} strokeWidth={2} className="shrink-0 text-white transition-transform duration-200 group-hover:scale-105" />
-                    <span className="tracking-tight whitespace-nowrap text-[11.5px] sm:text-[13.5px]">Tickets</span>
-                    <ArrowRight size={14} strokeWidth={2.5} className="w-0 opacity-0 group-hover:w-3.5 group-hover:opacity-100 transition-all duration-200 ease-out text-white shrink-0 -ml-1 group-hover:ml-0 hidden sm:block" />
+                    <Ticket size={15} strokeWidth={2.2} className="shrink-0 text-white transition-transform duration-200 group-hover:scale-105" />
+                    <span className="tracking-tight whitespace-nowrap text-xs sm:text-[13px]">Tickets</span>
                   </a>
 
-                  {/* Secondary CTA: Start Route (~32% width, fits full text cleanly without truncation) */}
+                  {/* Secondary CTA: Start Route (with Upright Arrow instead of diagonal icon) */}
                   <a
                     href={googleMapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-[26%] shrink-0 bg-white hover:bg-[#FAF8F5] text-[#1F1F1F] border border-black/6 hover:border-black/12 font-semibold rounded-2xl px-1.5 sm:px-2.5 h-12 flex items-center justify-center gap-1 sm:gap-1.5 shadow-2xs hover:shadow-sm hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out text-center group cursor-pointer"
+                    className="flex-1 min-w-0 bg-white hover:bg-[#FAF8F5] text-[#1F1F1F] border border-black/6 hover:border-black/12 font-semibold rounded-xl px-2 h-10 flex items-center justify-center gap-1 sm:gap-1.5 shadow-2xs hover:shadow-sm hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out text-center group cursor-pointer"
                   >
-                    <ArrowUpRight
-                      size={17}
-                      strokeWidth={2.2}
-                      className="text-[#FF6B2C] transition-transform duration-200 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-active:scale-110 shrink-0"
+                    <ArrowUp
+                      size={16}
+                      strokeWidth={2.4}
+                      className="text-[#FF6B2C] transition-transform duration-200 ease-out group-hover:-translate-y-0.5 group-active:scale-110 shrink-0"
                     />
-                    <span className="tracking-tight whitespace-nowrap text-[11.5px] sm:text-[13.5px]">Start Route</span>
+                    <span className="tracking-tight whitespace-nowrap text-xs sm:text-[13px]">Start Route</span>
                   </a>
 
-                  {/* Secondary CTA: Save (~20% width) */}
+                  {/* Secondary CTA: Save */}
                   <button
                     type="button"
                     onClick={() => setIsDestinationSaved(!isDestinationSaved)}
-                    className={`w-[20%] shrink-0 hover:bg-[#FAF8F5] ${
+                    className={`flex-1 min-w-0 hover:bg-[#FAF8F5] ${
                       isDestinationSaved
                         ? 'bg-linear-to-r from-[#FFE8DE] to-[#FFF3ED] text-[#D94E14] border border-[#FF6B2C]/30 shadow-2xs'
                         : 'bg-white text-[#1F1F1F] border border-black/6 hover:border-black/12 shadow-2xs'
-                    } font-semibold rounded-2xl px-1 sm:px-2 h-12 flex items-center justify-center gap-1 sm:gap-1.5 hover:shadow-sm hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out text-center group cursor-pointer`}
+                    } font-semibold rounded-xl px-2 h-10 flex items-center justify-center gap-1 sm:gap-1.5 hover:shadow-sm hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out text-center group cursor-pointer`}
                   >
                     <Heart
-                      size={16}
-                      strokeWidth={2}
+                      size={15}
+                      strokeWidth={2.2}
                       className={`shrink-0 transition-all duration-200 ${
                         isDestinationSaved
                           ? 'fill-[#FF6B2C] text-[#FF6B2C] scale-110'
                           : 'text-[#1F1F1F] group-hover:text-[#FF6B2C] group-active:scale-125'
                       }`}
                     />
-                    <span className="tracking-tight whitespace-nowrap text-[11.5px] sm:text-[13.5px]">{isDestinationSaved ? 'Saved' : 'Save'}</span>
+                    <span className="tracking-tight whitespace-nowrap text-xs sm:text-[13px]">{isDestinationSaved ? 'Saved' : 'Save'}</span>
                   </button>
 
-                  {/* Secondary CTA: Share (~20% width) */}
+                  {/* Secondary CTA: Share (icon fills solid on hover) */}
                   <button
                     type="button"
                     onClick={() => {
@@ -2042,14 +2045,14 @@ export default function InteractiveRouteMap({
                         setTimeout(() => setShowShareToast(false), 3000);
                       }
                     }}
-                    className="w-[20%] shrink-0 bg-white hover:bg-[#FAF8F5] text-[#1F1F1F] border border-black/6 hover:border-black/12 font-semibold rounded-2xl px-1 sm:px-2 h-12 flex items-center justify-center gap-1 sm:gap-1.5 shadow-2xs hover:shadow-sm hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out text-center group cursor-pointer"
+                    className="flex-1 min-w-0 bg-white hover:bg-[#FAF8F5] text-[#1F1F1F] border border-black/6 hover:border-black/12 font-semibold rounded-xl px-2 h-10 flex items-center justify-center gap-1 sm:gap-1.5 shadow-2xs hover:shadow-sm hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out text-center group cursor-pointer"
                   >
                     <Share2
-                      size={16}
-                      strokeWidth={2}
-                      className="shrink-0 text-[#1F1F1F] fill-transparent group-hover:fill-current transition-all duration-200 ease-out group-hover:translate-x-0.5 group-hover:scale-110"
+                      size={15}
+                      strokeWidth={2.2}
+                      className="shrink-0 text-[#1F1F1F] fill-transparent group-hover:fill-[#1F1F1F] transition-all duration-200 ease-out group-hover:scale-110"
                     />
-                    <span className="tracking-tight whitespace-nowrap text-[11.5px] sm:text-[13.5px]">Share</span>
+                    <span className="tracking-tight whitespace-nowrap text-xs sm:text-[13px]">Share</span>
                   </button>
                 </div>
 

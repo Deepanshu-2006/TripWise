@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import Header from '../components/Header';
-import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal } from 'lucide-react';
+import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun } from 'lucide-react';
 import {
   getActivityThumbnail,
   getTransportBetweenStops,
@@ -125,44 +126,46 @@ export default function ItineraryPage() {
       <main className="max-w-6xl mx-auto px-6 py-10 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-10">
         {/* Left Column: Day Selector & GeoEngine Route Map */}
         <div className="lg:col-span-4 flex flex-col gap-6">
-          <div className="bg-white p-5 sm:p-6 rounded-3xl border border-[rgba(28,27,27,0.08)] shadow-sm">
-            <h3 className="text-xs font-black uppercase tracking-widest text-[#5F5E5A] mb-4 flex items-center justify-between">
+          {/* Premium Animated Segmented Control Day Navigation (Apple iOS / Arc / Linear inspired) */}
+          <div className="bg-white p-4 sm:p-5 rounded-3xl border border-[rgba(28,27,27,0.08)] shadow-sm">
+            <h3 className="text-xs font-black uppercase tracking-widest text-[#5F5E5A] mb-3 flex items-center justify-between">
               <span>Select Day</span>
               <span className="text-[10px] text-[#EC6735] font-extrabold">{itinerary.days?.length || 1} Days Total</span>
             </h3>
-            {/* Point 12: Improved Day Tabs with rich theme & stop count */}
-            <div className="flex flex-col gap-2.5">
-              {itinerary.days?.map((day, idx) => {
-                const summary = getDaySummary(day, idx, itinerary.days || []);
-                const isActive = activeDay === summary.dayNum;
-                return (
-                  <button
-                    key={summary.dayNum}
-                    onClick={() => {
-                      setActiveDay(summary.dayNum);
-                      setSelectedStopIdx(null);
-                    }}
-                    className={`w-full p-4 rounded-2xl text-left font-bold transition-all duration-200 flex items-center justify-between cursor-pointer ${
-                      isActive
-                        ? 'bg-[#EC6735] text-white shadow-lg shadow-[#EC6735]/25 scale-[1.01]'
-                        : 'bg-[#FFF8F5] text-[#1C1B1B] hover:bg-[#FCE8E1]/60 border border-[rgba(28,27,27,0.06)] hover:border-[#EC6735]/30'
-                    }`}
-                  >
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-sm font-black tracking-tight">{summary.titleLabel}</span>
-                      <span className={`text-xs font-extrabold flex items-center gap-1.5 ${isActive ? 'text-white/95' : 'text-[#EC6735]'}`}>
-                        <span>{summary.themeTitle}</span>
+            {itinerary.days && itinerary.days.length > 0 && (
+              <div className="inline-flex items-center bg-[#F7F5F2] p-1 rounded-[22px] border border-[#ECE8E2] w-full relative select-none shadow-inner">
+                {itinerary.days.map((day, idx) => {
+                  const dayNum = day.dayNumber || idx + 1;
+                  const isSelected = activeDay === dayNum;
+                  return (
+                    <button
+                      key={dayNum}
+                      type="button"
+                      onClick={() => {
+                        setActiveDay(dayNum);
+                        setSelectedStopIdx(null);
+                      }}
+                      className="relative py-2.5 text-sm font-medium transition-colors duration-200 cursor-pointer flex items-center justify-center flex-1 whitespace-nowrap rounded-[18px] hover:bg-white/40 focus:outline-hidden z-10"
+                    >
+                      {isSelected && (
+                        <motion.span
+                          layoutId="activeDayItinerarySegmentedTab"
+                          className="absolute inset-0 rounded-[18px] bg-[#EC6735] shadow-[0_2px_8px_rgba(236,103,53,0.28)] -z-10"
+                          transition={{
+                            layout: { duration: 0.3, ease: [0.22, 1, 0.36, 1] }
+                          }}
+                        />
+                      )}
+                      <span className={`relative transition-colors duration-300 font-medium ${
+                        isSelected ? 'text-white' : 'text-[#5F5E5A] hover:text-[#1C1B1B]'
+                      }`}>
+                        Day {dayNum}
                       </span>
-                    </div>
-                    <span className={`text-xs font-bold px-2.5 py-1 rounded-xl shrink-0 ${
-                      isActive ? 'bg-white/20 text-white border border-white/20' : 'bg-[#ECE8E2]/60 text-[#5F5E5A]'
-                    }`}>
-                      {summary.stopsText}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Live GeoEngine Route Map */}
@@ -190,76 +193,105 @@ export default function ItineraryPage() {
 
         {/* Right Column: Day Overview Card & Connected Timeline */}
         <div className="lg:col-span-8 flex flex-col gap-6">
-          {/* Point 11 & Point 13: Day Overview Card + Quick Action Pill Buttons */}
-          <div className="bg-linear-to-r from-[#FFF8F5] via-white to-[#FFF2EA] p-5 sm:p-6 rounded-3xl border border-[rgba(28,27,27,0.08)] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-xs font-black uppercase tracking-wider text-[#EC6735] font-mono">
-                  {itinerary.destinationName || 'Rome'} • {currentDaySummary.titleLabel}
-                </span>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#EC6735]" />
-                <span className="text-xs font-bold text-[#5F5E5A]">{currentDaySummary.themeTitle}</span>
+          {/* Compact Floating Trip Summary Header (Inspired by Apple Maps, Airbnb, Arc, Linear) */}
+          <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md p-3.5 sm:p-4 rounded-[20px] border border-[#ECE8E2] shadow-[0_4px_24px_rgba(0,0,0,0.04)] flex flex-col gap-2.5 transition-all duration-300">
+            {/* Row 1: Destination Title & Weather Chip */}
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <MapPin className="w-4.5 h-4.5 text-[#EC6735] shrink-0 fill-[#EC6735]/15" />
+                <h2 className="text-[18px] sm:text-[20px] font-bold text-[#1C1B1B] tracking-tight truncate">
+                  {itinerary.destinationName || 'Rome, Italy'}
+                </h2>
               </div>
-              {/* Overview Stats Bar */}
-              <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 mt-2.5">
-                <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#1C1B1B] bg-white px-3 py-1.5 rounded-xl border border-[rgba(28,27,27,0.06)] shadow-2xs">
-                  <span>📍</span> <span>{currentDaySummary.stats.stops}</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#1C1B1B] bg-white px-3 py-1.5 rounded-xl border border-[rgba(28,27,27,0.06)] shadow-2xs">
-                  <span>🕒</span> <span>{currentDaySummary.stats.hours}</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#1C1B1B] bg-white px-3 py-1.5 rounded-xl border border-[rgba(28,27,27,0.06)] shadow-2xs">
-                  <span>🚶</span> <span>{currentDaySummary.stats.distance}</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#0D9488] bg-[#0D9488]/10 px-3 py-1.5 rounded-xl border border-[#0D9488]/20 shadow-2xs">
-                  <span>💰</span> <span>{currentDaySummary.stats.cost}</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs font-extrabold text-amber-800 bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/20 shadow-2xs">
-                  <span>{currentDaySummary.stats.weather}</span>
-                </div>
+              <div className="flex items-center gap-1 text-[12px] font-semibold text-[#5F5E5A] bg-[#F7F5F2] px-2.5 py-1 rounded-full border border-[#ECE8E2] shrink-0 select-none">
+                <CloudSun className="w-3.5 h-3.5 text-[#EC6735]" />
+                <span>{currentDaySummary.stats.weather || '☀ 32°'}</span>
               </div>
             </div>
 
-            {/* Point 13: Quick Action Pill Buttons (Replace single Modify Day dropdown) */}
-            <div className="flex items-center flex-wrap gap-2 shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-[rgba(28,27,27,0.08)]">
-              <button
-                type="button"
-                onClick={() => alert("✨ AI Copilot: Optimizing day route geometry & pacing right now...")}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#EC6735] text-white hover:bg-[#D95524] text-xs font-bold shadow-sm hover:shadow transition-all active:scale-95 cursor-pointer"
-              >
-                <span>✨ Optimize</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => alert("➕ Add Stop modal: Search attractions or drop custom pins.")}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-[#FFF8F5] text-[#1C1B1B] border border-[rgba(28,27,27,0.08)] hover:border-[#EC6735]/40 text-xs font-bold shadow-2xs hover:shadow transition-all active:scale-95 cursor-pointer"
-              >
-                <span>➕ Add Stop</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => alert("↕ Reorder mode enabled. Drag and drop cards along timeline.")}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-[#FFF8F5] text-[#1C1B1B] border border-[rgba(28,27,27,0.08)] hover:border-[#EC6735]/40 text-xs font-bold shadow-2xs hover:shadow transition-all active:scale-95 cursor-pointer"
-              >
-                <span>↕ Reorder</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => alert("⋯ More Day Options: Export PDF, Sync to Google Calendar, Share Link.")}
-                className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-white hover:bg-[#FFF8F5] text-[#1C1B1B] border border-[rgba(28,27,27,0.08)] hover:border-[#EC6735]/40 text-xs font-bold shadow-2xs hover:shadow transition-all active:scale-95 cursor-pointer"
-                title="More Day Actions"
-              >
-                <span>⋯</span>
-              </button>
+            {/* Row 2 / Day Subtitle & Row 3 / Inline Stats & Right-side Actions */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2 border-t border-[#ECE8E2]/60 text-[13px] font-medium text-[#5F5E5A]">
+              {/* Left: Inline Stats with small icons (Plain text instead of pills!) */}
+              <div className="flex items-center flex-wrap gap-x-3 gap-y-1 min-w-0">
+                <span className="text-[#1C1B1B] font-semibold flex items-center gap-1.5">
+                  <span>{currentDaySummary.titleLabel} • {currentDaySummary.themeTitle} • Demo</span>
+                  <span className="text-[#ECE8E2] font-light">•</span>
+                </span>
+                <span className="inline-flex items-center gap-1 text-[#1C1B1B] font-medium">
+                  <MapPin className="w-3.5 h-3.5 text-[#6B6B6B]" />
+                  <span>{currentDaySummary.stats.stops}</span>
+                </span>
+                <span className="text-[#ECE8E2] font-light">•</span>
+                <span className="inline-flex items-center gap-1 text-[#1C1B1B] font-medium">
+                  <Clock className="w-3.5 h-3.5 text-[#6B6B6B]" />
+                  <span>{currentDaySummary.stats.hours}</span>
+                </span>
+                <span className="text-[#ECE8E2] font-light">•</span>
+                <span className="inline-flex items-center gap-1 text-[#1C1B1B] font-medium">
+                  <Navigation className="w-3.5 h-3.5 text-[#6B6B6B]" />
+                  <span>{currentDaySummary.stats.distance}</span>
+                </span>
+                <span className="text-[#ECE8E2] font-light">•</span>
+                <span className="inline-flex items-center gap-1 text-[#15803D] font-semibold">
+                  <DollarSign className="w-3.5 h-3.5 text-[#16A34A]" />
+                  <span>{currentDaySummary.stats.cost}</span>
+                </span>
+              </div>
+
+              {/* Right side: Lightweight Toolbar Buttons (Optimize colored, rest ghost) */}
+              <div className="flex items-center gap-1 shrink-0 self-end sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => alert("✨ AI Copilot: Optimizing day route geometry & pacing right now...")}
+                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-[#EC6735] text-white hover:bg-[#D95524] text-xs font-semibold shadow-[0_2px_8px_rgba(236,103,53,0.25)] transition-all cursor-pointer hover:-translate-y-0.5"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Optimize</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => alert("➕ Add Stop modal: Search attractions or drop custom pins.")}
+                  className="inline-flex items-center gap-1 h-8 px-2.5 rounded-xl bg-transparent hover:bg-[#F7F5F2] text-[#1C1B1B] text-xs font-semibold transition-all cursor-pointer"
+                  title="Add Stop"
+                >
+                  <Plus className="w-3.5 h-3.5 text-[#6B6B6B]" />
+                  <span>Add</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => alert("↕ Reorder mode enabled. Drag and drop cards along timeline.")}
+                  className="inline-flex items-center gap-1 h-8 px-2.5 rounded-xl bg-transparent hover:bg-[#F7F5F2] text-[#1C1B1B] text-xs font-semibold transition-all cursor-pointer"
+                  title="Reorder"
+                >
+                  <ArrowUpDown className="w-3.5 h-3.5 text-[#6B6B6B]" />
+                  <span>Reorder</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => alert("⋯ More Day Options: Export PDF, Sync to Google Calendar, Share Link.")}
+                  className="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-transparent hover:bg-[#F7F5F2] text-[#1C1B1B] text-xs font-semibold transition-all cursor-pointer"
+                  title="More Actions"
+                >
+                  <MoreHorizontal className="w-4 h-4 text-[#6B6B6B]" />
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Point 1: Connected Timeline Activities List */}
-          <div className="relative pl-6 sm:pl-8 flex flex-col pb-4">
-            {/* Continuous Vertical Timeline Line */}
-            <div className="absolute left-3.75 sm:left-4.75 top-6 bottom-10 w-0.5 bg-linear-to-b from-[#EC6735] via-[#EC6735]/60 to-[#EC6735]/20 z-0 pointer-events-none" />
+          <div className="relative pl-6 sm:pl-8 flex flex-col pb-4 min-h-[420px]">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeDay}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0, transition: { duration: 0.25, ease: [0.22, 1, 0.36, 1] } }}
+                exit={{ opacity: 0, y: -8, transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] } }}
+                className="relative flex flex-col w-full"
+              >
+                {/* Continuous Vertical Timeline Line */}
+                <div className="absolute left-3.75 sm:left-4.75 top-6 bottom-10 w-0.5 bg-linear-to-b from-[#EC6735] via-[#EC6735]/60 to-[#EC6735]/20 z-0 pointer-events-none" />
 
-            {currentDayData?.activities?.map((act, idx) => {
+                {currentDayData?.activities?.map((act, idx) => {
               const stopNum = idx + 1;
               const isHovered = hoveredStopIdx === stopNum;
               const isActive = selectedStopIdx === stopNum;
@@ -444,6 +476,8 @@ export default function ItineraryPage() {
                 </div>
               );
             })}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </main>
