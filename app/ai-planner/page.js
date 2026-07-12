@@ -63,8 +63,8 @@ export default function AIPlannerPage() {
       {/* Unified Parent Container (Wrap BOTH Itinerary Panel and Map Section inside one shared parent container) */}
       <div className="flex-1 w-full h-full overflow-hidden p-3 sm:p-4 md:p-6 pb-4 sm:pb-6 flex flex-col min-h-0">
         <div className="flex-1 flex w-full h-full min-h-0 bg-[#FFFFFF] rounded-3xl border border-[#ECE8E2] shadow-[0_20px_60px_rgba(0,0,0,0.06)] overflow-hidden relative">
-          {/* Left Panel: Itinerary & Prompt Controls */}
-          <div className="w-full md:w-[42%] lg:w-[40%] xl:w-[38%] h-full overflow-y-auto shrink-0 bg-[#F7F5F2] border-r border-[#ECE8E2] flex flex-col">
+          {/* Left Panel: Itinerary & Prompt Controls (One single scrollable container for the entire left panel) */}
+          <div className="w-full md:w-[42%] lg:w-[40%] xl:w-[38%] h-full overflow-y-auto overflow-x-hidden shrink-0 bg-[#F7F5F2] border-r border-[#ECE8E2] flex flex-col scroll-smooth">
             <PlannerSidebar
               rawPrompt={currentPrompt}
               isGenerating={isGenerating}

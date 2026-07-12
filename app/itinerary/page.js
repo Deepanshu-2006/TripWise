@@ -152,11 +152,12 @@ export default function ItineraryPage() {
         {/* Right Column: Day Overview Card & Connected Timeline */}
         <div className="lg:col-span-8 flex flex-col gap-6">
           {/* Compact Floating Trip Summary Header (Inspired by Apple Maps, Airbnb, Arc, Linear) */}
-          <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md p-3 sm:p-3.5 rounded-2xl border border-[rgba(28,27,27,0.08)] shadow-sm flex flex-col gap-2.5 transition-all duration-300">
-            {/* Top Row: Day Navigation Segmented Control + Weather Chip (top-right) */}
+          <div className="sticky top-0 z-30 pt-4 pb-3 bg-[#FAF8F5] transition-all duration-300">
+            <div className="bg-white p-3 sm:p-3.5 rounded-2xl border border-[rgba(28,27,27,0.08)] shadow-sm flex flex-col gap-2.5 transition-all duration-300">
+              {/* Top Row: Day Navigation Segmented Control + Weather Chip (top-right) */}
             <div className="flex items-center justify-between gap-3">
               {itinerary.days && itinerary.days.length > 0 ? (
-                <div className="inline-flex items-center gap-1 bg-[#F6F4F1] p-0.5 rounded-full border border-[#ECE8E2] h-[34px] select-none shadow-inner w-fit">
+                <div className="inline-flex items-center gap-1 bg-[#F6F4F1] p-0.5 rounded-full border border-[#ECE8E2] h-8.5 select-none shadow-inner w-fit">
                   {itinerary.days.map((day, idx) => {
                     const dayNum = day.dayNumber || idx + 1;
                     const isSelected = activeDay === dayNum;
@@ -226,7 +227,7 @@ export default function ItineraryPage() {
                 <button
                   type="button"
                   onClick={() => alert("✨ AI Copilot: Optimizing day route geometry & pacing right now...")}
-                  className="inline-flex items-center gap-1.5 h-[34px] px-3.5 rounded-xl bg-[#EC6735] text-white hover:bg-[#D95524] text-xs font-semibold shadow-[0_2px_8px_rgba(236,103,53,0.25)] transition-all duration-200 cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0"
+                  className="inline-flex items-center gap-1.5 h-8.5 px-3.5 rounded-xl bg-[#EC6735] text-white hover:bg-[#D95524] text-xs font-semibold shadow-[0_2px_8px_rgba(236,103,53,0.25)] transition-all duration-200 cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0"
                 >
                   <Sparkles className="w-3.5 h-3.5 shrink-0" />
                   <span>Optimize Route</span>
@@ -234,7 +235,7 @@ export default function ItineraryPage() {
                 <button
                   type="button"
                   onClick={() => alert("➕ Add Stop modal: Search attractions or drop custom pins.")}
-                  className="inline-flex items-center gap-1.5 h-[34px] px-3.5 rounded-xl bg-transparent hover:bg-black/5 text-[#1C1B1B] text-xs font-semibold transition-all duration-200 cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0"
+                  className="inline-flex items-center gap-1.5 h-8.5 px-3.5 rounded-xl bg-transparent hover:bg-black/5 text-[#1C1B1B] text-xs font-semibold transition-all duration-200 cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0"
                   title="Add Stop"
                 >
                   <Plus className="w-3.5 h-3.5 text-[#6B6B6B] shrink-0" />
@@ -243,9 +244,10 @@ export default function ItineraryPage() {
               </div>
             </div>
           </div>
+        </div>
 
           {/* Point 1: Connected Timeline Activities List */}
-          <div className="relative pl-6 sm:pl-8 flex flex-col pb-4 min-h-[420px]">
+          <div className="relative pl-6 sm:pl-8 flex flex-col pt-2 pb-4 min-h-105 z-10">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeDay}
@@ -311,7 +313,7 @@ export default function ItineraryPage() {
                         isActive
                           ? 'bg-[#FFF8F5] border-l-4 border-l-[#EC6735] border-[#EC6735] shadow-xl shadow-[#EC6735]/15 -translate-y-1 z-10'
                           : isHovered
-                          ? 'bg-white border-[#EC6735] shadow-xl shadow-[0_16px_36px_rgba(236,103,53,0.14)] -translate-y-1.5 z-10'
+                          ? 'bg-white border-[#EC6735] shadow-[0_16px_36px_rgba(236,103,53,0.14)] -translate-y-1.5 z-10'
                           : 'bg-white border-[rgba(28,27,27,0.08)] shadow-[0_4px_16px_rgba(0,0,0,0.03)] hover:-translate-y-1 hover:shadow-lg hover:border-[#EC6735]/60'
                       }`}
                     >

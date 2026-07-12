@@ -858,298 +858,269 @@ export default function PlannerSidebar({
                 </div>
 
                 {/* Merged Day Tabs + Compact Sticky Trip Summary Header (Apple Maps / Arc / Linear inspired) */}
-                {(() => {
-                  const activeDayObj = itinerary.days?.[selectedDayIndex];
-                  const daySummary = getDaySummary(activeDayObj, selectedDayIndex, itinerary.days);
-                  return (
-                    <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md p-3 sm:p-3.5 rounded-2xl border border-[rgba(28,27,27,0.08)] shadow-sm flex flex-col gap-2.5 transition-all duration-300">
-                      {/* Top Row: Day Navigation Segmented Control + Weather Chip (top-right) */}
-                      <div className="flex items-center justify-between gap-3">
-                        {itinerary.days && itinerary.days.length > 0 ? (
-                          <div className="inline-flex items-center gap-1 bg-[#F6F4F1] p-0.5 rounded-full border border-[#ECE8E2] h-[34px] select-none shadow-inner w-fit">
-                            {itinerary.days.map((day, idx) => {
-                              const isSelected = selectedDayIndex === idx;
-                              return (
-                                <button
-                                  key={idx}
-                                  type="button"
-                                  onClick={() => handleDaySelect(idx)}
-                                  className="relative px-4 sm:px-5 h-full text-xs transition-colors duration-300 cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-full focus:outline-hidden z-10"
-                                >
-                                  {isSelected && (
-                                    <motion.span
-                                      layoutId="activeDaySegmentedTab"
-                                      className="absolute inset-0 rounded-full bg-[#EC6735] shadow-[0_1px_6px_rgba(236,103,53,0.28)] -z-10"
-                                      transition={{
-                                        layout: { duration: 0.3, ease: [0.22, 1, 0.36, 1] }
-                                      }}
-                                    />
-                                  )}
-                                  <span className={`relative transition-colors duration-300 ${
-                                    isSelected ? 'text-white font-semibold' : 'text-[#5F5E5A] hover:text-[#1C1B1B] font-medium'
-                                  }`}>
-                                    Day {idx + 1}
-                                  </span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        ) : <div />}
+                <div className="sticky top-0 z-30 pt-4 pb-3 -mx-4 sm:-mx-6 md:-mx-8 px-4 sm:px-6 md:px-8 bg-[#FAF3EE] transition-all duration-300 flex flex-col gap-2.5">
+                  {(() => {
+                    const activeDayObj = itinerary.days?.[selectedDayIndex];
+                    const daySummary = getDaySummary(activeDayObj, selectedDayIndex, itinerary.days);
+                    return (
+                      <div className="bg-white p-3 sm:p-3.5 rounded-2xl border border-[rgba(28,27,27,0.08)] shadow-sm flex flex-col gap-2.5 transition-all duration-300">
+                        {/* Top Row: Day Navigation Segmented Control + Weather Chip (top-right) */}
+                        <div className="flex items-center justify-between gap-3">
+                          {itinerary.days && itinerary.days.length > 0 ? (
+                            <div className="inline-flex items-center gap-1 bg-[#F6F4F1] p-0.5 rounded-full border border-[#ECE8E2] h-8.5 select-none shadow-inner w-fit">
+                              {itinerary.days.map((day, idx) => {
+                                const isSelected = selectedDayIndex === idx;
+                                return (
+                                  <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => handleDaySelect(idx)}
+                                    className="relative px-4 sm:px-5 h-full text-xs transition-colors duration-300 cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-full focus:outline-hidden z-10"
+                                  >
+                                    {isSelected && (
+                                      <motion.span
+                                        layoutId="activeDaySegmentedTab"
+                                        className="absolute inset-0 rounded-full bg-[#EC6735] shadow-[0_1px_6px_rgba(236,103,53,0.28)] -z-10"
+                                        transition={{
+                                          layout: { duration: 0.3, ease: [0.22, 1, 0.36, 1] }
+                                        }}
+                                      />
+                                    )}
+                                    <span className={`relative transition-colors duration-300 ${
+                                      isSelected ? 'text-white font-semibold' : 'text-[#5F5E5A] hover:text-[#1C1B1B] font-medium'
+                                    }`}>
+                                      Day {idx + 1}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          ) : <div />}
 
-                        <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#1C1B1B] bg-[#F7F5F2] px-2.5 py-1 rounded-full border border-[#ECE8E2] shrink-0 select-none shadow-2xs">
-                          <span>☀︎</span>
-                          <span>{daySummary.stats.weather || '32°'}</span>
+                          <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#1C1B1B] bg-[#F7F5F2] px-2.5 py-1 rounded-full border border-[#ECE8E2] shrink-0 select-none shadow-2xs">
+                            <span>☀︎</span>
+                            <span>{daySummary.stats.weather || '32°'}</span>
+                          </div>
+                        </div>
+
+                        {/* Second Row: Clean Inline Statistics & Rebalanced Action Toolbar */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2 border-t border-[rgba(28,27,27,0.06)] text-xs font-medium text-[#5F5E5A]">
+                          {/* Left: Clean horizontal statistics separated by subtle dots */}
+                          <div className="flex items-center flex-wrap gap-x-2.5 gap-y-1 min-w-0 select-none text-[#5F5E5A]">
+                            <span className="inline-flex items-center gap-1">
+                              <span className="text-[11px] text-[#8C8B88]">📍</span>
+                              <span>{String(daySummary.stats.stops).includes('Stop') ? daySummary.stats.stops : `${daySummary.stats.stops} Stops`}</span>
+                            </span>
+                            <span className="text-[#ECE8E2] font-light">•</span>
+                            <span className="inline-flex items-center gap-1">
+                              <span className="text-[11px] text-[#8C8B88]">🕒</span>
+                              <span>{daySummary.stats.hours}</span>
+                            </span>
+                            <span className="text-[#ECE8E2] font-light">•</span>
+                            <span className="inline-flex items-center gap-1">
+                              <span className="text-[11px] text-[#8C8B88]">🚶</span>
+                              <span>{daySummary.stats.distance}</span>
+                            </span>
+                            <span className="text-[#ECE8E2] font-light">•</span>
+                            <span className="inline-flex items-center gap-1 text-[#15803D] font-bold">
+                              <span className="text-[11px]">💰</span>
+                              <span>{daySummary.stats.cost}</span>
+                            </span>
+                          </div>
+
+                          {/* Right: Only Optimize Route (Primary orange) and Add Stop (Lightweight ghost) */}
+                          <div className="flex items-center flex-nowrap gap-2 shrink-0 self-end sm:self-auto">
+                            <button
+                              type="button"
+                              onClick={() => { setShowCopilotDrawer(true); setActiveDrawerTab('ai'); }}
+                              className="inline-flex items-center gap-1.5 h-8.5 px-3.5 rounded-xl bg-[#EC6735] text-white hover:bg-[#D95524] text-xs font-semibold shadow-[0_2px_8px_rgba(236,103,53,0.25)] transition-all duration-200 cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0"
+                            >
+                              <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                              <span>Optimize Route</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { setShowCopilotDrawer(true); setActiveDrawerTab('manual'); }}
+                              className="inline-flex items-center gap-1.5 h-8.5 px-3.5 rounded-xl bg-transparent hover:bg-black/5 text-[#1C1B1B] text-xs font-semibold transition-all duration-200 cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0"
+                              title="Add Stop"
+                            >
+                              <Plus className="w-3.5 h-3.5 text-[#6B6B6B] shrink-0" />
+                              <span>Add Stop</span>
+                            </button>
+                          </div>
                         </div>
                       </div>
+                    );
+                  })()}
 
-                      {/* Second Row: Clean Inline Statistics & Rebalanced Action Toolbar */}
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2 border-t border-[rgba(28,27,27,0.06)] text-xs font-medium text-[#5F5E5A]">
-                        {/* Left: Clean horizontal statistics separated by subtle dots */}
-                        <div className="flex items-center flex-wrap gap-x-2.5 gap-y-1 min-w-0 select-none text-[#5F5E5A]">
-                          <span className="inline-flex items-center gap-1">
-                            <span className="text-[11px] text-[#8C8B88]">📍</span>
-                            <span>{String(daySummary.stats.stops).includes('Stop') ? daySummary.stats.stops : `${daySummary.stats.stops} Stops`}</span>
-                          </span>
-                          <span className="text-[#ECE8E2] font-light">•</span>
-                          <span className="inline-flex items-center gap-1">
-                            <span className="text-[11px] text-[#8C8B88]">🕒</span>
-                            <span>{daySummary.stats.hours}</span>
-                          </span>
-                          <span className="text-[#ECE8E2] font-light">•</span>
-                          <span className="inline-flex items-center gap-1">
-                            <span className="text-[11px] text-[#8C8B88]">🚶</span>
-                            <span>{daySummary.stats.distance}</span>
-                          </span>
-                          <span className="text-[#ECE8E2] font-light">•</span>
-                          <span className="inline-flex items-center gap-1 text-[#15803D] font-bold">
-                            <span className="text-[11px]">💰</span>
-                            <span>{daySummary.stats.cost}</span>
-                          </span>
-                        </div>
-
-                        {/* Right: Only Optimize Route (Primary orange) and Add Stop (Lightweight ghost) */}
-                        <div className="flex items-center flex-nowrap gap-2 shrink-0 self-end sm:self-auto">
+                  {/* Unified Floating Modify / Copilot Drawer with Smooth Pop Animation */}
+                  <div className={`w-full transition-all duration-500 ease-in-out overflow-hidden ${
+                    showCopilotDrawer || isRefiningDay || refineExplanation
+                      ? 'max-h-115 opacity-100 mt-0.5 mb-1'
+                      : 'max-h-0 opacity-0 mt-0 mb-0 pointer-events-none'
+                  }`}>
+                    <div className="w-full bg-linear-to-r from-[#1C1B1B] via-[#2A2626] to-[#1C1B1B] p-3 rounded-2xl shadow-lg border border-[rgba(255,255,255,0.12)] flex flex-col gap-2.5 relative">
+                      {/* Header & Mode Tabs */}
+                      <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-2.5">
+                        <div className="flex items-center gap-1.5 bg-black/40 p-1 rounded-xl border border-white/10">
                           <button
                             type="button"
-                            onClick={() => { setShowCopilotDrawer(true); setActiveDrawerTab('ai'); }}
-                            className="inline-flex items-center gap-1.5 h-[34px] px-3.5 rounded-xl bg-[#EC6735] text-white hover:bg-[#D95524] text-xs font-semibold shadow-[0_2px_8px_rgba(236,103,53,0.25)] transition-all duration-200 cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0"
+                            onClick={() => setActiveDrawerTab('ai')}
+                            className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer flex items-center gap-1 ${
+                              activeDrawerTab === 'ai'
+                                ? 'bg-[#EC6735] text-white shadow-xs'
+                                : 'text-stone-300 hover:text-white'
+                            }`}
                           >
-                            <Sparkles className="w-3.5 h-3.5 shrink-0" />
-                            <span>Optimize Route</span>
+                            <span>✨</span>
+                            <span>AI Copilot</span>
                           </button>
                           <button
                             type="button"
-                            onClick={() => { setShowCopilotDrawer(true); setActiveDrawerTab('manual'); }}
-                            className="inline-flex items-center gap-1.5 h-[34px] px-3.5 rounded-xl bg-transparent hover:bg-black/5 text-[#1C1B1B] text-xs font-semibold transition-all duration-200 cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0"
-                            title="Add Stop"
+                            onClick={() => setActiveDrawerTab('manual')}
+                            className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer flex items-center gap-1 ${
+                              activeDrawerTab === 'manual'
+                                ? 'bg-[#EC6735] text-white shadow-xs'
+                                : 'text-stone-300 hover:text-white'
+                            }`}
                           >
-                            <Plus className="w-3.5 h-3.5 text-[#6B6B6B] shrink-0" />
+                            <span>➕</span>
                             <span>Add Stop</span>
                           </button>
                         </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {/* Unified Floating Modify / Copilot Drawer with Smooth Pop Animation */}
-                <div className={`w-full transition-all duration-500 ease-in-out overflow-hidden ${
-                  showCopilotDrawer || isRefiningDay || refineExplanation
-                    ? 'max-h-115 opacity-100 mt-1 mb-2'
-                    : 'max-h-0 opacity-0 mt-0 mb-0 pointer-events-none'
-                }`}>
-                  <div className="w-full bg-linear-to-r from-[#1C1B1B] via-[#2A2626] to-[#1C1B1B] p-3 rounded-2xl shadow-lg border border-[rgba(255,255,255,0.12)] flex flex-col gap-2.5 relative">
-                    {/* Header & Mode Tabs */}
-                    <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-2.5">
-                      <div className="flex items-center gap-1.5 bg-black/40 p-1 rounded-xl border border-white/10">
                         <button
                           type="button"
-                          onClick={() => setActiveDrawerTab('ai')}
-                          className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer flex items-center gap-1 ${
-                            activeDrawerTab === 'ai'
-                              ? 'bg-[#EC6735] text-white shadow-xs'
-                              : 'text-stone-300 hover:text-white'
-                          }`}
-                        >
-                          <span>✨</span>
-                          <span>AI Copilot</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setActiveDrawerTab('manual')}
-                          className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer flex items-center gap-1 ${
-                            activeDrawerTab === 'manual'
-                              ? 'bg-[#EC6735] text-white shadow-xs'
-                              : 'text-stone-300 hover:text-white'
-                          }`}
-                        >
-                          <span>📝</span>
-                          <span>Manual Add Stop</span>
-                        </button>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-stone-400 font-bold tracking-normal hidden sm:inline">
-                          {activeDrawerTab === 'ai' ? 'Natural language prompt' : 'Direct custom entry'}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowCopilotDrawer(false);
-                            setRefineExplanation(null);
-                          }}
-                          className="text-stone-400 hover:text-white text-xs font-bold cursor-pointer px-1.5 py-0.5 rounded-lg hover:bg-white/10"
-                          title="Close Drawer"
+                          onClick={() => { setShowCopilotDrawer(false); setRefinePromptInput(''); }}
+                          className="text-stone-400 hover:text-white text-sm font-bold w-6 h-6 flex items-center justify-center rounded-lg hover:bg-white/10 cursor-pointer"
+                          title="Close"
                         >
                           ✕
                         </button>
                       </div>
-                    </div>
 
-                    {/* Tab 1: AI Copilot */}
-                    {activeDrawerTab === 'ai' && (
-                      <div className="flex flex-col gap-2 animate-fade-in">
-                        <form
-                          onSubmit={handleRefineDaySubmit}
-                          className="flex items-center gap-2"
-                        >
-                          <div className="relative flex-1">
+                      {activeDrawerTab === 'ai' ? (
+                        <>
+                          <textarea
+                            value={refinePromptInput}
+                            onChange={(e) => setRefinePromptInput(e.target.value)}
+                            placeholder="e.g. 'Add a highly rated rooftop bar near the Colosseum for sunset' or 'Replace dinner with authentic Trastevere pasta spot'"
+                            className="w-full bg-black/40 text-white placeholder-stone-400 text-xs rounded-xl p-2.5 border border-white/10 focus:border-[#EC6735] focus:outline-hidden resize-none min-h-14 font-medium"
+                          />
+                          <div className="flex items-center justify-between gap-2 pt-0.5">
+                            <span className="text-[11px] text-stone-400 italic">
+                              ⚡ GeoEngine re-calculates travel times & pacing
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => triggerRefineDay()}
+                              disabled={isRefiningDay || !refinePromptInput.trim()}
+                              className={`h-8 px-4 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${
+                                isRefiningDay || !refinePromptInput.trim()
+                                  ? 'bg-white/10 text-stone-400 cursor-not-allowed'
+                                  : 'bg-[#EC6735] text-white hover:bg-[#D95524] shadow-md shadow-[#EC6735]/30 active:scale-95'
+                              }`}
+                            >
+                              {isRefiningDay ? (
+                                <>
+                                  <SpinnerIcon />
+                                  <span>Refining...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span>Update Route</span>
+                                  <ArrowRightIcon />
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex flex-col gap-2.5 pt-0.5">
+                          <div className="grid grid-cols-3 gap-2">
+                            <div>
+                              <label className="block text-[10px] font-extrabold uppercase text-stone-400 mb-1">Time</label>
+                              <input
+                                type="text"
+                                value={newStopTime}
+                                onChange={(e) => setNewStopTime(e.target.value)}
+                                placeholder="06:00 PM"
+                                className="w-full bg-black/40 text-white text-xs rounded-lg p-2 border border-white/10 focus:border-[#EC6735] focus:outline-hidden font-medium"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-extrabold uppercase text-stone-400 mb-1">Type</label>
+                              <select
+                                value={newStopCategory}
+                                onChange={(e) => setNewStopCategory(e.target.value)}
+                                className="w-full bg-black/40 text-white text-xs rounded-lg p-2 border border-white/10 focus:border-[#EC6735] focus:outline-hidden font-medium"
+                              >
+                                <option value="Highlight">Highlight</option>
+                                <option value="Food & Dining">Food & Dining</option>
+                                <option value="Cultural">Cultural</option>
+                                <option value="Hidden Gem">Hidden Gem</option>
+                                <option value="Activity">Activity</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-extrabold uppercase text-stone-400 mb-1">Title</label>
+                              <input
+                                type="text"
+                                value={newStopTitle}
+                                onChange={(e) => setNewStopTitle(e.target.value)}
+                                placeholder="e.g. Rooftop Aperitivo"
+                                className="w-full bg-black/40 text-white text-xs rounded-lg p-2 border border-white/10 focus:border-[#EC6735] focus:outline-hidden font-medium"
+                              />
+                            </div>
+                          </div>
+                          <div>
                             <input
                               type="text"
-                              value={refinePromptInput}
-                              onChange={(e) => setRefinePromptInput(e.target.value)}
-                              placeholder='e.g. "Add a Michelin-star dinner after Stop #3..."'
-                              disabled={isRefiningDay}
-                              className="w-full bg-white/10 hover:bg-white/15 focus:bg-white/20 text-white placeholder-stone-400 text-xs rounded-xl px-3.5 py-2 border border-white/15 focus:border-[#EC6735] focus:outline-hidden transition-all pr-8"
+                              value={newStopDesc}
+                              onChange={(e) => setNewStopDesc(e.target.value)}
+                              placeholder="Optional short description or note..."
+                              className="w-full bg-black/40 text-white text-xs rounded-lg p-2 border border-white/10 focus:border-[#EC6735] focus:outline-hidden font-medium"
                             />
-                            {refinePromptInput && !isRefiningDay && (
-                              <button
-                                type="button"
-                                onClick={() => setRefinePromptInput('')}
-                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-white text-xs font-bold cursor-pointer"
-                              >
-                                ✕
-                              </button>
-                            )}
                           </div>
-                          <button
-                            type="submit"
-                            disabled={!refinePromptInput.trim() || isRefiningDay}
-                            className="bg-linear-to-r from-[#EC6735] to-[#FF8C61] hover:from-[#d85827] hover:to-[#EC6735] text-white px-3.5 py-2 rounded-xl text-xs font-extrabold shadow-sm transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-                          >
-                            {isRefiningDay ? (
-                              <>
-                                <div className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                                <span>Refining...</span>
-                              </>
-                            ) : (
-                              <>
-                                <span>✨</span>
-                                <span>Apply</span>
-                              </>
-                            )}
-                          </button>
-                        </form>
-
-                        {/* Quick suggestion pills for instant 1-click refinement */}
-                        <div className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-0.5 scrollbar-none">
-                          {[
-                            '🍷 Add a Michelin-star dinner after Stop #3',
-                            '🧸 Make this day more kid-friendly',
-                            '☕ Add early morning coffee & pastry before Stop #1',
-                            '💆 Insert a relaxing luxury thermal spa break'
-                          ].map((sugg, idx) => (
+                          <div className="flex justify-end pt-1 border-t border-white/10">
                             <button
-                              key={idx}
                               type="button"
-                              onClick={() => {
-                                const cleanPrompt = sugg.replace(/^[^\s]+\s+/, '');
-                                setRefinePromptInput(cleanPrompt);
-                                triggerRefineDay(cleanPrompt);
-                              }}
-                              disabled={isRefiningDay}
-                              className="text-[10px] font-bold text-stone-300 bg-white/10 hover:bg-white/20 border border-white/15 rounded-lg px-2.5 py-1 whitespace-nowrap transition-all cursor-pointer shrink-0"
+                              onClick={handleAddCustomStop}
+                              disabled={!newStopTitle.trim()}
+                              className={`h-8 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 cursor-pointer ${
+                                !newStopTitle.trim()
+                                  ? 'bg-white/10 text-stone-400 cursor-not-allowed'
+                                  : 'bg-[#EC6735] text-white hover:bg-[#D95524] shadow-md shadow-[#EC6735]/30 active:scale-95'
+                              }`}
                             >
-                              {sugg}
+                              <Plus className="w-3.5 h-3.5" />
+                              <span>Insert Stop into Timeline</span>
                             </button>
-                          ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
-
-                    {/* Tab 2: Manual Add Stop */}
-                    {activeDrawerTab === 'manual' && (
-                      <div className="flex flex-col gap-2.5 animate-fade-in bg-black/20 p-2.5 rounded-xl border border-white/10">
-                        <div className="grid grid-cols-3 gap-2">
-                          <input
-                            type="text"
-                            placeholder="Time (e.g. 06:00 PM)"
-                            value={newStopTime}
-                            onChange={(e) => setNewStopTime(e.target.value)}
-                            className="col-span-1 p-2 rounded-xl text-xs bg-white/10 border border-white/15 font-bold text-white focus:outline-hidden focus:border-[#EC6735]"
-                          />
-                          <select
-                            value={newStopCategory}
-                            onChange={(e) => setNewStopCategory(e.target.value)}
-                            className="col-span-2 p-2 rounded-xl text-xs bg-stone-900 border border-white/15 font-bold text-white focus:outline-hidden focus:border-[#EC6735]"
-                          >
-                            <option value="Highlight">Category: Highlight</option>
-                            <option value="Food & Dining">Category: Food & Dining</option>
-                            <option value="Attractions">Category: Attractions</option>
-                            <option value="Landmarks">Category: Landmarks</option>
-                            <option value="Coffee & Cafe">Category: Coffee & Cafe</option>
-                            <option value="Late Night Dining">Category: Late Night Dining</option>
-                          </select>
-                        </div>
-                        <input
-                          type="text"
-                          placeholder="Stop Title (e.g. Sunset Rooftop Cocktails at Aqua Shard)"
-                          value={newStopTitle}
-                          onChange={(e) => setNewStopTitle(e.target.value)}
-                          className="w-full p-2.5 rounded-xl text-xs bg-white/10 border border-white/15 font-bold text-white placeholder-stone-400 focus:outline-hidden focus:border-[#EC6735]"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Short description or notes..."
-                          value={newStopDesc}
-                          onChange={(e) => setNewStopDesc(e.target.value)}
-                          className="w-full p-2.5 rounded-xl text-xs bg-white/10 border border-white/15 text-stone-200 placeholder-stone-400 focus:outline-hidden focus:border-[#EC6735]"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleAddCustomStop}
-                          disabled={!newStopTitle.trim()}
-                          className={`w-full py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm ${
-                            newStopTitle.trim()
-                              ? 'bg-linear-to-r from-[#EC6735] to-[#FF8C61] text-white hover:opacity-95'
-                              : 'bg-white/10 text-stone-500 cursor-not-allowed'
-                          }`}
-                        >
-                          ✅ Add Stop to Itinerary
-                        </button>
-                      </div>
-                    )}
-
-                    {/* AI / Manual Refinement Feedback Notification */}
-                    {refineExplanation && (
-                      <div className="mt-1 bg-[#10B981]/20 border border-[#10B981]/40 text-[#A7F3D0] px-3 py-2 rounded-xl text-xs flex items-center justify-between gap-2 animate-fade-in font-bold">
-                        <span className="flex items-center gap-1.5">
-                          <span>✅</span>
-                          <span>{refineExplanation}</span>
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setRefineExplanation(null)}
-                          className="text-[#A7F3D0] hover:text-white font-extrabold text-xs ml-2 cursor-pointer"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
+
+                  {/* AI / Manual Refinement Feedback Notification */}
+                  {refineExplanation && (
+                    <div className="mt-1 bg-[#10B981]/20 border border-[#10B981]/40 text-[#A7F3D0] px-3 py-2 rounded-xl text-xs flex items-center justify-between gap-2 animate-fade-in font-bold">
+                      <span className="flex items-center gap-1.5">
+                        <span>✅</span>
+                        <span>{refineExplanation}</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setRefineExplanation(null)}
+                        className="text-[#A7F3D0] hover:text-white font-extrabold text-xs ml-2 cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Day Schedule Activities Cards List with Vertical Timeline (Point 4, 5, & 6) */}
-                <div className="relative px-1 py-1 max-h-[calc(100vh-270px)] overflow-y-auto overflow-x-hidden min-h-[380px]">
+                <div className="relative px-1 pt-3 pb-1 w-full z-10">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={selectedDayIndex}
@@ -1206,7 +1177,7 @@ export default function PlannerSidebar({
                                   : draggedStopIdx === idx
                                   ? 'opacity-40 border-dashed border-[#FF6B2C] scale-95'
                                   : isHovered || hoveredStopIdx === stopNum
-                                  ? 'border-[#FF6B2C] bg-white shadow-xl shadow-[0_12px_28px_rgba(255,107,44,0.16)] -translate-y-1 z-20'
+                                  ? 'border-[#FF6B2C] bg-white shadow-[0_12px_28px_rgba(255,107,44,0.16)] -translate-y-1 z-20'
                                   : 'border-[#ECE8E2] bg-white shadow-2xs hover:border-[#FF6B2C]/60 hover:shadow-md hover:-translate-y-0.5'
                               }`}
                             >
