@@ -1,6 +1,17 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal } from 'lucide-react';
+import {
+  getActivityThumbnail,
+  getTransportBetweenStops,
+  getActivityRating,
+  getCategoryStyling,
+  getIconBadges,
+  getAiInsight,
+  formatCost,
+  getDaySummary
+} from './itineraryHelpers';
 
 // --- Icons ---
 const SpinnerIcon = () => (
@@ -849,42 +860,92 @@ export default function PlannerSidebar({
                   </button>
                 </div>
 
-                {/* Day Selector Pills & Chat to Modify Toggle Button */}
-                <div className="flex items-center justify-between gap-2 pb-1">
-                  <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none p-1 rounded-2xl bg-[#F7F5F2] border border-[#ECE8E2]">
-                    {itinerary.days && itinerary.days.map((day, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => handleDaySelect(idx)}
-                        className={`relative px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-300 ease-out cursor-pointer whitespace-nowrap ${
-                          selectedDayIndex === idx
-                            ? 'bg-[#FF6B2C] text-white shadow-[0_4px_16px_rgba(255,107,44,0.25)] scale-[1.03] z-10'
-                            : 'bg-transparent text-[#6B6B6B] hover:bg-white/80 hover:text-[#1F1F1F]'
-                        }`}
-                      >
-                        {selectedDayIndex === idx && (
-                          <span className="absolute inset-0 rounded-xl bg-linear-to-r from-white/15 to-transparent pointer-events-none" />
-                        )}
-                        Day {day.dayNumber || idx + 1}
-                      </button>
-                    ))}
+                {/* Point 12: Enriched Segmented Day Tabs & Point 11 Overview Card */}
+                <div className="flex flex-col gap-2.5 pb-2">
+                  <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none p-1.5 rounded-2xl bg-[#F7F5F2] border border-[#ECE8E2]">
+                    {itinerary.days && itinerary.days.map((day, idx) => {
+                      const summary = getDaySummary(day, idx, itinerary.days);
+                      const isSelected = selectedDayIndex === idx;
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleDaySelect(idx)}
+                          className={`relative px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all duration-300 ease-out cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+                            isSelected
+                              ? 'bg-[#FF6B2C] text-white shadow-[0_4px_16px_rgba(255,107,44,0.25)] scale-[1.02] z-10'
+                              : 'bg-transparent text-[#6B6B6B] hover:bg-white/80 hover:text-[#1F1F1F]'
+                          }`}
+                        >
+                          {isSelected && (
+                            <span className="absolute inset-0 rounded-xl bg-linear-to-r from-white/15 to-transparent pointer-events-none" />
+                          )}
+                          <span className="font-black">{summary.titleLabel}</span>
+                          <span className={`text-[11px] font-bold ${isSelected ? 'text-white/95' : 'text-[#EC6735]'}`}>{summary.themeTitle}</span>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold ${isSelected ? 'bg-white/20 text-white' : 'bg-[#ECE8E2] text-[#6B6B6B]'}`}>
+                            {summary.stopsText}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
 
-                  {/* Unified Modify Day Toggle Button right of the days */}
-                  <button
-                    type="button"
-                    onClick={() => setShowCopilotDrawer(!showCopilotDrawer)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap shadow-sm flex items-center gap-1.5 shrink-0 border ${
-                      showCopilotDrawer || isRefiningDay || refineExplanation
-                        ? 'bg-linear-to-r from-[#FF6B2C] to-[#FF8C61] text-white border-[#FF6B2C] shadow-md scale-102'
-                        : 'bg-[#FFFFFF] hover:bg-[#F7F5F2] text-[#1F1F1F] border-[#ECE8E2] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]'
-                    }`}
-                  >
-                    <span className="animate-pulse">⚡</span>
-                    <span>Modify Day</span>
-                    <span className={`transition-transform duration-300 text-[10px] ${showCopilotDrawer ? 'rotate-180' : ''}`}>▼</span>
-                  </button>
+                  {/* Point 11 & Point 13: Day Overview Card & Quick Action Pill Buttons */}
+                  {(() => {
+                    const activeDayObj = itinerary.days?.[selectedDayIndex];
+                    const daySummary = getDaySummary(activeDayObj, selectedDayIndex, itinerary.days);
+                    return (
+                      <div className="bg-linear-to-r from-[#FFF8F5] via-white to-[#FFF2EA] p-4 sm:p-4.5 rounded-2xl border border-[rgba(28,27,27,0.08)] shadow-2xs mt-1 flex flex-col gap-2.5">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#1C1B1B]">
+                            <span className="text-[#EC6735] font-black">{itinerary.destinationName || 'Rome'} • {daySummary.titleLabel}</span>
+                            <span>•</span>
+                            <span className="text-[#5F5E5A]">{daySummary.themeTitle}</span>
+                          </div>
+                          <span className="text-[10px] font-extrabold text-amber-800 bg-amber-500/10 px-2.5 py-0.5 rounded-md border border-amber-500/20">{daySummary.stats.weather}</span>
+                        </div>
+                        <div className="flex items-center flex-wrap gap-2 text-xs font-bold text-[#5F5E5A]">
+                          <span className="bg-white px-2.5 py-1 rounded-lg border border-[#ECE8E2] text-[#1C1B1B] shadow-2xs">📍 {daySummary.stats.stops}</span>
+                          <span className="bg-white px-2.5 py-1 rounded-lg border border-[#ECE8E2] text-[#1C1B1B] shadow-2xs">🕒 {daySummary.stats.hours}</span>
+                          <span className="bg-white px-2.5 py-1 rounded-lg border border-[#ECE8E2] text-[#1C1B1B] shadow-2xs">🚶 {daySummary.stats.distance}</span>
+                          <span className="bg-[#0D9488]/10 px-2.5 py-1 rounded-lg border border-[#0D9488]/20 text-[#0D9488] shadow-2xs">💰 {daySummary.stats.cost}</span>
+                        </div>
+
+                        {/* Point 13: Quick Action Pill Buttons */}
+                        <div className="flex items-center flex-wrap gap-1.5 pt-2 border-t border-[rgba(28,27,27,0.06)]">
+                          <button
+                            type="button"
+                            onClick={() => { setShowCopilotDrawer(true); setActiveDrawerTab('ai'); }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#EC6735] text-white hover:bg-[#D95524] text-xs font-extrabold shadow-2xs hover:shadow transition-all active:scale-95 cursor-pointer"
+                          >
+                            <span>✨ Optimize</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setShowCopilotDrawer(true); setActiveDrawerTab('manual'); }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-[#FFF8F5] text-[#1C1B1B] border border-[#ECE8E2] hover:border-[#EC6735]/40 text-xs font-extrabold shadow-2xs hover:shadow transition-all active:scale-95 cursor-pointer"
+                          >
+                            <span>➕ Add Stop</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => alert("↕ Reorder mode: Drag stops using the ⋮⋮ handle on the left of any activity card below to rearrange your timeline geometry.")}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-[#FFF8F5] text-[#1C1B1B] border border-[#ECE8E2] hover:border-[#EC6735]/40 text-xs font-extrabold shadow-2xs hover:shadow transition-all active:scale-95 cursor-pointer"
+                          >
+                            <span>↕ Reorder</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setShowCopilotDrawer(!showCopilotDrawer); }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-[#FFF8F5] text-[#1C1B1B] border border-[#ECE8E2] hover:border-[#EC6735]/40 text-xs font-extrabold shadow-2xs hover:shadow transition-all active:scale-95 cursor-pointer ml-auto"
+                            title="Toggle AI Copilot & More Options"
+                          >
+                            <span>⋯ More</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Unified Floating Modify / Copilot Drawer with Smooth Pop Animation */}
@@ -1087,85 +1148,141 @@ export default function PlannerSidebar({
                 <div className={`relative flex flex-col gap-3.5 px-1 py-1 max-h-[calc(100vh-270px)] overflow-y-auto overflow-x-hidden transition-all duration-300 ease-out ${
                   isDayChanging ? 'opacity-20 scale-[0.98]' : 'opacity-100 scale-100'
                 }`}>
-                  {/* Point 5: Subtle orange vertical timeline connecting stops */}
-                  {itinerary.days?.[selectedDayIndex]?.activities?.length > 1 && (
-                    <div className="absolute left-8.5 top-8 bottom-8 w-0.5 bg-linear-to-b from-[#FF7A1A]/75 via-[#FF7A1A]/40 to-[#FF7A1A]/15 pointer-events-none z-0" />
-                  )}
+                  {/* Point 5 & 1: Subtle orange continuous vertical timeline connecting stops */}
+                  <div className="absolute left-8 top-8 bottom-8 w-0.5 bg-linear-to-b from-[#FF6B2C] via-[#FF6B2C]/50 to-[#FF6B2C]/20 pointer-events-none z-0" />
 
                   {itinerary.days?.[selectedDayIndex]?.activities?.map((act, idx) => {
                     const stopNum = idx + 1;
                     const isHovered = hoveredStopIdx === stopNum;
+                    const categoryStyle = getCategoryStyling(act);
+                    const ratingData = getActivityRating(act, idx);
+                    const costInfo = formatCost(act);
+                    const iconBadges = getIconBadges(act, idx);
+                    const aiInsightText = getAiInsight(act, idx);
+                    const transport = getTransportBetweenStops(itinerary.days?.[selectedDayIndex]?.activities?.[idx - 1], act, idx);
+
                     return (
-                      <div
-                        key={idx}
-                        draggable={true}
-                        onDragStart={(e) => handleDragStart(e, idx)}
-                        onDragOver={(e) => handleDragOver(e, idx)}
-                        onDragLeave={handleDragLeave}
-                        onDrop={(e) => handleDrop(e, idx)}
-                        onDragEnd={handleDragEnd}
-                        onMouseEnter={() => handleHoverStop(stopNum)}
-                        onMouseLeave={() => handleHoverStop(null)}
-                        onClick={() => handleHoverStop(stopNum)}
-                        className={`w-full box-border p-4 rounded-2xl border transition-all duration-300 ease-out flex flex-col gap-2.5 cursor-pointer select-none relative z-10 ${
-                          dragOverStopIdx === idx
-                            ? 'border-[#FF6B2C] border-2 bg-[#FFF8F5] scale-[1.02] ring-4 ring-[#FF6B2C]/30 shadow-2xl z-30'
-                            : draggedStopIdx === idx
-                            ? 'opacity-40 scale-95 border-dashed border-2 border-[#ECE8E2] bg-[#F7F5F2]'
-                            : isHovered
-                            ? 'bg-[#FFFFFF] border-[#FF6B2C]/80 border ring-4 ring-[#FF6B2C]/20 -translate-y-1 shadow-[0_14px_32px_rgba(255,107,44,0.18)] z-20 font-bold'
-                            : 'bg-[#FFFFFF] border-[#ECE8E2] shadow-[0_4px_16px_rgba(0,0,0,0.04)] hover:border-[#FF6B2C]/70 hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(255,107,44,0.14)]'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-2.5">
-                            {/* Drag Handle */}
-                            <div
-                              className="cursor-grab active:cursor-grabbing text-[#6B6B6B] hover:text-[#FF6B2C] py-1 flex items-center justify-center transition-colors shrink-0"
-                              title="Drag stop to reorder along route"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <span className="text-base font-black tracking-tighter leading-none">⋮⋮</span>
-                            </div>
-                            {/* Stop Number Badge aligned with vertical timeline */}
-                            <div className={`w-8 h-8 rounded-xl font-black text-xs flex items-center justify-center shrink-0 border relative z-20 transition-all duration-300 ${
-                              isHovered || dragOverStopIdx === idx
-                                ? 'bg-[#FF6B2C] text-white border-[#FF6B2C] shadow-md scale-110'
-                                : 'bg-[#FFF2EA] text-[#FF6B2C] border-[#FF6B2C]/30'
-                            }`}>
-                              {stopNum}
-                            </div>
-                            <div className="ml-0.5">
-                              <span className="text-xs font-extrabold text-[#FF6B2C] tracking-tight">{act.time}</span>
-                              <h4 className="text-sm font-extrabold text-[#1F1F1F] leading-snug tracking-tight">{act.title}</h4>
+                      <div key={idx} className="flex flex-col">
+                        {/* Point 1 & 10: Transport Connector Between Stops */}
+                        {idx > 0 && transport && (
+                          <div className="relative pl-12 py-2 flex items-center z-10">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFF8F5] hover:bg-[#FFF2EA] border border-[#ECE8E2] rounded-full text-[11px] font-extrabold text-[#5F5E5A] shadow-2xs transition-all">
+                              <span className="text-xs">{transport.icon}</span>
+                              <span className="tracking-tight text-[#1C1B1B]">{transport.text}</span>
                             </div>
                           </div>
-                          <span className="text-[9px] font-extrabold px-2.5 py-0.5 rounded-md bg-[#F7F5F2] text-[#6B6B6B] uppercase tracking-wider shrink-0 border border-[#ECE8E2]">
-                            {act.badge || act.category || 'Stop'}
-                          </span>
-                        </div>
-                        <p className="text-xs text-[#6B6B6B] leading-relaxed pl-12">{act.description}</p>
-                        <div className="pl-12 flex items-center flex-wrap gap-1.5 pt-1">
-                          {act.duration && (
-                            <span className="text-[10px] font-bold text-[#6B6B6B] bg-[#F7F5F2] px-2.5 py-0.5 rounded-md flex items-center gap-1 border border-[#ECE8E2]">
-                              ⏱️ {act.duration}
+                        )}
+
+                        {/* Drag & Interactive Activity Card */}
+                        <div
+                          draggable={true}
+                          onDragStart={(e) => handleDragStart(e, idx)}
+                          onDragOver={(e) => handleDragOver(e, idx)}
+                          onDragLeave={handleDragLeave}
+                          onDrop={(e) => handleDrop(e, idx)}
+                          onDragEnd={handleDragEnd}
+                          onMouseEnter={() => handleHoverStop(stopNum)}
+                          onMouseLeave={() => handleHoverStop(null)}
+                          onClick={() => handleHoverStop(stopNum)}
+                          className={`w-full box-border p-4 rounded-2xl border transition-all duration-300 ease-out flex flex-col gap-3 cursor-pointer select-none relative z-10 ${
+                            dragOverStopIdx === idx
+                              ? 'border-[#FF6B2C] border-2 bg-[#FFF8F5] scale-[1.02] ring-4 ring-[#FF6B2C]/30 shadow-2xl z-30'
+                              : draggedStopIdx === idx
+                              ? 'opacity-40 scale-95 border-dashed border-2 border-[#ECE8E2] bg-[#F7F5F2]'
+                              : isHovered
+                              ? 'bg-[#FFFFFF] border-[#FF6B2C] border ring-4 ring-[#FF6B2C]/20 -translate-y-1 shadow-[0_14px_32px_rgba(255,107,44,0.18)] z-20 font-bold'
+                              : 'bg-[#FFFFFF] border-[#ECE8E2] shadow-[0_4px_16px_rgba(0,0,0,0.04)] hover:border-[#FF6B2C]/70 hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(255,107,44,0.14)]'
+                          }`}
+                        >
+                          {/* Top Row: Drag Handle + Timeline Node + Thumbnail + Title/Hierarchy */}
+                          <div className="flex items-start gap-3">
+                            {/* Drag Handle & Timeline Node */}
+                            <div className="flex items-center gap-2 shrink-0">
+                              <div
+                                className="cursor-grab active:cursor-grabbing text-[#6B6B6B] hover:text-[#FF6B2C] py-1 flex items-center justify-center transition-colors shrink-0"
+                                title="Drag stop to reorder along route"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <span className="text-base font-black tracking-tighter leading-none">⋮⋮</span>
+                              </div>
+                              <div className={`w-8 h-8 rounded-xl font-black text-xs flex items-center justify-center shrink-0 border relative z-20 transition-all duration-300 ${
+                                isHovered || dragOverStopIdx === idx
+                                  ? 'bg-[#FF6B2C] text-white border-[#FF6B2C] shadow-md scale-110'
+                                  : 'bg-[#FFF2EA] text-[#FF6B2C] border-[#FF6B2C]/30'
+                              }`}>
+                                {stopNum}
+                              </div>
+                            </div>
+
+                            {/* Point 2: Activity Thumbnail (80-100px) */}
+                            <div className="relative w-20 h-20 rounded-xl overflow-hidden shrink-0 border border-[#ECE8E2] shadow-2xs">
+                              <img
+                                src={getActivityThumbnail(act, idx)}
+                                alt={act.title}
+                                className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+                                loading="lazy"
+                              />
+                            </div>
+
+                            {/* Main Content Hierarchy */}
+                            <div className="flex-1 min-w-0 flex flex-col gap-1">
+                              <div className="flex items-center justify-between gap-1 flex-wrap">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-xs font-mono font-extrabold text-[#FF6B2C]">{act.time || '10:00 AM'}</span>
+                                  <span>•</span>
+                                  <span className={`inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md border ${categoryStyle.badgeClass}`}>
+                                    <span>{categoryStyle.icon}</span> <span>{categoryStyle.name}</span>
+                                  </span>
+                                </div>
+                              </div>
+
+                              <h4 className="text-sm sm:text-base font-black text-[#1C1B1B] leading-snug tracking-tight">
+                                {act.title}
+                              </h4>
+
+                              {/* Rating */}
+                              <div className="flex items-center gap-1 text-[11px] font-extrabold text-[#1C1B1B]">
+                                <span className="text-amber-500">★★★★★</span>
+                                <span>{ratingData.rating}</span>
+                                <span className="text-[#5F5E5A] font-medium">({ratingData.reviews})</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Description (line-clamp-2) */}
+                          <p className="text-xs text-[#5F5E5A] leading-relaxed line-clamp-2 pl-12 sm:pl-13 font-normal">
+                            {act.description}
+                          </p>
+
+                          {/* Pills: Duration, Cost, Badges */}
+                          <div className="pl-12 sm:pl-13 flex items-center flex-wrap gap-1.5 pt-0.5">
+                            {act.duration && (
+                              <span className="text-[10px] font-bold text-[#5F5E5A] bg-[#F7F5F2] px-2 py-0.5 rounded-md border border-[#ECE8E2]">
+                                ⏱️ {act.duration}
+                              </span>
+                            )}
+                            <span className="text-[10px] font-bold text-[#0D9488] bg-[#0D9488]/10 px-2 py-0.5 rounded-md border border-[#0D9488]/20">
+                              {costInfo.title}
                             </span>
-                          )}
-                          {act.cost && (
-                            <span className="text-[10px] font-bold text-[#0D9488] bg-[#0D9488]/10 px-2.5 py-0.5 rounded-md flex items-center gap-1">
-                              💰 {act.cost}
-                            </span>
-                          )}
-                          {(act.badge?.toLowerCase().includes('must') || act.title?.toLowerCase().includes('fast-track') || act.category?.toLowerCase().includes('attraction')) && (
-                            <span className="text-[10px] font-extrabold text-[#FF6B2C] bg-[#FFF2EA] px-2.5 py-0.5 rounded-md flex items-center gap-1 border border-[#FF6B2C]/30">
-                              🎟️ Fast-Track
-                            </span>
-                          )}
-                          {(act.category?.toLowerCase().includes('food') || act.badge?.toLowerCase().includes('gem') || act.title?.toLowerCase().includes('lunch')) && (
-                            <span className="text-[10px] font-extrabold text-[#854D0E] bg-[#FEF9C3] px-2.5 py-0.5 rounded-md flex items-center gap-1 border border-[#854D0E]/30">
-                              🍴 Gourmet Pick
-                            </span>
-                          )}
+                            {iconBadges.map((badge, bIdx) => (
+                              <span key={bIdx} className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md border flex items-center gap-1 ${badge.colorClass}`}>
+                                <span>{badge.icon}</span> <span>{badge.text}</span>
+                              </span>
+                            ))}
+                          </div>
+
+                          {/* AI Insight Collapsible */}
+                          <div className="pl-12 sm:pl-13 pt-1 border-t border-[rgba(28,27,27,0.06)]" onClick={(e) => e.stopPropagation()}>
+                            <details className="group/tip cursor-pointer">
+                              <summary className="inline-flex items-center gap-1 text-[11px] font-bold text-[#FF6B2C] hover:text-[#D95524] select-none py-0.5">
+                                <span>💡 AI Insight &amp; Tip</span>
+                                <span className="text-[9px] opacity-70 group-open/tip:rotate-180 transition-transform">▼</span>
+                              </summary>
+                              <div className="mt-1 p-2.5 rounded-xl bg-[#FFF8F5] border border-[#FF6B2C]/20 text-xs text-[#1C1B1B] font-medium leading-relaxed shadow-2xs">
+                                ✨ {aiInsightText}
+                              </div>
+                            </details>
+                          </div>
                         </div>
                       </div>
                     );
