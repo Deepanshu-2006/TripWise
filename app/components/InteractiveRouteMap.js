@@ -821,6 +821,15 @@ export default function InteractiveRouteMap({
             animation: tripwiseRouteFlow 1.6s linear infinite !important;
             filter: drop-shadow(0 0 6px rgba(236, 103, 53, 0.75));
           }
+          @keyframes tripwisePinPulseOnce {
+            0% { transform: scale(1); filter: drop-shadow(0 0 0px rgba(236, 103, 53, 0.9)); }
+            30% { transform: scale(1.35) translateY(-8px); filter: drop-shadow(0 12px 24px rgba(236, 103, 53, 0.85)); }
+            70% { transform: scale(0.95) translateY(2px); filter: drop-shadow(0 4px 10px rgba(236, 103, 53, 0.6)); }
+            100% { transform: scale(1) translateY(0); filter: drop-shadow(0 0 0px rgba(236, 103, 53, 0)); }
+          }
+          .tripwise-pin-pulse-once {
+            animation: tripwisePinPulseOnce 1.1s cubic-bezier(0.22, 1, 0.36, 1) !important;
+          }
           .glass-stop-popup .leaflet-popup-content-wrapper {
             background: rgba(255, 255, 255, 0.96) !important;
             backdrop-filter: blur(16px) !important;
@@ -1207,6 +1216,19 @@ export default function InteractiveRouteMap({
           stopsCount: res.stopsCount
         });
 
+        const triggerPulse = () => {
+          setTimeout(() => {
+            const firstStopKey = 1;
+            const firstStopMarker = markersRef.current[firstStopKey] || markersRef.current['1'] || markersRef.current['0'] || Object.values(markersRef.current)[0];
+            if (firstStopMarker && firstStopMarker._icon) {
+              firstStopMarker._icon.classList.add('tripwise-pin-pulse-once');
+              setTimeout(() => {
+                firstStopMarker._icon?.classList.remove('tripwise-pin-pulse-once');
+              }, 1200);
+            }
+          }, 850);
+        };
+
         if (res.animatedPolyline && selectedStopIdx === null && selectedCategory === 'all') {
           mapRef.current.flyToBounds(res.animatedPolyline.getBounds(), {
             paddingTopLeft: [75, 120],
@@ -1216,15 +1238,21 @@ export default function InteractiveRouteMap({
             duration: 0.8,
             easeLinearity: 0.25
           });
+          triggerPulse();
         } else if (res.latLngs.length === 1 && selectedStopIdx === null && selectedCategory === 'all') {
           mapRef.current.flyTo(res.latLngs[0], 15, { animate: true, duration: 0.8 });
+          triggerPulse();
         }
       }
     };
 
     plotRoute();
-    const timer1 = setTimeout(plotRoute, 150);
-    const timer2 = setTimeout(plotRoute, 500);
+    const timer1 = setTimeout(() => {
+      if (mapRef.current) mapRef.current.invalidateSize();
+    }, 150);
+    const timer2 = setTimeout(() => {
+      if (mapRef.current) mapRef.current.invalidateSize();
+    }, 500);
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);

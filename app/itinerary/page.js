@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import Header from '../components/Header';
-import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun } from 'lucide-react';
+import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, Bookmark } from 'lucide-react';
 import {
   getActivityThumbnail,
   getTransportBetweenStops,
@@ -126,48 +126,6 @@ export default function ItineraryPage() {
       <main className="max-w-6xl mx-auto px-6 py-10 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-10">
         {/* Left Column: Day Selector & GeoEngine Route Map */}
         <div className="lg:col-span-4 flex flex-col gap-6">
-          {/* Premium Animated Segmented Control Day Navigation (Apple iOS / Arc / Linear inspired) */}
-          <div className="bg-white p-4 sm:p-5 rounded-3xl border border-[rgba(28,27,27,0.08)] shadow-sm">
-            <h3 className="text-xs font-black uppercase tracking-widest text-[#5F5E5A] mb-3 flex items-center justify-between">
-              <span>Select Day</span>
-              <span className="text-[10px] text-[#EC6735] font-extrabold">{itinerary.days?.length || 1} Days Total</span>
-            </h3>
-            {itinerary.days && itinerary.days.length > 0 && (
-              <div className="inline-flex items-center bg-[#F7F5F2] p-1 rounded-[22px] border border-[#ECE8E2] w-full relative select-none shadow-inner">
-                {itinerary.days.map((day, idx) => {
-                  const dayNum = day.dayNumber || idx + 1;
-                  const isSelected = activeDay === dayNum;
-                  return (
-                    <button
-                      key={dayNum}
-                      type="button"
-                      onClick={() => {
-                        setActiveDay(dayNum);
-                        setSelectedStopIdx(null);
-                      }}
-                      className="relative py-2.5 text-sm font-medium transition-colors duration-200 cursor-pointer flex items-center justify-center flex-1 whitespace-nowrap rounded-[18px] hover:bg-white/40 focus:outline-hidden z-10"
-                    >
-                      {isSelected && (
-                        <motion.span
-                          layoutId="activeDayItinerarySegmentedTab"
-                          className="absolute inset-0 rounded-[18px] bg-[#EC6735] shadow-[0_2px_8px_rgba(236,103,53,0.28)] -z-10"
-                          transition={{
-                            layout: { duration: 0.3, ease: [0.22, 1, 0.36, 1] }
-                          }}
-                        />
-                      )}
-                      <span className={`relative transition-colors duration-300 font-medium ${
-                        isSelected ? 'text-white' : 'text-[#5F5E5A] hover:text-[#1C1B1B]'
-                      }`}>
-                        Day {dayNum}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
           {/* Live GeoEngine Route Map */}
           <div className="bg-white p-5 sm:p-6 rounded-3xl border border-[rgba(28,27,27,0.08)] shadow-sm sticky top-28">
             <h3 className="text-xs font-black uppercase tracking-widest text-[#5F5E5A] mb-2 flex items-center justify-between">
@@ -194,85 +152,93 @@ export default function ItineraryPage() {
         {/* Right Column: Day Overview Card & Connected Timeline */}
         <div className="lg:col-span-8 flex flex-col gap-6">
           {/* Compact Floating Trip Summary Header (Inspired by Apple Maps, Airbnb, Arc, Linear) */}
-          <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md p-3.5 sm:p-4 rounded-[20px] border border-[#ECE8E2] shadow-[0_4px_24px_rgba(0,0,0,0.04)] flex flex-col gap-2.5 transition-all duration-300">
-            {/* Row 1: Destination Title & Weather Chip */}
+          <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md p-3 sm:p-3.5 rounded-2xl border border-[rgba(28,27,27,0.08)] shadow-sm flex flex-col gap-2.5 transition-all duration-300">
+            {/* Top Row: Day Navigation Segmented Control + Weather Chip (top-right) */}
             <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 min-w-0">
-                <MapPin className="w-4.5 h-4.5 text-[#EC6735] shrink-0 fill-[#EC6735]/15" />
-                <h2 className="text-[18px] sm:text-[20px] font-bold text-[#1C1B1B] tracking-tight truncate">
-                  {itinerary.destinationName || 'Rome, Italy'}
-                </h2>
-              </div>
-              <div className="flex items-center gap-1 text-[12px] font-semibold text-[#5F5E5A] bg-[#F7F5F2] px-2.5 py-1 rounded-full border border-[#ECE8E2] shrink-0 select-none">
-                <CloudSun className="w-3.5 h-3.5 text-[#EC6735]" />
-                <span>{currentDaySummary.stats.weather || '☀ 32°'}</span>
+              {itinerary.days && itinerary.days.length > 0 ? (
+                <div className="inline-flex items-center gap-1 bg-[#F6F4F1] p-0.5 rounded-full border border-[#ECE8E2] h-[34px] select-none shadow-inner w-fit">
+                  {itinerary.days.map((day, idx) => {
+                    const dayNum = day.dayNumber || idx + 1;
+                    const isSelected = activeDay === dayNum;
+                    return (
+                      <button
+                        key={dayNum}
+                        type="button"
+                        onClick={() => {
+                          setActiveDay(dayNum);
+                          setSelectedStopIdx(null);
+                        }}
+                        className="relative px-4 sm:px-5 h-full text-xs transition-colors duration-300 cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-full focus:outline-hidden z-10"
+                      >
+                        {isSelected && (
+                          <motion.span
+                            layoutId="activeDayItinerarySegmentedTab"
+                            className="absolute inset-0 rounded-full bg-[#EC6735] shadow-[0_1px_6px_rgba(236,103,53,0.28)] -z-10"
+                            transition={{
+                              layout: { duration: 0.3, ease: [0.22, 1, 0.36, 1] }
+                            }}
+                          />
+                        )}
+                        <span className={`relative transition-colors duration-300 ${
+                          isSelected ? 'text-white font-semibold' : 'text-[#5F5E5A] hover:text-[#1C1B1B] font-medium'
+                        }`}>
+                          Day {dayNum}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : <div />}
+
+              <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#1C1B1B] bg-[#F7F5F2] px-2.5 py-1 rounded-full border border-[#ECE8E2] shrink-0 select-none shadow-2xs">
+                <span>☀︎</span>
+                <span>{currentDaySummary.stats.weather || '32°'}</span>
               </div>
             </div>
 
-            {/* Row 2 / Day Subtitle & Row 3 / Inline Stats & Right-side Actions */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2 border-t border-[#ECE8E2]/60 text-[13px] font-medium text-[#5F5E5A]">
-              {/* Left: Inline Stats with small icons (Plain text instead of pills!) */}
-              <div className="flex items-center flex-wrap gap-x-3 gap-y-1 min-w-0">
-                <span className="text-[#1C1B1B] font-semibold flex items-center gap-1.5">
-                  <span>{currentDaySummary.titleLabel} • {currentDaySummary.themeTitle} • Demo</span>
-                  <span className="text-[#ECE8E2] font-light">•</span>
-                </span>
-                <span className="inline-flex items-center gap-1 text-[#1C1B1B] font-medium">
-                  <MapPin className="w-3.5 h-3.5 text-[#6B6B6B]" />
-                  <span>{currentDaySummary.stats.stops}</span>
+            {/* Second Row: Clean Inline Statistics & Rebalanced Action Toolbar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2 border-t border-[rgba(28,27,27,0.06)] text-xs font-medium text-[#5F5E5A]">
+              {/* Left: Clean horizontal statistics separated by subtle dots */}
+              <div className="flex items-center flex-wrap gap-x-2.5 gap-y-1 min-w-0 select-none text-[#5F5E5A]">
+                <span className="inline-flex items-center gap-1">
+                  <span className="text-[11px] text-[#8C8B88]">📍</span>
+                  <span>{String(currentDaySummary.stats.stops).includes('Stop') ? currentDaySummary.stats.stops : `${currentDaySummary.stats.stops} Stops`}</span>
                 </span>
                 <span className="text-[#ECE8E2] font-light">•</span>
-                <span className="inline-flex items-center gap-1 text-[#1C1B1B] font-medium">
-                  <Clock className="w-3.5 h-3.5 text-[#6B6B6B]" />
+                <span className="inline-flex items-center gap-1">
+                  <span className="text-[11px] text-[#8C8B88]">🕒</span>
                   <span>{currentDaySummary.stats.hours}</span>
                 </span>
                 <span className="text-[#ECE8E2] font-light">•</span>
-                <span className="inline-flex items-center gap-1 text-[#1C1B1B] font-medium">
-                  <Navigation className="w-3.5 h-3.5 text-[#6B6B6B]" />
+                <span className="inline-flex items-center gap-1">
+                  <span className="text-[11px] text-[#8C8B88]">🚶</span>
                   <span>{currentDaySummary.stats.distance}</span>
                 </span>
                 <span className="text-[#ECE8E2] font-light">•</span>
-                <span className="inline-flex items-center gap-1 text-[#15803D] font-semibold">
-                  <DollarSign className="w-3.5 h-3.5 text-[#16A34A]" />
+                <span className="inline-flex items-center gap-1 text-[#15803D] font-bold">
+                  <span className="text-[11px]">💰</span>
                   <span>{currentDaySummary.stats.cost}</span>
                 </span>
               </div>
 
-              {/* Right side: Lightweight Toolbar Buttons (Optimize colored, rest ghost) */}
-              <div className="flex items-center gap-1 shrink-0 self-end sm:self-auto">
+              {/* Right: Only Optimize Route (Primary orange) and Add Stop (Lightweight ghost) */}
+              <div className="flex items-center flex-nowrap gap-2 shrink-0 self-end sm:self-auto">
                 <button
                   type="button"
                   onClick={() => alert("✨ AI Copilot: Optimizing day route geometry & pacing right now...")}
-                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-[#EC6735] text-white hover:bg-[#D95524] text-xs font-semibold shadow-[0_2px_8px_rgba(236,103,53,0.25)] transition-all cursor-pointer hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-1.5 h-[34px] px-3.5 rounded-xl bg-[#EC6735] text-white hover:bg-[#D95524] text-xs font-semibold shadow-[0_2px_8px_rgba(236,103,53,0.25)] transition-all duration-200 cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0"
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Optimize</span>
+                  <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                  <span>Optimize Route</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => alert("➕ Add Stop modal: Search attractions or drop custom pins.")}
-                  className="inline-flex items-center gap-1 h-8 px-2.5 rounded-xl bg-transparent hover:bg-[#F7F5F2] text-[#1C1B1B] text-xs font-semibold transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1.5 h-[34px] px-3.5 rounded-xl bg-transparent hover:bg-black/5 text-[#1C1B1B] text-xs font-semibold transition-all duration-200 cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0"
                   title="Add Stop"
                 >
-                  <Plus className="w-3.5 h-3.5 text-[#6B6B6B]" />
-                  <span>Add</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => alert("↕ Reorder mode enabled. Drag and drop cards along timeline.")}
-                  className="inline-flex items-center gap-1 h-8 px-2.5 rounded-xl bg-transparent hover:bg-[#F7F5F2] text-[#1C1B1B] text-xs font-semibold transition-all cursor-pointer"
-                  title="Reorder"
-                >
-                  <ArrowUpDown className="w-3.5 h-3.5 text-[#6B6B6B]" />
-                  <span>Reorder</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => alert("⋯ More Day Options: Export PDF, Sync to Google Calendar, Share Link.")}
-                  className="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-transparent hover:bg-[#F7F5F2] text-[#1C1B1B] text-xs font-semibold transition-all cursor-pointer"
-                  title="More Actions"
-                >
-                  <MoreHorizontal className="w-4 h-4 text-[#6B6B6B]" />
+                  <Plus className="w-3.5 h-3.5 text-[#6B6B6B] shrink-0" />
+                  <span>Add Stop</span>
                 </button>
               </div>
             </div>
@@ -283,9 +249,9 @@ export default function ItineraryPage() {
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeDay}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0, transition: { duration: 0.25, ease: [0.22, 1, 0.36, 1] } }}
-                exit={{ opacity: 0, y: -8, transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] } }}
+                initial={{ opacity: 1 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, y: -10, transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] } }}
                 className="relative flex flex-col w-full"
               >
                 {/* Continuous Vertical Timeline Line */}
@@ -305,7 +271,13 @@ export default function ItineraryPage() {
               const transport = getTransportBetweenStops(currentDayData?.activities?.[idx - 1], act, idx);
 
               return (
-                <div key={idx} className="flex flex-col">
+                <motion.div
+                  key={`${activeDay}-${idx}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0, transition: { duration: 0.26, delay: idx * 0.06, ease: [0.22, 1, 0.36, 1] } }}
+                  exit={{ opacity: 0, y: -10, transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] } }}
+                  className="flex flex-col"
+                >
                   {/* Point 1 & Point 10: Transport Connector Between Stops */}
                   {idx > 0 && transport && (
                     <div className="relative pl-8 sm:pl-10 py-3 flex items-center">
@@ -372,42 +344,27 @@ export default function ItineraryPage() {
                             </div>
 
                             {/* Point 6: Quick Actions (Navigate, Book, Save icon-only buttons with hover animations) */}
-                            <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                              <a
-                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${act.title} ${itinerary.destinationName || ''}`)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                title="Navigate in Google Maps"
-                                className="w-8 h-8 rounded-xl bg-[#FFF8F5] hover:bg-[#EC6735] text-[#1C1B1B] hover:text-white border border-[rgba(28,27,27,0.08)] hover:border-[#EC6735] flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 shadow-2xs"
-                              >
-                                <Navigation size={14} strokeWidth={2.2} />
-                              </a>
-                              <a
-                                href={`https://www.google.com/search?q=${encodeURIComponent(`Book tickets ${act.title} ${itinerary.destinationName || ''}`)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                title="Book Tickets / Reservation"
-                                className="w-8 h-8 rounded-xl bg-[#FFF8F5] hover:bg-[#EC6735] text-[#1C1B1B] hover:text-white border border-[rgba(28,27,27,0.08)] hover:border-[#EC6735] flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 shadow-2xs"
-                              >
-                                <Ticket size={14} strokeWidth={2.2} />
-                              </a>
+                            <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                               <button
                                 type="button"
-                                onClick={() => toggleSaveStop(stopNum)}
-                                title={isSaved ? "Saved to favorites" : "Save stop"}
-                                className={`w-8 h-8 rounded-xl border flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 shadow-2xs ${
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleSaveStop(stopNum);
+                                }}
+                                className={`h-8 px-3 rounded-xl border flex items-center gap-1 text-xs font-bold transition-all ${
                                   isSaved
-                                    ? 'bg-[#FCE8E1] text-[#EC6735] border-[#EC6735]/40 fill-[#EC6735]'
-                                    : 'bg-[#FFF8F5] hover:bg-[#EC6735] text-[#1C1B1B] hover:text-white border-[rgba(28,27,27,0.08)] hover:border-[#EC6735]'
+                                    ? 'bg-[#FFF8F5] border-[#EC6735] text-[#EC6735]'
+                                    : 'bg-white border-[#ECE8E2] text-[#5F5E5A] hover:border-[#EC6735]'
                                 }`}
                               >
-                                <Heart size={14} strokeWidth={2.2} className={isSaved ? "fill-[#EC6735] text-[#EC6735]" : ""} />
+                                <Bookmark className={`w-3.5 h-3.5 ${isSaved ? 'fill-[#EC6735]' : ''}`} />
+                                <span>{isSaved ? 'Saved' : 'Save'}</span>
                               </button>
                             </div>
                           </div>
 
-                          {/* 2. Title (Point 3 & Point 14 Better Typography) */}
-                          <h4 className="text-lg sm:text-xl font-black text-[#1C1B1B] leading-snug tracking-tight group-hover/card:text-[#EC6735] transition-colors">
+                          {/* 2. Activity Title (Point 3 Bold typography) */}
+                          <h4 className="text-base sm:text-lg font-black text-[#1C1B1B] leading-snug tracking-tight group-hover/card:text-[#EC6735] transition-colors">
                             {act.title}
                           </h4>
 
@@ -473,7 +430,7 @@ export default function ItineraryPage() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
               </motion.div>

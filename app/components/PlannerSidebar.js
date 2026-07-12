@@ -862,119 +862,89 @@ export default function PlannerSidebar({
                   const activeDayObj = itinerary.days?.[selectedDayIndex];
                   const daySummary = getDaySummary(activeDayObj, selectedDayIndex, itinerary.days);
                   return (
-                    <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md p-3.5 sm:p-4 rounded-[20px] border border-[#ECE8E2] shadow-[0_4px_24px_rgba(0,0,0,0.04)] flex flex-col gap-2.5 transition-all duration-300">
-                      {/* Row 1: Destination Title & Weather Chip */}
+                    <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md p-3 sm:p-3.5 rounded-2xl border border-[rgba(28,27,27,0.08)] shadow-sm flex flex-col gap-2.5 transition-all duration-300">
+                      {/* Top Row: Day Navigation Segmented Control + Weather Chip (top-right) */}
                       <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <MapPin className="w-4.5 h-4.5 text-[#EC6735] shrink-0 fill-[#EC6735]/15" />
-                          <h2 className="text-[18px] sm:text-[20px] font-bold text-[#1C1B1B] tracking-tight truncate">
-                            {itinerary.destinationName || 'Rome, Italy'}
-                          </h2>
-                        </div>
-                        <div className="flex items-center gap-1 text-[12px] font-semibold text-[#5F5E5A] bg-[#F7F5F2] px-2.5 py-1 rounded-full border border-[#ECE8E2] shrink-0 select-none">
-                          <CloudSun className="w-3.5 h-3.5 text-[#EC6735]" />
-                          <span>{daySummary.stats.weather || '☀ 32°'}</span>
+                        {itinerary.days && itinerary.days.length > 0 ? (
+                          <div className="inline-flex items-center gap-1 bg-[#F6F4F1] p-0.5 rounded-full border border-[#ECE8E2] h-[34px] select-none shadow-inner w-fit">
+                            {itinerary.days.map((day, idx) => {
+                              const isSelected = selectedDayIndex === idx;
+                              return (
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  onClick={() => handleDaySelect(idx)}
+                                  className="relative px-4 sm:px-5 h-full text-xs transition-colors duration-300 cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-full focus:outline-hidden z-10"
+                                >
+                                  {isSelected && (
+                                    <motion.span
+                                      layoutId="activeDaySegmentedTab"
+                                      className="absolute inset-0 rounded-full bg-[#EC6735] shadow-[0_1px_6px_rgba(236,103,53,0.28)] -z-10"
+                                      transition={{
+                                        layout: { duration: 0.3, ease: [0.22, 1, 0.36, 1] }
+                                      }}
+                                    />
+                                  )}
+                                  <span className={`relative transition-colors duration-300 ${
+                                    isSelected ? 'text-white font-semibold' : 'text-[#5F5E5A] hover:text-[#1C1B1B] font-medium'
+                                  }`}>
+                                    Day {idx + 1}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ) : <div />}
+
+                        <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#1C1B1B] bg-[#F7F5F2] px-2.5 py-1 rounded-full border border-[#ECE8E2] shrink-0 select-none shadow-2xs">
+                          <span>☀︎</span>
+                          <span>{daySummary.stats.weather || '32°'}</span>
                         </div>
                       </div>
 
-                      {/* Premium Native Segmented Control Day Navigation (Apple iOS / Arc / Linear / Airbnb inspired) */}
-                      {itinerary.days && itinerary.days.length > 1 && (
-                        <div className="inline-flex items-center bg-[#F7F5F2] p-1 rounded-[22px] border border-[#ECE8E2] w-full sm:w-auto overflow-x-auto scrollbar-none relative select-none shadow-inner">
-                          {itinerary.days.map((day, idx) => {
-                            const isSelected = selectedDayIndex === idx;
-                            return (
-                              <button
-                                key={idx}
-                                type="button"
-                                onClick={() => handleDaySelect(idx)}
-                                className="relative px-5 sm:px-6 py-2 text-[13px] font-medium transition-colors duration-200 cursor-pointer flex items-center justify-center min-w-[76px] sm:min-w-[88px] flex-1 sm:flex-initial whitespace-nowrap rounded-[18px] hover:bg-white/40 focus:outline-hidden z-10"
-                              >
-                                {isSelected && (
-                                  <motion.span
-                                    layoutId="activeDaySegmentedTab"
-                                    className="absolute inset-0 rounded-[18px] bg-[#EC6735] shadow-[0_2px_8px_rgba(236,103,53,0.28)] -z-10"
-                                    transition={{
-                                      layout: { duration: 0.3, ease: [0.22, 1, 0.36, 1] }
-                                    }}
-                                  />
-                                )}
-                                <span className={`relative transition-colors duration-300 font-medium ${
-                                  isSelected ? 'text-white' : 'text-[#5F5E5A] hover:text-[#1C1B1B]'
-                                }`}>
-                                  Day {idx + 1}
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-
-                      {/* Row 2 / Day Subtitle & Row 3 / Inline Stats & Right-side Actions */}
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2 border-t border-[#ECE8E2]/60 text-[13px] font-medium text-[#5F5E5A]">
-                        {/* Left: Inline Stats with small icons (Plain text instead of pills!) */}
-                        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 min-w-0">
-                          {(!itinerary.days || itinerary.days.length <= 1) && (
-                            <span className="text-[#1C1B1B] font-semibold flex items-center gap-1.5">
-                              <span>{daySummary.titleLabel} • {daySummary.themeTitle} • Demo</span>
-                              <span className="text-[#ECE8E2] font-light">•</span>
-                            </span>
-                          )}
-                          <span className="inline-flex items-center gap-1 text-[#1C1B1B] font-medium">
-                            <MapPin className="w-3.5 h-3.5 text-[#6B6B6B]" />
-                            <span>{daySummary.stats.stops}</span>
+                      {/* Second Row: Clean Inline Statistics & Rebalanced Action Toolbar */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2 border-t border-[rgba(28,27,27,0.06)] text-xs font-medium text-[#5F5E5A]">
+                        {/* Left: Clean horizontal statistics separated by subtle dots */}
+                        <div className="flex items-center flex-wrap gap-x-2.5 gap-y-1 min-w-0 select-none text-[#5F5E5A]">
+                          <span className="inline-flex items-center gap-1">
+                            <span className="text-[11px] text-[#8C8B88]">📍</span>
+                            <span>{String(daySummary.stats.stops).includes('Stop') ? daySummary.stats.stops : `${daySummary.stats.stops} Stops`}</span>
                           </span>
                           <span className="text-[#ECE8E2] font-light">•</span>
-                          <span className="inline-flex items-center gap-1 text-[#1C1B1B] font-medium">
-                            <Clock className="w-3.5 h-3.5 text-[#6B6B6B]" />
+                          <span className="inline-flex items-center gap-1">
+                            <span className="text-[11px] text-[#8C8B88]">🕒</span>
                             <span>{daySummary.stats.hours}</span>
                           </span>
                           <span className="text-[#ECE8E2] font-light">•</span>
-                          <span className="inline-flex items-center gap-1 text-[#1C1B1B] font-medium">
-                            <Navigation className="w-3.5 h-3.5 text-[#6B6B6B]" />
+                          <span className="inline-flex items-center gap-1">
+                            <span className="text-[11px] text-[#8C8B88]">🚶</span>
                             <span>{daySummary.stats.distance}</span>
                           </span>
                           <span className="text-[#ECE8E2] font-light">•</span>
-                          <span className="inline-flex items-center gap-1 text-[#15803D] font-semibold">
-                            <DollarSign className="w-3.5 h-3.5 text-[#16A34A]" />
+                          <span className="inline-flex items-center gap-1 text-[#15803D] font-bold">
+                            <span className="text-[11px]">💰</span>
                             <span>{daySummary.stats.cost}</span>
                           </span>
                         </div>
 
-                        {/* Right side: Lightweight Toolbar Buttons (Optimize colored, rest ghost) */}
-                        <div className="flex items-center gap-1 shrink-0 self-end sm:self-auto">
+                        {/* Right: Only Optimize Route (Primary orange) and Add Stop (Lightweight ghost) */}
+                        <div className="flex items-center flex-nowrap gap-2 shrink-0 self-end sm:self-auto">
                           <button
                             type="button"
                             onClick={() => { setShowCopilotDrawer(true); setActiveDrawerTab('ai'); }}
-                            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-[#EC6735] text-white hover:bg-[#D95524] text-xs font-semibold shadow-[0_2px_8px_rgba(236,103,53,0.25)] transition-all cursor-pointer hover:-translate-y-0.5"
+                            className="inline-flex items-center gap-1.5 h-[34px] px-3.5 rounded-xl bg-[#EC6735] text-white hover:bg-[#D95524] text-xs font-semibold shadow-[0_2px_8px_rgba(236,103,53,0.25)] transition-all duration-200 cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0"
                           >
-                            <Sparkles className="w-3.5 h-3.5" />
-                            <span>Optimize</span>
+                            <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                            <span>Optimize Route</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => { setShowCopilotDrawer(true); setActiveDrawerTab('manual'); }}
-                            className="inline-flex items-center gap-1 h-8 px-2.5 rounded-xl bg-transparent hover:bg-[#F7F5F2] text-[#1C1B1B] text-xs font-semibold transition-all cursor-pointer"
+                            className="inline-flex items-center gap-1.5 h-[34px] px-3.5 rounded-xl bg-transparent hover:bg-black/5 text-[#1C1B1B] text-xs font-semibold transition-all duration-200 cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0"
                             title="Add Stop"
                           >
-                            <Plus className="w-3.5 h-3.5 text-[#6B6B6B]" />
-                            <span>Add</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => alert("↕ Reorder mode: Drag stops along timeline geometry.")}
-                            className="inline-flex items-center gap-1 h-8 px-2.5 rounded-xl bg-transparent hover:bg-[#F7F5F2] text-[#1C1B1B] text-xs font-semibold transition-all cursor-pointer"
-                            title="Reorder"
-                          >
-                            <ArrowUpDown className="w-3.5 h-3.5 text-[#6B6B6B]" />
-                            <span>Reorder</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => { setShowCopilotDrawer(!showCopilotDrawer); }}
-                            className="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-transparent hover:bg-[#F7F5F2] text-[#1C1B1B] text-xs font-semibold transition-all cursor-pointer"
-                            title="More Actions"
-                          >
-                            <MoreHorizontal className="w-4 h-4 text-[#6B6B6B]" />
+                            <Plus className="w-3.5 h-3.5 text-[#6B6B6B] shrink-0" />
+                            <span>Add Stop</span>
                           </button>
                         </div>
                       </div>
@@ -1183,9 +1153,9 @@ export default function PlannerSidebar({
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={selectedDayIndex}
-                      initial={{ opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0, transition: { duration: 0.25, ease: [0.22, 1, 0.36, 1] } }}
-                      exit={{ opacity: 0, y: -8, transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] } }}
+                      initial={{ opacity: 1 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0, y: -10, transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] } }}
                       className="relative flex flex-col gap-3.5 w-full"
                     >
                       {/* Point 5 & 1: Subtle orange continuous vertical timeline connecting stops */}
@@ -1202,7 +1172,13 @@ export default function PlannerSidebar({
                         const transport = getTransportBetweenStops(itinerary.days?.[selectedDayIndex]?.activities?.[idx - 1], act, idx);
 
                         return (
-                          <div key={idx} className="flex flex-col">
+                          <motion.div
+                            key={`${selectedDayIndex}-${idx}`}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0, transition: { duration: 0.26, delay: idx * 0.06, ease: [0.22, 1, 0.36, 1] } }}
+                            exit={{ opacity: 0, y: -10, transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] } }}
+                            className="flex flex-col"
+                          >
                             {/* Point 1 & 10: Transport Connector Between Stops */}
                             {idx > 0 && transport && (
                               <div className="relative pl-12 py-2 flex items-center z-10">
@@ -1228,25 +1204,17 @@ export default function PlannerSidebar({
                                 dragOverStopIdx === idx
                                   ? 'border-[#FF6B2C] border-2 bg-[#FFF8F5] scale-[1.02] ring-4 ring-[#FF6B2C]/30 shadow-2xl z-30'
                                   : draggedStopIdx === idx
-                                  ? 'opacity-40 scale-95 border-dashed border-2 border-[#ECE8E2] bg-[#F7F5F2]'
-                                  : isHovered
-                                  ? 'bg-[#FFFFFF] border-[#FF6B2C] border ring-4 ring-[#FF6B2C]/20 -translate-y-1 shadow-[0_14px_32px_rgba(255,107,44,0.18)] z-20 font-bold'
-                                  : 'bg-[#FFFFFF] border-[#ECE8E2] shadow-[0_4px_16px_rgba(0,0,0,0.04)] hover:border-[#FF6B2C]/70 hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(255,107,44,0.14)]'
+                                  ? 'opacity-40 border-dashed border-[#FF6B2C] scale-95'
+                                  : isHovered || hoveredStopIdx === stopNum
+                                  ? 'border-[#FF6B2C] bg-white shadow-xl shadow-[0_12px_28px_rgba(255,107,44,0.16)] -translate-y-1 z-20'
+                                  : 'border-[#ECE8E2] bg-white shadow-2xs hover:border-[#FF6B2C]/60 hover:shadow-md hover:-translate-y-0.5'
                               }`}
                             >
-                              {/* Top Row: Drag Handle + Timeline Node + Thumbnail + Title/Hierarchy */}
-                              <div className="flex items-start gap-3">
-                                {/* Drag Handle & Timeline Node */}
-                                <div className="flex items-center gap-2 shrink-0">
-                                  <div
-                                    className="cursor-grab active:cursor-grabbing text-[#6B6B6B] hover:text-[#FF6B2C] py-1 flex items-center justify-center transition-colors shrink-0"
-                                    title="Drag stop to reorder along route"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <span className="text-base font-black tracking-tighter leading-none">⋮⋮</span>
-                                  </div>
-                                  <div className={`w-8 h-8 rounded-xl font-black text-xs flex items-center justify-center shrink-0 border relative z-20 transition-all duration-300 ${
-                                    isHovered || dragOverStopIdx === idx
+                              <div className="flex items-start gap-3.5">
+                                {/* Stop Number Circle / Timeline Node */}
+                                <div className="flex flex-col items-center shrink-0 pt-0.5">
+                                  <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-black transition-all ${
+                                    isHovered
                                       ? 'bg-[#FF6B2C] text-white border-[#FF6B2C] shadow-md scale-110'
                                       : 'bg-[#FFF2EA] text-[#FF6B2C] border-[#FF6B2C]/30'
                                   }`}>
@@ -1324,7 +1292,7 @@ export default function PlannerSidebar({
                                 </details>
                               </div>
                             </div>
-                          </div>
+                          </motion.div>
                         );
                       })}
                     </motion.div>
