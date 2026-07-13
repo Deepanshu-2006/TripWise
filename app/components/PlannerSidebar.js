@@ -1370,7 +1370,7 @@ export default function PlannerSidebar({
                     onClick={onViewItinerary || (() => { if (typeof window !== 'undefined') window.location.href = '/itinerary'; })}
                     className="group w-full h-12 px-5 rounded-2xl font-bold bg-linear-to-r from-[#FF6B2C] to-[#E65D20] text-white hover:from-[#FF7A3D] hover:to-[#FF6B2C] transition-all duration-300 ease-out text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-[0_8px_24px_rgba(255,107,44,0.3)] hover:shadow-[0_12px_32px_rgba(255,107,44,0.5)] hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
                   >
-                    <span>📄 Open Full Summary & Printable View</span>
+                    <span>📍 View Detailed Itinerary</span>
                     <span className="transition-transform duration-300 ease-out group-hover:translate-x-1.5 flex items-center">
                       <ArrowRightIcon />
                     </span>
