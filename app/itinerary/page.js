@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useScroll, useSpring, useTransform } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import Header from '../components/Header';
 import {
@@ -14,12 +14,20 @@ import {
   Sparkles,
   Bookmark,
   X,
-  ChevronRight,
   Compass,
+  Printer,
+  ChevronDown,
+  ChevronUp,
+  Info,
   Calendar,
-  ArrowUpRight,
-  Check,
-  Printer
+  AlertCircle,
+  HelpCircle,
+  Footprints,
+  Sun,
+  Sunset,
+  Layers,
+  ArrowRight,
+  Check
 } from 'lucide-react';
 import {
   getActivityThumbnail,
@@ -32,24 +40,160 @@ import {
   getDaySummary
 } from '../components/itineraryHelpers';
 
-const InteractiveRouteMap = dynamic(() => import('../components/InteractiveRouteMap'), { ssr: false });
+// Dynamically import map components to avoid SSR/window issues
+const Maplibre3DRouteMap = dynamic(() => import('../components/Maplibre3DRouteMap'), { ssr: false });
 
-// Helper to convert day numbers to Roman Numerals for editorial chapter headings
 const toRomanNumeral = (num) => {
   const romanMap = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V', 6: 'VI', 7: 'VII', 8: 'VIII', 9: 'IX', 10: 'X' };
   return romanMap[num] || String(num);
 };
 
+const parseTimeToMinutes = (timeStr) => {
+  if (!timeStr) return 600;
+  const cleaned = timeStr.trim().toLowerCase();
+  const match = cleaned.match(/(\d+):(\d+)\s*(am|pm)?/);
+  if (!match) return 600;
+  
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const ampm = match[3];
+  
+  if (ampm === 'pm' && hours < 12) hours += 12;
+  if (ampm === 'am' && hours === 12) hours = 0;
+  
+  return hours * 60 + minutes;
+};
+
+const getDaylightPercentage = (timeStr) => {
+  const mins = parseTimeToMinutes(timeStr);
+  const start = 8 * 60;
+  const end = 22 * 60;
+  const pct = ((mins - start) / (end - start)) * 100;
+  return Math.min(Math.max(pct, 0), 100);
+};
+
+const getStopEndTimeMinutes = (timeStr, durationStr) => {
+  const startMins = parseTimeToMinutes(timeStr);
+  let durationMins = 90;
+  if (durationStr) {
+    const hoursMatch = durationStr.match(/(\d+)\s*hr/i);
+    const minsMatch = durationStr.match(/(\d+)\s*min/i);
+    let h = hoursMatch ? parseInt(hoursMatch[1], 10) : 0;
+    let m = minsMatch ? parseInt(minsMatch[1], 10) : 0;
+    if (!hoursMatch && !minsMatch) {
+      const floatVal = parseFloat(durationStr);
+      if (!isNaN(floatVal)) h = floatVal;
+    }
+    durationMins = h * 60 + m;
+  }
+  return startMins + durationMins;
+};
+
+const getDayNarrativeTitle = (dayNum, destinationName) => {
+  const narratives = [
+    `Arrival, Settling In & First Impressions of ${destinationName}`,
+    `Into the Ancient Heart & Historical Legacy`,
+    `Cultural Synthesis, Culinary Journeys & Farewells`,
+    `Wandering the Secondary Paths & Scenic Vistas`,
+    `The Final Epilogue of Scenic Exploration`
+  ];
+  return narratives[(dayNum - 1) % narratives.length];
+};
+
+const getAlternativeSuggestions = (act, idx) => {
+  const category = (act.category || '').toLowerCase();
+  if (category.includes('din') || category.includes('food') || category.includes('rest')) {
+    return [
+      { title: "Trattoria da Enzo al 29", desc: "A cozy, legendary Trastevere kitchen serving classic carbonara in a rustic Roman setting." },
+      { title: "Emma Pizza", desc: "Crispy thin Roman pizza topped with artisanal local ingredients and premium olive oils." }
+    ];
+  }
+  if (category.includes('cafe') || category.includes('gelat') || category.includes('coffee')) {
+    return [
+      { title: "Sant' Eustachio il Caffè", desc: "Famous since 1938 for its secret wood-roasting process and signature frothy espresso." },
+      { title: "Frigidarium Gelato", desc: "Handcrafted Roman gelato dipped in a signature dark or white chocolate shell." }
+    ];
+  }
+  return [
+    { title: "Villa Borghese Gardens", desc: "Lush landscape park featuring quiet walkways, rowboats, and beautiful panoramic city vistas." },
+    { title: "Palazzo Altemps", desc: "Serene Renaissance palace housing classical Roman sculptures without the Vatican crowds." }
+  ];
+};
+
+const Sparkline = () => (
+  <svg className="w-14 h-4 text-[#BA5536] inline-block mr-1.5 align-middle" viewBox="0 0 50 15" fill="none">
+    <path 
+      d="M0 10 C10 15, 12 2, 20 8 C28 14, 35 1, 50 6" 
+      stroke="currentColor" 
+      strokeWidth="1.8" 
+      strokeLinecap="round" 
+    />
+  </svg>
+);
+
+const getContextAwareTip = (act, idx) => {
+  const title = (act.title || '').toLowerCase();
+  const timeMins = parseTimeToMinutes(act.time);
+  
+  let crowdNote = "Visiting before peak tour bus hours. Enjoy a calmer atmosphere.";
+  if (timeMins >= 660 && timeMins <= 840) {
+    crowdNote = "Peak midday tourist congestion. Staying hydrated and booking online in advance is highly advised.";
+  } else if (timeMins > 840) {
+    crowdNote = "Fewer crowds and softer lighting, ideal for photography and tranquil exploring.";
+  }
+
+  let weatherNote = "Expected mild temperatures. Ideal walking conditions.";
+  if (title.includes('colosseum') || title.includes('forum') || title.includes('ruin') || title.includes('plaza')) {
+    weatherNote = "Open historic ruins with high sun exposure. We strongly recommend hats and sunscreen before 1:00 PM.";
+  } else if (title.includes('restaurant') || title.includes('indoor') || title.includes('vatican') || title.includes('museum')) {
+    weatherNote = "Indoor climate-controlled site. A great option if outside heat rises.";
+  }
+
+  return { crowdNote, weatherNote };
+};
+
 export default function ItineraryPage() {
   const [itinerary, setItinerary] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeModalDay, setActiveModalDay] = useState(null); // When !== null, shows modal map overlay for that day
-  const [hoveredStopIdx, setHoveredStopIdx] = useState(null);
-  const [selectedStopIdx, setSelectedStopIdx] = useState(null);
+  
+  // Navigation & Modal State
+  const [activeDay, setActiveDay] = useState(1); // Active Day or 'epilogue'
+  const [activeModalDay, setActiveModalDay] = useState(null);
+
+  // Stop Detail States
+  const [expandedStops, setExpandedStops] = useState({});
+  const [showAlternatives, setShowAlternatives] = useState({});
   const [savedStops, setSavedStops] = useState({});
   const [shareCopied, setShareCopied] = useState(false);
 
-  // Load itinerary from localStorage on mount
+  // Parallax Scroll Tracking Refs
+  // Window scroll position tracking for parallax (no target ref needed to avoid hydration error)
+  const { scrollY } = useScroll();
+
+  // Spring-smoothed scroll progress bar (top of screen)
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
+
+  // Parallax offset mappings based on scroll position in pixels (0 to 600px)
+  const bgY = useTransform(scrollY, [0, 600], ["0%", "28%"]);
+  const midY = useTransform(scrollY, [0, 600], ["0%", "14%"]);
+  const foreY = useTransform(scrollY, [0, 600], ["0%", "4%"]);
+  const foreScale = useTransform(scrollY, [0, 600], [1, 1.04]);
+  const heroOpacity = useTransform(scrollY, [0, 600], [1, 0]);
+
+  // Motion accessibility check
+  const [reduceMotion, setReduceMotion] = useState(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      setReduceMotion(mediaQuery.matches);
+      const listener = (e) => setReduceMotion(e.matches);
+      mediaQuery.addEventListener('change', listener);
+      return () => mediaQuery.removeEventListener('change', listener);
+    }
+  }, []);
+
+  // Fetch itinerary from localStorage
   useEffect(() => {
     const timer = setTimeout(() => {
       if (typeof window !== 'undefined') {
@@ -67,6 +211,14 @@ export default function ItineraryPage() {
     }, 0);
     return () => clearTimeout(timer);
   }, []);
+
+  const toggleExpandStop = (stopKey) => {
+    setExpandedStops(prev => ({ ...prev, [stopKey]: !prev[stopKey] }));
+  };
+
+  const toggleAlternatives = (stopKey) => {
+    setShowAlternatives(prev => ({ ...prev, [stopKey]: !prev[stopKey] }));
+  };
 
   const toggleSaveStop = (stopKey) => {
     setSavedStops(prev => ({ ...prev, [stopKey]: !prev[stopKey] }));
@@ -90,7 +242,7 @@ export default function ItineraryPage() {
     return (
       <div className="min-h-screen bg-[#FAF6F0] text-[#1E1C1A] flex flex-col items-center justify-center font-serif">
         <div className="w-10 h-10 rounded-full border-2 border-[#BA5536] border-t-transparent animate-spin mb-4" />
-        <p className="text-sm font-serif italic text-[#7A7268] tracking-wide">Assembling your private travel dossier...</p>
+        <p className="text-sm font-serif italic text-[#7A7268] tracking-wide">Assembling your custom Trip Dossier...</p>
       </div>
     );
   }
@@ -100,12 +252,12 @@ export default function ItineraryPage() {
       <div className="min-h-screen bg-[#FAF6F0] text-[#1E1C1A] flex flex-col justify-between font-sans selection:bg-[#BA5536]/15">
         <Header />
         <div className="max-w-xl mx-auto px-6 py-32 text-center my-auto">
-          <div className="w-16 h-16 rounded-full border border-[#E6DFD5] bg-[#F5F0E8] text-[#BA5536] flex items-center justify-center mx-auto mb-6 text-2xl shadow-xs font-serif italic">
+          <div className="w-16 h-16 rounded-full border border-[#E6DFD5] bg-[#F5F0E8] text-[#BA5536] flex items-center justify-center mx-auto mb-6 text-2xl font-serif italic shadow-2xs">
             I
           </div>
           <h1 className="text-4xl font-serif font-black tracking-tight mb-3 text-[#1E1C1A]">No Dossier Found</h1>
           <p className="text-base font-serif italic text-[#7A7268] leading-relaxed mb-8">
-            Your private itinerary has not been assembled yet. Return to the AI Planner to craft your customized itinerary with our intelligent concierge.
+            Your travel dossier has not been generated yet. Please head to the AI Planner to build an interactive trip schedule.
           </p>
           <a
             href="/ai-planner"
@@ -115,7 +267,7 @@ export default function ItineraryPage() {
           </a>
         </div>
         <footer className="py-8 text-center text-xs font-serif italic text-[#7A7268] border-t border-[#E6DFD5]/60">
-          TripWise Private Travel Concierge · Typeset Dossier Guide
+          TripWise Private Travel Concierge · Published Dossier Guide
         </footer>
       </div>
     );
@@ -123,110 +275,134 @@ export default function ItineraryPage() {
 
   const days = itinerary.days || [];
   const totalStopsCount = days.reduce((acc, d) => acc + (d.activities?.length || 0), 0);
+  
   const totalDistanceEst = days.reduce((acc, d, i) => {
     const summary = getDaySummary(d, i, days);
     const num = parseFloat(summary?.stats?.distance || '3');
     return acc + (isNaN(num) ? 3 : num);
   }, 0).toFixed(1);
 
-  const totalHoursEst = days.reduce((acc, d, i) => {
-    const summary = getDaySummary(d, i, days);
-    const num = parseFloat(summary?.stats?.hours || '6');
-    return acc + (isNaN(num) ? 6 : num);
-  }, 0).toFixed(1);
+  const preBookedItems = [
+    { item: "Basecamp Hotel Accommodation", status: "Pre-booked", code: "TW-98231A" },
+    { item: "Vatican Museum Fast-Track Passes", status: "Action Needed", link: "Vatican Ticketing Portal" }
+  ];
 
   return (
     <div className="min-h-screen bg-[#FAF6F0] text-[#1E1C1A] flex flex-col font-sans selection:bg-[#BA5536]/15">
+      {/* Scroll Progress Bar at the top of the page */}
+      <motion.div 
+        style={{ scaleX }} 
+        className="fixed top-0 left-0 right-0 h-[3px] bg-[#BA5536] origin-left z-[60] pointer-events-none"
+      />
+
       <Header />
 
-      {/* HERO SECTION: Full-Bleed Destination Image with Editorial Display Typography */}
-      <section className="relative w-full min-h-[620px] md:min-h-[700px] pt-32 pb-16 px-6 flex flex-col justify-end overflow-hidden border-b border-[#E6DFD5]">
-        {/* Full-bleed background image */}
-        <div className="absolute inset-0 z-0 overflow-hidden">
+      {/* HERO SECTION: Scroll-Driven Layered Parallax (Accesses Requirement 1) */}
+      <section 
+        className="relative w-full min-h-[660px] md:min-h-[720px] pt-32 pb-20 px-6 flex flex-col justify-end overflow-hidden border-b border-[#E6DFD5]"
+      >
+        {/* Layer 1: Parallax Background (Image Layer - Moves slowest: 0.2x speed) */}
+        <motion.div 
+          style={{ translateY: reduceMotion ? "0%" : bgY, opacity: reduceMotion ? 1 : heroOpacity }}
+          className="absolute inset-0 z-0"
+        >
           <img
             src={itinerary.heroImage || "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=2000&q=85"}
             alt={itinerary.destinationName || 'Destination'}
-            className="w-full h-full object-cover object-center transform scale-105 transition-transform duration-1000 ease-out"
+            className="w-full h-full object-cover object-center transform scale-105"
           />
-          <div className="absolute inset-0 bg-linear-to-t from-[#FAF6F0] via-[#FAF6F0]/75 to-black/45" />
-          <div className="absolute inset-0 bg-radial from-transparent via-transparent to-[#1E1C1A]/20 pointer-events-none" />
-        </div>
+        </motion.div>
 
-        {/* Editorial Dossier Header Content */}
-        <div className="max-w-5xl mx-auto w-full relative z-10 flex flex-col gap-5 pt-12">
-          {/* Subtle Top Dossier Stamp */}
+        {/* Layer 2: Parallax Midground (Landmark silhouette overlay / Atmospheric color wash - Moves at 0.5x speed) */}
+        <motion.div
+          style={{ translateY: reduceMotion ? "0%" : midY, opacity: reduceMotion ? 1 : heroOpacity }}
+          className="absolute inset-0 z-10 pointer-events-none bg-linear-to-t from-[#FAF6F0] via-[#FAF6F0]/65 to-black/25"
+        />
+
+        {/* Layer 3: Foreground content (Title, Subtitle & Meta - Stays nearly fixed with subtle scaling) */}
+        <motion.div 
+          style={{ 
+            translateY: reduceMotion ? "0%" : foreY, 
+            scale: reduceMotion ? 1 : foreScale, 
+            opacity: reduceMotion ? 1 : heroOpacity 
+          }}
+          className="max-w-5xl mx-auto w-full relative z-20 flex flex-col gap-6 pt-16"
+        >
           <div className="flex items-center gap-3">
-            <span className="px-3.5 py-1 rounded-full border border-[#BA5536]/40 bg-[#FAF6F0]/90 backdrop-blur-sm text-[#BA5536] font-mono text-[11px] font-bold tracking-widest uppercase shadow-2xs">
-              Private Travel Dossier
+            <span className="px-3.5 py-1 rounded-full border border-[#BA5536]/40 bg-[#FAF6F0]/90 backdrop-blur-sm text-[#BA5536] font-mono text-[10px] font-bold tracking-widest uppercase shadow-2xs">
+              Curated Travel Guide
             </span>
-            <span className="text-xs font-serif italic text-[#4A443E]/90 hidden sm:inline">
-              Verified &amp; Typeset by TripWise Concierge
+            <span className="text-xs font-serif italic text-[#4A443E]/85">
+              Refined by TripWise Private Concierge
             </span>
           </div>
 
-          {/* Editorial Serif Display Title */}
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-serif font-black tracking-tight text-[#1E1C1A] leading-[1.06] drop-shadow-xs">
-            {itinerary.destinationName || 'Curated Journey'}
+          <h1 className="text-5xl sm:text-7xl md:text-8xl font-serif font-black tracking-tight text-[#1E1C1A] leading-[1.04]">
+            {itinerary.destinationName || 'Your Custom Journey'}
           </h1>
 
-          {/* One-line Vibe Subtitle */}
-          <p className="text-lg sm:text-2xl font-serif italic text-[#4A443E] max-w-3xl leading-relaxed">
+          <p className="text-xl sm:text-2xl font-serif italic text-[#4A443E] max-w-3xl leading-relaxed">
             “{itinerary.tagline || 'An immersive, thoughtfully paced exploration tailored to your unique architectural, culinary, and cultural preferences.'}”
           </p>
 
-          {/* Minimal Trip Meta as Understated Typographic Text (NO Boxed Pill Buttons!) */}
-          <div className="pt-3 border-t border-[#E6DFD5]/80 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs sm:text-sm font-sans tracking-wide text-[#5F5E5A] uppercase">
-            <span className="font-bold text-[#1E1C1A]">{days.length} Day Chapter{days.length > 1 ? 's' : ''}</span>
+          <div className="pt-4 border-t border-[#E6DFD5]/80 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs sm:text-sm font-sans tracking-wide text-[#5F5E5A] uppercase">
+            <span className="font-bold text-[#1E1C1A]">{days.length} Daily Chapters</span>
             <span className="text-[#BA5536] font-serif">•</span>
-            <span>{totalStopsCount} Curated Experiences</span>
+            <span>{totalStopsCount} Curated Stops</span>
             <span className="text-[#BA5536] font-serif">•</span>
             <span>Est. Budget: <strong className="text-[#1E1C1A]">{itinerary.estimatedCost || '$1,450'}</strong></span>
             <span className="text-[#BA5536] font-serif">•</span>
-            <span>Pacing: <strong className="text-[#1E1C1A]">Relaxed &amp; Immersive</strong></span>
+            <span>Pacing: <strong className="text-[#1E1C1A]">Immersive &amp; Fluid</strong></span>
           </div>
-        </div>
+        </motion.div>
       </section>
 
-      {/* STICKY CHAPTER NAVIGATION & DOSSIER ACTION BAR */}
-      <div className="sticky top-16 sm:top-18 z-40 bg-[#FAF6F0]/95 backdrop-blur-md border-b border-[#E6DFD5] py-3.5 px-6 shadow-xs transition-all">
+      {/* STICKY JUMP BAR & UTILITY STRIP */}
+      <div className="sticky top-16 sm:top-18 z-40 bg-[#FAF6F0]/95 backdrop-blur-md border-b border-[#E6DFD5] py-3.5 px-6 shadow-2xs transition-all">
         <div className="max-w-5xl mx-auto w-full flex flex-col sm:flex-row items-center justify-between gap-3">
-          {/* Left: Quick Chapter Jump Strip */}
+          {/* Chapter Links */}
           <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 no-scrollbar">
-            <span className="text-[11px] font-serif italic text-[#7A7268] mr-1 hidden md:inline">Jump to Chapter:</span>
+            <span className="text-[11px] font-serif italic text-[#7A7268] mr-1.5 hidden md:inline">Jump to:</span>
             {days.map((day, dIdx) => {
               const dayNum = day.dayNumber || dIdx + 1;
+              const isSelected = activeDay === dayNum;
               return (
-                <a
+                <button
                   key={dayNum}
-                  href={`#chapter-day-${dayNum}`}
-                  className="px-3.5 py-1.5 rounded-full border border-[#E6DFD5] bg-white/80 hover:bg-[#1E1C1A] hover:text-[#FAF6F0] hover:border-[#1E1C1A] text-xs font-serif font-semibold text-[#1E1C1A] transition-all duration-200 shrink-0 select-none shadow-2xs"
+                  onClick={() => setActiveDay(dayNum)}
+                  className={`px-3.5 py-1.5 rounded-full border text-xs font-serif font-bold transition-all duration-200 shrink-0 cursor-pointer shadow-2xs ${
+                    isSelected 
+                      ? 'bg-[#1E1C1A] text-[#FAF6F0] border-[#1E1C1A]' 
+                      : 'bg-white/80 hover:bg-[#1E1C1A] hover:text-[#FAF6F0] hover:border-[#1E1C1A] text-[#1E1C1A] border-[#E6DFD5]'
+                  }`}
                 >
                   Day {toRomanNumeral(dayNum)}
-                </a>
+                </button>
               );
             })}
-            <a
-              href="#chapter-epilogue"
-              className="px-3.5 py-1.5 rounded-full border border-[#E6DFD5] bg-[#F5F0E8] hover:bg-[#BA5536] hover:text-white text-xs font-serif italic text-[#4A443E] transition-all duration-200 shrink-0 select-none shadow-2xs"
+            <button
+              onClick={() => setActiveDay('epilogue')}
+              className={`px-3.5 py-1.5 rounded-full border text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer shadow-2xs ${
+                activeDay === 'epilogue'
+                  ? 'bg-[#BA5536] text-white border-[#BA5536]'
+                  : 'bg-[#F5F0E8] hover:bg-[#BA5536] hover:text-white text-[#4A443E] border-[#E6DFD5]'
+              }`}
             >
               Epilogue
-            </a>
+            </button>
           </div>
 
-          {/* Right: Persistent But Unobtrusive Action Bar */}
+          {/* Action Set */}
           <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-            {/* Download PDF button */}
             <button
               type="button"
               onClick={handlePrintOrDownload}
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#E6DFD5] bg-white text-xs font-sans font-bold text-[#1E1C1A] hover:bg-[#F5F0E8] transition-all cursor-pointer shadow-2xs"
-              title="Download or Print Dossier"
             >
               <Printer className="w-3.5 h-3.5 text-[#BA5536]" />
               <span>Download PDF</span>
             </button>
 
-            {/* Share button */}
             <button
               type="button"
               onClick={handleShareDossier}
@@ -235,7 +411,7 @@ export default function ItineraryPage() {
               {shareCopied ? (
                 <>
                   <Check className="w-3.5 h-3.5 text-emerald-600" />
-                  <span className="text-emerald-700">Copied Link!</span>
+                  <span className="text-emerald-700">Copied!</span>
                 </>
               ) : (
                 <>
@@ -245,7 +421,6 @@ export default function ItineraryPage() {
               )}
             </button>
 
-            {/* Single Subtle Editing Affordance Allowed */}
             <a
               href="/ai-planner"
               className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-[#BA5536] bg-[#BA5536]/10 text-xs font-sans font-bold text-[#BA5536] hover:bg-[#BA5536] hover:text-white transition-all cursor-pointer shadow-2xs ml-1"
@@ -257,323 +432,603 @@ export default function ItineraryPage() {
         </div>
       </div>
 
-      {/* MAIN DOSSIER CONTENT CONTAINER */}
-      <main className="max-w-5xl mx-auto px-6 py-12 w-full flex flex-col gap-20">
+      {/* DOSSIER BODY CONTENT */}
+      <main className="max-w-5xl mx-auto px-6 py-12 w-full flex flex-col gap-16">
         
-        {/* SECTION 1: DOSSIER AT A GLANCE (Overview Index Table of Contents) */}
-        <section className="bg-white rounded-3xl border border-[#E6DFD5] p-8 sm:p-10 shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-radial from-[#BA5536]/5 via-transparent to-transparent pointer-events-none" />
-          
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#E6DFD5]">
-            <div>
-              <span className="text-xs font-mono uppercase tracking-widest text-[#BA5536] font-bold block mb-1">
-                Table of Contents
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A] tracking-tight">
-                The Dossier at a Glance
-              </h2>
+        {/* THE DOSSIER INDEX (Overview List) */}
+        {activeDay !== 'epilogue' && (
+          <section className="bg-white rounded-3xl border border-[#E6DFD5] p-8 sm:p-10 shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-radial from-[#BA5536]/5 via-transparent to-transparent pointer-events-none" />
+            
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#E6DFD5]">
+              <div>
+                <span className="text-xs font-mono uppercase tracking-widest text-[#BA5536] font-bold block mb-1">
+                  The Dossier Index
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A] tracking-tight">
+                  Curated Chapters
+                </h2>
+              </div>
+              <p className="text-xs font-serif italic text-[#7A7268] max-w-xs">
+                Chronologically mapped daily schedules. Select a card below or use the jump links to page-turn chapters in 3D.
+              </p>
             </div>
-            <p className="text-xs font-serif italic text-[#7A7268] max-w-xs">
-              A chronological overview of daily themes and territorial foci before diving into full spreads.
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8">
-            {days.map((day, idx) => {
-              const dayNum = day.dayNumber || idx + 1;
-              const summary = getDaySummary(day, idx, days);
-              return (
-                <div
-                  key={dayNum}
-                  className="flex flex-col justify-between p-6 rounded-2xl bg-[#FAF6F0] border border-[#E6DFD5]/80 hover:border-[#BA5536]/60 transition-all group"
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="px-2.5 py-0.5 rounded-md bg-[#1E1C1A] text-[#FAF6F0] font-serif text-xs font-bold tracking-wider">
-                        Chapter {toRomanNumeral(dayNum)}
-                      </span>
-                      <span className="text-xs font-sans text-[#7A7268] font-semibold">
-                        Day {dayNum}
-                      </span>
-                    </div>
-                    <h3 className="text-lg font-serif font-bold text-[#1E1C1A] leading-snug group-hover:text-[#BA5536] transition-colors">
-                      {day.title || `Day ${dayNum} Exploration`}
-                    </h3>
-                    <p className="text-xs font-serif italic text-[#7A7268] mt-2 line-clamp-2 leading-relaxed">
-                      {day.activities?.[0]?.description || 'Architectural landmarks, hidden quarters, and acclaimed local dining.'}
-                    </p>
-                  </div>
-
-                  <div className="mt-6 pt-4 border-t border-[#E6DFD5] flex items-center justify-between text-[11px] font-sans text-[#5F5E5A]">
-                    <span>{day.activities?.length || 0} Curated Stops</span>
-                    <span>{summary?.stats?.hours || '6.5h'}</span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveModalDay(dayNum)}
-                    className="mt-4 w-full py-2 px-3 rounded-xl border border-[#E6DFD5] bg-white hover:bg-[#BA5536] hover:border-[#BA5536] hover:text-white text-[#1E1C1A] font-sans text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer"
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8">
+              {days.map((day, idx) => {
+                const dayNum = day.dayNumber || idx + 1;
+                const summary = getDaySummary(day, idx, days);
+                return (
+                  <div
+                    key={dayNum}
+                    onClick={() => setActiveDay(dayNum)}
+                    className="flex flex-col justify-between p-6 rounded-2xl bg-[#FAF6F0] border border-[#E6DFD5]/80 hover:border-[#BA5536]/60 transition-all duration-300 group cursor-pointer"
                   >
-                    <MapPin className="w-3.5 h-3.5 text-[#BA5536] group-hover:text-white" />
-                    <span>View Day {toRomanNumeral(dayNum)} Map Overlay</span>
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* SECTION 2: THE EDITORIAL CHAPTERS (Day 1, Day 2, Day 3...) */}
-        <div className="flex flex-col gap-28">
-          {days.map((day, dIdx) => {
-            const dayNum = day.dayNumber || dIdx + 1;
-            const summary = getDaySummary(day, dIdx, days);
-            const activities = day.activities || [];
-
-            return (
-              <section
-                key={dayNum}
-                id={`chapter-day-${dayNum}`}
-                className="scroll-mt-32 flex flex-col pt-4"
-              >
-                {/* Chapter Header Banner */}
-                <div className="border-b-2 border-[#1E1C1A] pb-8 mb-12 flex flex-col gap-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <span className="text-xs font-mono uppercase tracking-widest text-[#BA5536] font-extrabold">
-                      CHAPTER {toRomanNumeral(dayNum)}  —  DAY {dayNum}
-                    </span>
-                    
-                    {/* Clean Typographic Summary Stats (NO Icon-Badge Rows!) */}
-                    <div className="flex items-center gap-2 text-xs font-sans font-semibold text-[#5F5E5A] tracking-wide">
-                      <span>{activities.length} Stops</span>
-                      <span className="text-[#BA5536] font-serif">•</span>
-                      <span>{summary?.stats?.hours || '6.5 Hours Total'}</span>
-                      <span className="text-[#BA5536] font-serif">•</span>
-                      <span>{summary?.stats?.distance || '3.2 km On Foot'}</span>
-                      <span className="text-[#BA5536] font-serif">•</span>
-                      <span className="text-[#1E1C1A] font-bold">{summary?.stats?.cost || 'Est. €85'}</span>
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="px-2.5 py-0.5 rounded-md bg-[#1E1C1A] text-[#FAF6F0] font-serif text-xs font-bold tracking-wider">
+                          Day {toRomanNumeral(dayNum)}
+                        </span>
+                        <span className="text-xs font-sans text-[#7A7268] font-semibold">
+                          Chapter {dayNum}
+                        </span>
+                      </div>
+                      <h3 className="text-lg font-serif font-bold text-[#1E1C1A] leading-snug group-hover:text-[#BA5536] transition-colors">
+                        {getDayNarrativeTitle(dayNum, itinerary.destinationName || 'Destination')}
+                      </h3>
                     </div>
-                  </div>
 
-                  <h2 className="text-3xl sm:text-5xl font-serif font-black text-[#1E1C1A] tracking-tight leading-tight">
-                    {day.title || `Day ${dayNum} Exploration`}
-                  </h2>
+                    <div className="mt-6 pt-4 border-t border-[#E6DFD5] flex items-center justify-between text-[11px] font-sans text-[#5F5E5A]">
+                      <span>{day.activities?.length || 0} Curated Stops</span>
+                      <span className="font-bold text-[#1E1C1A]">{summary?.stats?.hours || '6.5 Hours'}</span>
+                    </div>
 
-                  {/* Short Narrative Intro Line */}
-                  <p className="text-lg sm:text-xl font-serif italic text-[#4A443E] leading-relaxed max-w-4xl">
-                    {activities.length > 0
-                      ? `“We begin our morning traversing the architectural marvel of ${activities[0].title}, winding through historic boulevards before concluding with evening gastronomy at ${activities[activities.length - 1].title}.”`
-                      : `“A carefully sequenced day exploring historical highlights and authentic neighborhood culture.”`
-                    }
-                  </p>
-
-                  {/* Optional Map Overlay Button Trigger for this Chapter */}
-                  <div className="pt-2 flex items-center">
                     <button
                       type="button"
-                      onClick={() => setActiveModalDay(dayNum)}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-[#1E1C1A] bg-white hover:bg-[#1E1C1A] hover:text-white text-xs font-sans font-bold uppercase tracking-wider text-[#1E1C1A] transition-all duration-300 shadow-2xs cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveModalDay(dayNum);
+                      }}
+                      className="mt-4 w-full py-2 px-3 rounded-xl border border-[#E6DFD5] bg-white hover:bg-[#BA5536] hover:border-[#BA5536] hover:text-white text-[#1E1C1A] font-sans text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer"
                     >
-                      <Compass className="w-4 h-4 text-[#BA5536]" />
-                      <span>Explore Chapter {toRomanNumeral(dayNum)} Route Map Overlay →</span>
+                      <Compass className="w-3.5 h-3.5 text-[#BA5536] group-hover:text-white" />
+                      <span>View Day {toRomanNumeral(dayNum)} Map Overlay</span>
                     </button>
                   </div>
-                </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
-                {/* Chapter Stops Spreads with Timeline Spine */}
-                <div className="relative flex flex-col">
-                  {/* Subtle color-shifting timeline spine connecting stops within the day */}
-                  <div className="absolute left-6 sm:left-1/2 top-12 bottom-12 w-px bg-linear-to-b from-[#C5A059] via-[#BA5536] to-[#4A3E4D] hidden sm:block pointer-events-none opacity-40" />
+        {/* NARRATIVE CHAPTERS WITH 3D DEPTH SWAP TRANSITION (Accesses Requirement 2) */}
+        <div style={{ perspective: 1200 }} className="relative min-h-[500px]">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeDay}
+              initial={reduceMotion ? { opacity: 0 } : { rotateY: 8, translateZ: -100, opacity: 0 }}
+              animate={reduceMotion ? { opacity: 1 } : { rotateY: 0, translateZ: 0, opacity: 1 }}
+              exit={reduceMotion ? { opacity: 0 } : { rotateY: -8, translateZ: -100, opacity: 0 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              style={{ transformStyle: "preserve-3d" }}
+              className="w-full"
+            >
+              {activeDay === 'epilogue' ? (
+                /* SECTION 3: THE EPILOGUE & 3D STAMP FLOURISH (Accesses Requirement 4) */
+                <section className="scroll-mt-32 flex flex-col gap-10">
+                  <div className="text-center max-w-2xl mx-auto">
+                    <span className="text-xs font-mono uppercase tracking-widest text-[#BA5536] font-bold block mb-1">
+                      THE EPILOGUE  —  DOSSIER SUMMARY
+                    </span>
+                    <h2 className="text-3xl sm:text-5xl font-serif font-black text-[#1E1C1A] tracking-tight leading-tight">
+                      Trip Epilogue &amp; Statistics
+                    </h2>
+                  </div>
 
-                  {activities.map((act, idx) => {
-                    const stopNum = idx + 1;
-                    const isEven = idx % 2 === 0;
-                    const ratingData = getActivityRating(act, idx);
-                    const costInfo = formatCost(act);
-                    const aiInsightText = getAiInsight(act, idx);
-                    const transport = getTransportBetweenStops(activities[idx - 1], act, idx);
-                    const stopKey = `${dayNum}-${stopNum}`;
-                    const isSaved = !!savedStops[stopKey];
+                  {/* Visual 3D stamp flourish loop trigger when scrolled into view */}
+                  <div className="flex flex-col items-center justify-center py-6">
+                    <motion.div
+                      initial={{ scale: 1.8, rotate: -45, opacity: 0 }}
+                      whileInView={{ scale: 1, rotate: -12, opacity: 1 }}
+                      viewport={{ once: true, margin: "-120px" }}
+                      transition={{ type: "spring", damping: 12, stiffness: 90, delay: 0.2 }}
+                      className="w-44 h-44 rounded-full border-4 border-dashed border-[#BA5536]/80 text-[#BA5536] flex flex-col items-center justify-center font-serif uppercase text-center relative z-10 shadow-xs select-none"
+                    >
+                      <span className="text-[10px] tracking-widest font-bold">Approved</span>
+                      <span className="text-lg font-black tracking-tight my-0.5">TripWise</span>
+                      <span className="text-[8px] tracking-[0.2em] font-extrabold text-[#7A7268]">Concierge</span>
+                      
+                      {/* Innermost ink circle stamp details */}
+                      <div className="absolute inset-1 border border-solid border-[#BA5536]/25 rounded-full pointer-events-none" />
+                      <div className="absolute bottom-2 text-[7px] text-[#7A7268] tracking-widest font-sans font-bold">Ref: TW-Stamp</div>
+                    </motion.div>
 
-                    return (
-                      <React.Fragment key={`${dayNum}-${idx}`}>
-                        {/* Quiet Typographic Transit Connector Between Stops (NO Boxed Chips!) */}
-                        {idx > 0 && transport && (
-                          <div className="py-8 my-2 flex items-center justify-center gap-4 text-[#7A7268] relative z-10">
-                            <div className="h-px w-12 sm:w-24 bg-[#E6DFD5]" />
-                            <span className="font-serif italic text-xs sm:text-sm tracking-wide px-3 bg-[#FAF6F0] text-center">
-                              {transport.icon} {transport.text} between stops
+                    <motion.div 
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      whileInView={{ scale: 1, opacity: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.7 }}
+                      className="text-xs font-serif italic text-[#7A7268] mt-3"
+                    >
+                      ✓ Verification stamp locked down successfully.
+                    </motion.div>
+                  </div>
+
+                  {/* Grid stats */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-8 p-8 rounded-3xl bg-white border border-[#E6DFD5] text-center shadow-xs">
+                    <div className="flex flex-col gap-1 border-r border-[#E6DFD5] last:border-r-0">
+                      <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Total Duration</span>
+                      <span className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A]">{days.length} Days</span>
+                    </div>
+                    <div className="flex flex-col gap-1 border-r border-[#E6DFD5] last:border-r-0">
+                      <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Experiences Plotted</span>
+                      <span className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A]">{totalStopsCount} Stops</span>
+                    </div>
+                    <div className="flex flex-col gap-1 border-r border-[#E6DFD5] last:border-r-0">
+                      <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Walking Distance</span>
+                      <span className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A]">~{totalDistanceEst} km</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Estimated Cost</span>
+                      <span className="text-2xl sm:text-3xl font-serif font-black text-[#BA5536]">{itinerary.estimatedCost || '$1,450'}</span>
+                    </div>
+                  </div>
+
+                  {/* Reminders grids */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="bg-white p-6 rounded-2xl border border-[#E6DFD5] shadow-2xs">
+                      <h3 className="text-sm font-sans font-bold uppercase tracking-widest text-[#BA5536] border-b border-[#E6DFD5] pb-2.5 mb-3.5 flex items-center gap-2">
+                        <Calendar className="w-4 h-4" />
+                        <span>Concierge Packing &amp; Prep Reminders</span>
+                      </h3>
+                      <ul className="text-xs font-serif text-[#4A443E] leading-relaxed flex flex-col gap-2.5 list-disc pl-4">
+                        <li>
+                          <strong>Comfortable Footwear:</strong> Walk sparklines denote approx. {totalDistanceEst} km. Wear robust walking shoes suited for old city cobblestones.
+                        </li>
+                        <li>
+                          <strong>Church/Cultural Sites:</strong> Several scheduled historical landmarks require covered shoulders and knees to enter.
+                        </li>
+                        <li>
+                          <strong>Reusable Flasks:</strong> Rome features free historic drinking fountains (Nasoni) across streets—highly recommended for daylight walking segments.
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-2xl border border-[#E6DFD5] shadow-2xs">
+                      <h3 className="text-sm font-sans font-bold uppercase tracking-widest text-[#BA5536] border-b border-[#E6DFD5] pb-2.5 mb-3.5 flex items-center gap-2">
+                        <Layers className="w-4 h-4" />
+                        <span>Booking &amp; Tickets Status Overview</span>
+                      </h3>
+                      <div className="flex flex-col gap-3">
+                        {preBookedItems.map((item, keyIdx) => (
+                          <div key={keyIdx} className="flex items-center justify-between text-xs border-b border-[#FAF6F0] pb-2 last:border-b-0 last:pb-0">
+                            <div>
+                              <strong className="block text-[#1E1C1A]">{item.item}</strong>
+                              <span className="text-[10px] text-[#7A7268]">{item.code || 'Instant access link available'}</span>
+                            </div>
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                              item.status === 'Pre-booked' ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-600/10 text-amber-700'
+                            }`}>
+                              {item.status}
                             </span>
-                            <div className="h-px w-12 sm:w-24 bg-[#E6DFD5]" />
                           </div>
-                        )}
+                        ))}
+                      </div>
+                    </div>
+                  </div>
 
-                        {/* Large Editorial Spread (Alternating Image-Left / Image-Right) */}
-                        <div className={`py-12 sm:py-16 flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} items-center gap-8 lg:gap-12 relative z-10 border-b border-[#E6DFD5]/50 last:border-b-0`}>
+                  {/* Closing signature and bottom page-turns */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-8 border-t border-[#E6DFD5]">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-[#1E1C1A] text-[#FAF6F0] flex items-center justify-center font-serif italic text-lg font-bold">
+                        T
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-serif font-bold text-[#1E1C1A]">TripWise Travel Concierge</h4>
+                        <p className="text-xs font-sans text-[#7A7268]">Dossier Lock Verified • Ref: TW-3129841</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 flex-wrap justify-center">
+                      <button
+                        onClick={() => setActiveDay(1)}
+                        className="px-5 py-2.5 rounded-full border border-[#E6DFD5] bg-white text-xs font-sans font-bold uppercase tracking-wider text-[#1E1C1A] hover:bg-[#FAF6F0] transition-colors cursor-pointer"
+                      >
+                        ← Start Over (Day I)
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handlePrintOrDownload}
+                        className="px-6 py-3 rounded-full border border-[#1E1C1A] bg-[#1E1C1A] text-[#FAF6F0] hover:bg-[#BA5536] hover:border-[#BA5536] text-xs font-sans font-bold uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer flex items-center gap-2"
+                      >
+                        <Printer className="w-4 h-4" />
+                        <span>Print Dossier Booklet</span>
+                      </button>
+                    </div>
+                  </div>
+                </section>
+              ) : (
+                /* ACTIVE CHAPTER VIEW */
+                (() => {
+                  const dayIdx = activeDay - 1;
+                  const day = days[dayIdx] || days[0];
+                  const summary = getDaySummary(day, dayIdx, days);
+                  const activities = day.activities || [];
+
+                  return (
+                    <div className="flex flex-col">
+                      {/* Chapter Header Card & daylight pacing gradient */}
+                      <div className="border-b-2 border-[#1E1C1A] pb-6 mb-8 flex flex-col gap-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <span className="text-xs font-mono uppercase tracking-widest text-[#BA5536] font-extrabold">
+                            CHAPTER {toRomanNumeral(activeDay)}  —  DAY {activeDay}
+                          </span>
                           
-                          {/* Timeline Spine Node Stamp */}
-                          <div className="absolute left-6 sm:left-1/2 -top-4 sm:-top-5 -translate-x-1/2 w-9 h-9 rounded-full border border-[#1E1C1A] bg-[#FAF6F0] text-[#1E1C1A] font-serif text-xs font-bold flex items-center justify-center shadow-xs z-20">
-                            {stopNum}
+                          {/* Visual distance sparkline next to distance stats */}
+                          <div className="flex items-center gap-3 text-xs font-sans font-semibold text-[#5F5E5A] tracking-wide">
+                            <span>{activities.length} Stops</span>
+                            <span className="text-[#E6DFD5] font-serif">•</span>
+                            <span>{summary?.stats?.hours || '6.5 hrs'}</span>
+                            <span className="text-[#E6DFD5] font-serif">•</span>
+                            <span className="inline-flex items-center">
+                              <Sparkline />
+                              <span>{summary?.stats?.distance || '3.2 km'}</span>
+                            </span>
+                            <span className="text-[#E6DFD5] font-serif">•</span>
+                            <span className="text-[#1E1C1A] font-bold">{summary?.stats?.cost || 'Est. €85'}</span>
                           </div>
-
-                          {/* Spread Imagery Column */}
-                          <div className="w-full lg:w-1/2 h-72 sm:h-96 rounded-3xl overflow-hidden border border-[#E6DFD5] shadow-md relative group shrink-0">
-                            <img
-                              src={getActivityThumbnail(act, idx)}
-                              alt={act.title}
-                              className="w-full h-full object-cover object-center transform transition-transform duration-700 ease-out group-hover:scale-105"
-                              loading="lazy"
-                            />
-                            <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-[#1E1C1A]/85 backdrop-blur-sm text-white font-mono text-xs font-bold tracking-wider">
-                              {act.time || '10:00 AM'}
-                            </div>
-                            <div className="absolute bottom-4 right-4 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-sm text-[#1E1C1A] font-serif italic text-xs font-bold shadow-xs">
-                              Stop {stopNum} of {activities.length}
-                            </div>
-                          </div>
-
-                          {/* Spread Editorial Typography Column */}
-                          <div className="w-full lg:w-1/2 flex flex-col justify-center px-2 lg:px-6">
-                            {/* Metadata & Category Header */}
-                            <div className="flex items-center justify-between gap-3 mb-2">
-                              <div className="flex items-center gap-2 text-xs font-sans tracking-widest uppercase text-[#7A7268] font-bold">
-                                <span>{act.time || '10:00 AM'}</span>
-                                <span className="text-[#BA5536] font-serif">•</span>
-                                <span>{act.category || 'Curated Stop'}</span>
-                              </div>
-
-                              {/* Save Bookmark button */}
-                              <button
-                                type="button"
-                                onClick={() => toggleSaveStop(stopKey)}
-                                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-sans font-bold transition-all cursor-pointer ${
-                                  isSaved
-                                    ? 'border-[#BA5536] bg-[#BA5536]/10 text-[#BA5536]'
-                                    : 'border-[#E6DFD5] bg-white text-[#7A7268] hover:border-[#1E1C1A]'
-                                }`}
-                              >
-                                <Bookmark className={`w-3.5 h-3.5 ${isSaved ? 'fill-[#BA5536]' : ''}`} />
-                                <span>{isSaved ? 'Bookmarked' : 'Bookmark'}</span>
-                              </button>
-                            </div>
-
-                            {/* Stop Title */}
-                            <h3 className="text-2xl sm:text-4xl font-serif font-black text-[#1E1C1A] tracking-tight leading-snug mb-3">
-                              {act.title}
-                            </h3>
-
-                            {/* Rating, Price & Duration as Understated Text */}
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm font-sans font-medium text-[#5F5E5A] mb-4">
-                              <span className="text-amber-600 font-bold">★★★★★ {ratingData.rating}</span>
-                              <span>({ratingData.reviews} verified reviews)</span>
-                              <span className="text-[#BA5536] font-serif">•</span>
-                              <span className="font-bold text-[#1E1C1A]">{costInfo.title}</span>
-                              {act.duration && (
-                                <>
-                                  <span className="text-[#BA5536] font-serif">•</span>
-                                  <span>Allocated: <strong>{act.duration}</strong></span>
-                                </>
-                              )}
-                            </div>
-
-                            {/* Description Copy */}
-                            <p className="text-base sm:text-lg font-serif text-[#4A443E] leading-relaxed font-normal">
-                              {act.description}
-                            </p>
-
-                            {/* AI Insight Styled as a Concierge's Handwritten Note */}
-                            <div className="mt-6 p-6 rounded-2xl bg-[#F3EFEA] border-l-2 border-[#BA5536] relative shadow-2xs">
-                              <span className="font-serif text-4xl text-[#BA5536] absolute top-2 left-4 leading-none select-none">
-                                “
-                              </span>
-                              <p className="font-serif italic text-sm sm:text-base text-[#3E3A36] pl-6 leading-relaxed">
-                                {aiInsightText}
-                              </p>
-                              <span className="block text-[11px] font-sans uppercase tracking-widest text-[#7A7268] pl-6 pt-3 font-semibold">
-                                — TripWise Private Concierge Note
-                              </span>
-                            </div>
-                          </div>
-
                         </div>
-                      </React.Fragment>
-                    );
-                  })}
-                </div>
-              </section>
-            );
-          })}
+
+                        <h2 className="text-3xl sm:text-5xl font-serif font-black text-[#1E1C1A] tracking-tight leading-tight">
+                          {getDayNarrativeTitle(activeDay, itinerary.destinationName || 'Destination')}
+                        </h2>
+
+                        {/* Day pacing narrator intro */}
+                        <p className="text-lg sm:text-xl font-serif italic text-[#4A443E] leading-relaxed max-w-4xl">
+                          “We have structured this day's pacing with early morning historical wonders, leading to quiet lunch breaks and open afternoon blocks for leisurely independent wandering.”
+                        </p>
+
+                        {/* DAYLIGHT PACE GRADIENT BAR: Plotting times visually (Accesses Requirement 3 daylight track) */}
+                        <div className="my-4">
+                          <div className="flex items-center justify-between text-[10px] font-sans uppercase tracking-widest text-[#7A7268] mb-1.5 font-bold">
+                            <span className="flex items-center gap-1"><Sun className="w-3 h-3 text-amber-500" /> Morning Pacing (8 AM)</span>
+                            <span className="flex items-center gap-1">Afternoon (2 PM)</span>
+                            <span className="flex items-center gap-1"><Sunset className="w-3 h-3 text-indigo-700" /> Evening (10 PM)</span>
+                          </div>
+                          
+                          {/* Sunrise-to-sunset gradient track */}
+                          <div className="relative w-full h-3 rounded-full bg-gradient-to-r from-amber-100 via-orange-200 to-indigo-950 border border-[#E6DFD5]/40 shadow-inner">
+                            {activities.map((act, idx) => {
+                              const pct = getDaylightPercentage(act.time);
+                              return (
+                                <div
+                                  key={idx}
+                                  style={{ left: `${pct}%` }}
+                                  className="absolute -top-1 -translate-x-1/2 group/marker z-20 cursor-pointer"
+                                  title={`${act.time}: ${act.title}`}
+                                >
+                                  {/* Pin dot */}
+                                  <div className="w-5 h-5 rounded-full border border-white bg-[#BA5536] shadow-xs flex items-center justify-center text-[9px] font-bold text-white transition-all group-hover/marker:scale-125 group-hover/marker:bg-[#1E1C1A]">
+                                    {idx + 1}
+                                  </div>
+                                  
+                                  {/* Floating tooltip */}
+                                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden group-hover/marker:flex flex-col items-center bg-[#1E1C1A] text-white text-[10px] font-sans px-2.5 py-1.5 rounded-lg whitespace-nowrap shadow-md z-30">
+                                    <span className="font-bold text-[#F5F0E8]">{act.time}</span>
+                                    <span className="text-[9px] text-[#E6DFD5]">{act.title}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div className="pt-2 flex items-center">
+                          <button
+                            type="button"
+                            onClick={() => setActiveModalDay(activeDay)}
+                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-[#1E1C1A] bg-white hover:bg-[#1E1C1A] hover:text-white text-xs font-sans font-bold uppercase tracking-wider text-[#1E1C1A] transition-all duration-300 shadow-2xs cursor-pointer"
+                          >
+                            <Compass className="w-4 h-4 text-[#BA5536]" />
+                            <span>Explore Day {toRomanNumeral(activeDay)} Overlay Map →</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Stops layout for current day */}
+                      <div className="relative flex flex-col">
+                        {activities.map((act, idx) => {
+                          const stopNum = idx + 1;
+                          const isEven = idx % 2 === 0;
+                          const ratingData = getActivityRating(act, idx);
+                          const costInfo = formatCost(act);
+                          const aiInsightText = getAiInsight(act, idx);
+                          const transport = getTransportBetweenStops(activities[idx - 1], act, idx);
+                          
+                          const stopKey = `${activeDay}-${stopNum}`;
+                          const isExpanded = !!expandedStops[stopKey];
+                          const isSaved = !!savedStops[stopKey];
+                          const showsAlts = !!showAlternatives[stopKey];
+                          const alternatives = getAlternativeSuggestions(act, idx);
+                          
+                          const { crowdNote, weatherNote } = getContextAwareTip(act, idx);
+                          const categoryStyle = getCategoryStyling(act);
+
+                          // Check for intentional pacing gaps (greater than 1 hour / 60 minutes)
+                          let gapElement = null;
+                          if (idx > 0) {
+                            const prevStop = activities[idx - 1];
+                            const prevEnd = getStopEndTimeMinutes(prevStop.time, prevStop.duration);
+                            const currentStart = parseTimeToMinutes(act.time);
+                            const diffMins = currentStart - prevEnd;
+                            
+                            if (diffMins > 60) {
+                              const gapHours = (diffMins / 60).toFixed(1);
+                              gapElement = (
+                                <div className="my-6 py-5 px-6 rounded-2xl border border-dashed border-[#E6DFD5] bg-[#FDFBF7] text-center max-w-xl mx-auto relative z-10">
+                                  <span className="text-[10px] font-mono uppercase tracking-widest text-[#BA5536] font-bold block mb-1">
+                                    Intentional Intermission
+                                  </span>
+                                  <p className="font-serif italic text-sm text-[#7A7268] leading-relaxed">
+                                    “A quiet pacing break of {gapHours} hours. We recommend visiting a local espresso bar, resting at your hotel, or exploring the surrounding streets at your own leisure.”
+                                  </p>
+                                </div>
+                              );
+                            }
+                          }
+
+                          return (
+                            <React.Fragment key={`${activeDay}-${idx}`}>
+                              {/* Render Pacing Gap if applicable */}
+                              {gapElement}
+
+                              {/* Quiet Typographic Transit Line */}
+                              {idx > 0 && transport && (
+                                <div className="py-6 flex items-center justify-center gap-4 text-[#7A7268] relative z-10">
+                                  <div className="h-px w-12 sm:w-24 bg-[#E6DFD5]" />
+                                  <span className="font-serif italic text-xs sm:text-sm tracking-wide px-3 bg-[#FAF6F0] text-center">
+                                    {transport.icon} {transport.text} between stops
+                                  </span>
+                                  <div className="h-px w-12 sm:w-24 bg-[#E6DFD5]" />
+                                </div>
+                              )}
+
+                              {/* Large Editorial Spread Stops (Alternating Left/Right) */}
+                              <motion.div 
+                                className={`py-12 sm:py-16 flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} items-center gap-8 lg:gap-12 relative z-10 border-b border-[#E6DFD5]/50 last:border-b-0`}
+                                initial={{ opacity: 0, y: 30 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true, margin: "-80px" }}
+                                transition={{ type: "spring", damping: 20, stiffness: 100 }}
+                              >
+                                {/* Timeline Spine badge */}
+                                <div className="absolute left-6 sm:left-1/2 -top-5 -translate-x-1/2 w-10 h-10 rounded-full border border-[#1E1C1A] bg-[#FAF6F0] text-[#1E1C1A] font-serif text-xs font-bold flex items-center justify-center shadow-xs z-20 transition-all duration-300">
+                                  {stopNum}
+                                </div>
+
+                                {/* Image Side Spread with subtle hover scale drift */}
+                                <div className="w-full lg:w-1/2 h-80 sm:h-[400px] rounded-3xl overflow-hidden border border-[#E6DFD5] shadow-md relative group shrink-0">
+                                  <motion.img
+                                    src={getActivityThumbnail(act, idx)}
+                                    alt={act.title}
+                                    className="w-full h-full object-cover object-center"
+                                    whileHover={{ scale: 1.04 }}
+                                    transition={{ duration: 0.6, ease: 'easeOut' }}
+                                  />
+                                  
+                                  {/* Daylight time tag */}
+                                  <div className="absolute top-4 left-4 px-3.5 py-1.5 rounded-full bg-[#1E1C1A]/85 backdrop-blur-sm text-white font-mono text-xs font-bold tracking-wider">
+                                    {act.time || '10:00 AM'}
+                                  </div>
+
+                                  {/* Distinct Category stamp visual style */}
+                                  <div className="absolute bottom-4 right-4 px-4 py-1.5 rounded-full bg-white/95 backdrop-blur-xs text-[#1E1C1A] font-serif italic text-xs font-bold shadow-xs border border-[#E6DFD5]">
+                                    {categoryStyle.icon} {categoryStyle.name}
+                                  </div>
+                                </div>
+
+                                {/* Editorial details side spread */}
+                                <div className="w-full lg:w-1/2 flex flex-col justify-center px-2 lg:px-6">
+                                  <div className="flex items-center justify-between gap-3 mb-2">
+                                    <div className="flex items-center gap-2 text-xs font-sans tracking-widest uppercase text-[#7A7268] font-bold">
+                                      <span>{act.time || '10:00 AM'}</span>
+                                      <span className="text-[#BA5536] font-serif">•</span>
+                                      
+                                      {/* Micro-loop 3D hover rotating icon (Accesses Requirement 5) */}
+                                      <motion.span
+                                        whileHover={{ rotateY: 180, scale: 1.15 }}
+                                        transition={{ type: "spring", stiffness: 150, damping: 10 }}
+                                        className="inline-block cursor-pointer"
+                                      >
+                                        {categoryStyle.icon}
+                                      </motion.span>
+                                      
+                                      <span>{categoryStyle.name}</span>
+                                    </div>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleSaveStop(stopKey)}
+                                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-sans font-bold transition-all cursor-pointer ${
+                                        isSaved
+                                          ? 'border-[#BA5536] bg-[#BA5536]/10 text-[#BA5536]'
+                                          : 'border-[#E6DFD5] bg-white text-[#7A7268] hover:border-[#1E1C1A]'
+                                      }`}
+                                    >
+                                      <Bookmark className={`w-3.5 h-3.5 ${isSaved ? 'fill-[#BA5536]' : ''}`} />
+                                      <span>{isSaved ? 'Saved' : 'Bookmark'}</span>
+                                    </button>
+                                  </div>
+
+                                  <h3 className="text-2xl sm:text-4xl font-serif font-black text-[#1E1C1A] tracking-tight leading-snug mb-3">
+                                    {act.title}
+                                  </h3>
+
+                                  {/* Clean stats row */}
+                                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm font-sans font-medium text-[#5F5E5A] mb-3">
+                                    <span className="text-amber-600 font-bold">★★★★★ {ratingData.rating}</span>
+                                    <span>({ratingData.reviews} reviews)</span>
+                                    <span className="text-[#E6DFD5] font-serif">•</span>
+                                    <span className="font-bold text-[#1E1C1A]">{costInfo.title}</span>
+                                    {act.duration && (
+                                      <>
+                                        <span className="text-[#E6DFD5] font-serif">•</span>
+                                        <span>Duration: <strong>{act.duration}</strong></span>
+                                      </>
+                                    )}
+                                  </div>
+
+                                  {/* Highlight: "Why this was chosen" */}
+                                  <div className="text-xs font-sans italic text-[#BA5536] mb-4 bg-[#BA5536]/5 px-3 py-1.5 rounded-lg border-l border-[#BA5536]">
+                                    ✓ Chosen for: High local authenticity, scenic context, and balanced timing pacing.
+                                  </div>
+
+                                  {/* One-Line Hook Description */}
+                                  <p className="text-base sm:text-lg font-serif text-[#4A443E] leading-relaxed mb-4">
+                                    {act.description?.split('.')[0] || 'Explore the breathtaking landscapes and cultural history at this custom stop.'}.
+                                  </p>
+
+                                  {/* PROGRESSIVE DISCLOSURE ACTIONS */}
+                                  <div className="flex items-center gap-3 mt-2 flex-wrap">
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleExpandStop(stopKey)}
+                                      className="inline-flex items-center gap-1 px-4 py-2 rounded-full border border-[#1E1C1A] hover:bg-[#1E1C1A] hover:text-[#FAF6F0] bg-white text-xs font-sans font-bold uppercase tracking-wider text-[#1E1C1A] transition-all cursor-pointer shadow-2xs"
+                                    >
+                                      <span>{isExpanded ? 'Hide Dossier Details' : 'Read Detailed Dossier Notes'}</span>
+                                      {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleAlternatives(stopKey)}
+                                      className="inline-flex items-center gap-1 px-4 py-2 rounded-full border border-[#E6DFD5] hover:border-[#BA5536] hover:text-[#BA5536] bg-white text-xs font-sans text-[#7A7268] transition-all cursor-pointer"
+                                    >
+                                      <span>Alternatives</span>
+                                      {showsAlts ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                                    </button>
+                                  </div>
+
+                                  {/* Collapsible Dossier Details Panel (Smooth Framer Motion) */}
+                                  <AnimatePresence initial={false}>
+                                    {isExpanded && (
+                                      <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="overflow-hidden w-full mt-4"
+                                      >
+                                        <div className="pt-3 pb-4 border-t border-[#E6DFD5] flex flex-col gap-4 text-sm text-[#4A443E]">
+                                          
+                                          <p className="font-serif leading-relaxed text-base">
+                                            {act.description || 'Detailed historical context and neighborhood guide maps.'}
+                                          </p>
+
+                                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white/70 p-4 rounded-2xl border border-[#E6DFD5]">
+                                            <div className="flex items-start gap-2">
+                                              <Info className="w-4 h-4 text-[#BA5536] shrink-0 mt-0.5" />
+                                              <div>
+                                                <strong className="block text-xs font-sans uppercase tracking-wider text-[#7A7268]">Concierge Crowd Tip</strong>
+                                                <p className="text-xs font-serif italic text-[#5F5E5A] mt-0.5">{crowdNote}</p>
+                                              </div>
+                                            </div>
+                                            
+                                            <div className="flex items-start gap-2">
+                                              <Sun className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                                              <div>
+                                                <strong className="block text-xs font-sans uppercase tracking-wider text-[#7A7268]">Daylight &amp; Weather Alert</strong>
+                                                <p className="text-xs font-serif italic text-[#5F5E5A] mt-0.5">{weatherNote}</p>
+                                              </div>
+                                            </div>
+                                          </div>
+
+                                          {/* Concierge handwritten notes */}
+                                          <div className="p-5 sm:p-6 rounded-2xl bg-[#F3EFEA] border-l-2 border-[#BA5536] relative shadow-2xs">
+                                            <span className="font-serif text-3xl text-[#BA5536] absolute top-1.5 left-4 leading-none select-none">“</span>
+                                            <p className="font-serif italic text-sm sm:text-base text-[#3E3A36] pl-5 leading-relaxed">
+                                              {aiInsightText}
+                                            </p>
+                                            <span className="block text-[10px] font-sans uppercase tracking-widest text-[#7A7268] pl-5 pt-3 font-bold">
+                                              — TripWise Concierge Custom Insight
+                                            </span>
+                                          </div>
+
+                                          <div className="flex items-center justify-between p-3.5 bg-white rounded-xl border border-[#E6DFD5] text-xs font-sans">
+                                            <span className="text-[#7A7268]">Reservation Booking Details:</span>
+                                            <strong className="text-[#1E1C1A]">Reservation: Not Required (Walk-in Accepted)</strong>
+                                          </div>
+
+                                        </div>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+
+                                  {/* Alternatives Toggle Section */}
+                                  <AnimatePresence>
+                                    {showsAlts && (
+                                      <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="overflow-hidden w-full mt-3"
+                                      >
+                                        <div className="p-4 rounded-2xl bg-white border border-[#E6DFD5] flex flex-col gap-3.5">
+                                          <h4 className="text-xs font-sans font-bold uppercase tracking-widest text-[#BA5536] border-b border-[#E6DFD5] pb-2">
+                                            Nearby Alternatives (Dossier Backup Choices)
+                                          </h4>
+                                          {alternatives.map((alt, altIdx) => (
+                                            <div key={altIdx} className="text-xs">
+                                              <strong className="block text-[#1E1C1A] text-sm font-serif">{alt.title}</strong>
+                                              <p className="text-[#5F5E5A] font-serif italic mt-0.5 leading-relaxed">{alt.desc}</p>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </div>
+
+                              </motion.div>
+                            </React.Fragment>
+                          );
+                        })}
+                      </div>
+
+                      {/* Day navigation footer pagination */}
+                      <div className="mt-12 pt-6 border-t border-[#E6DFD5] flex items-center justify-between">
+                        <span className="text-xs font-sans text-[#7A7268]">
+                          End of Chapter {toRomanNumeral(activeDay)}
+                        </span>
+                        
+                        <button
+                          onClick={() => {
+                            if (activeDay < days.length) {
+                              setActiveDay(activeDay + 1);
+                            } else {
+                              setActiveDay('epilogue');
+                            }
+                            if (typeof window !== 'undefined') {
+                              window.scrollTo({ top: 380, behavior: 'smooth' });
+                            }
+                          }}
+                          className="px-5 py-2.5 rounded-full bg-[#1E1C1A] text-white hover:bg-[#BA5536] text-xs font-sans font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                        >
+                          <span>{activeDay < days.length ? `Next Chapter (Day ${toRomanNumeral(activeDay + 1)})` : "Go to Epilogue"}</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
-
-        {/* SECTION 3: THE EPILOGUE (End-of-Trip Summary Block) */}
-        <section id="chapter-epilogue" className="scroll-mt-32 mt-16 pt-16 border-t-2 border-[#1E1C1A] flex flex-col gap-10">
-          <div className="text-center max-w-3xl mx-auto">
-            <span className="text-xs font-mono uppercase tracking-widest text-[#BA5536] font-extrabold block mb-2">
-              THE EPILOGUE  —  DOSSIER CONCLUSION
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-serif font-black text-[#1E1C1A] tracking-tight leading-tight mb-4">
-              Your Journey at a Glance
-            </h2>
-            <p className="text-base sm:text-lg font-serif italic text-[#4A443E] leading-relaxed">
-              “From ancient monuments to intimate evening dining, this itinerary represents an ideal synthesis of cultural depth, culinary excellence, and comfortable transit pacing across {itinerary.destinationName || 'your destination'}.”
-            </p>
-          </div>
-
-          {/* Clean Typographic Stats Block (NO Icon-Badge Rows!) */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 p-8 rounded-3xl bg-[#FAF6F0] border border-[#E6DFD5] text-center">
-            <div className="flex flex-col gap-1 border-r border-[#E6DFD5] last:border-r-0">
-              <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Total Duration</span>
-              <span className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A]">{days.length} Days</span>
-            </div>
-            <div className="flex flex-col gap-1 border-r border-[#E6DFD5] last:border-r-0">
-              <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Curated Stops</span>
-              <span className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A]">{totalStopsCount} Stops</span>
-            </div>
-            <div className="flex flex-col gap-1 border-r border-[#E6DFD5] last:border-r-0">
-              <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Walking Distance</span>
-              <span className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A]">~{totalDistanceEst} km</span>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Estimated Budget</span>
-              <span className="text-2xl sm:text-3xl font-serif font-black text-[#BA5536]">{itinerary.estimatedCost || '$1,450'}</span>
-            </div>
-          </div>
-
-          {/* Final Action Bar & Concierge Stamp */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-6 border-t border-[#E6DFD5]">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#1E1C1A] text-[#FAF6F0] flex items-center justify-center font-serif italic text-lg font-bold">
-                T
-              </div>
-              <div>
-                <h4 className="text-sm font-serif font-bold text-[#1E1C1A]">TripWise Private Concierge</h4>
-                <p className="text-xs font-sans text-[#7A7268]">Dossier Ref: TW-{Math.floor(100000 + Math.random() * 900000)} • Document Locked</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 flex-wrap justify-center">
-              <button
-                type="button"
-                onClick={handlePrintOrDownload}
-                className="px-6 py-3 rounded-full border border-[#1E1C1A] bg-[#1E1C1A] text-[#FAF6F0] hover:bg-[#BA5536] hover:border-[#BA5536] text-xs font-sans font-bold uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer flex items-center gap-2"
-              >
-                <Printer className="w-4 h-4" />
-                <span>Download Dossier PDF</span>
-              </button>
-              <a
-                href="/ai-planner"
-                className="px-6 py-3 rounded-full border border-[#E6DFD5] bg-white text-[#1E1C1A] hover:border-[#BA5536] hover:text-[#BA5536] text-xs font-sans font-bold uppercase tracking-wider transition-all duration-300 shadow-2xs flex items-center gap-2"
-              >
-                <Edit3 className="w-4 h-4" />
-                <span>Edit in Planner →</span>
-              </a>
-            </div>
-          </div>
-        </section>
 
       </main>
 
-      {/* OPTIONAL ROUTE MAP OVERLAY (NEVER A FIXED 50/50 SPLIT!) */}
+      {/* OVERLAY MAP MODAL (Maplibre 3D Engine - Accesses Requirement 3) */}
       <AnimatePresence>
         {activeModalDay !== null && (
           <motion.div
@@ -581,63 +1036,25 @@ export default function ItineraryPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 sm:p-8"
-            onClick={() => setActiveModalDay(null)}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-[#FAF6F0] w-full max-w-5xl h-[85vh] rounded-3xl overflow-hidden shadow-2xl border border-[#E6DFD5] flex flex-col"
+              className="bg-[#FAF6F0] w-full max-w-5xl h-[85vh] rounded-3xl overflow-hidden shadow-2xl border border-[#E6DFD5] flex flex-col relative"
             >
-              {/* Modal Overlay Header */}
-              <div className="px-6 py-4 border-b border-[#E6DFD5] bg-white flex items-center justify-between shrink-0">
-                <div>
-                  <span className="text-xs font-mono uppercase tracking-widest text-[#BA5536] font-bold block">
-                    INTERACTIVE OVERLAY MAP
-                  </span>
-                  <h3 className="text-lg sm:text-xl font-serif font-black text-[#1E1C1A]">
-                    Chapter {toRomanNumeral(activeModalDay)} — Day {activeModalDay} Route Dossier
-                  </h3>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveModalDay(null)}
-                  className="px-4 py-2 rounded-full border border-[#E6DFD5] bg-[#FAF6F0] hover:bg-[#1E1C1A] hover:text-white text-xs font-sans font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                >
-                  <X className="w-4 h-4" />
-                  <span>Close Map Overlay</span>
-                </button>
-              </div>
-
-              {/* Modal Body with GeoEngine InteractiveRouteMap */}
-              <div className="flex-1 w-full relative bg-stone-100 overflow-hidden">
-                <InteractiveRouteMap
-                  activities={days.find(d => (d.dayNumber || 1) === activeModalDay)?.activities || days[activeModalDay - 1]?.activities || []}
-                  allDays={days}
-                  selectedDayIndex={activeModalDay - 1}
-                  destinationName={itinerary.destinationName || 'Destination'}
-                  coordinates={itinerary.coordinates || { lat: 41.9028, lng: 12.4964 }}
-                  hoveredStopIdx={hoveredStopIdx}
-                  onHoverStop={setHoveredStopIdx}
-                  selectedStopIdx={selectedStopIdx}
-                  onSelectStop={setSelectedStopIdx}
-                />
-              </div>
-
-              {/* Modal Overlay Footer */}
-              <div className="px-6 py-3 border-t border-[#E6DFD5] bg-white flex items-center justify-between text-xs font-sans text-[#7A7268] shrink-0">
-                <span>Click pins or cards above to preview stop photography and walk trajectories.</span>
-                <span className="font-bold text-[#1E1C1A]">TripWise GeoEngine Overlay</span>
-              </div>
+              <Maplibre3DRouteMap
+                activities={days.find(d => (d.dayNumber || 1) === activeModalDay)?.activities || days[activeModalDay - 1]?.activities || []}
+                coordinates={itinerary.coordinates || { lat: 41.9028, lng: 12.4964 }}
+                onClose={() => setActiveModalDay(null)}
+                destinationName={itinerary.destinationName || 'Destination'}
+              />
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Footer */}
       <footer className="py-12 text-center text-xs font-serif italic text-[#7A7268] border-t border-[#E6DFD5] bg-white mt-auto">
         TripWise Private Travel Concierge · Published Dossier Guide · Powered by Google Gemini
       </footer>
