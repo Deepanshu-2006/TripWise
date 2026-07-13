@@ -148,3 +148,8 @@ body {
 .animate-cursor {
   animation: cursor-blink 0.8s infinite;
 }
+
+/* Custom Styled Warm Ivory / Sepia map filter for detailed itinerary guide view */
+.itinerary-theme-map .leaflet-container {
+  filter: sepia(48%) hue-rotate(-12deg) saturate(85%) contrast(96%) brightness(99%);
+}

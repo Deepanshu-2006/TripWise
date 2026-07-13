@@ -41,7 +41,7 @@ import {
 } from '../components/itineraryHelpers';
 
 // Dynamically import map components to avoid SSR/window issues
-const Maplibre3DRouteMap = dynamic(() => import('../components/Maplibre3DRouteMap'), { ssr: false });
+const InteractiveRouteMap = dynamic(() => import('../components/InteractiveRouteMap'), { ssr: false });
 
 const toRomanNumeral = (num) => {
   const romanMap = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V', 6: 'VI', 7: 'VII', 8: 'VIII', 9: 'IX', 10: 'X' };
@@ -1028,14 +1028,15 @@ export default function ItineraryPage() {
 
       </main>
 
-      {/* OVERLAY MAP MODAL (Maplibre 3D Engine - Accesses Requirement 3) */}
+      {/* OVERLAY MAP MODAL (InteractiveRouteMap - Itinerary View) */}
       <AnimatePresence>
         {activeModalDay !== null && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 sm:p-8"
+            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 sm:p-8"
+            onClick={() => setActiveModalDay(null)}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -1043,13 +1044,35 @@ export default function ItineraryPage() {
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               className="bg-[#FAF6F0] w-full max-w-5xl h-[85vh] rounded-3xl overflow-hidden shadow-2xl border border-[#E6DFD5] flex flex-col relative"
+              onClick={e => e.stopPropagation()}
             >
-              <Maplibre3DRouteMap
-                activities={days.find(d => (d.dayNumber || 1) === activeModalDay)?.activities || days[activeModalDay - 1]?.activities || []}
-                coordinates={itinerary.coordinates || { lat: 41.9028, lng: 12.4964 }}
-                onClose={() => setActiveModalDay(null)}
-                destinationName={itinerary.destinationName || 'Destination'}
-              />
+              {/* Modal Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-[#E6DFD5] shrink-0 bg-[#FAF6F0]">
+                <div>
+                  <h3 className="font-serif text-lg font-semibold text-[#1E1C1A]">
+                    Day {activeModalDay} · Route Map
+                  </h3>
+                  <p className="text-xs text-[#7A7268] mt-0.5">
+                    {days.find(d => (d.dayNumber || 1) === activeModalDay)?.title || itinerary.destinationName}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setActiveModalDay(null)}
+                  className="w-8 h-8 rounded-full bg-[#F0EBE4] hover:bg-[#E6DFD5] text-[#7A7268] hover:text-[#1E1C1A] flex items-center justify-center transition-all duration-200 cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Map fills remaining height */}
+              <div className="flex-1 min-h-0">
+                <InteractiveRouteMap
+                  activities={days.find(d => (d.dayNumber || 1) === activeModalDay)?.activities || days[activeModalDay - 1]?.activities || []}
+                  coordinates={itinerary.coordinates || { lat: 41.9028, lng: 12.4964 }}
+                  destinationName={itinerary.destinationName || 'Destination'}
+                  isItineraryView={true}
+                />
+              </div>
             </motion.div>
           </motion.div>
         )}

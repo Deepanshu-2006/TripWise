@@ -57,8 +57,51 @@ export default function Maplibre3DRouteMap({ activities, coordinates, onClose, d
 
     mapRef.current = map;
 
+    let animationFrameId;
+    let step = 0;
+
+    const animateDash = () => {
+      if (!mapRef.current) return;
+      try {
+        step = (step + 0.15) % 10;
+        if (mapRef.current.getLayer('route-line-dashed')) {
+          mapRef.current.setPaintProperty('route-line-dashed', 'line-dasharray', [0.8, 3, step, 3]);
+        }
+      } catch (e) {
+        // Safe catch
+      }
+      animationFrameId = requestAnimationFrame(animateDash);
+    };
+
     map.on('load', () => {
       setIsMapReady(true);
+
+      // Customize Basemap Paint Colors dynamically to match the concierge theme
+      try {
+        const layers = map.getStyle().layers || [];
+        layers.forEach(layer => {
+          if (layer.type === 'fill') {
+            if (layer.id.includes('park') || layer.id.includes('wood') || layer.id.includes('green') || layer.id.includes('landcover') || layer.id.includes('cemetery')) {
+              map.setPaintProperty(layer.id, 'fill-color', '#ebe6de');
+              map.setPaintProperty(layer.id, 'fill-opacity', 0.85);
+            } else if (layer.id.includes('water')) {
+              map.setPaintProperty(layer.id, 'fill-color', '#d2dadc');
+            } else if (layer.id.includes('building')) {
+              map.setPaintProperty(layer.id, 'fill-color', '#ebdcc5');
+            }
+          } else if (layer.type === 'line') {
+            if (layer.id.includes('water')) {
+              map.setPaintProperty(layer.id, 'line-color', '#c0cbd0');
+            } else if (layer.id.includes('road') || layer.id.includes('highway') || layer.id.includes('street')) {
+              map.setPaintProperty(layer.id, 'line-color', '#f1ede6');
+            }
+          } else if (layer.type === 'background') {
+            map.setPaintProperty(layer.id, 'background-color', '#FAF6F0');
+          }
+        });
+      } catch (err) {
+        console.warn("Could not customize basemap colors:", err);
+      }
 
       // 1. Add 3D Extruded Buildings Layer
       const allSources = map.getStyle().sources || {};
@@ -121,6 +164,23 @@ export default function Maplibre3DRouteMap({ activities, coordinates, onClose, d
             }
           });
 
+          // Draw the animated dashed overlay route line
+          map.addLayer({
+            'id': 'route-line-dashed',
+            'type': 'line',
+            'source': 'route',
+            'layout': {
+              'line-join': 'round',
+              'line-cap': 'round'
+            },
+            'paint': {
+              'line-color': '#FAF6F0',
+              'line-width': 2.2,
+              'line-opacity': 0.95,
+              'line-dasharray': [0.8, 3]
+            }
+          });
+
           // Draw elevated duplicate layer to represent ribbon shadow/glow
           map.addLayer({
             'id': 'route-shadow',
@@ -133,6 +193,10 @@ export default function Maplibre3DRouteMap({ activities, coordinates, onClose, d
               'line-offset': 2
             }
           });
+
+          // Trigger walking dash animation loop
+          animateDash();
+
         } catch (err) {
           console.warn("Could not draw route path:", err);
         }
@@ -173,6 +237,9 @@ export default function Maplibre3DRouteMap({ activities, coordinates, onClose, d
     });
 
     return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;

@@ -191,7 +191,8 @@ export default function InteractiveRouteMap({
   hoveredStopIdx: propHoveredIdx = null,
   onHoverStop = () => {},
   selectedStopIdx: propSelectedStopIdx = null,
-  onSelectStop = () => {}
+  onSelectStop = () => {},
+  isItineraryView = false
 }) {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
@@ -223,6 +224,8 @@ export default function InteractiveRouteMap({
 
   const activeHoverIdx = propHoveredIdx !== undefined ? propHoveredIdx : internalHoveredIdx;
   const selectedStopIdx = propSelectedStopIdx !== undefined ? propSelectedStopIdx : internalSelectedStopIdx;
+  const themeColor = isItineraryView ? '#BA5536' : '#FF6B2C';
+  const themeHoverColor = isItineraryView ? '#9C4124' : '#E65D20';
 
   const setSelectedStopIdx = (idx) => {
     if (onSelectStop) onSelectStop(idx);
@@ -973,9 +976,9 @@ export default function InteractiveRouteMap({
           const markerKey = isMultiDayMode ? `d${dayIdx}_s${stopNum}` : `${stopNum}`;
           const isSelected = (!isMultiDayMode && selectedStopIdx === stopNum) || (activeDestination?.act === act || (activeDestination?.stopIndex === stopNum && activeDestination?.dayIdx === dayIdx));
 
-          const meta = isBasecamp ? { icon: '🏨', label: 'Basecamp', bg: '#1E293B' } : getCategoryMeta(act);
-          const pinBg = isSelected ? '#FF6B2C' : (isBasecamp ? '#1E293B' : (isMultiDayMode ? dayColorMeta.color : meta.bg));
-
+           const meta = isBasecamp ? { icon: '🏨', label: 'Basecamp', bg: '#1E293B' } : getCategoryMeta(act);
+          const pinBg = isSelected ? themeColor : (isBasecamp ? '#1E293B' : (isMultiDayMode ? dayColorMeta.color : meta.bg));
+ 
           let isCategoryMatch = true;
           if (selectedCategory !== 'all') {
             if (selectedCategory === 'dining') isCategoryMatch = !isBasecamp && meta.label === 'Dining';
@@ -984,12 +987,12 @@ export default function InteractiveRouteMap({
             else if (selectedCategory === 'nature') isCategoryMatch = !isBasecamp && meta.label === 'Nature';
             else if (selectedCategory === 'shopping') isCategoryMatch = !isBasecamp && meta.label === 'Shopping';
           }
-
+ 
           const isFilterActive = selectedCategory !== 'all';
           const isHighlightedByFilter = isFilterActive && isCategoryMatch && !isBasecamp;
-
+ 
           const gradientBg = isSelected
-            ? 'linear-gradient(135deg, #FF6B2C 0%, #D94E14 100%)'
+            ? `linear-gradient(135deg, ${themeColor} 0%, ${themeHoverColor} 100%)`
             : (isBasecamp
               ? 'linear-gradient(135deg, #334155 0%, #0F172A 100%)'
               : (isMultiDayMode
@@ -1123,9 +1126,9 @@ export default function InteractiveRouteMap({
         // Layer 1: Subtle route glow backdrop
         let animatedPolyline = null;
         if (latLngs.length > 1 && window.L) {
-          const routeColor = isMultiDayMode ? dayColorMeta.color : '#FF6B2C';
-          const routeGlow = isMultiDayMode ? dayColorMeta.glow : 'rgba(255, 107, 44, 0.45)';
-
+          const routeColor = isMultiDayMode ? dayColorMeta.color : themeColor;
+          const routeGlow = isMultiDayMode ? dayColorMeta.glow : (isItineraryView ? 'rgba(186, 85, 54, 0.45)' : 'rgba(255, 107, 44, 0.45)');
+ 
           L.polyline(latLngs, {
             color: routeGlow,
             weight: isMultiDayMode ? 8 : 10,
@@ -1134,23 +1137,23 @@ export default function InteractiveRouteMap({
             lineJoin: 'round',
             className: 'animated-route-glow'
           }).addTo(layerGroupRef.current);
-
+ 
           // Layer 2: Clean solid premium route line (Point 3: Completed vs Upcoming route split)
           if (selectedStopIdx !== null && !isMultiDayMode && selectedStopIdx > 0 && selectedStopIdx < latLngs.length) {
             const completedLatLngs = latLngs.slice(0, selectedStopIdx + 1);
             const upcomingLatLngs = latLngs.slice(selectedStopIdx);
             
             L.polyline(completedLatLngs, {
-              color: '#D95524',
+              color: isItineraryView ? '#9C4124' : '#D95524',
               weight: 4,
               opacity: 0.45,
               dashArray: '5, 8',
               lineCap: 'round',
               lineJoin: 'round'
             }).addTo(layerGroupRef.current);
-
+ 
             animatedPolyline = L.polyline(upcomingLatLngs, {
-              color: '#EC6735',
+              color: isItineraryView ? '#BA5536' : '#EC6735',
               weight: 5,
               opacity: 1.0,
               lineCap: 'round',
@@ -1283,9 +1286,11 @@ export default function InteractiveRouteMap({
       } else {
         const currentDayIdx = typeof selectedDayIndex === 'number' ? selectedDayIndex : 0;
         const res = plotSingleDayStops(activities, currentDayIdx, false);
-        setRouteStats({
-          totalKm: (res.totalMeters / 1000).toFixed(1),
-          stopsCount: res.stopsCount
+        const nextTotalKm = (res.totalMeters / 1000).toFixed(1);
+        const nextStopsCount = res.stopsCount;
+        setRouteStats(prev => {
+          if (prev.totalKm === nextTotalKm && prev.stopsCount === nextStopsCount) return prev;
+          return { totalKm: nextTotalKm, stopsCount: nextStopsCount };
         });
 
         const triggerPulse = () => {
@@ -1453,7 +1458,7 @@ export default function InteractiveRouteMap({
       isFullscreen
         ? 'fixed top-0! left-0! right-0! bottom-0! inset-0! z-99999 w-screen! h-screen! rounded-none shadow-2xl m-0 p-0 border-none'
         : 'relative w-full h-full min-h-100 rounded-3xl border border-[#ECE8E2] shadow-[0_16px_48px_rgba(0,0,0,0.06)]'
-    } overflow-hidden bg-[#FFFFFF] transition-all duration-300`}>
+    } ${isItineraryView ? 'itinerary-theme-map' : ''} overflow-hidden bg-[#FFFFFF] transition-all duration-300`}>
       {/* Subtle inner highlight overlay */}
       <div className="absolute inset-0 rounded-3xl pointer-events-none z-20 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)]" />
 
@@ -1472,7 +1477,7 @@ export default function InteractiveRouteMap({
       {/* 1. Unified Sleek Top Bar (Top-Left Filter Chips & Top-Right Controls in single Flex row with zero overlap) */}
       <div className="absolute top-5 inset-x-5 z-50 flex items-center justify-between gap-2 pointer-events-none">
         {/* Left Side: Compact iOS-Segmented Filter Chips */}
-        {availableCategoryFilters.length > 1 ? (
+        {availableCategoryFilters.length > 1 && !isItineraryView ? (
           <div className="pointer-events-auto min-w-0 max-w-[calc(100%-260px)] 2xl:max-w-[calc(100%-460px)] overflow-x-auto no-scrollbar">
             <div className="bg-[rgba(255,255,255,0.92)] backdrop-blur-md p-1 rounded-[14px] border border-[rgba(0,0,0,0.06)] shadow-[0_4px_20px_rgba(0,0,0,0.06)] flex items-center gap-1 w-max">
               {availableCategoryFilters.map((filter) => {
@@ -1508,61 +1513,74 @@ export default function InteractiveRouteMap({
 
         {/* Right Side: Sleek Map Controls Strip */}
         <div className="pointer-events-auto shrink-0 flex items-center gap-2">
-          {/* Quick Actions Glassmorphic Pill */}
-          <div className="flex items-center gap-1 bg-[rgba(255,255,255,0.92)] backdrop-blur-md p-1 rounded-[14px] border border-[rgba(0,0,0,0.06)] shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
-            <button
-              type="button"
-              onClick={handleFitRoute}
-              className="h-8 px-3 rounded-xl text-[11px] font-medium bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)] hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-1.5 cursor-pointer active:scale-95"
-              title="Fit Entire Route"
-            >
-              <span className="text-xs">🎯</span>
-              <span className={`${isFullscreen ? 'inline' : 'hidden 2xl:inline'} font-medium`}>Fit Route</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsHotelRingActive(!isHotelRingActive)}
-              className={`h-8 px-3 rounded-xl text-[11px] font-medium transition-all duration-300 flex items-center gap-1.5 cursor-pointer hover:-translate-y-0.5 active:scale-95 ${
-                isHotelRingActive
-                  ? 'bg-[#FF6B2C] text-white font-semibold shadow-[0_4px_16px_rgba(255,107,44,0.3)] border border-[#FF6B2C]'
-                  : 'bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)]'
-              }`}
-              title="Toggle 15-min walk geofence around Basecamp Hotel"
-            >
-              <span className="text-xs">📏</span>
-              <span className={`${isFullscreen ? 'inline' : 'hidden 2xl:inline'} font-medium`}>15-Min Walk</span>
-            </button>
-
-            {allDays && allDays.length > 1 && (
+          {isItineraryView ? (
+            <div className="flex items-center gap-1 bg-[rgba(255,255,255,0.92)] backdrop-blur-md p-1 rounded-[14px] border border-[rgba(0,0,0,0.06)] shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
               <button
                 type="button"
-                onClick={() => setShowAllDaysOverview(!showAllDaysOverview)}
+                onClick={handleFitRoute}
+                className="h-8 px-3.5 rounded-xl text-[11px] font-semibold bg-[#FFFFFF] text-[#BA5536] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:bg-[#BA5536] hover:text-white hover:border-[#BA5536] transition-all duration-300 flex items-center gap-1.5 cursor-pointer active:scale-95"
+                title="Fit Entire Route"
+              >
+                <span className="text-xs">🎯</span>
+                <span>Fit Route</span>
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1 bg-[rgba(255,255,255,0.92)] backdrop-blur-md p-1 rounded-[14px] border border-[rgba(0,0,0,0.06)] shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
+              <button
+                type="button"
+                onClick={handleFitRoute}
+                className="h-8 px-3 rounded-xl text-[11px] font-medium bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)] hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-1.5 cursor-pointer active:scale-95"
+                title="Fit Entire Route"
+              >
+                <span className="text-xs">🎯</span>
+                <span className={`${isFullscreen ? 'inline' : 'hidden 2xl:inline'} font-medium`}>Fit Route</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsHotelRingActive(!isHotelRingActive)}
                 className={`h-8 px-3 rounded-xl text-[11px] font-medium transition-all duration-300 flex items-center gap-1.5 cursor-pointer hover:-translate-y-0.5 active:scale-95 ${
-                  showAllDaysOverview
+                  isHotelRingActive
                     ? 'bg-[#FF6B2C] text-white font-semibold shadow-[0_4px_16px_rgba(255,107,44,0.3)] border border-[#FF6B2C]'
                     : 'bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)]'
                 }`}
-                title="Toggle all days route comparison"
+                title="Toggle 15-min walk geofence around Basecamp Hotel"
               >
-                <span className="text-xs">🗺️</span>
-                <span className={`${isFullscreen ? 'inline' : 'hidden 2xl:inline'} font-medium`}>All Days</span>
+                <span className="text-xs">📏</span>
+                <span className={`${isFullscreen ? 'inline' : 'hidden 2xl:inline'} font-medium`}>15-Min Walk</span>
               </button>
-            )}
 
-            <button
-              type="button"
-              onClick={() => {
-                setIsFullscreen(!isFullscreen);
-                setTimeout(() => mapRef.current?.invalidateSize(), 350);
-              }}
-              className={`h-8 ${isFullscreen ? 'px-3 gap-1.5' : 'w-8 px-0 justify-center'} rounded-xl text-[11px] font-medium bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)] transition-all duration-300 flex items-center cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0`}
-              title={isFullscreen ? "Exit Fullscreen" : "Expand Map Fullscreen"}
-            >
-              <span className="text-xs">{isFullscreen ? '✕' : '⛶'}</span>
-              {isFullscreen && <span className="font-medium">Exit Fullscreen</span>}
-            </button>
-          </div>
+              {allDays && allDays.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllDaysOverview(!showAllDaysOverview)}
+                  className={`h-8 px-3 rounded-xl text-[11px] font-medium transition-all duration-300 flex items-center gap-1.5 cursor-pointer hover:-translate-y-0.5 active:scale-95 ${
+                    showAllDaysOverview
+                      ? 'bg-[#FF6B2C] text-white font-semibold shadow-[0_4px_16px_rgba(255,107,44,0.3)] border border-[#FF6B2C]'
+                      : 'bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)]'
+                  }`}
+                  title="Toggle all days route comparison"
+                >
+                  <span className="text-xs">🗺️</span>
+                  <span className={`${isFullscreen ? 'inline' : 'hidden 2xl:inline'} font-medium`}>All Days</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsFullscreen(!isFullscreen);
+                  setTimeout(() => mapRef.current?.invalidateSize(), 350);
+                }}
+                className={`h-8 ${isFullscreen ? 'px-3 gap-1.5' : 'w-8 px-0 justify-center'} rounded-xl text-[11px] font-medium bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)] transition-all duration-300 flex items-center cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0`}
+                title={isFullscreen ? "Exit Fullscreen" : "Expand Map Fullscreen"}
+              >
+                <span className="text-xs">{isFullscreen ? '✕' : '⛶'}</span>
+                {isFullscreen && <span className="font-medium">Exit Fullscreen</span>}
+              </button>
+            </div>
+          )}
 
           {/* Map Style & GeoEngine Dropdown */}
           <div className="relative">
