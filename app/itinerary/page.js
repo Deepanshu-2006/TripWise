@@ -137,26 +137,27 @@ const Sparkline = () => (
   </svg>
 );
 
-const getContextAwareTip = (act, idx) => {
-  const title = (act.title || '').toLowerCase();
-  const timeMins = parseTimeToMinutes(act.time);
+const getContextAwareTip = (act, idx, summary) => {
+  const title = (act?.title || '').toLowerCase();
   
-  let crowdNote = "Visiting before peak tour bus hours. Enjoy a calmer atmosphere.";
-  if (timeMins >= 660 && timeMins <= 840) {
-    crowdNote = "Peak midday tourist congestion. Staying hydrated and booking online in advance is highly advised.";
-  } else if (timeMins > 840) {
-    crowdNote = "Fewer crowds and softer lighting, ideal for photography and tranquil exploring.";
+  // Non-overlapping logistics advice instead of repeating crowd timing (which lives in custom insight)
+  let logisticsNote = act?.location ? `Main entry via ${act.location}. Walk-ins & digital passes verified at express security check.` : `Easily reached on foot or short local transit from previous stop. Walk-ins accepted; verify ticket barcode before security scan.`;
+  if (title.includes('colosseum') || title.includes('forum') || title.includes('vatican') || title.includes('temple') || title.includes('castle') || title.includes('museum')) {
+    logisticsNote = `Main gate entry at ${act?.location || 'Central Security Checkpoint'}. Present digital barcode or mobile reservation directly at priority turnstile.`;
   }
 
-  let weatherNote = "Expected mild temperatures. Ideal walking conditions.";
-  if (title.includes('colosseum') || title.includes('forum') || title.includes('ruin') || title.includes('plaza')) {
-    weatherNote = "Open historic ruins with high sun exposure. We strongly recommend hats and sunscreen before 1:00 PM.";
-  } else if (title.includes('restaurant') || title.includes('indoor') || title.includes('vatican') || title.includes('museum')) {
-    weatherNote = "Indoor climate-controlled site. A great option if outside heat rises.";
+  // Pull exact forecast from trip data (e.g. 32°C 🌤 or 31°C ☀️)
+  const forecastStr = summary?.stats?.weather || '32°C 🌤';
+  let weatherNote = `Forecast: ${forecastStr}. Expected comfortable temperatures and ideal walking conditions for exploring.`;
+  if (title.includes('colosseum') || title.includes('forum') || title.includes('ruin') || title.includes('plaza') || title.includes('park') || title.includes('garden') || title.includes('beach') || title.includes('walk') || title.includes('terrace')) {
+    weatherNote = `Forecast: ${forecastStr}. Open outdoor site with high UV exposure—we strongly recommend hats, sunglasses, and water before 1:00 PM.`;
+  } else if (title.includes('restaurant') || title.includes('indoor') || title.includes('vatican') || title.includes('museum') || title.includes('gallery') || title.includes('church') || title.includes('cathedral') || title.includes('palace') || title.includes('cafe')) {
+    weatherNote = `Forecast: ${forecastStr}. Climate-controlled indoor sanctuary—a great cool escape during warm midday hours.`;
   }
 
-  return { crowdNote, weatherNote };
+  return { logisticsNote, weatherNote };
 };
+
 
 export default function ItineraryPage() {
   const [itinerary, setItinerary] = useState(null);
@@ -884,7 +885,7 @@ export default function ItineraryPage() {
                           const showsAlts = !!showAlternatives[stopKey];
                           const alternatives = getAlternativeSuggestions(act, idx);
                           
-                          const { crowdNote, weatherNote } = getContextAwareTip(act, idx);
+                          const { logisticsNote, weatherNote } = getContextAwareTip(act, idx, summary);
                           const categoryStyle = getCategoryStyling(act);
 
                           // Category Classification for Dynamic Concierge Ribbon
@@ -1253,20 +1254,20 @@ export default function ItineraryPage() {
                                             {act.description || 'Detailed historical context and neighborhood guide maps.'}
                                           </p>
 
-                                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white/70 p-4 rounded-2xl border border-[#E6DFD5]">
-                                            <div className="flex items-start gap-2">
-                                              <Info className="w-4 h-4 text-[#BA5536] shrink-0 mt-0.5" />
+                                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white/70 p-4 sm:p-5 rounded-2xl border border-[#E6DFD5] shadow-2xs">
+                                            <div className="flex items-start gap-2.5">
+                                              <MapPin className="w-4 h-4 text-[#BA5536] shrink-0 mt-0.5" />
                                               <div>
-                                                <strong className="block text-xs font-sans uppercase tracking-wider text-[#7A7268]">Concierge Crowd Tip</strong>
-                                                <p className="text-xs font-serif italic text-[#5F5E5A] mt-0.5">{crowdNote}</p>
+                                                <strong className="block text-xs font-sans uppercase tracking-wider text-[#7A7268] font-bold">Logistics &amp; Gate Access</strong>
+                                                <p className="text-xs font-serif italic text-[#5F5E5A] mt-0.5 leading-relaxed">{logisticsNote}</p>
                                               </div>
                                             </div>
                                             
-                                            <div className="flex items-start gap-2">
+                                            <div className="flex items-start gap-2.5">
                                               <Sun className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                                               <div>
-                                                <strong className="block text-xs font-sans uppercase tracking-wider text-[#7A7268]">Daylight &amp; Weather Alert</strong>
-                                                <p className="text-xs font-serif italic text-[#5F5E5A] mt-0.5">{weatherNote}</p>
+                                                <strong className="block text-xs font-sans uppercase tracking-wider text-[#7A7268] font-bold">Daylight &amp; Weather Alert</strong>
+                                                <p className="text-xs font-serif italic text-[#5F5E5A] mt-0.5 leading-relaxed">{weatherNote}</p>
                                               </div>
                                             </div>
                                           </div>
@@ -1282,10 +1283,14 @@ export default function ItineraryPage() {
                                             </span>
                                           </div>
 
-                                          <div className="flex items-center justify-between p-3.5 bg-white rounded-xl border border-[#E6DFD5] text-xs font-sans">
-                                            <span className="text-[#7A7268]">Reservation Booking Details:</span>
-                                            <strong className="text-[#1E1C1A]">Reservation: Not Required (Walk-in Accepted)</strong>
-                                          </div>
+                                          {isDining && (
+                                            <div className="flex items-center justify-between p-3.5 bg-white rounded-xl border border-[#E6DFD5] text-xs font-sans">
+                                              <span className="text-[#7A7268]">Reservation Booking Details:</span>
+                                              <strong className="text-[#1E1C1A]">
+                                                {act.reservationNote || 'Recommended during peak dinner hours (6:30 PM – 9:00 PM)'}
+                                              </strong>
+                                            </div>
+                                          )}
 
                                         </div>
                                       </motion.div>
@@ -1301,10 +1306,15 @@ export default function ItineraryPage() {
                                         exit={{ opacity: 0, height: 0 }}
                                         className="overflow-hidden w-full mt-3"
                                       >
-                                        <div className="p-4 rounded-2xl bg-white border border-[#E6DFD5] flex flex-col gap-3.5">
-                                          <h4 className="text-xs font-sans font-bold uppercase tracking-widest text-[#BA5536] border-b border-[#E6DFD5] pb-2">
-                                            Nearby Alternatives (Dossier Backup Choices)
-                                          </h4>
+                                        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#E6DFD5] flex flex-col gap-3.5 shadow-2xs">
+                                          <div className="border-b border-[#E6DFD5] pb-2.5">
+                                            <h4 className="text-xs font-sans font-bold uppercase tracking-widest text-[#BA5536]">
+                                              Nearby Alternatives
+                                            </h4>
+                                            <p className="text-xs font-serif italic text-[#7A7268] mt-1">
+                                              Curated backup choices and spontaneous diversions in the immediate neighborhood if weather or crowd pacing changes.
+                                            </p>
+                                          </div>
                                           {alternatives.map((alt, altIdx) => (
                                             <div key={altIdx} className="text-xs">
                                               <strong className="block text-[#1E1C1A] text-sm font-serif">{alt.title}</strong>
