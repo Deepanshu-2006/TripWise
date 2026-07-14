@@ -267,60 +267,106 @@ export function getIconBadges(act, idx = 0) {
   return badges;
 }
 
-// 6. Get AI Insight (Point 5)
+// 6. Get AI Insight (Point 5 & Issue 1)
 export function getAiInsight(act, idx = 0) {
   if (act?.aiTip || act?.aiInsight || act?.tip) {
     return act.aiTip || act.aiInsight || act.tip;
   }
-  const text = ((act?.title || '') + ' ' + (act?.category || '')).toLowerCase();
-  if (text.includes('colosseum') || text.includes('arena')) {
-    return 'Visit before 10 AM to avoid peak crowds. Best lighting for photography between 9:15–10:00 AM.';
+  const title = (act?.title || '').trim();
+  const titleLower = title.toLowerCase();
+  const categoryLower = (act?.category || '').toLowerCase();
+  const descLower = (act?.description || '').toLowerCase();
+  const time = act?.time || 'midday';
+  const location = act?.location ? `near ${act.location}` : 'in the immediate neighborhood';
+
+  // Check specific landmarks & renowned spots first
+  if (titleLower.includes('colosseum') || titleLower.includes('arena')) {
+    return 'Visit before 10 AM to avoid peak crowds. Best lighting for photography between 9:15–10:00 AM from the upper tier.';
   }
-  if (text.includes('pantheon')) {
+  if (titleLower.includes('pantheon')) {
     return 'Look up at the oculus precisely at noon to watch the sunbeam traverse the marble rotunda floor.';
   }
-  if (text.includes('vatican') || text.includes('sistine')) {
-    return 'Dress code enforced: shoulders and knees must be covered. Head straight to the Sistine Chapel first before crowds build.';
+  if (titleLower.includes('vatican') || titleLower.includes('sistine') || titleLower.includes('st. peter')) {
+    return 'Dress code enforced: shoulders and knees must be covered. Head straight to the Sistine Chapel first before crowds build around midday.';
   }
-  if (text.includes('trevi')) {
-    return 'Toss a coin over your left shoulder with your right hand to guarantee a return to Rome. Early morning around 7:30 AM is magical.';
+  if (titleLower.includes('trevi')) {
+    return 'Toss a coin over your left shoulder with your right hand to guarantee a return to Rome. Early morning around 7:30 AM offers peaceful reflections.';
   }
-  if (text.includes('food') || text.includes('pasta') || text.includes('restaurant') || text.includes('din')) {
-    return 'Ask for a table on the outdoor cobblestone terrace. Try their signature cacio e pepe paired with a local Lazio white wine.';
+  if (titleLower.includes('borghese') || titleLower.includes('spanish steps')) {
+    return 'Reservations at Galleria Borghese are strictly timed in 2-hour entry slots; check your ticket window carefully before strolling the gardens.';
   }
-  if (text.includes('cafe') || text.includes('coffee') || text.includes('espresso')) {
-    return 'Order al banco (at the bar counter) like locals do for half the table service price. Pair espresso with a fresh cornetto.';
+  if (titleLower.includes('enzo')) {
+    return 'Arrive 20 minutes before doors open at 12:30 PM or 7:30 PM; no reservations are taken for outdoor tables at this Trastevere institution. Order the carciofi alla giudìa and classic carbonara.';
   }
-  if (text.includes('gelato')) {
-    return 'Look for natural pistachio color (muted brownish-green, not neon green) as the ultimate hallmark of authentic artisanal gelato.';
+  if (titleLower.includes('emma')) {
+    return 'Ask for a table in the subterranean Roman dining room. Pair their thin, crisp pizza bianca topped with 36-month prosciutto with a glass of Frascati Superiore.';
   }
-  if (text.includes('sunset') || text.includes('terrace') || text.includes('view')) {
-    return 'Arrive 35 minutes before official golden hour to secure a front-row viewpoint bench as the city lights illuminate below.';
+  if (titleLower.includes('roscioli')) {
+    return 'Book well in advance for the deli counter tables. Their burrata with sun-dried tomatoes and rigatoni alla gricia are masterclasses in Roman flavor.';
   }
-  return 'AI Route Advisor: Stop sequence perfectly synchronized with nearby pedestrian zones and optimal daylight hours.';
+  if (titleLower.includes('armando')) {
+    return 'Tucked right near the Pantheon, Armando al Pantheon requires reservations weeks ahead. Their trippa alla romana and saltimbocca represent authentic cucina romana.';
+  }
+
+  // Detect exact venue categories for genuinely distinct advice (Issue 1)
+  const isMarketOrStreetFood = categoryLower.includes('market') || categoryLower.includes('street food') || categoryLower.includes('stall') || categoryLower.includes('bakery') || titleLower.includes('mercato') || titleLower.includes('forno') || titleLower.includes('panino') || titleLower.includes('pizza al taglio') || titleLower.includes('suppl') || descLower.includes('street food') || descLower.includes('counter');
+  const isCafeOrGelateria = categoryLower.includes('cafe') || categoryLower.includes('coffee') || categoryLower.includes('gelat') || categoryLower.includes('dessert') || titleLower.includes('caff') || titleLower.includes('gelat') || titleLower.includes('greco') || titleLower.includes('frigidarium') || titleLower.includes('giolitti') || titleLower.includes('eustachio') || titleLower.includes('pasticceria');
+  const isFineDiningRooftop = categoryLower.includes('fine dining') || categoryLower.includes('rooftop') || categoryLower.includes('michelin') || titleLower.includes('terrace') || titleLower.includes('rooftop') || titleLower.includes('palazzo') || titleLower.includes('villa') || descLower.includes('panoramic') || descLower.includes('sommelier') || descLower.includes('tasting menu');
+  const isPizzeria = categoryLower.includes('pizzeria') || categoryLower.includes('pizza') || titleLower.includes('pizzeria');
+  const isTrattoriaOrOsteria = categoryLower.includes('trattoria') || categoryLower.includes('osteria') || categoryLower.includes('taverna') || categoryLower.includes('bistro') || titleLower.includes('trattoria') || titleLower.includes('osteria') || titleLower.includes('taverna') || titleLower.includes('locanda');
+  const isDining = isMarketOrStreetFood || isCafeOrGelateria || isFineDiningRooftop || isPizzeria || isTrattoriaOrOsteria || categoryLower.includes('din') || categoryLower.includes('food') || categoryLower.includes('rest') || categoryLower.includes('lunch') || categoryLower.includes('dinner') || titleLower.includes('restaurant');
+
+  if (isMarketOrStreetFood) {
+    return `At market stalls and street-food counters like ${title}, ordering is fast-paced and casual. Browse the display cases first, order directly at the counter by piece or weight (\`all'etto\`), and keep small cash or contactless payment ready for immediate counter pickup.`;
+  }
+  if (isCafeOrGelateria) {
+    return `At Italian espresso bars and gelaterias like ${title}, follow local custom: pay first at the cash register (\`la cassa\`), then present your receipt to the barista or counter staff with a polite greeting. Stand at the marble counter (\`al banco\`) for authentic, lively pacing.`;
+  }
+  if (isFineDiningRooftop) {
+    return `An elegant dress code applies for dining at ${title}. Arrive 10 minutes prior to your reservation time to request perimeter terrace seating or dining room tables with the clearest sightlines, and allow your sommelier to guide wine selections from the regional cellar.`;
+  }
+  if (isPizzeria) {
+    return `Traditional Roman pizzerias like ${title} specialize in ultra-thin, crackling wood-fired crusts. Start your meal like a true local by sharing \`fritti\` (crispy fried zucchini flowers or supplì) before your whole pizza arrives, eaten with knife and fork.`;
+  }
+  if (isTrattoriaOrOsteria) {
+    return `Neighborhood trattorias and osterias like ${title} celebrate unhurried, multi-course Roman dining. House wine (\`vino della casa\`) served in glass carafes is exceptional here; pair classic antipasti with signature regional first courses like \`cacio e pepe\` or \`gricia\`.`;
+  }
+  if (isDining) {
+    const isEvening = time.toLowerCase().includes('pm') && (parseInt(time) >= 6 || time.includes('7') || time.includes('8') || time.includes('9'));
+    if (isEvening) {
+      return `Evening service at ${title} hits its vibrant peak between 8:30 PM and 9:30 PM. When checking in, request a table away from the main kitchen corridor and conclude your meal with a digestive \`amaro\` after dessert.`;
+    }
+    return `Midday dining at ${title} offers an authentic slice of local neighborhood rhythm. Ask your server for the unlisted \`primo del giorno\` (chef's daily pasta special) and finish your lunch with a classic espresso before resuming your afternoon route.`;
+  }
+
+  if (titleLower.includes('sunset') || titleLower.includes('terrace') || titleLower.includes('view')) {
+    return `Arrive 35 minutes before official golden hour at ${title} to secure a front-row viewpoint bench as the city lights illuminate below.`;
+  }
+
+  // Dynamic derivation for cultural/scenic spots
+  return `Concierge Pacing Note for ${title}: Scheduled around ${time} to optimize pedestrian navigation ${location} and balance architectural exploration with restful transitions.`;
 }
 
 // 7. Format Cost (Point 9)
-export function formatCost(act) {
-  if (!act?.cost || act.cost.toLowerCase().includes('free')) {
+export function formatCost(actOrCost, category = '') {
+  const raw = typeof actOrCost === 'object' && actOrCost !== null ? actOrCost.cost : actOrCost;
+  if (!raw || String(raw).toLowerCase().includes('free') || String(raw) === '$0' || String(raw) === '€0') {
     return { title: '💰 Free Entry', subtitle: 'Public Access Included' };
   }
-  // If it's something like "€32 VIP Ticket + Arena" or "€25"
-  const raw = act.cost;
-  const match = raw.match(/([€$£¥₹]?\d+(?:\.\d{2})?)/);
+  const rawStr = String(raw);
+  const match = rawStr.match(/([€$£¥₹]?\d+(?:\.\d{2})?)/);
   if (match) {
     const priceStr = match[0].startsWith('€') || match[0].startsWith('$') ? match[0] : `€${match[0]}`;
-    // Extract rest of text or provide clean default
-    let subtext = raw.replace(match[0], '').replace(/^[+-\s\/\w:]*/, '').trim();
+    let subtext = rawStr.replace(match[0], '').replace(/^[+-\s\/\w:]*/, '').trim();
     if (!subtext || subtext.length < 3) {
-      if (raw.toLowerCase().includes('vip')) subtext = 'VIP Arena Access Included';
-      else if (raw.toLowerCase().includes('ticket')) subtext = 'Priority Entry Included';
-      else if (raw.toLowerCase().includes('dinner') || raw.toLowerCase().includes('lunch')) subtext = 'Estimated Tasting Price';
+      if (rawStr.toLowerCase().includes('vip')) subtext = 'VIP Arena Access Included';
+      else if (rawStr.toLowerCase().includes('ticket')) subtext = 'Priority Entry Included';
+      else if (rawStr.toLowerCase().includes('dinner') || rawStr.toLowerCase().includes('lunch')) subtext = 'Estimated Tasting Price';
       else subtext = 'Standard Admission Included';
     }
     return { title: `💰 From ${priceStr}`, subtitle: subtext };
   }
-  return { title: `💰 ${raw}`, subtitle: 'Verified Price' };
+  return { title: `💰 ${rawStr}`, subtitle: 'Verified Price' };
 }
 
 // 8. Get Day Summary Stats (Point 11 & 12)

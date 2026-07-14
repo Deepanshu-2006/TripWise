@@ -75,7 +75,15 @@ const getDaylightPercentage = (timeStr) => {
   const start = 8 * 60;
   const end = 22 * 60;
   const pct = ((mins - start) / (end - start)) * 100;
-  return Math.min(Math.max(pct, 0), 100);
+  const clamped = Math.min(Math.max(pct, 0), 100);
+  return Math.round(clamped * 10) / 10;
+};
+
+const getPacingLabel = (activities = []) => {
+  const count = activities.length;
+  if (count <= 3) return 'Relaxed Pacing (Optimal Daylight Balance)';
+  if (count <= 5) return 'Moderate Pacing (Balanced Daylight Schedule)';
+  return 'Active Pacing (Comprehensive Daylight Exploration)';
 };
 
 const getStopEndTimeMinutes = (timeStr, durationStr) => {
@@ -106,24 +114,105 @@ const getDayNarrativeTitle = (dayNum, destinationName) => {
   return narratives[(dayNum - 1) % narratives.length];
 };
 
-const getAlternativeSuggestions = (act, idx) => {
-  const category = (act.category || '').toLowerCase();
-  if (category.includes('din') || category.includes('food') || category.includes('rest')) {
+const getAlternativeSuggestions = (act, idx = 0) => {
+  if (act?.alternatives && Array.isArray(act.alternatives) && act.alternatives.length > 0) {
+    return act.alternatives.map(a => ({
+      title: a.title || a.name || 'Nearby Alternative',
+      desc: a.desc || a.description || a.reason || a.note || 'Recommended nearby backup option.'
+    }));
+  }
+
+  const category = (act?.category || '').toLowerCase();
+  const title = (act?.title || '').toLowerCase();
+  const location = (act?.location || '').toLowerCase();
+  const stopIndex = typeof idx === 'number' ? idx : 0;
+  const dayIndex = act?.dayNumber || 1;
+  const hash = (stopIndex + dayIndex * 2) % 4;
+
+  if (category.includes('din') || category.includes('food') || category.includes('rest') || category.includes('lunch') || category.includes('dinner') || title.includes('trattoria') || title.includes('osteria') || title.includes('restaurant')) {
+    const diningPool = [
+      [
+        { title: "Trattoria da Enzo al 29", desc: "A cozy, legendary Trastevere kitchen serving classic carbonara in a rustic Roman setting." },
+        { title: "Emma Pizza & Pizzeria", desc: "Crispy thin Roman pizza topped with artisanal local ingredients and premium olive oils." }
+      ],
+      [
+        { title: "Pianostrada Laboratorio di Cucina", desc: "Chic open kitchen across the Tiber famous for gourmet foccacine and fresh handmade pasta." },
+        { title: "Salumeria Roscioli", desc: "Legendary salumeria and wine bar featuring over 300 artisanal cheeses and master-level carbonara." }
+      ],
+      [
+        { title: "Armando al Pantheon", desc: "Historic family-run trattoria steps from the Pantheon specializing in authentic Roman classics." },
+        { title: "Osteria da Fortunata", desc: "Watch hand-rolled strozzapreti and tagliolini made fresh right in the front window near Campo de' Fiori." }
+      ],
+      [
+        { title: "Colline Emiliane", desc: "Refined trattoria near Piazza Barberini renowned for hand-spun tortellini in brodo and pumpkin tortelli." },
+        { title: "Supplizio", desc: "Artisanal street food haven crafted by Chef Arcangelo Dandini, serving the crispiest gourmet supplì in Rome." }
+      ]
+    ];
+    return diningPool[hash];
+  }
+
+  if (category.includes('cafe') || category.includes('gelat') || category.includes('coffee') || title.includes('caff') || title.includes('gelat')) {
+    const cafePool = [
+      [
+        { title: "Sant'Eustachio il Caffè", desc: "Famous since 1938 for its secret wood-roasting process and signature frothy espresso." },
+        { title: "Frigidarium Gelato", desc: "Handcrafted Roman gelato dipped in a signature dark or white chocolate shell." }
+      ],
+      [
+        { title: "Antico Caffè Greco", desc: "Rome's oldest historic coffeehouse on Via Condotti frequented by writers and artists since 1760." },
+        { title: "Giolitti Artisanal Gelato", desc: "Beloved historic gelateria near Piazza Colonna offering dozens of flavors and classic table service." }
+      ],
+      [
+        { title: "Caffè Tazza d'Oro", desc: "Iconic coffee bar right by the Pantheon famous for its granita di caffè con panna." },
+        { title: "Gelateria del Teatro", desc: "All-natural gelato made with organic Sicilian lemons and Bronte pistachios on a charming cobblestone alleyway." }
+      ],
+      [
+        { title: "Otello Gelateria", desc: "Delightful neighborhood gelateria near Trastevere crafting seasonal fruit sorbets daily." },
+        { title: "Faro - Luminaries of Coffee", desc: "Modern specialty coffee roaster serving pour-overs, flat whites, and artisanal pastries near Piazza Fiume." }
+      ]
+    ];
+    return cafePool[hash];
+  }
+
+  if (title.includes('colosseum') || title.includes('forum') || title.includes('palatine')) {
     return [
-      { title: "Trattoria da Enzo al 29", desc: "A cozy, legendary Trastevere kitchen serving classic carbonara in a rustic Roman setting." },
-      { title: "Emma Pizza", desc: "Crispy thin Roman pizza topped with artisanal local ingredients and premium olive oils." }
+      { title: "Clementine Monti Kitchen", desc: "Intimate neighborhood trattoria in Monti serving organic Roman classics just 5 minutes from the Forum." },
+      { title: "Piazza della Madonna dei Monti", desc: "Vibrant neighborhood piazza surrounded by artisan wine bars and shaded stone benches." }
     ];
   }
-  if (category.includes('cafe') || category.includes('gelat') || category.includes('coffee')) {
+
+  if (title.includes('vatican') || title.includes('sistine') || title.includes('st. peter')) {
     return [
-      { title: "Sant' Eustachio il Caffè", desc: "Famous since 1938 for its secret wood-roasting process and signature frothy espresso." },
-      { title: "Frigidarium Gelato", desc: "Handcrafted Roman gelato dipped in a signature dark or white chocolate shell." }
+      { title: "Mercato Trionfale Gourmet Stalls", desc: "One of Rome's largest indoor food markets offering fresh porchetta sandwiches and local cheeses in Prati." },
+      { title: "Castel Sant'Angelo Ramparts", desc: "Open-air fortress walk with sweeping panoramic views over the Tiber River and St. Peter's dome." }
     ];
   }
-  return [
-    { title: "Villa Borghese Gardens", desc: "Lush landscape park featuring quiet walkways, rowboats, and beautiful panoramic city vistas." },
-    { title: "Palazzo Altemps", desc: "Serene Renaissance palace housing classical Roman sculptures without the Vatican crowds." }
+
+  if (title.includes('pantheon') || title.includes('navona') || title.includes('trevi') || location.includes('centro')) {
+    return [
+      { title: "Palazzo Altemps & Courtyard", desc: "Serene Renaissance palace housing classical Roman sculptures right near Piazza Navona without the crowds." },
+      { title: "Chiostro del Bramante Cafe", desc: "Peaceful 16th-century monastery cloister serving coffee and pastries overlooking Bramante's architecture." }
+    ];
+  }
+
+  const generalPool = [
+    [
+      { title: "Villa Borghese Gardens", desc: "Lush landscape park featuring quiet walkways, rowboats, and beautiful panoramic city vistas." },
+      { title: "Palazzo Doria Pamphilj", desc: "Private baroque palazzo featuring masterpieces by Velázquez and Caravaggio with zero ticket lines." }
+    ],
+    [
+      { title: "Orto Botanico di Roma", desc: "Lush 30-acre botanical garden in Trastevere featuring bamboo groves and quiet shaded pathways." },
+      { title: "Piazza di Santa Maria in Trastevere", desc: "Historic neighborhood heart lined with outdoor cafes and the oldest golden mosaics in Rome." }
+    ],
+    [
+      { title: "Terme di Caracalla Ruins", desc: "Monumental ancient Roman public baths set among grand umbrella pines with vast open lawns." },
+      { title: "Giardino degli Aranci (Orange Garden)", desc: "Romantic Aventine Hill terrace overlooking St. Peter's Basilica framed by fragrant orange trees." }
+    ],
+    [
+      { title: "Piazza del Popolo & Pincio Terrace", desc: "Grand elliptical piazza leading to the Pincio overlook for breathtaking sunset views over Rome." },
+      { title: "Museo Nazionale Romano at Baths of Diocletian", desc: "Massive ancient thermal complex transformed by Michelangelo into a tranquil sculptural cloister." }
+    ]
   ];
+  return generalPool[hash];
 };
 
 const Sparkline = () => (
@@ -180,6 +269,21 @@ export default function ItineraryPage() {
     }
   }, [activeModalDay]);
 
+  // Print Mode Full-Mount State (Priority 1: Ensures 100% of DOM is rendered & mounted before window.print())
+  const [isPrinting, setIsPrinting] = useState(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const handleBeforePrint = () => setIsPrinting(true);
+      const handleAfterPrint = () => setIsPrinting(false);
+      window.addEventListener('beforeprint', handleBeforePrint);
+      window.addEventListener('afterprint', handleAfterPrint);
+      return () => {
+        window.removeEventListener('beforeprint', handleBeforePrint);
+        window.removeEventListener('afterprint', handleAfterPrint);
+      };
+    }
+  }, []);
+
   // Stop Detail States
   const [expandedStops, setExpandedStops] = useState({});
   const [showAlternatives, setShowAlternatives] = useState({});
@@ -235,18 +339,23 @@ export default function ItineraryPage() {
     return { total, markedReserved: confirmed, confirmed, firstUnbooked };
   };
 
-  const scrollToFirstUnbookedDining = (firstUnbooked) => {
-    if (!firstUnbooked) return;
-    if (activeDay !== firstUnbooked.dayNum) {
-      setActiveDay(firstUnbooked.dayNum);
+  const scrollToStopCard = (dayNum, stopNum) => {
+    if (!dayNum || !stopNum) return;
+    if (activeDay !== dayNum) {
+      setActiveDay(dayNum);
       setTimeout(() => {
-        const el = document.getElementById(`dining-stop-${firstUnbooked.dayNum}-${firstUnbooked.stopNum}`);
+        const el = document.getElementById(`stop-card-${dayNum}-${stopNum}`) || document.getElementById(`dining-stop-${dayNum}-${stopNum}`);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 350);
     } else {
-      const el = document.getElementById(`dining-stop-${firstUnbooked.dayNum}-${firstUnbooked.stopNum}`);
+      const el = document.getElementById(`stop-card-${dayNum}-${stopNum}`) || document.getElementById(`dining-stop-${dayNum}-${stopNum}`);
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
+  };
+
+  const scrollToFirstUnbookedDining = (firstUnbooked) => {
+    if (!firstUnbooked) return;
+    scrollToStopCard(firstUnbooked.dayNum, firstUnbooked.stopNum);
   };
 
   // Parallax Scroll Tracking Refs
@@ -286,8 +395,16 @@ export default function ItineraryPage() {
 
         if (dossierParam) {
           try {
-            const decoded = decodeURIComponent(dossierParam);
-            const parsed = JSON.parse(decoded);
+            // URLSearchParams.get() automatically decodes the query parameter once.
+            // When single URL-encoding is used via searchParams.set('dossier', jsonStr), dossierParam is already raw JSON string (`{"days":...}`).
+            // If a legacy double-encoded link (`%2522...`) was opened, dossierParam will still contain `%22` or `%7B`, so we decode once more if needed.
+            let rawJsonStr = dossierParam;
+            if (rawJsonStr.startsWith('%') || rawJsonStr.includes('%22') || rawJsonStr.includes('%7B')) {
+              try {
+                rawJsonStr = decodeURIComponent(rawJsonStr);
+              } catch (e) {}
+            }
+            const parsed = JSON.parse(rawJsonStr);
             if (parsed && parsed.days) {
               setItinerary(parsed);
               localStorage.setItem('tripwise_itinerary', JSON.stringify(parsed));
@@ -332,10 +449,23 @@ export default function ItineraryPage() {
       let shareUrl = window.location.href;
       if (itinerary) {
         try {
+          // CONFIRMATION & PRIVACY DOCUMENTATION:
+          // The shared dossier payload intentionally serializes ONLY the core `itinerary` object 
+          // (destination, dates, stops, coordinates, times, titles, and costs).
+          // Personal booking/reservation state (dining confirmation notes, ticket reference numbers)
+          // is stored in `localStorage` on the original user's device (`tw_dining_res_...` and `tw_ticket_note_...`)
+          // and is explicitly EXCLUDED from this share link.
+          // Recipients opening a shared link will see all bookable items as "Action Needed" since they have no prior
+          // local booking state on their device.
+          //
+          // FUTURE BACKEND NOTE (Non-urgent / architectural roadmap):
+          // Once a backend exists, replace this full-JSON-in-URL approach with a server-saved dossier + short shareable ID
+          // (e.g., `/itinerary?id=abc123`) to avoid URL length limits on longer multi-week itineraries.
           const jsonStr = JSON.stringify(itinerary);
-          const encoded = encodeURIComponent(jsonStr);
           const url = new URL(window.location.origin + window.location.pathname);
-          url.searchParams.set('dossier', encoded);
+          // Fix double URL-encoding: `url.searchParams.set()` automatically URL-encodes the value once (`"` -> `%22`).
+          // Do NOT call `encodeURIComponent()` beforehand, otherwise `%` becomes `%25` (`%2522`).
+          url.searchParams.set('dossier', jsonStr);
           shareUrl = url.toString();
         } catch (e) {
           console.error("Failed to encode itinerary:", e);
@@ -349,7 +479,11 @@ export default function ItineraryPage() {
 
   const handlePrintOrDownload = () => {
     if (typeof window !== 'undefined') {
-      window.print();
+      setIsPrinting(true);
+      setTimeout(() => {
+        window.print();
+        setTimeout(() => setIsPrinting(false), 500);
+      }, 150);
     }
   };
 
@@ -475,19 +609,23 @@ export default function ItineraryPage() {
     return acc;
   }, []);
 
+  const tripDiningRollup = computeDiningRollup(null);
+
   return (
     <div className="min-h-screen bg-[#FAF6F0] text-[#1E1C1A] flex flex-col font-sans selection:bg-[#BA5536]/15">
       {/* Scroll Progress Bar at the top of the page */}
       <motion.div 
         style={{ scaleX }} 
-        className="fixed top-0 left-0 right-0 h-0.75 bg-[#BA5536] origin-left z-60 pointer-events-none"
+        className="fixed top-0 left-0 right-0 h-0.75 bg-[#BA5536] origin-left z-60 pointer-events-none print:hidden"
       />
 
-      <Header />
+      <div className="print:hidden">
+        <Header />
+      </div>
 
       {/* HERO SECTION: Scroll-Driven Layered Parallax (Accesses Requirement 1) */}
       <section 
-        className="relative w-full min-h-165 md:min-h-180 pt-32 pb-20 px-6 flex flex-col justify-end overflow-hidden border-b border-[#E6DFD5]"
+        className="relative w-full min-h-165 md:min-h-180 pt-32 pb-20 px-6 flex flex-col justify-end overflow-hidden border-b border-[#E6DFD5] print:hidden"
       >
         {/* Layer 1: Parallax Background (Image Layer - Moves slowest: 0.2x speed) */}
         <motion.div 
@@ -546,7 +684,7 @@ export default function ItineraryPage() {
       </section>
 
       {/* STICKY JUMP BAR & UTILITY STRIP */}
-      <div className="sticky top-16 sm:top-18 z-40 bg-[#FAF6F0]/95 backdrop-blur-md border-b border-[#E6DFD5] py-3.5 px-6 shadow-2xs transition-all">
+      <div className="sticky top-16 sm:top-18 z-40 bg-[#FAF6F0]/95 backdrop-blur-md border-b border-[#E6DFD5] py-3.5 px-6 shadow-2xs transition-all print:hidden">
         <div className="max-w-5xl mx-auto w-full flex flex-col sm:flex-row items-center justify-between gap-3">
           {/* Chapter Links */}
           <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 no-scrollbar">
@@ -582,14 +720,20 @@ export default function ItineraryPage() {
 
           {/* Action Set */}
           <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-            <button
-              type="button"
-              onClick={handlePrintOrDownload}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#E6DFD5] bg-white text-xs font-sans font-bold text-[#1E1C1A] hover:bg-[#F5F0E8] transition-all cursor-pointer shadow-2xs"
-            >
-              <Printer className="w-3.5 h-3.5 text-[#BA5536]" />
-              <span>Download PDF</span>
-            </button>
+            <div className="relative group/print">
+              <button
+                type="button"
+                onClick={handlePrintOrDownload}
+                title="Tip: Disable 'Headers and footers' in print dialog for cleanest PDF output"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#E6DFD5] bg-white text-xs font-sans font-bold text-[#1E1C1A] hover:bg-[#F5F0E8] transition-all cursor-pointer shadow-2xs"
+              >
+                <Printer className="w-3.5 h-3.5 text-[#BA5536]" />
+                <span>Download PDF</span>
+              </button>
+              <div className="absolute right-0 top-full mt-1.5 hidden group-hover/print:block z-50 bg-[#1E1C1A] text-white text-[10px] font-sans py-1.5 px-2.5 rounded-lg shadow-lg whitespace-nowrap border border-[#BA5536]/40 pointer-events-none">
+                💡 Tip: Uncheck "Headers and footers" in print dialog
+              </div>
+            </div>
 
             <button
               type="button"
@@ -623,9 +767,9 @@ export default function ItineraryPage() {
       {/* DOSSIER BODY CONTENT */}
       <main className="max-w-5xl mx-auto px-6 py-12 w-full flex flex-col gap-16">
         
-        {/* THE DOSSIER INDEX (Overview List) */}
+        {/* THE DOSSIER INDEX (Overview List - Screen Only) */}
         {activeDay !== 'epilogue' && (
-          <section className="bg-white rounded-3xl border border-[#E6DFD5] p-8 sm:p-10 shadow-sm relative overflow-hidden">
+          <section className="bg-white rounded-3xl border border-[#E6DFD5] p-8 sm:p-10 shadow-sm relative overflow-hidden print:hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-radial from-[#BA5536]/5 via-transparent to-transparent pointer-events-none" />
             
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#E6DFD5]">
@@ -677,7 +821,7 @@ export default function ItineraryPage() {
                         e.stopPropagation();
                         setActiveModalDay(dayNum);
                       }}
-                      className="mt-4 w-full py-2 px-3 rounded-xl border border-[#E6DFD5] bg-white hover:bg-[#BA5536] hover:border-[#BA5536] hover:text-white text-[#1E1C1A] font-sans text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer"
+                      className="mt-4 w-full py-2 px-3 rounded-xl border border-[#E6DFD5] bg-white hover:bg-[#BA5536] hover:border-[#BA5536] hover:text-white text-[#1E1C1A] font-sans text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer print:hidden"
                     >
                       <Compass className="w-3.5 h-3.5 text-[#BA5536] group-hover:text-white" />
                       <span>View Day {toRomanNumeral(dayNum)} Map Overlay</span>
@@ -690,7 +834,7 @@ export default function ItineraryPage() {
         )}
 
         {/* NARRATIVE CHAPTERS WITH 3D DEPTH SWAP TRANSITION (Accesses Requirement 2) */}
-        <div style={{ perspective: 1200 }} className="relative min-h-125">
+        <div style={{ perspective: 1200 }} className="relative min-h-125 print:hidden">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeDay}
@@ -730,7 +874,7 @@ export default function ItineraryPage() {
                         
                         {/* Innermost ink circle stamp details */}
                         <div className="absolute inset-1 border border-solid border-[#BA5536]/25 rounded-full pointer-events-none" />
-                        <div className="absolute bottom-2 text-[7px] text-[#7A7268] tracking-widest font-sans font-bold">Ref: TW-Stamp</div>
+                        <div className="absolute bottom-2 text-[6px] text-[#7A7268] tracking-widest font-sans font-bold uppercase">Private Guide</div>
                       </motion.div>
 
                       <motion.div 
@@ -740,7 +884,7 @@ export default function ItineraryPage() {
                         transition={{ delay: 0.7 }}
                         className="text-xs font-serif italic text-[#7A7268] mt-3"
                       >
-                        ✓ Verification stamp locked down successfully.
+                        ✨ Custom travel dossier assembled &amp; formatted.
                       </motion.div>
                     </div>
 
@@ -806,7 +950,7 @@ export default function ItineraryPage() {
                       </h3>
                       <ul className="text-xs font-serif text-[#4A443E] leading-relaxed flex flex-col gap-2.5 list-disc pl-4">
                         <li>
-                          <strong>Comfortable Footwear:</strong> Walk sparklines denote approx. {totalDistanceEst} km. Wear robust walking shoes suited for old city cobblestones.
+                          <strong>Comfortable Footwear:</strong> Your route covers approximately {totalDistanceEst} km. Wear robust walking shoes suited for old city cobblestones.
                         </li>
                         <li>
                           <strong>Church/Cultural Sites:</strong> Several scheduled historical landmarks require covered shoulders and knees to enter.
@@ -824,17 +968,29 @@ export default function ItineraryPage() {
                       </h3>
                       <div className="flex flex-col gap-3">
                         {preBookedItems.map((item, keyIdx) => (
-                          <div key={keyIdx} className="flex items-center justify-between text-xs border-b border-[#FAF6F0] pb-2 last:border-b-0 last:pb-0">
+                          <div key={keyIdx} className="flex items-center justify-between text-xs border-b border-[#FAF6F0] pb-2.5 last:border-b-0 last:pb-0">
                             <div>
-                              <strong className="block text-[#1E1C1A]">{item.item}</strong>
-                              <span className="text-[10px] text-[#7A7268]">{item.code || 'Instant access link available'}</span>
+                              <strong className="block text-[#1E1C1A] font-serif">{item.item}</strong>
+                              <span className="text-[10px] text-[#7A7268] font-sans">{item.code || 'Instant access link available'}</span>
                             </div>
-                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                              item.status === 'Pre-booked' ? 'bg-emerald-500/10 text-emerald-700' :
-                              item.status === 'Open Access' ? 'bg-blue-500/10 text-blue-700' : 'bg-amber-600/10 text-amber-700'
-                            }`}>
-                              {item.status}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                item.status === 'Pre-booked' ? 'bg-emerald-500/10 text-emerald-700' :
+                                item.status === 'Open Access' ? 'bg-blue-500/10 text-blue-700' : 'bg-amber-600/10 text-amber-700'
+                              }`}>
+                                {item.status}
+                              </span>
+                              {item.status === 'Action Needed' && (
+                                <button
+                                  type="button"
+                                  onClick={() => scrollToStopCard(item.dayNum, item.stopNum)}
+                                  className="px-2.5 py-1 rounded-lg bg-[#1E1C1A] text-white hover:bg-[#BA5536] font-sans text-[10px] font-bold transition-all cursor-pointer shadow-2xs shrink-0 flex items-center gap-1"
+                                  title="Jump to this stop card to review booking options"
+                                >
+                                  <span>View Stop →</span>
+                                </button>
+                              )}
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -849,7 +1005,7 @@ export default function ItineraryPage() {
                       </div>
                       <div>
                         <h4 className="text-sm font-serif font-bold text-[#1E1C1A]">TripWise Travel Concierge</h4>
-                        <p className="text-xs font-sans text-[#7A7268]">Dossier Lock Verified • Ref: TW-3129841</p>
+                        <p className="text-xs font-sans text-[#7A7268]">Curated Private Travel Dossier Guide</p>
                       </div>
                     </div>
 
@@ -1078,7 +1234,8 @@ export default function ItineraryPage() {
 
                               {/* Large Editorial Spread Stops (Alternating Left/Right) */}
                               <motion.div 
-                                id={`dining-stop-${activeDay}-${stopNum}`}
+                                id={`stop-card-${activeDay}-${stopNum}`}
+                                data-dining={`dining-stop-${activeDay}-${stopNum}`}
                                 className={`py-12 sm:py-16 flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} items-center gap-8 lg:gap-12 relative z-10 border-b border-[#E6DFD5]/50 last:border-b-0`}
                                 initial={{ opacity: 0, y: 30 }}
                                 whileInView={{ opacity: 1, y: 0 }}
@@ -1290,7 +1447,7 @@ export default function ItineraryPage() {
                                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 relative z-10">
                                         <button
                                           type="button"
-                                          onClick={() => setActivePassModal({ activity: act, stopNum: stopNum })}
+                                          onClick={() => setActivePassModal({ activity: act, stopNum: stopNum, dayNum: activeDay })}
                                           className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#1E1C1A] hover:bg-[#2A2623] text-white text-xs font-sans font-bold shadow-sm transition-all duration-200 cursor-pointer hover:scale-[1.01] active:scale-95"
                                         >
                                           {isNature ? <MapPin className="w-3.5 h-3.5 text-[#BA5536] shrink-0" /> : <Ticket className="w-3.5 h-3.5 text-[#BA5536] shrink-0" />}
@@ -1482,6 +1639,319 @@ export default function ItineraryPage() {
           </AnimatePresence>
         </div>
 
+        {/* PRINT-ONLY FULL DOSSIER SEQUENCE (All Days 1..N + Epilogue in sequence for PDF/Print) */}
+        <div className={`hidden print:block print:w-full text-[#1E1C1A] ${isPrinting ? '!block !w-full' : ''}`}>
+          {/* PRINT HERO HEADER (High-contrast solid brand panel, no photographic bg, 100% legibility) */}
+          <header className="print-hero-section w-full pt-4 pb-8 mb-8 border-b-4 border-[#1E1C1A] block">
+            <div className="flex items-center justify-between text-xs font-mono font-bold uppercase tracking-widest text-[#BA5536] mb-3">
+              <span>Curated Private Travel Dossier</span>
+              <span>{itinerary.duration || `${days.length} Days`} • {itinerary.destinationName || 'Destination'}</span>
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-serif font-black text-[#1E1C1A] tracking-tight mb-3">
+              {itinerary.destinationName || 'Your Custom Journey'} — Curated Itinerary
+            </h1>
+            <p className="font-serif italic text-base text-[#4A443E] max-w-3xl leading-relaxed mb-4">
+              “{itinerary.tagline || 'An immersive, thoughtfully paced exploration tailored to your unique architectural, culinary, and cultural preferences.'}”
+            </p>
+            <div className="flex items-center gap-4 text-xs font-sans uppercase tracking-wider text-[#5F5E5A] font-bold pt-3 border-t border-[#C8BFB2]">
+              <span>{days.length} Daily Chapters</span>
+              <span>•</span>
+              <span>{totalStopsCount} Curated Stops</span>
+              <span>•</span>
+              <span>Est. Budget: {itinerary.estimatedCost || '$1,450'}</span>
+            </div>
+          </header>
+
+          {/* PRINT DOSSIER INDEX (Clean Chapters Index without 3D interaction copy - Issue 5) */}
+          <section className="print-index-section w-full pt-2 pb-8 mb-8 border-b-2 border-[#1E1C1A] block">
+            <div className="flex items-end justify-between gap-4 pb-4 border-b border-[#E6DFD5] mb-6">
+              <div>
+                <span className="text-xs font-mono uppercase tracking-widest text-[#BA5536] font-bold block mb-1">
+                  The Dossier Index
+                </span>
+                <h2 className="text-3xl font-serif font-black text-[#1E1C1A] tracking-tight">
+                  Curated Chapters
+                </h2>
+              </div>
+              <p className="text-xs font-serif italic text-[#7A7268] max-w-xs">
+                Chronologically mapped daily schedules and pacing statistics across your trip.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {days.map((day, idx) => {
+                const dayNum = day.dayNumber || idx + 1;
+                const summary = getDaySummary(day, idx, days);
+                return (
+                  <div
+                    key={`print-index-${dayNum}`}
+                    className="print-stat-box flex flex-col justify-between p-5 rounded-2xl bg-[#FAF6F0] border border-[#C8BFB2]"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-2.5">
+                        <span className="px-2.5 py-0.5 rounded-md bg-[#1E1C1A] text-white font-serif text-xs font-bold tracking-wider">
+                          Day {toRomanNumeral(dayNum)}
+                        </span>
+                        <span className="text-xs font-sans text-[#7A7268] font-semibold">
+                          Chapter {dayNum}
+                        </span>
+                      </div>
+                      <h3 className="text-base font-serif font-bold text-[#1E1C1A] leading-snug">
+                        {getDayNarrativeTitle(dayNum, itinerary.destinationName || 'Destination')}
+                      </h3>
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-[#E6DFD5] flex items-center justify-between text-[11px] font-sans text-[#5F5E5A]">
+                      <span>{day.activities?.length || 0} Curated Stops</span>
+                      <span className="font-bold text-[#1E1C1A]">{summary?.stats?.hours || '6.5 Hours'}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {days.map((day, dIdx) => {
+            const dayNum = day.dayNumber || dIdx + 1;
+            const summary = getDaySummary(day, dIdx, days);
+            const activities = day.activities || [];
+            return (
+              <section key={`print-day-${dayNum}`} className={`print-day-section w-full pt-4 pb-8 mb-8 border-t-2 border-[#1E1C1A] block ${dIdx > 0 ? 'break-before-page' : ''}`}>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="px-3 py-1 rounded-md bg-[#1E1C1A] text-white font-serif text-xs font-bold tracking-wider">
+                    Day {toRomanNumeral(dayNum)}
+                  </span>
+                  <span className="text-xs font-sans font-bold text-[#7A7268] uppercase tracking-wider">
+                    Chapter {dayNum} • {activities.length} Curated Stops
+                  </span>
+                </div>
+                <h3 className="text-3xl font-serif font-black text-[#1E1C1A] tracking-tight mb-2">
+                  {getDayNarrativeTitle(dayNum, itinerary.destinationName || 'Destination')}
+                </h3>
+                <p className="font-serif italic text-base text-[#4A443E] mb-6">
+                  {day.pacingQuote || 'An immersive day crafted for scenic depth and architectural pacing.'}
+                </p>
+
+                {/* Daylight Pace Bar in print (Clean plain-language pacing label without confusing percentage - Issue 2) */}
+                <div className="mb-8 p-4 bg-[#FAF6F0] rounded-2xl border border-[#E6DFD5] text-xs">
+                  <div className="flex items-center justify-between font-sans font-bold uppercase text-[10px] text-[#7A7268] mb-1.5">
+                    <span>Daylight Pacing: {getPacingLabel(activities)}</span>
+                    <span>{summary?.stats?.hours || '6.5 Hours'} Total Pace</span>
+                  </div>
+                  {(() => {
+                    const hoursNum = parseFloat(summary?.stats?.hours || '6.5') || 6.5;
+                    const usedPct = Math.min(Math.max(Math.round((hoursNum / 14) * 100), 25), 90);
+                    return (
+                      <div className="w-full h-2 rounded-full bg-[#E6DFD5] overflow-hidden flex">
+                        <div className="bg-amber-500 h-full" style={{ width: `${usedPct}%` }} title={`${hoursNum} hours of daylight exploration`} />
+                        <div className="bg-indigo-900 h-full flex-1" title="Evening / rest hours" />
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* All Stops Expanded */}
+                <div className="flex flex-col gap-6">
+                  {activities.map((act, aIdx) => {
+                    const stopNum = aIdx + 1;
+                    const { logisticsNote, weatherNote } = getContextAwareTip(act, aIdx, summary);
+                    const aiInsightText = getAiInsight(act, aIdx);
+                    const alternatives = getAlternativeSuggestions(act, aIdx);
+                    const categoryStyle = getCategoryStyling(act);
+                    const ratingData = getActivityRating(act);
+                    const costInfo = formatCost(act);
+
+                    return (
+                      <div key={`print-stop-${dayNum}-${stopNum}`} className="print-card p-6 rounded-2xl bg-white border border-[#C8BFB2] flex flex-col gap-4 mb-6">
+                        <div className="flex items-center justify-between border-b border-[#E6DFD5] pb-3 text-xs font-sans">
+                          <div className="flex items-center gap-2">
+                            <span className="w-6 h-6 rounded-full bg-[#1E1C1A] text-white font-serif text-xs font-bold flex items-center justify-center">
+                              {stopNum}
+                            </span>
+                            <span className="font-bold uppercase tracking-wider text-[#BA5536]">{categoryStyle.name}</span>
+                          </div>
+                          <div className="font-mono text-[#5F5E5A] font-bold">
+                            Planned: {act.time || '10:00 AM'} ({act.duration || '1.5 hrs'})
+                          </div>
+                        </div>
+
+                        <h4 className="text-2xl font-serif font-black text-[#1E1C1A]">
+                          {act.title}
+                        </h4>
+
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-sans font-medium text-[#5F5E5A]">
+                          <span className="text-amber-600 font-bold">★★★★★ {ratingData.rating}</span>
+                          <span>({formatReviewCount(ratingData?.reviews)})</span>
+                          <span className="text-[#C8BFB2] font-serif">•</span>
+                          <span className="font-bold text-[#1E1C1A]">{costInfo.title}</span>
+                          {act.duration && (
+                            <>
+                              <span className="text-[#C8BFB2] font-serif">•</span>
+                              <span>Duration: <strong>{act.duration}</strong></span>
+                            </>
+                          )}
+                        </div>
+
+                        <div className="text-xs font-sans italic text-[#BA5536] bg-[#BA5536]/5 px-3 py-1.5 rounded-lg border-l border-[#BA5536]">
+                          ✓ Chosen for: High local authenticity, scenic context, and balanced timing pacing.
+                        </div>
+
+                        <p className="font-serif text-base text-[#2A2623] leading-relaxed">
+                          {act.description}
+                        </p>
+
+                        {/* Expanded Logistics & Weather */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#FAF6F0] p-4 rounded-xl border border-[#E6DFD5] text-xs">
+                          <div>
+                            <strong className="block font-sans uppercase tracking-wider text-[#7A7268] font-bold mb-1">Logistics &amp; Gate Access</strong>
+                            <p className="font-serif italic text-[#4A443E]">{logisticsNote}</p>
+                          </div>
+                          <div>
+                            <strong className="block font-sans uppercase tracking-wider text-[#7A7268] font-bold mb-1">Daylight &amp; Weather Alert</strong>
+                            <p className="font-serif italic text-[#4A443E]">{weatherNote}</p>
+                          </div>
+                        </div>
+
+                        {/* Expanded Concierge Insight Box */}
+                        <div className="p-4 rounded-xl bg-[#F3EFEA] border-l-2 border-[#BA5536] text-xs">
+                          <p className="font-serif italic text-[#3E3A36] mb-2 leading-relaxed">
+                            “{aiInsightText}”
+                          </p>
+                          <span className="block font-sans uppercase text-[9px] tracking-widest text-[#7A7268] font-bold">
+                            — TripWise Concierge Custom Insight
+                          </span>
+                        </div>
+
+                        {/* Expanded Alternatives */}
+                        {alternatives && alternatives.length > 0 && (
+                          <div className="mt-2 pt-3 border-t border-[#E6DFD5]">
+                            <strong className="text-xs font-sans font-bold uppercase tracking-widest text-[#BA5536] block mb-2">Nearby Alternatives</strong>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                              {alternatives.map((alt, altIdx) => (
+                                <div key={`print-alt-${altIdx}`} className="p-3 bg-[#FAF6F0] rounded-lg border border-[#E6DFD5]/70">
+                                  <strong className="font-serif font-bold text-[#1E1C1A] block mb-1">{alt.title}</strong>
+                                  <p className="font-serif italic text-[11px] text-[#4A443E] leading-relaxed">{alt.desc}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
+
+          {/* Print Epilogue Section */}
+          <section className="print-epilogue-section w-full pt-8 pb-12 border-t-2 border-[#1E1C1A] block break-before-page">
+            <div className="text-center max-w-2xl mx-auto mb-8">
+              <span className="text-xs font-mono uppercase tracking-widest text-[#BA5536] font-bold block mb-1">
+                THE EPILOGUE — DOSSIER SUMMARY
+              </span>
+              <h2 className="text-4xl font-serif font-black text-[#1E1C1A] tracking-tight">
+                Trip Epilogue &amp; Statistics
+              </h2>
+            </div>
+
+            <div className="print-stamp-wrapper flex flex-col sm:flex-row items-center justify-between gap-6 p-6 bg-[#FAF6F0] rounded-2xl border border-[#E6DFD5] mb-6">
+              <div className="w-36 h-36 rounded-full border-4 border-dashed border-[#BA5536]/80 text-[#BA5536] flex flex-col items-center justify-center font-serif uppercase text-center shrink-0">
+                <span className="text-[9px] tracking-widest font-bold">Approved</span>
+                <span className="text-base font-black tracking-tight my-0.5">TripWise</span>
+                <span className="text-[7px] tracking-[0.2em] font-extrabold text-[#7A7268]">Concierge</span>
+                <div className="text-[6px] text-[#7A7268] tracking-widest font-sans font-bold uppercase mt-1">Private Guide</div>
+              </div>
+              <div className="text-center sm:text-left">
+                <h4 className="font-serif font-bold text-lg text-[#1E1C1A]">TripWise Travel Concierge • Private Guide</h4>
+                <p className="text-xs font-serif italic text-[#7A7268] mt-1 leading-relaxed max-w-md">
+                  ✨ Custom travel dossier assembled &amp; formatted for offline exploration.
+                </p>
+              </div>
+            </div>
+
+            {/* Grid stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-6 rounded-2xl bg-white border border-[#E6DFD5] text-center mb-6">
+              <div className="flex flex-col gap-1 border-r border-[#E6DFD5] last:border-r-0">
+                <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Total Duration</span>
+                <span className="text-2xl font-serif font-black text-[#1E1C1A]">{days.length} Days</span>
+              </div>
+              <div className="flex flex-col gap-1 border-r border-[#E6DFD5] last:border-r-0">
+                <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Experiences Plotted</span>
+                <span className="text-2xl font-serif font-black text-[#1E1C1A]">{totalStopsCount} Stops</span>
+              </div>
+              <div className="flex flex-col gap-1 border-r border-[#E6DFD5] last:border-r-0">
+                <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Walking Distance</span>
+                <span className="text-2xl font-serif font-black text-[#1E1C1A]">~{totalDistanceEst} km</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Estimated Cost</span>
+                <span className="text-2xl font-serif font-black text-[#BA5536]">{itinerary.estimatedCost || '$1,450'}</span>
+              </div>
+            </div>
+
+            {/* Trip-Level Dining Rollup */}
+            {tripDiningRollup.total > 0 && (
+              <div className="print-summary-panel p-6 rounded-2xl bg-[#FAF6F0] border border-[#BA5536]/30 flex flex-col gap-3 mb-6">
+                <div className="flex items-center gap-3">
+                  <span className="text-lg font-serif font-bold text-[#1E1C1A]">🍽️ Trip-Level Dining Concierge Rollup</span>
+                </div>
+                <p className="text-xs font-sans text-[#5F5E5A]">
+                  {tripDiningRollup.markedReserved === tripDiningRollup.total ? 'All dining reservations across your itinerary are marked as booked!' : `${tripDiningRollup.markedReserved || 0} of ${tripDiningRollup.total} dining reservations marked as booked.`}
+                </p>
+              </div>
+            )}
+
+            {/* Packing & Prep Reminders */}
+            <div className="print-summary-panel p-6 rounded-2xl bg-white border border-[#E6DFD5] mb-6">
+              <h3 className="text-sm font-sans font-bold uppercase tracking-widest text-[#BA5536] border-b border-[#E6DFD5] pb-2 mb-3">
+                Concierge Packing &amp; Prep Reminders
+              </h3>
+              <ul className="text-xs font-serif text-[#4A443E] leading-relaxed flex flex-col gap-2 list-disc pl-4">
+                <li>
+                  <strong>Comfortable Footwear:</strong> Your route covers approximately {totalDistanceEst} km. Wear robust walking shoes suited for old city cobblestones.
+                </li>
+                <li>
+                  <strong>Church/Cultural Sites:</strong> Several scheduled historical landmarks require covered shoulders and knees to enter.
+                </li>
+                <li>
+                  <strong>Reusable Flasks:</strong> Rome features free historic drinking fountains (Nasoni) across streets—highly recommended for daylight walking segments.
+                </li>
+              </ul>
+            </div>
+
+            {/* Booking Status Overview (Table layout to guarantee no WebKit/Chrome clipping across page boundaries - Issue 4) */}
+            <div className="print-summary-panel p-6 rounded-2xl bg-white border border-[#E6DFD5] mb-8">
+              <h3 className="text-sm font-sans font-bold uppercase tracking-widest text-[#BA5536] border-b border-[#E6DFD5] pb-2 mb-4">
+                Booking &amp; Tickets Status Overview
+              </h3>
+              <table className="w-full text-left border-collapse">
+                <tbody>
+                  {preBookedItems.map((item, keyIdx) => (
+                    <tr key={`print-booking-${keyIdx}`} className="border-b border-[#FAF6F0] last:border-b-0 print-booking-row">
+                      <td className="py-2.5 pr-4 align-middle">
+                        <strong className="block text-[#1E1C1A] font-serif text-xs">{item.item}</strong>
+                        <span className="text-[10px] text-[#7A7268] font-sans block mt-0.5">{item.code || 'Instant access link available'}</span>
+                      </td>
+                      <td className="py-2.5 pl-2 align-middle text-right shrink-0 w-28">
+                        <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF6F0] border border-[#E6DFD5] text-[#1E1C1A]">
+                          {item.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Footer Signature */}
+            <div className="pt-6 border-t border-[#E6DFD5] flex items-center justify-between text-xs font-serif italic text-[#7A7268]">
+              <span>TripWise Travel Concierge · Curated Private Travel Dossier Guide</span>
+              <span>Generated {itinerary.generatedDate || '2026'}</span>
+            </div>
+          </section>
+        </div>
+
       </main>
 
       {/* OVERLAY MAP MODAL (InteractiveRouteMap - Itinerary View) */}
@@ -1551,7 +2021,7 @@ export default function ItineraryPage() {
         onClose={() => setActivePassModal(null)}
         activity={activePassModal?.activity}
         destinationName={itinerary?.destinationName || 'Destination'}
-        dayNumber={activeDay === 'epilogue' ? 1 : activeDay}
+        dayNumber={activePassModal?.dayNum || (activeDay === 'epilogue' ? 1 : activeDay)}
         stopNumber={activePassModal?.stopNum || 1}
         onStatusChange={handleDiningBookingsChange}
       />
