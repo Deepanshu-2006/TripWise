@@ -41,7 +41,7 @@ import {
 } from '../components/itineraryHelpers';
 
 // Dynamically import map components to avoid SSR/window issues
-const InteractiveRouteMap = dynamic(() => import('../components/InteractiveRouteMap'), { ssr: false });
+const ItineraryMapModal = dynamic(() => import('../components/ItineraryMapModal'), { ssr: false });
 
 const toRomanNumeral = (num) => {
   const romanMap = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V', 6: 'VI', 7: 'VII', 8: 'VIII', 9: 'IX', 10: 'X' };
@@ -159,6 +159,19 @@ export default function ItineraryPage() {
   // Navigation & Modal State
   const [activeDay, setActiveDay] = useState(1); // Active Day or 'epilogue'
   const [activeModalDay, setActiveModalDay] = useState(null);
+  // Delay-mount Leaflet map until AFTER modal spring animation settles (prevents tile jitter)
+  const [mapMounted, setMapMounted] = useState(false);
+  const mapModalRef = useRef(null);
+
+  useEffect(() => {
+    if (activeModalDay !== null) {
+      // Wait for the modal spring animation to settle (~280ms) then mount the map
+      const t = setTimeout(() => setMapMounted(true), 300);
+      return () => clearTimeout(t);
+    } else {
+      setMapMounted(false);
+    }
+  }, [activeModalDay]);
 
   // Stop Detail States
   const [expandedStops, setExpandedStops] = useState({});
@@ -292,14 +305,14 @@ export default function ItineraryPage() {
       {/* Scroll Progress Bar at the top of the page */}
       <motion.div 
         style={{ scaleX }} 
-        className="fixed top-0 left-0 right-0 h-[3px] bg-[#BA5536] origin-left z-[60] pointer-events-none"
+        className="fixed top-0 left-0 right-0 h-0.75 bg-[#BA5536] origin-left z-60 pointer-events-none"
       />
 
       <Header />
 
       {/* HERO SECTION: Scroll-Driven Layered Parallax (Accesses Requirement 1) */}
       <section 
-        className="relative w-full min-h-[660px] md:min-h-[720px] pt-32 pb-20 px-6 flex flex-col justify-end overflow-hidden border-b border-[#E6DFD5]"
+        className="relative w-full min-h-165 md:min-h-180 pt-32 pb-20 px-6 flex flex-col justify-end overflow-hidden border-b border-[#E6DFD5]"
       >
         {/* Layer 1: Parallax Background (Image Layer - Moves slowest: 0.2x speed) */}
         <motion.div 
@@ -502,7 +515,7 @@ export default function ItineraryPage() {
         )}
 
         {/* NARRATIVE CHAPTERS WITH 3D DEPTH SWAP TRANSITION (Accesses Requirement 2) */}
-        <div style={{ perspective: 1200 }} className="relative min-h-[500px]">
+        <div style={{ perspective: 1200 }} className="relative min-h-125">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeDay}
@@ -698,7 +711,7 @@ export default function ItineraryPage() {
                           </div>
                           
                           {/* Sunrise-to-sunset gradient track */}
-                          <div className="relative w-full h-3 rounded-full bg-gradient-to-r from-amber-100 via-orange-200 to-indigo-950 border border-[#E6DFD5]/40 shadow-inner">
+                          <div className="relative w-full h-3 rounded-full bg-linear-to-r from-amber-100 via-orange-200 to-indigo-950 border border-[#E6DFD5]/40 shadow-inner">
                             {activities.map((act, idx) => {
                               const pct = getDaylightPercentage(act.time);
                               return (
@@ -808,7 +821,7 @@ export default function ItineraryPage() {
                                 </div>
 
                                 {/* Image Side Spread with subtle hover scale drift */}
-                                <div className="w-full lg:w-1/2 h-80 sm:h-[400px] rounded-3xl overflow-hidden border border-[#E6DFD5] shadow-md relative group shrink-0">
+                                <div className="w-full lg:w-1/2 h-80 sm:h-100 rounded-3xl overflow-hidden border border-[#E6DFD5] shadow-md relative group shrink-0">
                                   <motion.img
                                     src={getActivityThumbnail(act, idx)}
                                     alt={act.title}
@@ -1039,11 +1052,13 @@ export default function ItineraryPage() {
             onClick={() => setActiveModalDay(null)}
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              ref={mapModalRef}
+              initial={{ scale: 0.96, opacity: 0, y: 16 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              exit={{ scale: 0.96, opacity: 0, y: 16 }}
+              transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
               className="bg-[#FAF6F0] w-full max-w-5xl h-[85vh] rounded-3xl overflow-hidden shadow-2xl border border-[#E6DFD5] flex flex-col relative"
+              style={{ willChange: 'transform, opacity' }}
               onClick={e => e.stopPropagation()}
             >
               {/* Modal Header */}
@@ -1064,14 +1079,23 @@ export default function ItineraryPage() {
                 </button>
               </div>
 
-              {/* Map fills remaining height */}
+              {/* Map fills remaining height — mounted after modal animation settles */}
               <div className="flex-1 min-h-0">
-                <InteractiveRouteMap
-                  activities={days.find(d => (d.dayNumber || 1) === activeModalDay)?.activities || days[activeModalDay - 1]?.activities || []}
-                  coordinates={itinerary.coordinates || { lat: 41.9028, lng: 12.4964 }}
-                  destinationName={itinerary.destinationName || 'Destination'}
-                  isItineraryView={true}
-                />
+                {mapMounted && (
+                  <ItineraryMapModal
+                    activities={days.find(d => (d.dayNumber || 1) === activeModalDay)?.activities || days[activeModalDay - 1]?.activities || []}
+                    coordinates={itinerary.coordinates || { lat: 41.9028, lng: 12.4964 }}
+                    destinationName={itinerary.destinationName || 'Destination'}
+                  />
+                )}
+                {!mapMounted && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-[#FAF6F0]">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-8 h-8 rounded-full border-2 border-[#BA5536]/30 border-t-[#BA5536] animate-spin" />
+                      <span className="text-xs font-serif text-[#7A7268]">Loading map…</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           </motion.div>
