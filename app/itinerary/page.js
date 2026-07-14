@@ -27,7 +27,9 @@ import {
   Sunset,
   Layers,
   ArrowRight,
-  Check
+  Check,
+  Ticket,
+  ExternalLink
 } from 'lucide-react';
 import {
   getActivityThumbnail,
@@ -42,6 +44,7 @@ import {
 
 // Dynamically import map components to avoid SSR/window issues
 const ItineraryMapModal = dynamic(() => import('../components/ItineraryMapModal'), { ssr: false });
+const TicketPassModal = dynamic(() => import('../components/TicketPassModal'), { ssr: false });
 
 const toRomanNumeral = (num) => {
   const romanMap = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V', 6: 'VI', 7: 'VII', 8: 'VIII', 9: 'IX', 10: 'X' };
@@ -178,6 +181,7 @@ export default function ItineraryPage() {
   const [showAlternatives, setShowAlternatives] = useState({});
   const [savedStops, setSavedStops] = useState({});
   const [shareCopied, setShareCopied] = useState(false);
+  const [activePassModal, setActivePassModal] = useState(null);
 
   // Parallax Scroll Tracking Refs
   // Window scroll position tracking for parallax (no target ref needed to avoid hydration error)
@@ -902,6 +906,61 @@ export default function ItineraryPage() {
                                     {act.description?.split('.')[0] || 'Explore the breathtaking landscapes and cultural history at this custom stop.'}.
                                   </p>
 
+                                  {/* OPTION 1: Ultra-Premium Editorial Admission & Ticket Ribbon */}
+                                  <div className="w-full rounded-2xl border border-[#E6DFD5] bg-[#FAF6F0]/80 p-4 sm:p-5 mb-5 shadow-2xs hover:border-[#BA5536]/40 transition-all duration-300 relative overflow-hidden group">
+                                    {/* Decorative subtle terracotta glow */}
+                                    <div className="absolute -right-12 -top-12 w-36 h-36 bg-[#BA5536]/10 rounded-full blur-2xl pointer-events-none group-hover:bg-[#BA5536]/15 transition-all duration-500" />
+                                    
+                                    {/* Top Row: Icon + Title + Est Rate */}
+                                    <div className="flex items-start justify-between gap-3 relative z-10 mb-3.5 pb-3.5 border-b border-[#E6DFD5]/70">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-white border border-[#E6DFD5] shadow-2xs flex items-center justify-center text-[#BA5536] shrink-0 group-hover:scale-105 transition-transform duration-300">
+                                          <Ticket className="w-5 h-5 stroke-[2.2]" />
+                                        </div>
+                                        <div>
+                                          <div className="flex items-center gap-2 flex-wrap">
+                                            <h4 className="font-serif font-bold text-sm sm:text-base text-[#1E1C1A] tracking-tight leading-none">
+                                              Official Admission & Gateways
+                                            </h4>
+                                            <span className="px-2 py-0.5 rounded-full bg-[#BA5536]/10 border border-[#BA5536]/25 text-[#BA5536] font-mono text-[9px] font-bold tracking-wider uppercase">
+                                              ⚡ Verified
+                                            </span>
+                                          </div>
+                                          <p className="text-xs font-sans text-[#5F5E5A] mt-1 flex items-center gap-1.5 flex-wrap">
+                                            <span>Est. Rate: <strong className="text-[#1E1C1A]">{costInfo.title}</strong></span>
+                                            <span className="text-[#C8BFB2] font-serif">•</span>
+                                            <span>Skip-the-line options available</span>
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Bottom Row: 2 Clean Buttons in an even grid */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 relative z-10">
+                                      <button
+                                        type="button"
+                                        onClick={() => setActivePassModal({ activity: act, stopNum: stopNum })}
+                                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#1E1C1A] hover:bg-[#2A2623] text-white text-xs font-sans font-bold shadow-sm transition-all duration-200 cursor-pointer hover:scale-[1.01] active:scale-95"
+                                      >
+                                        <Ticket className="w-3.5 h-3.5 text-[#BA5536] shrink-0" />
+                                        <span>Compare 4 Gateways</span>
+                                      </button>
+
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const q = encodeURIComponent(`${act.title} ${itinerary?.destinationName || ''}`);
+                                          window.open(`https://www.viator.com/searchResults/all?text=${q}`, '_blank', 'noopener,noreferrer');
+                                        }}
+                                        className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-[#E6DFD5] hover:border-[#BA5536] bg-white text-[#1E1C1A] hover:text-[#BA5536] text-xs font-sans font-bold shadow-2xs transition-all duration-200 cursor-pointer group/btn"
+                                        title="Check Viator Verified Skip-the-Line Passes"
+                                      >
+                                        <span>Check Viator Passes</span>
+                                        <ExternalLink className="w-3.5 h-3.5 text-[#7A7268] group-hover/btn:text-[#BA5536] shrink-0 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
+                                      </button>
+                                    </div>
+                                  </div>
+
                                   {/* PROGRESSIVE DISCLOSURE ACTIONS */}
                                   <div className="flex items-center gap-3 mt-2 flex-wrap">
                                     <button
@@ -1101,6 +1160,16 @@ export default function ItineraryPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Dossier VIP Ticket & Admission Pass Modal (Option 2) */}
+      <TicketPassModal
+        isOpen={Boolean(activePassModal)}
+        onClose={() => setActivePassModal(null)}
+        activity={activePassModal?.activity}
+        destinationName={itinerary?.destinationName || 'Destination'}
+        dayNumber={activeDay === 'epilogue' ? 1 : activeDay}
+        stopNumber={activePassModal?.stopNum || 1}
+      />
 
       <footer className="py-12 text-center text-xs font-serif italic text-[#7A7268] border-t border-[#E6DFD5] bg-white mt-auto">
         TripWise Private Travel Concierge · Published Dossier Guide · Powered by Google Gemini
