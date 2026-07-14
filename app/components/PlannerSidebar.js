@@ -11,7 +11,8 @@ import {
   getIconBadges,
   getAiInsight,
   formatCost,
-  getDaySummary
+  getDaySummary,
+  formatReviewCount
 } from './itineraryHelpers';
 
 // --- Icons ---
@@ -1316,7 +1317,7 @@ export default function PlannerSidebar({
                                   <div className="flex items-center gap-1 text-[11px] font-extrabold text-[#1C1B1B]">
                                     <span className="text-amber-500">★★★★★</span>
                                     <span>{ratingData.rating}</span>
-                                    <span className="text-[#5F5E5A] font-medium">({ratingData.reviews})</span>
+                                    <span className="text-[#5F5E5A] font-medium">({formatReviewCount(ratingData.reviews)})</span>
                                   </div>
                                 </div>
                               </div>

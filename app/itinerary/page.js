@@ -40,7 +40,8 @@ import {
   getIconBadges,
   getAiInsight,
   formatCost,
-  getDaySummary
+  getDaySummary,
+  formatReviewCount
 } from '../components/itineraryHelpers';
 
 // Dynamically import map components to avoid SSR/window issues
@@ -893,12 +894,12 @@ export default function ItineraryPage() {
                           const isNature = !isDining && (catLower.includes('park') || catLower.includes('nature') || catLower.includes('garden') || catLower.includes('beach') || catLower.includes('walk') || catLower.includes('view') || catLower.includes('scenic') || titleLower.includes('park') || titleLower.includes('garden') || titleLower.includes('fountain') || titleLower.includes('plaza') || titleLower.includes('piazza') || titleLower.includes('villa borghese') || titleLower.includes('spanish steps'));
 
                           const ribbonTitle = isDining ? 'Table Reservation & Dining Guide' : (isNature ? 'Public Access & Visitor Guide' : 'Official Admission & Gateways');
-                          const ribbonBadge = isDining ? '🍽️ Table Check' : (isNature ? '🌿 Open Access' : '⚡ Verified');
+                          const ribbonBadge = isDining ? '🍽️ Table Check' : (isNature ? '🌿 Open Access' : '⚡ Verified Direct Link');
                           const ribbonEstLabel = isDining ? 'Est. Spend Range:' : (isNature ? 'Admission Status:' : 'Est. Rate:');
                           const ribbonEstValue = isNature && (costInfo.title.includes('Check') || costInfo.title === 'Free' || costInfo.title === '$0') ? 'Free Public Entry' : costInfo.title;
-                          const ribbonSubtext = isDining ? 'Table reservations & menu recommendations' : (isNature ? 'Best visiting times & walking directions' : 'Skip-the-line options available');
+                          const ribbonSubtext = isDining ? 'Table reservations & menu recommendations' : (isNature ? 'Best visiting times & walking directions' : 'Skip-the-line options & box office access');
                           
-                          const ribbonBtnText = isDining ? 'Compare Table Gateways' : (isNature ? 'Visitor Access Gateways' : 'Compare 4 Gateways');
+                          const ribbonBtnText = isDining ? 'Compare Table Gateways' : (isNature ? 'Visitor Access Gateways' : 'Curated Booking Gateways');
                           const ribbonActionLabel = isDining ? 'Reserve Table Online' : (isNature ? 'Google Maps View' : 'Check Viator Passes');
                           
                           // Clean venue/restaurant name extraction for accurate inline search queries
@@ -1011,6 +1012,27 @@ export default function ItineraryPage() {
                                       })()}
                                     </div>
 
+                                    {/* Ticket Confirmation Status Indicator (Requirement 4) */}
+                                    {!isDining && (() => {
+                                      let hasTicketNote = false;
+                                      try {
+                                        const noteKey = `tw_ticket_note_${itinerary?.destinationName || 'Destination'}_day${activeDay}_stop${stopNum}`;
+                                        const storedNote = localStorage.getItem(noteKey);
+                                        if (storedNote && storedNote.trim()) {
+                                          hasTicketNote = true;
+                                        }
+                                      } catch (e) {}
+                                      if (hasTicketNote) {
+                                        return (
+                                          <div className="absolute top-4 right-4 px-3.5 py-1.5 rounded-full bg-emerald-600/95 backdrop-blur-sm text-white font-mono text-xs font-bold tracking-wider shadow-md border border-emerald-400/40 flex items-center gap-1.5 animate-in fade-in zoom-in duration-300 z-10">
+                                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                            <span>Reference saved ✓</span>
+                                          </div>
+                                        );
+                                      }
+                                      return null;
+                                    })()}
+
                                     {/* Distinct Category stamp visual style */}
                                     <div className="absolute bottom-4 right-4 px-4 py-1.5 rounded-full bg-white/95 backdrop-blur-xs text-[#1E1C1A] font-serif italic text-xs font-bold shadow-xs border border-[#E6DFD5]">
                                       {categoryStyle.icon} {categoryStyle.name}
@@ -1076,7 +1098,7 @@ export default function ItineraryPage() {
                                   {/* Clean stats row (Requirement 5: fix duplicate reviews word) */}
                                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm font-sans font-medium text-[#5F5E5A] mb-3">
                                     <span className="text-amber-600 font-bold">★★★★★ {ratingData.rating}</span>
-                                    <span>({String(ratingData?.reviews || '12k').replace(/\s*reviews?\s*/i, '').trim()} reviews)</span>
+                                    <span>({formatReviewCount(ratingData?.reviews)})</span>
                                     <span className="text-[#E6DFD5] font-serif">•</span>
                                     <span className="font-bold text-[#1E1C1A]">{costInfo.title}</span>
                                     {act.duration && (
@@ -1124,9 +1146,29 @@ export default function ItineraryPage() {
                                               <h4 className="font-serif font-bold text-sm sm:text-base text-[#1E1C1A] tracking-tight leading-none">
                                                 {ribbonTitle}
                                               </h4>
-                                              <span className="px-2 py-0.5 rounded-full bg-[#BA5536]/10 border border-[#BA5536]/25 text-[#BA5536] font-mono text-[9px] font-bold tracking-wider uppercase">
-                                                {ribbonBadge}
-                                              </span>
+                                              {(() => {
+                                                let hasTicketNote = false;
+                                                try {
+                                                  const noteKey = `tw_ticket_note_${itinerary?.destinationName || 'Destination'}_day${activeDay}_stop${stopNum}`;
+                                                  const storedNote = localStorage.getItem(noteKey);
+                                                  if (storedNote && storedNote.trim()) {
+                                                    hasTicketNote = true;
+                                                  }
+                                                } catch (e) {}
+                                                if (hasTicketNote) {
+                                                  return (
+                                                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-600/15 border border-emerald-600/30 text-emerald-700 font-mono text-[10px] font-bold tracking-wider uppercase flex items-center gap-1">
+                                                      <Check className="w-3 h-3 stroke-[3]" />
+                                                      <span>Reference saved ✓</span>
+                                                    </span>
+                                                  );
+                                                }
+                                                return (
+                                                  <span className="px-2 py-0.5 rounded-full bg-[#BA5536]/10 border border-[#BA5536]/25 text-[#BA5536] font-mono text-[9px] font-bold tracking-wider uppercase">
+                                                    {ribbonBadge}
+                                                  </span>
+                                                );
+                                              })()}
                                             </div>
                                             <p className="text-xs font-sans text-[#5F5E5A] mt-1 flex items-center gap-1.5 flex-wrap">
                                               <span>{ribbonEstLabel} <strong className="text-[#1E1C1A]">{ribbonEstValue}</strong></span>
@@ -1145,7 +1187,19 @@ export default function ItineraryPage() {
                                           className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#1E1C1A] hover:bg-[#2A2623] text-white text-xs font-sans font-bold shadow-sm transition-all duration-200 cursor-pointer hover:scale-[1.01] active:scale-95"
                                         >
                                           {isNature ? <MapPin className="w-3.5 h-3.5 text-[#BA5536] shrink-0" /> : <Ticket className="w-3.5 h-3.5 text-[#BA5536] shrink-0" />}
-                                          <span>{ribbonBtnText}</span>
+                                          <span>
+                                            {(() => {
+                                              let hasTicketNote = false;
+                                              try {
+                                                const noteKey = `tw_ticket_note_${itinerary?.destinationName || 'Destination'}_day${activeDay}_stop${stopNum}`;
+                                                const storedNote = localStorage.getItem(noteKey);
+                                                if (storedNote && storedNote.trim()) {
+                                                  hasTicketNote = true;
+                                                }
+                                              } catch (e) {}
+                                              return hasTicketNote ? 'View Saved Reference ✓' : ribbonBtnText;
+                                            })()}
+                                          </span>
                                         </button>
 
                                         <button
@@ -1383,6 +1437,7 @@ export default function ItineraryPage() {
         destinationName={itinerary?.destinationName || 'Destination'}
         dayNumber={activeDay === 'epilogue' ? 1 : activeDay}
         stopNumber={activePassModal?.stopNum || 1}
+        onStatusChange={handleDiningBookingsChange}
       />
 
       <footer className="py-12 text-center text-xs font-serif italic text-[#7A7268] border-t border-[#E6DFD5] bg-white mt-auto">

@@ -8,7 +8,8 @@ import {
   getActivityRating,
   getCategoryStyling,
   getAiInsight,
-  formatCost
+  formatCost,
+  formatReviewCount
 } from './itineraryHelpers';
 
 const MAP_STYLES = {
@@ -2012,7 +2013,7 @@ export default function InteractiveRouteMap({
               <div className="flex items-center justify-between gap-1 sm:gap-1.5 w-full flex-nowrap pb-1 pt-0.5">
                 <div className="bg-[rgba(255,255,255,0.85)] backdrop-blur-md border border-black/6 shadow-[0_8px_24px_rgba(0,0,0,0.06)] rounded-full px-2 sm:px-2.5 py-1.5 flex items-center gap-1 text-[11px] font-extrabold text-[#1F1F1F] whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-default">
                   <span className="text-[#FFB000] text-xs font-black">★</span>
-                  <span>{ratingInfo.rating} ({ratingInfo.reviews})</span>
+                  <span>{ratingInfo.rating} ({formatReviewCount(ratingInfo.reviews)})</span>
                 </div>
 
                 <div className="bg-[rgba(255,255,255,0.85)] backdrop-blur-md border border-black/6 shadow-[0_8px_24px_rgba(0,0,0,0.06)] rounded-full px-2 sm:px-2.5 py-1.5 flex items-center gap-1 text-[11px] font-extrabold text-[#059669] dark:text-[#10B981] whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-default">

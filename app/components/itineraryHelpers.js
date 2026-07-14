@@ -113,9 +113,10 @@ export function getTransportBetweenStops(prevStop, nextStop, idx = 0) {
 
 // 3. Get Activity Rating (Point 3)
 export function getActivityRating(act, idx = 0) {
-  if (act?.rating && act?.reviewsCount) {
-    const cleanRev = String(act.reviewsCount).replace(/\s*reviews?\s*/i, '').trim();
-    return { rating: act.rating, reviews: cleanRev };
+  const rawRev = act?.reviewsCount ?? act?.reviews ?? '';
+  if (act?.rating && rawRev) {
+    const cleanRev = String(rawRev).replace(/[\s\(\)]*reviews?[\s\(\)]*/ig, '').trim();
+    return { rating: act.rating, reviews: cleanRev || '12k' };
   }
   const ratings = ['4.8', '4.9', '4.7', '4.9', '4.8', '4.6'];
   const reviews = ['12k', '18k', '8.5k', '24k', '15k', '6.2k'];
@@ -123,6 +124,12 @@ export function getActivityRating(act, idx = 0) {
     rating: ratings[idx % ratings.length],
     reviews: reviews[idx % reviews.length]
   };
+}
+
+export function formatReviewCount(rev) {
+  if (!rev) return '12k reviews';
+  const clean = String(rev).replace(/[\s\(\)]*reviews?[\s\(\)]*/ig, '').trim() || '12k';
+  return `${clean} reviews`;
 }
 
 // 4. Get Category Styling & Colors (Point 15)

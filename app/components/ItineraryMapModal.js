@@ -6,7 +6,8 @@ import {
   getActivityRating,
   getCategoryStyling,
   getAiInsight,
-  formatCost
+  formatCost,
+  formatReviewCount
 } from './itineraryHelpers';
 
 // ── Leaflet CSS (injected once globally) ───────────────────────────────────────
@@ -447,7 +448,7 @@ export default function ItineraryMapModal({ activities = [], coordinates = null,
           {/* Quick stats row */}
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="px-2.5 py-1.5 bg-white/90 rounded-full border border-black/6 shadow-sm text-[11px] font-bold flex items-center gap-1">
-              <span className="text-yellow-500">★</span>{ratingInfo.rating} ({ratingInfo.reviews})
+              <span className="text-yellow-500">★</span>{ratingInfo.rating} ({formatReviewCount(ratingInfo.reviews)})
             </span>
             {costInfo?.display && (
               <span className="px-2.5 py-1.5 bg-white/90 rounded-full border border-black/6 shadow-sm text-[11px] font-bold text-emerald-600 flex items-center gap-1">
