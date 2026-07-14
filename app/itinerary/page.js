@@ -213,8 +213,11 @@ export default function ItineraryPage() {
           let isConf = false;
           try {
             const stored = localStorage.getItem(storageKey);
-            if (stored && JSON.parse(stored)?.status === 'confirmed') {
-              isConf = true;
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              if (parsed && (parsed.status === 'marked_reserved' || parsed.status === 'confirmed')) {
+                isConf = true;
+              }
             }
           } catch (e) {}
 
@@ -227,7 +230,7 @@ export default function ItineraryPage() {
       });
     });
 
-    return { total, confirmed, firstUnbooked };
+    return { total, markedReserved: confirmed, confirmed, firstUnbooked };
   };
 
   const scrollToFirstUnbookedDining = (firstUnbooked) => {
@@ -666,13 +669,13 @@ export default function ItineraryPage() {
                               Trip-Level Dining Concierge Rollup
                             </h4>
                             <p className="text-xs sm:text-sm font-sans text-[#5F5E5A] mt-1">
-                              {tripDiningRollup.confirmed === tripDiningRollup.total ? 'All dining reservations across your itinerary are confirmed and locked in!' : `${tripDiningRollup.confirmed} of ${tripDiningRollup.total} dining tables reserved across the itinerary.`}
+                              {tripDiningRollup.markedReserved === tripDiningRollup.total ? 'All dining reservations across your itinerary are marked as booked!' : `${tripDiningRollup.markedReserved} of ${tripDiningRollup.total} dining reservations marked as booked.`}
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3 self-end sm:self-auto flex-wrap">
                           <span className="px-3.5 py-1.5 rounded-full bg-[#BA5536]/15 border border-[#BA5536]/30 text-[#BA5536] font-mono text-xs font-extrabold tracking-wider">
-                            {tripDiningRollup.confirmed} / {tripDiningRollup.total} CONFIRMED
+                            {tripDiningRollup.markedReserved} / {tripDiningRollup.total} MARKED AS BOOKED
                           </span>
                           {tripDiningRollup.firstUnbooked && (
                             <button
@@ -680,7 +683,7 @@ export default function ItineraryPage() {
                               onClick={() => scrollToFirstUnbookedDining(tripDiningRollup.firstUnbooked)}
                               className="px-4 py-2 rounded-xl bg-[#1E1C1A] text-white hover:bg-[#BA5536] font-sans text-xs font-bold transition-all cursor-pointer shadow-2xs flex items-center gap-1.5"
                             >
-                              <span>Book Day {tripDiningRollup.firstUnbooked.dayNum} Table →</span>
+                              <span>Mark Day {tripDiningRollup.firstUnbooked.dayNum} Table →</span>
                             </button>
                           )}
                         </div>
@@ -801,7 +804,7 @@ export default function ItineraryPage() {
                                   title="Tap to jump to first unbooked dining stop"
                                 >
                                   <Utensils className="w-3.5 h-3.5 shrink-0" />
-                                  <span>{dayDiningRollup.confirmed} of {dayDiningRollup.total} reservations confirmed</span>
+                                  <span>{dayDiningRollup.markedReserved} of {dayDiningRollup.total} reservations marked as booked</span>
                                 </button>
                               </>
                             )}
@@ -998,7 +1001,7 @@ export default function ItineraryPage() {
                                             const stored = localStorage.getItem(`tw_dining_res_${itinerary?.destinationName || 'Destination'}_d${activeDay}_s${stopNum}`);
                                             if (stored) {
                                               const parsed = JSON.parse(stored);
-                                              if (parsed && parsed.status === 'confirmed' && parsed.time && parsed.time !== act.time) {
+                                              if (parsed && (parsed.status === 'marked_reserved' || parsed.status === 'confirmed') && parsed.time && parsed.time !== act.time) {
                                                 return `Planned ${act.time || '10:00 AM'}`;
                                               }
                                             }
