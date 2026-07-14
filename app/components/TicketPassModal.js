@@ -254,13 +254,21 @@ export default function TicketPassModal({
             transition={{ type: 'spring', damping: 26, stiffness: 320 }}
             className="relative w-full max-w-xl my-auto z-10"
           >
-            {/* Close Button Top Right */}
+            {/* Close Button Top Right (Desktop outside, Mobile inside modal header) */}
             <button
               onClick={onClose}
-              className="absolute -top-12 right-0 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer border border-white/15"
+              className="absolute -top-12 right-0 hidden sm:flex w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white items-center justify-center transition-all cursor-pointer border border-white/15"
               aria-label="Close ticket modal"
             >
               <X className="w-5 h-5" />
+            </button>
+
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 sm:hidden z-50 w-8 h-8 rounded-full bg-[#1E1C1A]/10 hover:bg-[#1E1C1A]/20 text-[#1E1C1A] flex items-center justify-center transition-all cursor-pointer"
+              aria-label="Close ticket modal"
+            >
+              <X className="w-4 h-4" />
             </button>
 
             {/* ── EDITORIAL DOSSIER PASS CARD ── */}

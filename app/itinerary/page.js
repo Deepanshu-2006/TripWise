@@ -276,17 +276,37 @@ export default function ItineraryPage() {
     }
   }, []);
 
-  // Fetch itinerary from localStorage
+  // Fetch itinerary from URL param or localStorage
   useEffect(() => {
     const timer = setTimeout(() => {
       if (typeof window !== 'undefined') {
-        const stored = localStorage.getItem('tripwise_itinerary');
-        if (stored) {
+        const params = new URLSearchParams(window.location.search);
+        const dossierParam = params.get('dossier');
+        let loadedFromUrl = false;
+
+        if (dossierParam) {
           try {
-            const parsed = JSON.parse(stored);
-            setItinerary(parsed);
+            const decoded = decodeURIComponent(dossierParam);
+            const parsed = JSON.parse(decoded);
+            if (parsed && parsed.days) {
+              setItinerary(parsed);
+              localStorage.setItem('tripwise_itinerary', JSON.stringify(parsed));
+              loadedFromUrl = true;
+            }
           } catch (err) {
-            console.error("Failed to parse stored itinerary:", err);
+            console.error("Failed to parse dossier from URL:", err);
+          }
+        }
+
+        if (!loadedFromUrl) {
+          const stored = localStorage.getItem('tripwise_itinerary');
+          if (stored) {
+            try {
+              const parsed = JSON.parse(stored);
+              setItinerary(parsed);
+            } catch (err) {
+              console.error("Failed to parse stored itinerary:", err);
+            }
           }
         }
         setLoading(false);
@@ -309,7 +329,19 @@ export default function ItineraryPage() {
 
   const handleShareDossier = () => {
     if (typeof window !== 'undefined') {
-      navigator.clipboard?.writeText(window.location.href);
+      let shareUrl = window.location.href;
+      if (itinerary) {
+        try {
+          const jsonStr = JSON.stringify(itinerary);
+          const encoded = encodeURIComponent(jsonStr);
+          const url = new URL(window.location.origin + window.location.pathname);
+          url.searchParams.set('dossier', encoded);
+          shareUrl = url.toString();
+        } catch (e) {
+          console.error("Failed to encode itinerary:", e);
+        }
+      }
+      navigator.clipboard?.writeText(shareUrl);
       setShareCopied(true);
       setTimeout(() => setShareCopied(false), 2500);
     }
@@ -365,10 +397,83 @@ export default function ItineraryPage() {
     return acc + (isNaN(num) ? 3 : num);
   }, 0).toFixed(1);
 
-  const preBookedItems = [
-    { item: "Basecamp Hotel Accommodation", status: "Pre-booked", code: "TW-98231A" },
-    { item: "Vatican Museum Fast-Track Passes", status: "Action Needed", link: "Vatican Ticketing Portal" }
-  ];
+  const preBookedItems = days.reduce((acc, d, dIdx) => {
+    const dNum = dIdx + 1;
+    const dest = itinerary.destinationName || 'Destination';
+    (d.activities || []).forEach((a, aIdx) => {
+      const stopNum = aIdx + 1;
+      const catLower = (a.category || a.type || '').toLowerCase();
+      const titleLower = (a.title || '').toLowerCase();
+      const isDining = catLower.includes('din') || catLower.includes('food') || catLower.includes('rest') || catLower.includes('cafe') || catLower.includes('bar') || catLower.includes('lunch') || catLower.includes('dinner') || catLower.includes('breakfast') || titleLower.includes('osteria') || titleLower.includes('trattoria') || titleLower.includes('restaurant') || titleLower.includes('cafe') || titleLower.includes('bistro') || titleLower.includes('gelat') || titleLower.includes('pizzeria') || titleLower.includes('tavern');
+      const isNature = !isDining && (catLower.includes('park') || catLower.includes('nature') || catLower.includes('garden') || catLower.includes('beach') || catLower.includes('walk') || catLower.includes('view') || catLower.includes('scenic') || titleLower.includes('park') || titleLower.includes('garden') || titleLower.includes('fountain') || titleLower.includes('plaza') || titleLower.includes('piazza') || titleLower.includes('villa borghese') || titleLower.includes('spanish steps'));
+
+      if (isDining) {
+        const storageKey = `tw_dining_res_${dest}_d${dNum}_s${stopNum}`;
+        let isConf = false;
+        let confCode = 'Table Marked Reserved';
+        try {
+          if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem(storageKey);
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              if (parsed && (parsed.status === 'marked_reserved' || parsed.status === 'confirmed')) {
+                isConf = true;
+                if (parsed.confNum) confCode = `Ref: ${parsed.confNum}`;
+              }
+            }
+          }
+        } catch (e) {}
+
+        acc.push({
+          item: `${a.title || 'Restaurant'} (Day ${dNum})`,
+          status: isConf ? 'Pre-booked' : 'Action Needed',
+          code: isConf ? confCode : 'Table Reservation Required / Recommended',
+          dayNum: dNum,
+          stopNum: stopNum,
+          isPrebooked: isConf
+        });
+      } else {
+        // Sightseeing / Attraction / Park
+        const ticketKey = `tw_ticket_note_${dest}_day${dNum}_stop${stopNum}`;
+        let ticketNote = '';
+        try {
+          if (typeof window !== 'undefined') {
+            ticketNote = localStorage.getItem(ticketKey) || '';
+          }
+        } catch (e) {}
+
+        if (ticketNote.trim()) {
+          acc.push({
+            item: `${a.title || 'Attraction'} (Day ${dNum})`,
+            status: 'Pre-booked',
+            code: `Ref: ${ticketNote.trim()}`,
+            dayNum: dNum,
+            stopNum: stopNum,
+            isPrebooked: true
+          });
+        } else if (!isNature) {
+          acc.push({
+            item: `${a.title || 'Attraction'} (Day ${dNum})`,
+            status: 'Action Needed',
+            code: 'Ticket Pass / Time Slot Gateway',
+            dayNum: dNum,
+            stopNum: stopNum,
+            isPrebooked: false
+          });
+        } else {
+          acc.push({
+            item: `${a.title || 'Park & Scenic Site'} (Day ${dNum})`,
+            status: 'Open Access',
+            code: 'No Ticket Required (Public Entry)',
+            dayNum: dNum,
+            stopNum: stopNum,
+            isPrebooked: true
+          });
+        }
+      }
+    });
+    return acc;
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#FAF6F0] text-[#1E1C1A] flex flex-col font-sans selection:bg-[#BA5536]/15">
@@ -725,7 +830,8 @@ export default function ItineraryPage() {
                               <span className="text-[10px] text-[#7A7268]">{item.code || 'Instant access link available'}</span>
                             </div>
                             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                              item.status === 'Pre-booked' ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-600/10 text-amber-700'
+                              item.status === 'Pre-booked' ? 'bg-emerald-500/10 text-emerald-700' :
+                              item.status === 'Open Access' ? 'bg-blue-500/10 text-blue-700' : 'bg-amber-600/10 text-amber-700'
                             }`}>
                               {item.status}
                             </span>

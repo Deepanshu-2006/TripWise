@@ -153,3 +153,29 @@ body {
 .itinerary-theme-map .leaflet-container {
   filter: sepia(48%) hue-rotate(-12deg) saturate(85%) contrast(96%) brightness(99%);
 }
+
+/* Print CSS Pass for Clean Dossier Booklet Output */
+@media print {
+  header,
+  button,
+  .fixed,
+  [role="dialog"] {
+    display: none !important;
+  }
+  
+  body, 
+  .min-h-screen {
+    background: white !important;
+    color: #1E1C1A !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  section,
+  .rounded-3xl,
+  .rounded-2xl {
+    break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #E6DFD5 !important;
+  }
+}
