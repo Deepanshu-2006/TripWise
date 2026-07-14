@@ -29,7 +29,8 @@ import {
   ArrowRight,
   Check,
   Ticket,
-  ExternalLink
+  ExternalLink,
+  Utensils
 } from 'lucide-react';
 import {
   getActivityThumbnail,
@@ -45,6 +46,7 @@ import {
 // Dynamically import map components to avoid SSR/window issues
 const ItineraryMapModal = dynamic(() => import('../components/ItineraryMapModal'), { ssr: false });
 const TicketPassModal = dynamic(() => import('../components/TicketPassModal'), { ssr: false });
+import InlineDiningReservation from '../components/InlineDiningReservation';
 
 const toRomanNumeral = (num) => {
   const romanMap = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V', 6: 'VI', 7: 'VII', 8: 'VIII', 9: 'IX', 10: 'X' };
@@ -182,6 +184,65 @@ export default function ItineraryPage() {
   const [savedStops, setSavedStops] = useState({});
   const [shareCopied, setShareCopied] = useState(false);
   const [activePassModal, setActivePassModal] = useState(null);
+
+  // Dining Reservations Rollup State & Refresh
+  const [diningTick, setDiningTick] = useState(0);
+  const handleDiningBookingsChange = () => {
+    setDiningTick(prev => prev + 1);
+  };
+
+  // Compute Trip-Level and Day-Level Dining Reservation Rollups
+  const computeDiningRollup = (dayFilterNum = null) => {
+    if (!itinerary || !itinerary.days) return { total: 0, confirmed: 0, firstUnbooked: null };
+    let total = 0;
+    let confirmed = 0;
+    let firstUnbooked = null;
+
+    itinerary.days.forEach((d, dIdx) => {
+      const dNum = dIdx + 1;
+      if (dayFilterNum !== null && dNum !== dayFilterNum) return;
+      const acts = d.activities || [];
+      acts.forEach((a, aIdx) => {
+        const catLower = (a.category || a.type || '').toLowerCase();
+        const titleLower = (a.title || '').toLowerCase();
+        const isDining = catLower.includes('din') || catLower.includes('food') || catLower.includes('rest') || catLower.includes('cafe') || catLower.includes('bar') || catLower.includes('lunch') || catLower.includes('dinner') || catLower.includes('breakfast') || titleLower.includes('osteria') || titleLower.includes('trattoria') || titleLower.includes('restaurant') || titleLower.includes('cafe') || titleLower.includes('bistro') || titleLower.includes('gelat') || titleLower.includes('pizzeria') || titleLower.includes('tavern');
+        if (isDining) {
+          total++;
+          const stopNum = aIdx + 1;
+          const storageKey = `tw_dining_res_${itinerary.destinationName || 'Destination'}_d${dNum}_s${stopNum}`;
+          let isConf = false;
+          try {
+            const stored = localStorage.getItem(storageKey);
+            if (stored && JSON.parse(stored)?.status === 'confirmed') {
+              isConf = true;
+            }
+          } catch (e) {}
+
+          if (isConf) {
+            confirmed++;
+          } else if (!firstUnbooked) {
+            firstUnbooked = { dayNum: dNum, stopNum: stopNum };
+          }
+        }
+      });
+    });
+
+    return { total, confirmed, firstUnbooked };
+  };
+
+  const scrollToFirstUnbookedDining = (firstUnbooked) => {
+    if (!firstUnbooked) return;
+    if (activeDay !== firstUnbooked.dayNum) {
+      setActiveDay(firstUnbooked.dayNum);
+      setTimeout(() => {
+        const el = document.getElementById(`dining-stop-${firstUnbooked.dayNum}-${firstUnbooked.stopNum}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 350);
+    } else {
+      const el = document.getElementById(`dining-stop-${firstUnbooked.dayNum}-${firstUnbooked.stopNum}`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
 
   // Parallax Scroll Tracking Refs
   // Window scroll position tracking for parallax (no target ref needed to avoid hydration error)
@@ -530,69 +591,104 @@ export default function ItineraryPage() {
               style={{ transformStyle: "preserve-3d" }}
               className="w-full"
             >
-              {activeDay === 'epilogue' ? (
-                /* SECTION 3: THE EPILOGUE & 3D STAMP FLOURISH (Accesses Requirement 4) */
-                <section className="scroll-mt-32 flex flex-col gap-10">
-                  <div className="text-center max-w-2xl mx-auto">
-                    <span className="text-xs font-mono uppercase tracking-widest text-[#BA5536] font-bold block mb-1">
-                      THE EPILOGUE  —  DOSSIER SUMMARY
-                    </span>
-                    <h2 className="text-3xl sm:text-5xl font-serif font-black text-[#1E1C1A] tracking-tight leading-tight">
-                      Trip Epilogue &amp; Statistics
-                    </h2>
-                  </div>
-
-                  {/* Visual 3D stamp flourish loop trigger when scrolled into view */}
-                  <div className="flex flex-col items-center justify-center py-6">
-                    <motion.div
-                      initial={{ scale: 1.8, rotate: -45, opacity: 0 }}
-                      whileInView={{ scale: 1, rotate: -12, opacity: 1 }}
-                      viewport={{ once: true, margin: "-120px" }}
-                      transition={{ type: "spring", damping: 12, stiffness: 90, delay: 0.2 }}
-                      className="w-44 h-44 rounded-full border-4 border-dashed border-[#BA5536]/80 text-[#BA5536] flex flex-col items-center justify-center font-serif uppercase text-center relative z-10 shadow-xs select-none"
-                    >
-                      <span className="text-[10px] tracking-widest font-bold">Approved</span>
-                      <span className="text-lg font-black tracking-tight my-0.5">TripWise</span>
-                      <span className="text-[8px] tracking-[0.2em] font-extrabold text-[#7A7268]">Concierge</span>
-                      
-                      {/* Innermost ink circle stamp details */}
-                      <div className="absolute inset-1 border border-solid border-[#BA5536]/25 rounded-full pointer-events-none" />
-                      <div className="absolute bottom-2 text-[7px] text-[#7A7268] tracking-widest font-sans font-bold">Ref: TW-Stamp</div>
-                    </motion.div>
-
-                    <motion.div 
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      whileInView={{ scale: 1, opacity: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: 0.7 }}
-                      className="text-xs font-serif italic text-[#7A7268] mt-3"
-                    >
-                      ✓ Verification stamp locked down successfully.
-                    </motion.div>
-                  </div>
-
-                  {/* Grid stats */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-8 p-8 rounded-3xl bg-white border border-[#E6DFD5] text-center shadow-xs">
-                    <div className="flex flex-col gap-1 border-r border-[#E6DFD5] last:border-r-0">
-                      <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Total Duration</span>
-                      <span className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A]">{days.length} Days</span>
+              {activeDay === 'epilogue' ? (() => {
+                const tripDiningRollup = computeDiningRollup(null);
+                return (
+                  /* SECTION 3: THE EPILOGUE & 3D STAMP FLOURISH (Accesses Requirement 4) */
+                  <section className="scroll-mt-32 flex flex-col gap-10">
+                    <div className="text-center max-w-2xl mx-auto">
+                      <span className="text-xs font-mono uppercase tracking-widest text-[#BA5536] font-bold block mb-1">
+                        THE EPILOGUE  —  DOSSIER SUMMARY
+                      </span>
+                      <h2 className="text-3xl sm:text-5xl font-serif font-black text-[#1E1C1A] tracking-tight leading-tight">
+                        Trip Epilogue &amp; Statistics
+                      </h2>
                     </div>
-                    <div className="flex flex-col gap-1 border-r border-[#E6DFD5] last:border-r-0">
-                      <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Experiences Plotted</span>
-                      <span className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A]">{totalStopsCount} Stops</span>
-                    </div>
-                    <div className="flex flex-col gap-1 border-r border-[#E6DFD5] last:border-r-0">
-                      <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Walking Distance</span>
-                      <span className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A]">~{totalDistanceEst} km</span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Estimated Cost</span>
-                      <span className="text-2xl sm:text-3xl font-serif font-black text-[#BA5536]">{itinerary.estimatedCost || '$1,450'}</span>
-                    </div>
-                  </div>
 
-                  {/* Reminders grids */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Visual 3D stamp flourish loop trigger when scrolled into view */}
+                    <div className="flex flex-col items-center justify-center py-6">
+                      <motion.div
+                        initial={{ scale: 1.8, rotate: -45, opacity: 0 }}
+                        whileInView={{ scale: 1, rotate: -12, opacity: 1 }}
+                        viewport={{ once: true, margin: "-120px" }}
+                        transition={{ type: "spring", damping: 12, stiffness: 90, delay: 0.2 }}
+                        className="w-44 h-44 rounded-full border-4 border-dashed border-[#BA5536]/80 text-[#BA5536] flex flex-col items-center justify-center font-serif uppercase text-center relative z-10 shadow-xs select-none"
+                      >
+                        <span className="text-[10px] tracking-widest font-bold">Approved</span>
+                        <span className="text-lg font-black tracking-tight my-0.5">TripWise</span>
+                        <span className="text-[8px] tracking-[0.2em] font-extrabold text-[#7A7268]">Concierge</span>
+                        
+                        {/* Innermost ink circle stamp details */}
+                        <div className="absolute inset-1 border border-solid border-[#BA5536]/25 rounded-full pointer-events-none" />
+                        <div className="absolute bottom-2 text-[7px] text-[#7A7268] tracking-widest font-sans font-bold">Ref: TW-Stamp</div>
+                      </motion.div>
+
+                      <motion.div 
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        whileInView={{ scale: 1, opacity: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.7 }}
+                        className="text-xs font-serif italic text-[#7A7268] mt-3"
+                      >
+                        ✓ Verification stamp locked down successfully.
+                      </motion.div>
+                    </div>
+
+                    {/* Grid stats */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 p-8 rounded-3xl bg-white border border-[#E6DFD5] text-center shadow-xs">
+                      <div className="flex flex-col gap-1 border-r border-[#E6DFD5] last:border-r-0">
+                        <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Total Duration</span>
+                        <span className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A]">{days.length} Days</span>
+                      </div>
+                      <div className="flex flex-col gap-1 border-r border-[#E6DFD5] last:border-r-0">
+                        <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Experiences Plotted</span>
+                        <span className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A]">{totalStopsCount} Stops</span>
+                      </div>
+                      <div className="flex flex-col gap-1 border-r border-[#E6DFD5] last:border-r-0">
+                        <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Walking Distance</span>
+                        <span className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A]">~{totalDistanceEst} km</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Estimated Cost</span>
+                        <span className="text-2xl sm:text-3xl font-serif font-black text-[#BA5536]">{itinerary.estimatedCost || '$1,450'}</span>
+                      </div>
+                    </div>
+
+                    {/* Trip-Level Dining Rollup Banner */}
+                    {tripDiningRollup.total > 0 && (
+                      <div className="p-6 rounded-3xl bg-[#FAF6F0] border border-[#BA5536]/30 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-12 h-12 rounded-2xl bg-[#BA5536]/10 border border-[#BA5536]/25 flex items-center justify-center text-[#BA5536] shrink-0">
+                            <Utensils className="w-6 h-6 stroke-[2.2]" />
+                          </div>
+                          <div>
+                            <h4 className="font-serif font-bold text-lg text-[#1E1C1A] leading-tight">
+                              Trip-Level Dining Concierge Rollup
+                            </h4>
+                            <p className="text-xs sm:text-sm font-sans text-[#5F5E5A] mt-1">
+                              {tripDiningRollup.confirmed === tripDiningRollup.total ? 'All dining reservations across your itinerary are confirmed and locked in!' : `${tripDiningRollup.confirmed} of ${tripDiningRollup.total} dining tables reserved across the itinerary.`}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 self-end sm:self-auto flex-wrap">
+                          <span className="px-3.5 py-1.5 rounded-full bg-[#BA5536]/15 border border-[#BA5536]/30 text-[#BA5536] font-mono text-xs font-extrabold tracking-wider">
+                            {tripDiningRollup.confirmed} / {tripDiningRollup.total} CONFIRMED
+                          </span>
+                          {tripDiningRollup.firstUnbooked && (
+                            <button
+                              type="button"
+                              onClick={() => scrollToFirstUnbookedDining(tripDiningRollup.firstUnbooked)}
+                              className="px-4 py-2 rounded-xl bg-[#1E1C1A] text-white hover:bg-[#BA5536] font-sans text-xs font-bold transition-all cursor-pointer shadow-2xs flex items-center gap-1.5"
+                            >
+                              <span>Book Day {tripDiningRollup.firstUnbooked.dayNum} Table →</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Reminders grids */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="bg-white p-6 rounded-2xl border border-[#E6DFD5] shadow-2xs">
                       <h3 className="text-sm font-sans font-bold uppercase tracking-widest text-[#BA5536] border-b border-[#E6DFD5] pb-2.5 mb-3.5 flex items-center gap-2">
                         <Calendar className="w-4 h-4" />
@@ -665,13 +761,14 @@ export default function ItineraryPage() {
                     </div>
                   </div>
                 </section>
-              ) : (
+              ); })() : (
                 /* ACTIVE CHAPTER VIEW */
                 (() => {
                   const dayIdx = activeDay - 1;
                   const day = days[dayIdx] || days[0];
                   const summary = getDaySummary(day, dayIdx, days);
                   const activities = day.activities || [];
+                  const dayDiningRollup = computeDiningRollup(activeDay);
 
                   return (
                     <div className="flex flex-col">
@@ -682,8 +779,8 @@ export default function ItineraryPage() {
                             CHAPTER {toRomanNumeral(activeDay)}  —  DAY {activeDay}
                           </span>
                           
-                          {/* Visual distance sparkline next to distance stats */}
-                          <div className="flex items-center gap-3 text-xs font-sans font-semibold text-[#5F5E5A] tracking-wide">
+                          {/* Visual distance sparkline next to distance stats & dining rollup */}
+                          <div className="flex items-center gap-3 text-xs font-sans font-semibold text-[#5F5E5A] tracking-wide flex-wrap">
                             <span>{activities.length} Stops</span>
                             <span className="text-[#E6DFD5] font-serif">•</span>
                             <span>{summary?.stats?.hours || '6.5 hrs'}</span>
@@ -694,6 +791,20 @@ export default function ItineraryPage() {
                             </span>
                             <span className="text-[#E6DFD5] font-serif">•</span>
                             <span className="text-[#1E1C1A] font-bold">{summary?.stats?.cost || 'Est. €85'}</span>
+                            {dayDiningRollup.total > 0 && (
+                              <>
+                                <span className="text-[#E6DFD5] font-serif">•</span>
+                                <button
+                                  type="button"
+                                  onClick={() => scrollToFirstUnbookedDining(dayDiningRollup.firstUnbooked)}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#BA5536]/30 bg-[#BA5536]/10 text-[#BA5536] font-sans text-xs font-bold hover:bg-[#BA5536]/20 transition-all cursor-pointer shadow-2xs"
+                                  title="Tap to jump to first unbooked dining stop"
+                                >
+                                  <Utensils className="w-3.5 h-3.5 shrink-0" />
+                                  <span>{dayDiningRollup.confirmed} of {dayDiningRollup.total} reservations confirmed</span>
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
 
@@ -772,6 +883,49 @@ export default function ItineraryPage() {
                           const { crowdNote, weatherNote } = getContextAwareTip(act, idx);
                           const categoryStyle = getCategoryStyling(act);
 
+                          // Category Classification for Dynamic Concierge Ribbon
+                          const catLower = (act.category || act.type || '').toLowerCase();
+                          const titleLower = (act.title || '').toLowerCase();
+                          const isDining = catLower.includes('din') || catLower.includes('food') || catLower.includes('rest') || catLower.includes('cafe') || catLower.includes('bar') || catLower.includes('lunch') || catLower.includes('dinner') || catLower.includes('breakfast') || titleLower.includes('osteria') || titleLower.includes('trattoria') || titleLower.includes('restaurant') || titleLower.includes('cafe') || titleLower.includes('bistro') || titleLower.includes('gelat') || titleLower.includes('pizzeria') || titleLower.includes('tavern');
+                          const isNature = !isDining && (catLower.includes('park') || catLower.includes('nature') || catLower.includes('garden') || catLower.includes('beach') || catLower.includes('walk') || catLower.includes('view') || catLower.includes('scenic') || titleLower.includes('park') || titleLower.includes('garden') || titleLower.includes('fountain') || titleLower.includes('plaza') || titleLower.includes('piazza') || titleLower.includes('villa borghese') || titleLower.includes('spanish steps'));
+
+                          const ribbonTitle = isDining ? 'Table Reservation & Dining Guide' : (isNature ? 'Public Access & Visitor Guide' : 'Official Admission & Gateways');
+                          const ribbonBadge = isDining ? '🍽️ Table Check' : (isNature ? '🌿 Open Access' : '⚡ Verified');
+                          const ribbonEstLabel = isDining ? 'Est. Spend Range:' : (isNature ? 'Admission Status:' : 'Est. Rate:');
+                          const ribbonEstValue = isNature && (costInfo.title.includes('Check') || costInfo.title === 'Free' || costInfo.title === '$0') ? 'Free Public Entry' : costInfo.title;
+                          const ribbonSubtext = isDining ? 'Table reservations & menu recommendations' : (isNature ? 'Best visiting times & walking directions' : 'Skip-the-line options available');
+                          
+                          const ribbonBtnText = isDining ? 'Compare Table Gateways' : (isNature ? 'Visitor Access Gateways' : 'Compare 4 Gateways');
+                          const ribbonActionLabel = isDining ? 'Reserve Table Online' : (isNature ? 'Google Maps View' : 'Check Viator Passes');
+                          
+                          // Clean venue/restaurant name extraction for accurate inline search queries
+                          let cleanName = (act.title || '').trim();
+                          const atMatch = cleanName.match(/\s(?:at|@|inside)\s+(.+)$/i);
+                          if (atMatch && atMatch[1]) {
+                            cleanName = atMatch[1].trim();
+                          } else {
+                            const verbMatch = cleanName.match(/^(?:visit|tour|guided tour|exploration|stroll|walk|sunset walk|afternoon|morning|evening|dinner|lunch|breakfast|drinks|cocktails|coffee|gelato|tasting|shopping)\s+(?:to|of|around|at|in)\s+(.+)$/i);
+                            if (verbMatch && verbMatch[1]) {
+                              cleanName = verbMatch[1].trim();
+                            }
+                          }
+                          cleanName = cleanName
+                            .replace(/\b(?:VIP|Fast-Track|Skip-the-Line|Priority|Exclusive|Guided|Tour|Exploration|Experience|Admission|Entry|Pass|Passes|Access)\b/gi, '')
+                            .replace(/\s+/g, ' ')
+                            .trim();
+                          if (!cleanName || cleanName.length < 2) {
+                            cleanName = (act.title || '').trim();
+                          }
+                          const cleanDest = itinerary?.destinationName ? itinerary.destinationName.split(',')[0].trim() : '';
+                          const cleanSearchQuery = `${cleanName} ${cleanDest}`.trim();
+
+                          const ribbonActionUrl = isDining
+                            ? `https://www.google.com/search?q=${encodeURIComponent(`${cleanSearchQuery} reserve table`)}`
+                            : (isNature 
+                                ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cleanSearchQuery)}`
+                                : `https://www.viator.com/searchResults/all?text=${encodeURIComponent(cleanSearchQuery)}`);
+
+
                           // Check for intentional pacing gaps (greater than 1 hour / 60 minutes)
                           let gapElement = null;
                           if (idx > 0) {
@@ -813,6 +967,7 @@ export default function ItineraryPage() {
 
                               {/* Large Editorial Spread Stops (Alternating Left/Right) */}
                               <motion.div 
+                                id={`dining-stop-${activeDay}-${stopNum}`}
                                 className={`py-12 sm:py-16 flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} items-center gap-8 lg:gap-12 relative z-10 border-b border-[#E6DFD5]/50 last:border-b-0`}
                                 initial={{ opacity: 0, y: 30 }}
                                 whileInView={{ opacity: 1, y: 0 }}
@@ -824,24 +979,57 @@ export default function ItineraryPage() {
                                   {stopNum}
                                 </div>
 
-                                {/* Image Side Spread with subtle hover scale drift */}
-                                <div className="w-full lg:w-1/2 h-80 sm:h-100 rounded-3xl overflow-hidden border border-[#E6DFD5] shadow-md relative group shrink-0">
-                                  <motion.img
-                                    src={getActivityThumbnail(act, idx)}
-                                    alt={act.title}
-                                    className="w-full h-full object-cover object-center"
-                                    whileHover={{ scale: 1.04 }}
-                                    transition={{ duration: 0.6, ease: 'easeOut' }}
-                                  />
-                                  
-                                  {/* Daylight time tag */}
-                                  <div className="absolute top-4 left-4 px-3.5 py-1.5 rounded-full bg-[#1E1C1A]/85 backdrop-blur-sm text-white font-mono text-xs font-bold tracking-wider">
-                                    {act.time || '10:00 AM'}
+                                {/* Image Side Spread with subtle hover scale drift + Secondary detail box on wide viewports below image (Requirement 6) */}
+                                <div className="w-full lg:w-1/2 flex flex-col gap-4 shrink-0">
+                                  <div className="w-full h-80 sm:h-100 rounded-3xl overflow-hidden border border-[#E6DFD5] shadow-md relative group">
+                                    <motion.img
+                                      src={getActivityThumbnail(act, idx)}
+                                      alt={act.title}
+                                      className="w-full h-full object-cover object-center"
+                                      whileHover={{ scale: 1.04 }}
+                                      transition={{ duration: 0.6, ease: 'easeOut' }}
+                                    />
+                                    
+                                    {/* Daylight time tag with Planned vs Booked check (Requirement 4) */}
+                                    <div className="absolute top-4 left-4 px-3.5 py-1.5 rounded-full bg-[#1E1C1A]/85 backdrop-blur-sm text-white font-mono text-xs font-bold tracking-wider shadow-sm">
+                                      {(() => {
+                                        if (isDining) {
+                                          try {
+                                            const stored = localStorage.getItem(`tw_dining_res_${itinerary?.destinationName || 'Destination'}_d${activeDay}_s${stopNum}`);
+                                            if (stored) {
+                                              const parsed = JSON.parse(stored);
+                                              if (parsed && parsed.status === 'confirmed' && parsed.time && parsed.time !== act.time) {
+                                                return `Planned ${act.time || '10:00 AM'}`;
+                                              }
+                                            }
+                                          } catch (e) {}
+                                        }
+                                        return act.time || '10:00 AM';
+                                      })()}
+                                    </div>
+
+                                    {/* Distinct Category stamp visual style */}
+                                    <div className="absolute bottom-4 right-4 px-4 py-1.5 rounded-full bg-white/95 backdrop-blur-xs text-[#1E1C1A] font-serif italic text-xs font-bold shadow-xs border border-[#E6DFD5]">
+                                      {categoryStyle.icon} {categoryStyle.name}
+                                    </div>
                                   </div>
 
-                                  {/* Distinct Category stamp visual style */}
-                                  <div className="absolute bottom-4 right-4 px-4 py-1.5 rounded-full bg-white/95 backdrop-blur-xs text-[#1E1C1A] font-serif italic text-xs font-bold shadow-xs border border-[#E6DFD5]">
-                                    {categoryStyle.icon} {categoryStyle.name}
+                                  {/* Secondary detail card underneath image on wide viewports to balance column heights (`hidden lg:flex`) */}
+                                  <div className="hidden lg:flex items-start gap-3.5 p-4 rounded-2xl border border-[#E6DFD5] bg-[#FAF6F0]/70 text-xs font-sans text-[#5F5E5A] shadow-2xs">
+                                    <div className="w-9 h-9 rounded-xl bg-white border border-[#E6DFD5] flex items-center justify-center text-[#BA5536] shrink-0 mt-0.5 shadow-2xs">
+                                      <MapPin className="w-4 h-4 stroke-[2.2]" />
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="flex items-center justify-between gap-2 border-b border-[#E6DFD5]/60 pb-1.5 mb-1.5">
+                                        <strong className="font-serif font-bold text-[#1E1C1A] text-sm tracking-tight">Getting There &amp; Local Note</strong>
+                                        <span className="text-[10px] font-mono uppercase tracking-wider text-[#7A7268] bg-white px-2 py-0.5 rounded-md border border-[#E6DFD5]">
+                                          Stop #{stopNum} Pin
+                                        </span>
+                                      </div>
+                                      <p className="font-serif text-xs text-[#4A443E] leading-relaxed">
+                                        {act.location || `${cleanName}, ${cleanDest}`} — easily reached on foot or short local transit from the previous itinerary chapter stop.
+                                      </p>
+                                    </div>
                                   </div>
                                 </div>
 
@@ -882,10 +1070,10 @@ export default function ItineraryPage() {
                                     {act.title}
                                   </h3>
 
-                                  {/* Clean stats row */}
+                                  {/* Clean stats row (Requirement 5: fix duplicate reviews word) */}
                                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm font-sans font-medium text-[#5F5E5A] mb-3">
                                     <span className="text-amber-600 font-bold">★★★★★ {ratingData.rating}</span>
-                                    <span>({ratingData.reviews} reviews)</span>
+                                    <span>({String(ratingData?.reviews || '12k').replace(/\s*reviews?\s*/i, '').trim()} reviews)</span>
                                     <span className="text-[#E6DFD5] font-serif">•</span>
                                     <span className="font-bold text-[#1E1C1A]">{costInfo.title}</span>
                                     {act.duration && (
@@ -906,60 +1094,71 @@ export default function ItineraryPage() {
                                     {act.description?.split('.')[0] || 'Explore the breathtaking landscapes and cultural history at this custom stop.'}.
                                   </p>
 
-                                  {/* OPTION 1: Ultra-Premium Editorial Admission & Ticket Ribbon */}
-                                  <div className="w-full rounded-2xl border border-[#E6DFD5] bg-[#FAF6F0]/80 p-4 sm:p-5 mb-5 shadow-2xs hover:border-[#BA5536]/40 transition-all duration-300 relative overflow-hidden group">
-                                    {/* Decorative subtle terracotta glow */}
-                                    <div className="absolute -right-12 -top-12 w-36 h-36 bg-[#BA5536]/10 rounded-full blur-2xl pointer-events-none group-hover:bg-[#BA5536]/15 transition-all duration-500" />
-                                    
-                                    {/* Top Row: Icon + Title + Est Rate */}
-                                    <div className="flex items-start justify-between gap-3 relative z-10 mb-3.5 pb-3.5 border-b border-[#E6DFD5]/70">
-                                      <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-xl bg-white border border-[#E6DFD5] shadow-2xs flex items-center justify-center text-[#BA5536] shrink-0 group-hover:scale-105 transition-transform duration-300">
-                                          <Ticket className="w-5 h-5 stroke-[2.2]" />
-                                        </div>
-                                        <div>
-                                          <div className="flex items-center gap-2 flex-wrap">
-                                            <h4 className="font-serif font-bold text-sm sm:text-base text-[#1E1C1A] tracking-tight leading-none">
-                                              Official Admission & Gateways
-                                            </h4>
-                                            <span className="px-2 py-0.5 rounded-full bg-[#BA5536]/10 border border-[#BA5536]/25 text-[#BA5536] font-mono text-[9px] font-bold tracking-wider uppercase">
-                                              ⚡ Verified
-                                            </span>
+                                  {/* OPTION 1: Ultra-Premium Editorial Admission & Ticket Ribbon OR Inline Dining Reservation */}
+                                  {isDining ? (
+                                    <div className="mb-5">
+                                      <InlineDiningReservation
+                                        activity={act}
+                                        destinationName={itinerary?.destinationName || 'Destination'}
+                                        dayNumber={activeDay}
+                                        stopNumber={stopNum}
+                                        onStatusChange={handleDiningBookingsChange}
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="w-full rounded-2xl border border-[#E6DFD5] bg-[#FAF6F0]/80 p-4 sm:p-5 mb-5 shadow-2xs hover:border-[#BA5536]/40 transition-all duration-300 relative overflow-hidden group">
+                                      {/* Decorative subtle terracotta glow */}
+                                      <div className="absolute -right-12 -top-12 w-36 h-36 bg-[#BA5536]/10 rounded-full blur-2xl pointer-events-none group-hover:bg-[#BA5536]/15 transition-all duration-500" />
+                                      
+                                      {/* Top Row: Icon + Title + Est Rate */}
+                                      <div className="flex items-start justify-between gap-3 relative z-10 mb-3.5 pb-3.5 border-b border-[#E6DFD5]/70">
+                                        <div className="flex items-center gap-3">
+                                          <div className="w-10 h-10 rounded-xl bg-white border border-[#E6DFD5] shadow-2xs flex items-center justify-center text-[#BA5536] shrink-0 group-hover:scale-105 transition-transform duration-300">
+                                            {isNature ? <MapPin className="w-5 h-5 stroke-[2.2]" /> : <Ticket className="w-5 h-5 stroke-[2.2]" />}
                                           </div>
-                                          <p className="text-xs font-sans text-[#5F5E5A] mt-1 flex items-center gap-1.5 flex-wrap">
-                                            <span>Est. Rate: <strong className="text-[#1E1C1A]">{costInfo.title}</strong></span>
-                                            <span className="text-[#C8BFB2] font-serif">•</span>
-                                            <span>Skip-the-line options available</span>
-                                          </p>
+                                          <div>
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                              <h4 className="font-serif font-bold text-sm sm:text-base text-[#1E1C1A] tracking-tight leading-none">
+                                                {ribbonTitle}
+                                              </h4>
+                                              <span className="px-2 py-0.5 rounded-full bg-[#BA5536]/10 border border-[#BA5536]/25 text-[#BA5536] font-mono text-[9px] font-bold tracking-wider uppercase">
+                                                {ribbonBadge}
+                                              </span>
+                                            </div>
+                                            <p className="text-xs font-sans text-[#5F5E5A] mt-1 flex items-center gap-1.5 flex-wrap">
+                                              <span>{ribbonEstLabel} <strong className="text-[#1E1C1A]">{ribbonEstValue}</strong></span>
+                                              <span className="text-[#C8BFB2] font-serif">•</span>
+                                              <span>{ribbonSubtext}</span>
+                                            </p>
+                                          </div>
                                         </div>
                                       </div>
-                                    </div>
 
-                                    {/* Bottom Row: 2 Clean Buttons in an even grid */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 relative z-10">
-                                      <button
-                                        type="button"
-                                        onClick={() => setActivePassModal({ activity: act, stopNum: stopNum })}
-                                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#1E1C1A] hover:bg-[#2A2623] text-white text-xs font-sans font-bold shadow-sm transition-all duration-200 cursor-pointer hover:scale-[1.01] active:scale-95"
-                                      >
-                                        <Ticket className="w-3.5 h-3.5 text-[#BA5536] shrink-0" />
-                                        <span>Compare 4 Gateways</span>
-                                      </button>
+                                      {/* Bottom Row: 2 Clean Buttons in an even grid */}
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 relative z-10">
+                                        <button
+                                          type="button"
+                                          onClick={() => setActivePassModal({ activity: act, stopNum: stopNum })}
+                                          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#1E1C1A] hover:bg-[#2A2623] text-white text-xs font-sans font-bold shadow-sm transition-all duration-200 cursor-pointer hover:scale-[1.01] active:scale-95"
+                                        >
+                                          {isNature ? <MapPin className="w-3.5 h-3.5 text-[#BA5536] shrink-0" /> : <Ticket className="w-3.5 h-3.5 text-[#BA5536] shrink-0" />}
+                                          <span>{ribbonBtnText}</span>
+                                        </button>
 
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          const q = encodeURIComponent(`${act.title} ${itinerary?.destinationName || ''}`);
-                                          window.open(`https://www.viator.com/searchResults/all?text=${q}`, '_blank', 'noopener,noreferrer');
-                                        }}
-                                        className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-[#E6DFD5] hover:border-[#BA5536] bg-white text-[#1E1C1A] hover:text-[#BA5536] text-xs font-sans font-bold shadow-2xs transition-all duration-200 cursor-pointer group/btn"
-                                        title="Check Viator Verified Skip-the-Line Passes"
-                                      >
-                                        <span>Check Viator Passes</span>
-                                        <ExternalLink className="w-3.5 h-3.5 text-[#7A7268] group-hover/btn:text-[#BA5536] shrink-0 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
-                                      </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            window.open(ribbonActionUrl, '_blank', 'noopener,noreferrer');
+                                          }}
+                                          className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-[#E6DFD5] hover:border-[#BA5536] bg-white text-[#1E1C1A] hover:text-[#BA5536] text-xs font-sans font-bold shadow-2xs transition-all duration-200 cursor-pointer group/btn"
+                                          title={ribbonActionLabel}
+                                        >
+                                          <span>{ribbonActionLabel}</span>
+                                          <ExternalLink className="w-3.5 h-3.5 text-[#7A7268] group-hover/btn:text-[#BA5536] shrink-0 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
+                                        </button>
+                                      </div>
                                     </div>
-                                  </div>
+                                  )}
 
                                   {/* PROGRESSIVE DISCLOSURE ACTIONS */}
                                   <div className="flex items-center gap-3 mt-2 flex-wrap">
@@ -1067,11 +1266,23 @@ export default function ItineraryPage() {
                         })}
                       </div>
 
-                      {/* Day navigation footer pagination */}
-                      <div className="mt-12 pt-6 border-t border-[#E6DFD5] flex items-center justify-between">
-                        <span className="text-xs font-sans text-[#7A7268]">
-                          End of Chapter {toRomanNumeral(activeDay)}
-                        </span>
+                      {/* Day navigation footer pagination & Dining status rollup */}
+                      <div className="mt-12 pt-6 border-t border-[#E6DFD5] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <span className="text-xs font-sans text-[#7A7268] font-medium">
+                            End of Chapter {toRomanNumeral(activeDay)}
+                          </span>
+                          {dayDiningRollup.total > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => scrollToFirstUnbookedDining(dayDiningRollup.firstUnbooked)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#BA5536]/30 bg-[#BA5536]/10 text-[#BA5536] font-sans text-xs font-bold hover:bg-[#BA5536]/20 transition-all cursor-pointer shadow-2xs"
+                            >
+                              <Utensils className="w-3.5 h-3.5 shrink-0" />
+                              <span>{dayDiningRollup.confirmed} of {dayDiningRollup.total} table reservations confirmed</span>
+                            </button>
+                          )}
+                        </div>
                         
                         <button
                           onClick={() => {
@@ -1084,7 +1295,7 @@ export default function ItineraryPage() {
                               window.scrollTo({ top: 380, behavior: 'smooth' });
                             }
                           }}
-                          className="px-5 py-2.5 rounded-full bg-[#1E1C1A] text-white hover:bg-[#BA5536] text-xs font-sans font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                          className="px-5 py-2.5 rounded-full bg-[#1E1C1A] text-white hover:bg-[#BA5536] text-xs font-sans font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs self-start sm:self-auto"
                         >
                           <span>{activeDay < days.length ? `Next Chapter (Day ${toRomanNumeral(activeDay + 1)})` : "Go to Epilogue"}</span>
                           <ArrowRight className="w-4 h-4" />

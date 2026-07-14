@@ -114,10 +114,11 @@ export function getTransportBetweenStops(prevStop, nextStop, idx = 0) {
 // 3. Get Activity Rating (Point 3)
 export function getActivityRating(act, idx = 0) {
   if (act?.rating && act?.reviewsCount) {
-    return { rating: act.rating, reviews: act.reviewsCount };
+    const cleanRev = String(act.reviewsCount).replace(/\s*reviews?\s*/i, '').trim();
+    return { rating: act.rating, reviews: cleanRev };
   }
   const ratings = ['4.8', '4.9', '4.7', '4.9', '4.8', '4.6'];
-  const reviews = ['12k Reviews', '18k Reviews', '8.5k Reviews', '24k Reviews', '15k Reviews', '6.2k Reviews'];
+  const reviews = ['12k', '18k', '8.5k', '24k', '15k', '6.2k'];
   return {
     rating: ratings[idx % ratings.length],
     reviews: reviews[idx % reviews.length]

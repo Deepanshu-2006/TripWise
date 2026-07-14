@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ExternalLink, ShieldCheck, Ticket, Clock, AlertCircle, Bookmark, Check, Compass, Landmark, Sparkles, FileText } from 'lucide-react';
+import { X, ExternalLink, ShieldCheck, Ticket, Clock, AlertCircle, Bookmark, Check, Compass, Landmark, Sparkles, FileText, Utensils, MapPin, Star, Trees, Bike, Camera } from 'lucide-react';
 
 export default function TicketPassModal({
   isOpen,
@@ -33,50 +33,173 @@ export default function TicketPassModal({
 
   const title = activity.title || 'Featured Stop';
   const time = activity.time || '10:00 AM';
-  const category = (activity.category || activity.type || 'Attraction').toUpperCase();
+  const rawCat = activity.category || activity.type || 'Attraction';
+  const category = rawCat.toUpperCase();
   const cost = activity.costInfo?.title || 'Check venue rate';
   const cleanDest = destinationName.split(',')[0].trim();
 
-  // 100% Real, Clean Direct Partner Search Gateways
-  const officialQuery = encodeURIComponent(`${title} ${destinationName} official tickets site box office`);
-  const viatorQuery = encodeURIComponent(`${title} ${destinationName}`);
-  const gygQuery = encodeURIComponent(`${title} ${destinationName}`);
-  const tiqetsQuery = encodeURIComponent(`${title} ${destinationName}`);
+  // Category Detection for Dynamic Concierge
+  const catLower = rawCat.toLowerCase();
+  const titleLower = title.toLowerCase();
+  
+  const isDining = catLower.includes('din') || catLower.includes('food') || catLower.includes('rest') || catLower.includes('cafe') || catLower.includes('bar') || catLower.includes('lunch') || catLower.includes('dinner') || catLower.includes('breakfast') || titleLower.includes('osteria') || titleLower.includes('trattoria') || titleLower.includes('restaurant') || titleLower.includes('cafe') || titleLower.includes('bistro') || titleLower.includes('gelat') || titleLower.includes('pizzeria') || titleLower.includes('tavern');
+  
+  const isNature = !isDining && (catLower.includes('park') || catLower.includes('nature') || catLower.includes('garden') || catLower.includes('beach') || catLower.includes('walk') || catLower.includes('view') || catLower.includes('scenic') || titleLower.includes('park') || titleLower.includes('garden') || titleLower.includes('fountain') || titleLower.includes('plaza') || titleLower.includes('piazza') || titleLower.includes('villa borghese') || titleLower.includes('spanish steps'));
 
-  const gateways = [
-    {
-      name: 'Official Venue Ticket Gateway',
-      badge: 'Direct Box Office',
-      icon: <Landmark className="w-5 h-5 text-[#BA5536]" />,
-      url: `https://www.google.com/search?q=${officialQuery}`,
-      desc: 'Search official venue website, standard admission & direct box office releases.',
-      color: 'border-[#BA5536]/30 bg-[#BA5536]/5 hover:border-[#BA5536] hover:bg-[#BA5536]/10 text-[#BA5536]'
-    },
-    {
-      name: 'Viator Skip-the-Line Passes',
-      badge: 'Verified Partner',
-      icon: <Sparkles className="w-5 h-5 text-amber-600" />,
-      url: `https://www.viator.com/searchResults/all?text=${viatorQuery}`,
-      desc: 'Compare priority skip-the-line tours, reserved time slots, and VIP guided entry.',
-      color: 'border-amber-500/30 bg-amber-500/5 hover:border-amber-500 hover:bg-amber-500/10 text-amber-700'
-    },
-    {
-      name: 'GetYourGuide Tours & Passes',
-      badge: 'Flexible Cancellation',
-      icon: <Compass className="w-5 h-5 text-emerald-600" />,
-      url: `https://www.getyourguide.com/s/?q=${gygQuery}`,
-      desc: 'Explore instant mobile passes, audio guides, and combo city attractions.',
-      color: 'border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500 hover:bg-emerald-500/10 text-emerald-700'
-    },
-    {
-      name: 'Tiqets Instant Mobile Entry',
-      badge: 'Digital Delivery',
-      icon: <Ticket className="w-5 h-5 text-indigo-600" />,
-      url: `https://www.tiqets.com/en/search/?q=${tiqetsQuery}`,
-      desc: 'Instant mobile delivery passes and discounted multi-attraction bundles.',
-      color: 'border-indigo-500/30 bg-indigo-500/5 hover:border-indigo-500 hover:bg-indigo-500/10 text-indigo-700'
+  // Header and grid labels dynamically adapted
+  const headerSubtitle = isDining 
+    ? 'TABLE RESERVATION & DINING CONCIERGE' 
+    : (isNature ? 'PUBLIC ACCESS & VISITOR GUIDE' : 'TICKET & BOOKING CONCIERGE');
+  
+  const rateLabel = isDining ? 'Est. Spend Range' : 'Est. Rate';
+  const timeLabel = isDining ? 'Seating Window' : (isNature ? 'Best Visiting Time' : 'Itinerary Time');
+  const timeSub = isDining ? '(Recommended reserve early)' : '(Arrive 15m early)';
+
+  // Clean venue/restaurant/attraction name extraction (strips "Authentic Roman Pasta at", "Colosseum VIP Exploration", etc.)
+  let cleanName = title.trim();
+  const atMatch = cleanName.match(/\s(?:at|@|inside)\s+(.+)$/i);
+  if (atMatch && atMatch[1]) {
+    cleanName = atMatch[1].trim();
+  } else {
+    const verbMatch = cleanName.match(/^(?:visit|tour|guided tour|exploration|stroll|walk|sunset walk|afternoon|morning|evening|dinner|lunch|breakfast|drinks|cocktails|coffee|gelato|tasting|shopping)\s+(?:to|of|around|at|in)\s+(.+)$/i);
+    if (verbMatch && verbMatch[1]) {
+      cleanName = verbMatch[1].trim();
     }
-  ];
+  }
+  cleanName = cleanName
+    .replace(/\b(?:VIP|Fast-Track|Skip-the-Line|Priority|Exclusive|Guided|Tour|Exploration|Experience|Admission|Entry|Pass|Passes|Access)\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!cleanName || cleanName.length < 2) {
+    cleanName = title.trim();
+  }
+
+  const cleanSearchQuery = `${cleanName} ${cleanDest}`.trim();
+
+  // Dynamically tailor the 4 gateways based on category using exact cleanSearchQuery
+  let gateways = [];
+  if (isDining) {
+    const googleReserveQuery = encodeURIComponent(`${cleanSearchQuery} reserve table`);
+    const opentableQuery = encodeURIComponent(cleanName);
+    const theforkQuery = encodeURIComponent(cleanName);
+    const mapsQuery = encodeURIComponent(cleanSearchQuery);
+
+    gateways = [
+      {
+        name: 'Instant Google Table Reservation',
+        badge: 'Universal Booking',
+        icon: <Utensils className="w-5 h-5 text-[#BA5536]" />,
+        url: `https://www.google.com/search?q=${googleReserveQuery}`,
+        desc: `Check instant online reservation windows for ${cleanName} across OpenTable, Resy & direct desk.`,
+        color: 'border-[#BA5536]/30 bg-[#BA5536]/5 hover:border-[#BA5536] hover:bg-[#BA5536]/10 text-[#BA5536]'
+      },
+      {
+        name: 'Check Table on OpenTable',
+        badge: 'Global #1 Network',
+        icon: <Bookmark className="w-5 h-5 text-indigo-600" />,
+        url: `https://www.opentable.com/s?term=${opentableQuery}`,
+        desc: `Search real-time table availability, special dining offers, and instant confirmation seating.`,
+        color: 'border-indigo-500/30 bg-indigo-500/5 hover:border-indigo-500 hover:bg-indigo-500/10 text-indigo-700'
+      },
+      {
+        name: 'Check Seating on TheFork',
+        badge: 'Michelin / Europe',
+        icon: <Star className="w-5 h-5 text-amber-600" />,
+        url: `https://www.thefork.com/search?q=${theforkQuery}`,
+        desc: `Compare dining slots, special chef tasting menus, and up to 50% off table discounts for ${cleanName}.`,
+        color: 'border-amber-500/30 bg-amber-500/5 hover:border-amber-500 hover:bg-amber-500/10 text-amber-700'
+      },
+      {
+        name: 'Google Maps Wait Times & Menu',
+        badge: 'Live Crowd & Phone',
+        icon: <MapPin className="w-5 h-5 text-emerald-600" />,
+        url: `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`,
+        desc: `Check exact location, phone booking desk, peak crowd wait times, and customer menu photos.`,
+        color: 'border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500 hover:bg-emerald-500/10 text-emerald-700'
+      }
+    ];
+  } else if (isNature) {
+    const mapsQuery = encodeURIComponent(cleanSearchQuery);
+    const infoQuery = encodeURIComponent(`${cleanSearchQuery} official opening hours visitor information`);
+    const viatorQuery = encodeURIComponent(cleanSearchQuery);
+    const photoQuery = encodeURIComponent(`${cleanSearchQuery} best photography spots tips`);
+
+    gateways = [
+      {
+        name: 'Google Maps Navigation & Entrance Points',
+        badge: 'Walking Directions',
+        icon: <MapPin className="w-5 h-5 text-[#BA5536]" />,
+        url: `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`,
+        desc: `Get live walking navigation, entrance gate coordinates, and crowd conditions for ${cleanName}.`,
+        color: 'border-[#BA5536]/30 bg-[#BA5536]/5 hover:border-[#BA5536] hover:bg-[#BA5536]/10 text-[#BA5536]'
+      },
+      {
+        name: 'Official Park / Site Visitor Info',
+        badge: 'Hours & Access',
+        icon: <Trees className="w-5 h-5 text-emerald-600" />,
+        url: `https://www.google.com/search?q=${infoQuery}`,
+        desc: `Check seasonal opening hours, public events, fountain schedules, and access maps for ${cleanName}.`,
+        color: 'border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500 hover:bg-emerald-500/10 text-emerald-700'
+      },
+      {
+        name: 'Guided Walking & Bike Tours on Viator',
+        badge: 'Optional Guided Passes',
+        icon: <Bike className="w-5 h-5 text-amber-600" />,
+        url: `https://www.viator.com/searchResults/all?text=${viatorQuery}`,
+        desc: `Explore optional guided Segway, e-bike, and historical storytelling walking tours of ${cleanName}.`,
+        color: 'border-amber-500/30 bg-amber-500/5 hover:border-amber-500 hover:bg-amber-500/10 text-amber-700'
+      },
+      {
+        name: 'Top Photography Angles & Tips',
+        badge: 'Scenic Guide',
+        icon: <Camera className="w-5 h-5 text-indigo-600" />,
+        url: `https://www.google.com/search?q=${photoQuery}`,
+        desc: `Check traveler tips for the best sunset viewing angles and quiet pathways around ${cleanName}.`,
+        color: 'border-indigo-500/30 bg-indigo-500/5 hover:border-indigo-500 hover:bg-indigo-500/10 text-indigo-700'
+      }
+    ];
+  } else {
+    // Standard Attraction Gateways
+    const officialQuery = encodeURIComponent(`${cleanSearchQuery} official tickets site box office`);
+    const viatorQuery = encodeURIComponent(cleanSearchQuery);
+    const gygQuery = encodeURIComponent(cleanSearchQuery);
+    const tiqetsQuery = encodeURIComponent(cleanSearchQuery);
+
+    gateways = [
+      {
+        name: 'Official Venue Ticket Gateway',
+        badge: 'Direct Box Office',
+        icon: <Landmark className="w-5 h-5 text-[#BA5536]" />,
+        url: `https://www.google.com/search?q=${officialQuery}`,
+        desc: `Search official venue website, standard admission & direct box office releases for ${cleanName}.`,
+        color: 'border-[#BA5536]/30 bg-[#BA5536]/5 hover:border-[#BA5536] hover:bg-[#BA5536]/10 text-[#BA5536]'
+      },
+      {
+        name: 'Viator Skip-the-Line Passes',
+        badge: 'Verified Partner',
+        icon: <Sparkles className="w-5 h-5 text-amber-600" />,
+        url: `https://www.viator.com/searchResults/all?text=${viatorQuery}`,
+        desc: `Compare priority skip-the-line tours, reserved time slots, and VIP guided entry for ${cleanName}.`,
+        color: 'border-amber-500/30 bg-amber-500/5 hover:border-amber-500 hover:bg-amber-500/10 text-amber-700'
+      },
+      {
+        name: 'GetYourGuide Tours & Passes',
+        badge: 'Flexible Cancellation',
+        icon: <Compass className="w-5 h-5 text-emerald-600" />,
+        url: `https://www.getyourguide.com/s/?q=${gygQuery}`,
+        desc: `Explore instant mobile passes, audio guides, and combo city attractions for ${cleanName}.`,
+        color: 'border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500 hover:bg-emerald-500/10 text-emerald-700'
+      },
+      {
+        name: 'Tiqets Instant Mobile Entry',
+        badge: 'Digital Delivery',
+        icon: <Ticket className="w-5 h-5 text-indigo-600" />,
+        url: `https://www.tiqets.com/en/search/?q=${tiqetsQuery}`,
+        desc: `Instant mobile delivery passes and discounted multi-attraction bundles for ${cleanName}.`,
+        color: 'border-indigo-500/30 bg-indigo-500/5 hover:border-indigo-500 hover:bg-indigo-500/10 text-indigo-700'
+      }
+    ];
+  }
 
   const handleSaveNote = () => {
     const key = `tw_ticket_note_${destinationName}_day${dayNumber}_stop${stopNumber}`;
@@ -88,7 +211,7 @@ export default function TicketPassModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -128,8 +251,9 @@ export default function TicketPassModal({
                       TW
                     </span>
                     <span className="font-mono text-xs tracking-widest uppercase text-[#D8D0C5]/90 font-bold">
-                      TICKET & BOOKING CONCIERGE
+                      {headerSubtitle}
                     </span>
+
                   </div>
                   <span className="px-2.5 py-1 rounded-full bg-white/10 border border-white/20 text-[#FAF6F0] font-mono text-[10px] font-bold tracking-wider uppercase">
                     Day {dayNumber} • Stop #{stopNumber}
@@ -153,10 +277,10 @@ export default function TicketPassModal({
                 <div className="grid grid-cols-2 gap-3 p-3.5 bg-white rounded-2xl border border-[#E6DFD5] shadow-2xs">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-[#FAF6F0] border border-[#E6DFD5] flex items-center justify-center shrink-0">
-                      <Ticket className="w-4 h-4 text-[#BA5536]" />
+                      {isDining ? <Utensils className="w-4 h-4 text-[#BA5536]" /> : (isNature ? <MapPin className="w-4 h-4 text-[#BA5536]" /> : <Ticket className="w-4 h-4 text-[#BA5536]" />)}
                     </div>
                     <div>
-                      <div className="text-[10px] font-sans font-bold uppercase tracking-wider text-[#7A7268]">Est. Ticket Rate</div>
+                      <div className="text-[10px] font-sans font-bold uppercase tracking-wider text-[#7A7268]">{rateLabel}</div>
                       <div className="text-xs font-serif font-bold text-[#1E1C1A]">{cost}</div>
                     </div>
                   </div>
@@ -166,8 +290,8 @@ export default function TicketPassModal({
                       <Clock className="w-4 h-4 text-[#BA5536]" />
                     </div>
                     <div>
-                      <div className="text-[10px] font-sans font-bold uppercase tracking-wider text-[#7A7268]">Itinerary Time</div>
-                      <div className="text-xs font-serif font-bold text-[#1E1C1A]">{time} (Arrive 15m early)</div>
+                      <div className="text-[10px] font-sans font-bold uppercase tracking-wider text-[#7A7268]">{timeLabel}</div>
+                      <div className="text-xs font-serif font-bold text-[#1E1C1A]">{time} <span className="text-[11px] font-sans font-normal text-[#7A7268]">{timeSub}</span></div>
                     </div>
                   </div>
                 </div>
@@ -218,15 +342,19 @@ export default function TicketPassModal({
                   </div>
                 </div>
 
-                {/* Real Booking Advisory Note */}
+                {/* Real Advisory Note tailored to category */}
                 <div className="p-4 rounded-2xl bg-[#FAF0E6]/80 border border-[#E6DFD5] flex items-start gap-3">
                   <AlertCircle className="w-5 h-5 text-[#BA5536] shrink-0 mt-0.5" />
                   <div className="text-xs font-sans text-[#4A443E] space-y-1">
                     <div className="font-bold text-[#1E1C1A] uppercase tracking-wide text-[11px]">
-                      Important Booking Advisory
+                      Important {isDining ? 'Dining & Table' : (isNature ? 'Visitor & Access' : 'Booking')} Advisory
                     </div>
                     <p className="leading-relaxed">
-                      Official box office tickets for high-demand destinations often release <strong>30 to 60 days prior</strong> and sell out fast. If direct venue admission is unavailable, verified partner passes (Viator / GetYourGuide) guarantee reserved entry windows.
+                      {isDining 
+                        ? 'Authentic popular trattorias and restaurants often fill up during peak lunch (1:30 PM) and dinner (8:00 PM). If online table reservations are unavailable on TheFork/Google, arriving right when doors open guarantees first-come seating.'
+                        : (isNature 
+                            ? 'Public parks, plazas, and scenic walking routes generally offer free open admission. Check live Google Maps crowd metrics to avoid midday heat or find quiet sunset viewing hours.'
+                            : 'Official box office tickets for high-demand destinations often release 30 to 60 days prior and sell out fast. If direct venue admission is unavailable, verified partner passes (Viator / GetYourGuide) guarantee reserved entry windows.')}
                     </p>
                   </div>
                 </div>
