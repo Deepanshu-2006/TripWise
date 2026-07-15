@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useScroll, useSpring, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useSpring, useTransform, useMotionValue } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import Header from '../components/Header';
 import {
@@ -216,7 +216,7 @@ const getAlternativeSuggestions = (act, idx = 0) => {
 };
 
 const Sparkline = () => (
-  <svg className="w-14 h-4 text-[#BA5536] inline-block mr-1.5 align-middle" viewBox="0 0 50 15" fill="none">
+  <svg className="w-14 h-4 text-[#FF6B2C] inline-block mr-1.5 align-middle" viewBox="0 0 50 15" fill="none">
     <path 
       d="M0 10 C10 15, 12 2, 20 8 C28 14, 35 1, 50 6" 
       stroke="currentColor" 
@@ -290,6 +290,13 @@ export default function ItineraryPage() {
   const [savedStops, setSavedStops] = useState({});
   const [shareCopied, setShareCopied] = useState(false);
   const [activePassModal, setActivePassModal] = useState(null);
+  const [stampInView, setStampInView] = useState(false);
+
+  useEffect(() => {
+    if (activeDay !== 'epilogue') {
+      setStampInView(false);
+    }
+  }, [activeDay]);
 
   // Dining Reservations Rollup State & Refresh
   const [diningTick, setDiningTick] = useState(0);
@@ -373,6 +380,8 @@ export default function ItineraryPage() {
   const foreScale = useTransform(scrollY, [0, 600], [1, 1.04]);
   const heroOpacity = useTransform(scrollY, [0, 600], [1, 0]);
 
+
+
   // Motion accessibility check
   const [reduceMotion, setReduceMotion] = useState(false);
   useEffect(() => {
@@ -384,6 +393,8 @@ export default function ItineraryPage() {
       return () => mediaQuery.removeEventListener('change', listener);
     }
   }, []);
+
+  const [isHeroHovered, setIsHeroHovered] = useState(false);
 
   // Fetch itinerary from URL param or localStorage
   useEffect(() => {
@@ -490,7 +501,7 @@ export default function ItineraryPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FAF6F0] text-[#1E1C1A] flex flex-col items-center justify-center font-serif">
-        <div className="w-10 h-10 rounded-full border-2 border-[#BA5536] border-t-transparent animate-spin mb-4" />
+        <div className="w-10 h-10 rounded-full border-2 border-[#FF6B2C] border-t-transparent animate-spin mb-4" />
         <p className="text-sm font-serif italic text-[#7A7268] tracking-wide">Assembling your custom Trip Dossier...</p>
       </div>
     );
@@ -498,10 +509,10 @@ export default function ItineraryPage() {
 
   if (!itinerary) {
     return (
-      <div className="min-h-screen bg-[#FAF6F0] text-[#1E1C1A] flex flex-col justify-between font-sans selection:bg-[#BA5536]/15">
+      <div className="min-h-screen bg-[#FAF6F0] text-[#1E1C1A] flex flex-col justify-between font-sans selection:bg-[#FF6B2C]/15">
         <Header />
         <div className="max-w-xl mx-auto px-6 py-32 text-center my-auto">
-          <div className="w-16 h-16 rounded-full border border-[#E6DFD5] bg-[#F5F0E8] text-[#BA5536] flex items-center justify-center mx-auto mb-6 text-2xl font-serif italic shadow-2xs">
+          <div className="w-16 h-16 rounded-full border border-[#E6DFD5] bg-[#F5F0E8] text-[#FF6B2C] flex items-center justify-center mx-auto mb-6 text-2xl font-serif italic shadow-2xs">
             I
           </div>
           <h1 className="text-4xl font-serif font-black tracking-tight mb-3 text-[#1E1C1A]">No Dossier Found</h1>
@@ -510,7 +521,7 @@ export default function ItineraryPage() {
           </p>
           <a
             href="/ai-planner"
-            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full font-sans text-xs font-bold uppercase tracking-wider bg-[#1E1C1A] text-[#FAF6F0] hover:bg-[#BA5536] transition-all duration-300 shadow-md"
+            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full font-sans text-xs font-bold uppercase tracking-wider bg-[#1E1C1A] text-[#FAF6F0] hover:bg-[#FF6B2C] transition-all duration-300 shadow-md"
           >
             <span>Create Itinerary in Planner →</span>
           </a>
@@ -521,6 +532,10 @@ export default function ItineraryPage() {
       </div>
     );
   }
+
+  const rawDest = itinerary.destinationName || 'Your Custom Journey';
+  const hasDemo = rawDest.toLowerCase().includes('demo mode');
+  const destinationNameClean = rawDest.replace(/\s*\(demo mode\)/i, '').trim();
 
   const days = itinerary.days || [];
   const totalStopsCount = days.reduce((acc, d) => acc + (d.activities?.length || 0), 0);
@@ -612,83 +627,136 @@ export default function ItineraryPage() {
   const tripDiningRollup = computeDiningRollup(null);
 
   return (
-    <div className="min-h-screen bg-[#FAF6F0] text-[#1E1C1A] flex flex-col font-sans selection:bg-[#BA5536]/15">
+    <div className="min-h-screen bg-[#FAF6F0] text-[#1E1C1A] flex flex-col font-sans selection:bg-[#FF6B2C]/15">
       {/* Scroll Progress Bar at the top of the page */}
       <motion.div 
         style={{ scaleX }} 
-        className="fixed top-0 left-0 right-0 h-0.75 bg-[#BA5536] origin-left z-60 pointer-events-none print:hidden"
+        className="fixed top-0 left-0 right-0 h-0.75 bg-[#FF6B2C] origin-left z-60 pointer-events-none print:hidden"
       />
 
       <div className="print:hidden">
         <Header />
       </div>
 
-      {/* HERO SECTION: Scroll-Driven Layered Parallax (Accesses Requirement 1) */}
+      {/* HERO SECTION: Scroll-Driven Layered Parallax with Interactive Hover Zoom & Text Float (Accesses Requirement 1) */}
       <section 
-        className="relative w-full min-h-165 md:min-h-180 pt-32 pb-20 px-6 flex flex-col justify-end overflow-hidden border-b border-[#E6DFD5] print:hidden"
+        onMouseEnter={() => setIsHeroHovered(true)}
+        onMouseLeave={() => setIsHeroHovered(false)}
+        className="relative w-full min-h-135 md:min-h-145 pt-32 pb-8 px-6 flex flex-col justify-end overflow-hidden border-b border-[#E6DFD5] print:hidden cursor-default select-none"
       >
-        {/* Layer 1: Parallax Background (Image Layer - Moves slowest: 0.2x speed) */}
+        {/* Layer 1: Parallax Background (Image Layer with slow zoom-in on mount and saturation lift on hover) */}
         <motion.div 
-          style={{ translateY: reduceMotion ? "0%" : bgY, opacity: reduceMotion ? 1 : heroOpacity }}
-          className="absolute inset-0 z-0"
+          style={{ 
+            translateY: reduceMotion ? "0%" : bgY, 
+            opacity: reduceMotion ? 1 : heroOpacity
+          }}
+          className="absolute inset-0 z-0 origin-center"
         >
-          <img
+          <motion.img
+            initial={reduceMotion ? { scale: 1.1 } : { scale: 1.1 }}
+            animate={
+              reduceMotion 
+                ? { scale: 1.1 } 
+                : isHeroHovered 
+                  ? { scale: 1.3, filter: "saturate(1.18) brightness(1.04)" } 
+                  : { scale: 1.25, filter: "saturate(1) brightness(1)" }
+            }
+            transition={{ duration: 1.5, ease: "easeOut" }}
             src={itinerary.heroImage || "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=2000&q=85"}
-            alt={itinerary.destinationName || 'Destination'}
-            className="w-full h-full object-cover object-center transform scale-105"
+            alt={destinationNameClean}
+            className="w-full h-full object-cover object-[center_30%] pointer-events-none"
           />
         </motion.div>
 
-        {/* Layer 2: Parallax Midground (Landmark silhouette overlay / Atmospheric color wash - Moves at 0.5x speed) */}
+        {/* Layer 2: Directional Color Wash (Darker at bottom-left for text contrast, lighter at top-right for sky visibility) */}
         <motion.div
           style={{ translateY: reduceMotion ? "0%" : midY, opacity: reduceMotion ? 1 : heroOpacity }}
-          className="absolute inset-0 z-10 pointer-events-none bg-linear-to-t from-[#FAF6F0] via-[#FAF6F0]/65 to-black/25"
+          className="absolute inset-0 z-10 pointer-events-none bg-linear-to-tr from-black/95 via-black/40 to-transparent"
         />
 
-        {/* Layer 3: Foreground content (Title, Subtitle & Meta - Stays nearly fixed with subtle scaling) */}
+        {/* Layer 2b: Bottom Ivory Blend Gradient (Smoothly transitions the background to match the ivory page body) */}
+        <div className="absolute bottom-0 left-0 right-0 h-28 bg-linear-to-t from-[#FAF6F0] via-[#FAF6F0]/40 to-transparent z-15 pointer-events-none" />
+
+        {/* Layer 3: Foreground content (High-contrast light typography on dark directional wash with vertical hover float lift) */}
         <motion.div 
           style={{ 
             translateY: reduceMotion ? "0%" : foreY, 
             scale: reduceMotion ? 1 : foreScale, 
             opacity: reduceMotion ? 1 : heroOpacity 
           }}
-          className="max-w-5xl mx-auto w-full relative z-20 flex flex-col gap-6 pt-16"
+          animate={isHeroHovered ? { y: -6 } : { y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="max-w-5xl mx-auto w-full relative z-20 flex flex-col gap-5 pt-16"
         >
-          <div className="flex items-center gap-3">
-            <span className="px-3.5 py-1 rounded-full border border-[#BA5536]/40 bg-[#FAF6F0]/90 backdrop-blur-sm text-[#BA5536] font-mono text-[10px] font-bold tracking-widest uppercase shadow-2xs">
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
+            className="flex items-center flex-wrap gap-2"
+          >
+            <span className="px-2.5 py-1 rounded bg-[#FF6B2C] text-white font-mono text-[9px] font-extrabold tracking-wider uppercase shadow-xs">
               Curated Travel Guide
             </span>
-            <span className="text-xs font-serif italic text-[#4A443E]/85">
+            {hasDemo && (
+              <span className="px-2.5 py-1 rounded bg-white/10 border border-white/15 text-white/90 font-mono text-[9px] font-extrabold tracking-wider uppercase backdrop-blur-xs shadow-xs">
+                Demo Mode
+              </span>
+            )}
+            <span className="text-[10px] font-serif italic text-white/70 ml-2 self-center">
               Refined by TripWise Private Concierge
             </span>
-          </div>
+          </motion.div>
 
-          <h1 className="text-5xl sm:text-7xl md:text-8xl font-serif font-black tracking-tight text-[#1E1C1A] leading-[1.04]">
-            {itinerary.destinationName || 'Your Custom Journey'}
-          </h1>
+          <motion.h1 
+            initial={{ opacity: 0, y: 25 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.215, 0.61, 0.355, 1], delay: 0.35 }}
+            className="text-5xl sm:text-7xl md:text-8xl font-serif font-black tracking-tight text-white leading-[1.04] drop-shadow-sm"
+          >
+            {destinationNameClean}
+          </motion.h1>
 
-          <p className="text-xl sm:text-2xl font-serif italic text-[#4A443E] max-w-3xl leading-relaxed">
-            “{itinerary.tagline || 'An immersive, thoughtfully paced exploration tailored to your unique architectural, culinary, and cultural preferences.'}”
-          </p>
+          <motion.p 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.5 }}
+            className="text-xl sm:text-2xl font-serif italic text-[#FFF4EB] max-w-3xl leading-relaxed mt-3 mb-5 font-normal drop-shadow-xs"
+          >
+            “{itinerary.tagline || 'An immersive, thoughtfully paced exploration tailored to your unique preference guide.'}”
+          </motion.p>
 
-          <div className="pt-4 border-t border-[#E6DFD5]/80 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs sm:text-sm font-sans tracking-wide text-[#5F5E5A] uppercase">
-            <span className="font-bold text-[#1E1C1A]">{days.length} Daily Chapters</span>
-            <span className="text-[#BA5536] font-serif">•</span>
-            <span>{totalStopsCount} Curated Stops</span>
-            <span className="text-[#BA5536] font-serif">•</span>
-            <span>Est. Budget: <strong className="text-[#1E1C1A]">{itinerary.estimatedCost || '$1,450'}</strong></span>
-            <span className="text-[#BA5536] font-serif">•</span>
-            <span>Pacing: <strong className="text-[#1E1C1A]">Immersive &amp; Fluid</strong></span>
-          </div>
+          {/* Structured stat metadata cards block blended directly on top of gradient overlay */}
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.65 }}
+            className="grid grid-cols-2 sm:grid-cols-4 gap-6 border-t border-white/15 pt-6 w-full max-w-4xl mt-4"
+          >
+            <div className="flex flex-col">
+              <span className="text-[10px] sm:text-xs font-sans font-bold text-white/70 uppercase tracking-widest">Duration</span>
+              <span className="text-2xl sm:text-3xl font-serif font-black text-white mt-1.5">{days.length} Days</span>
+            </div>
+            <div className="flex flex-col border-l border-white/10 pl-6 last:border-0">
+              <span className="text-[10px] sm:text-xs font-sans font-bold text-white/70 uppercase tracking-widest">Curated Stops</span>
+              <span className="text-2xl sm:text-3xl font-serif font-black text-white mt-1.5">{totalStopsCount} Stops</span>
+            </div>
+            <div className="flex flex-col border-l border-white/10 pl-6 last:border-0">
+              <span className="text-[10px] sm:text-xs font-sans font-bold text-white/70 uppercase tracking-widest">Est. Budget</span>
+              <span className="text-2xl sm:text-3xl font-serif font-black text-[#FF6B2C] mt-1.5">{itinerary.estimatedCost || '$1,450'}</span>
+            </div>
+            <div className="flex flex-col border-l border-white/10 pl-6 last:border-0">
+              <span className="text-[10px] sm:text-xs font-sans font-bold text-white/70 uppercase tracking-widest">Daylight Pacing</span>
+              <span className="text-2xl sm:text-3xl font-serif font-black text-white mt-1.5 truncate" title="Immersive & Fluid">Fluid</span>
+            </div>
+          </motion.div>
         </motion.div>
       </section>
 
-      {/* STICKY JUMP BAR & UTILITY STRIP */}
-      <div className="sticky top-16 sm:top-18 z-40 bg-[#FAF6F0]/95 backdrop-blur-md border-b border-[#E6DFD5] py-3.5 px-6 shadow-2xs transition-all print:hidden">
-        <div className="max-w-5xl mx-auto w-full flex flex-col sm:flex-row items-center justify-between gap-3">
-          {/* Chapter Links */}
-          <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 no-scrollbar">
-            <span className="text-[11px] font-serif italic text-[#7A7268] mr-1.5 hidden md:inline">Jump to:</span>
+      {/* STICKY JUMP BAR & UTILITY STRIP (Light-themed to blend cleanly with the page body background) */}
+      <div className="sticky top-16 sm:top-18 z-40 bg-[#FAF6F0]/95 backdrop-blur-md border-b border-[#E6DFD5] pt-4 pb-0 px-6 shadow-2xs transition-all print:hidden">
+        <div className="max-w-5xl mx-auto w-full flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          {/* Chapter Tabs Link System */}
+          <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto no-scrollbar border-b border-transparent">
             {days.map((day, dIdx) => {
               const dayNum = day.dayNumber || dIdx + 1;
               const isSelected = activeDay === dayNum;
@@ -696,30 +764,40 @@ export default function ItineraryPage() {
                 <button
                   key={dayNum}
                   onClick={() => setActiveDay(dayNum)}
-                  className={`px-3.5 py-1.5 rounded-full border text-xs font-serif font-bold transition-all duration-200 shrink-0 cursor-pointer shadow-2xs ${
-                    isSelected 
-                      ? 'bg-[#1E1C1A] text-[#FAF6F0] border-[#1E1C1A]' 
-                      : 'bg-white/80 hover:bg-[#1E1C1A] hover:text-[#FAF6F0] hover:border-[#1E1C1A] text-[#1E1C1A] border-[#E6DFD5]'
+                  className={`relative pb-3.5 pt-2 px-4 text-xs font-serif font-bold transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${
+                    isSelected ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
                   }`}
                 >
-                  Day {toRomanNumeral(dayNum)}
+                  <span>Day {toRomanNumeral(dayNum)}</span>
+                  {isSelected && (
+                    <motion.div
+                      layoutId="activeTabUnderline"
+                      className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#FF6B2C] rounded-t-full"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
                 </button>
               );
             })}
             <button
               onClick={() => setActiveDay('epilogue')}
-              className={`px-3.5 py-1.5 rounded-full border text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer shadow-2xs ${
-                activeDay === 'epilogue'
-                  ? 'bg-[#BA5536] text-white border-[#BA5536]'
-                  : 'bg-[#F5F0E8] hover:bg-[#BA5536] hover:text-white text-[#4A443E] border-[#E6DFD5]'
+              className={`relative pb-3.5 pt-2 px-4 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${
+                activeDay === 'epilogue' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
               }`}
             >
-              Epilogue
+              <span>Epilogue</span>
+              {activeDay === 'epilogue' && (
+                <motion.div
+                  layoutId="activeTabUnderline"
+                  className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#FF6B2C] rounded-t-full"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
             </button>
           </div>
 
-          {/* Action Set */}
-          <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+          {/* Actions Set (Aligned with bottom spacing) */}
+          <div className="flex items-center gap-2 shrink-0 pb-3.5 self-end sm:self-auto">
             <div className="relative group/print">
               <button
                 type="button"
@@ -727,10 +805,10 @@ export default function ItineraryPage() {
                 title="Tip: Disable 'Headers and footers' in print dialog for cleanest PDF output"
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#E6DFD5] bg-white text-xs font-sans font-bold text-[#1E1C1A] hover:bg-[#F5F0E8] transition-all cursor-pointer shadow-2xs"
               >
-                <Printer className="w-3.5 h-3.5 text-[#BA5536]" />
+                <Printer className="w-3.5 h-3.5 text-[#FF6B2C]" />
                 <span>Download PDF</span>
               </button>
-              <div className="absolute right-0 top-full mt-1.5 hidden group-hover/print:block z-50 bg-[#1E1C1A] text-white text-[10px] font-sans py-1.5 px-2.5 rounded-lg shadow-lg whitespace-nowrap border border-[#BA5536]/40 pointer-events-none">
+              <div className="absolute right-0 top-full mt-1.5 hidden group-hover/print:block z-50 bg-[#1E1C1A] text-white text-[10px] font-sans py-1.5 px-2.5 rounded-lg shadow-lg whitespace-nowrap border border-[#FF6B2C]/40 pointer-events-none">
                 💡 Tip: Uncheck "Headers and footers" in print dialog
               </div>
             </div>
@@ -747,7 +825,7 @@ export default function ItineraryPage() {
                 </>
               ) : (
                 <>
-                  <Share2 className="w-3.5 h-3.5 text-[#BA5536]" />
+                  <Share2 className="w-3.5 h-3.5 text-[#FF6B2C]" />
                   <span>Share Dossier</span>
                 </>
               )}
@@ -755,7 +833,7 @@ export default function ItineraryPage() {
 
             <a
               href="/ai-planner"
-              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-[#BA5536] bg-[#BA5536]/10 text-xs font-sans font-bold text-[#BA5536] hover:bg-[#BA5536] hover:text-white transition-all cursor-pointer shadow-2xs ml-1"
+              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-[#FF6B2C] bg-[#FF6B2C]/10 text-xs font-sans font-bold text-[#FF6B2C] hover:bg-[#FF6B2C] hover:text-white transition-all cursor-pointer shadow-2xs ml-1"
             >
               <Edit3 className="w-3.5 h-3.5" />
               <span>Edit in Planner</span>
@@ -770,11 +848,11 @@ export default function ItineraryPage() {
         {/* THE DOSSIER INDEX (Overview List - Screen Only) */}
         {activeDay !== 'epilogue' && (
           <section className="bg-white rounded-3xl border border-[#E6DFD5] p-8 sm:p-10 shadow-sm relative overflow-hidden print:hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-radial from-[#BA5536]/5 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-radial from-[#FF6B2C]/5 via-transparent to-transparent pointer-events-none" />
             
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#E6DFD5]">
               <div>
-                <span className="text-xs font-mono uppercase tracking-widest text-[#BA5536] font-bold block mb-1">
+                <span className="text-xs font-mono uppercase tracking-widest text-[#FF6B2C] font-bold block mb-1">
                   The Dossier Index
                 </span>
                 <h2 className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A] tracking-tight">
@@ -794,7 +872,7 @@ export default function ItineraryPage() {
                   <div
                     key={dayNum}
                     onClick={() => setActiveDay(dayNum)}
-                    className="flex flex-col justify-between p-6 rounded-2xl bg-[#FAF6F0] border border-[#E6DFD5]/80 hover:border-[#BA5536]/60 transition-all duration-300 group cursor-pointer"
+                    className="flex flex-col justify-between p-6 rounded-2xl bg-[#FAF6F0] border border-[#E6DFD5]/80 hover:border-[#FF6B2C]/60 transition-all duration-300 group cursor-pointer"
                   >
                     <div>
                       <div className="flex items-center justify-between mb-3">
@@ -805,7 +883,7 @@ export default function ItineraryPage() {
                           Chapter {dayNum}
                         </span>
                       </div>
-                      <h3 className="text-lg font-serif font-bold text-[#1E1C1A] leading-snug group-hover:text-[#BA5536] transition-colors">
+                      <h3 className="text-lg font-serif font-bold text-[#1E1C1A] leading-snug group-hover:text-[#FF6B2C] transition-colors">
                         {getDayNarrativeTitle(dayNum, itinerary.destinationName || 'Destination')}
                       </h3>
                     </div>
@@ -821,9 +899,9 @@ export default function ItineraryPage() {
                         e.stopPropagation();
                         setActiveModalDay(dayNum);
                       }}
-                      className="mt-4 w-full py-2 px-3 rounded-xl border border-[#E6DFD5] bg-white hover:bg-[#BA5536] hover:border-[#BA5536] hover:text-white text-[#1E1C1A] font-sans text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer print:hidden"
+                      className="mt-4 w-full py-2 px-3 rounded-xl border border-[#E6DFD5] bg-white hover:bg-[#FF6B2C] hover:border-[#FF6B2C] hover:text-white text-[#1E1C1A] font-sans text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer print:hidden"
                     >
-                      <Compass className="w-3.5 h-3.5 text-[#BA5536] group-hover:text-white" />
+                      <Compass className="w-3.5 h-3.5 text-[#FF6B2C] group-hover:text-white" />
                       <span>View Day {toRomanNumeral(dayNum)} Map Overlay</span>
                     </button>
                   </div>
@@ -851,7 +929,7 @@ export default function ItineraryPage() {
                   /* SECTION 3: THE EPILOGUE & 3D STAMP FLOURISH (Accesses Requirement 4) */
                   <section className="scroll-mt-32 flex flex-col gap-10">
                     <div className="text-center max-w-2xl mx-auto">
-                      <span className="text-xs font-mono uppercase tracking-widest text-[#BA5536] font-bold block mb-1">
+                      <span className="text-xs font-mono uppercase tracking-widest text-[#FF6B2C] font-bold block mb-1">
                         THE EPILOGUE  —  DOSSIER SUMMARY
                       </span>
                       <h2 className="text-3xl sm:text-5xl font-serif font-black text-[#1E1C1A] tracking-tight leading-tight">
@@ -860,20 +938,56 @@ export default function ItineraryPage() {
                     </div>
 
                     {/* Visual 3D stamp flourish loop trigger when scrolled into view */}
-                    <div className="flex flex-col items-center justify-center py-6">
+                    <div className="flex flex-col items-center justify-center py-6 relative overflow-visible w-full min-h-55">
+                      {/* SVG Flight Path & Animated Airplane */}
+                      {stampInView && (
+                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-90 pointer-events-none z-0 overflow-visible">
+                          <svg
+                            viewBox="0 0 600 360"
+                            className="w-full h-full overflow-visible"
+                          >
+                            {/* Dotted path trail */}
+                            <motion.path
+                              d="M 300 180 C 200 120, 100 180, 100 240 C 100 310, 220 330, 300 290 C 380 250, 440 120, 510 80 C 560 50, 580 60, 600 70"
+                              fill="none"
+                              stroke="#FF6B2C"
+                              strokeWidth="1.5"
+                              strokeDasharray="4 4"
+                              initial={{ pathLength: 0 }}
+                              animate={{ pathLength: 1 }}
+                              transition={{ duration: 3.5, ease: [0.25, 0.1, 0.25, 1], delay: 0.8 }}
+                            />
+                          </svg>
+
+                          {/* Airplane following the path */}
+                          <div
+                            className="flight-plane animate-fly-plane"
+                            style={{ animationDelay: '0.8s' }}
+                          >
+                            <svg viewBox="-30 -30 60 60" className="w-full h-full text-[#FF6B2C] overflow-visible drop-shadow-[0_4px_6px_rgba(255, 107, 44,0.25)]">
+                              <path
+                                d="M -8 -4 L 0 -38 L 8 -4 L 26 6 L 26 14 L 8 8 L 5 26 L 13 32 L 13 38 L 0 32 L -13 38 L -13 32 L -5 26 L -8 8 L -26 14 L -26 6 Z"
+                                fill="currentColor"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                      )}
+
                       <motion.div
                         initial={{ scale: 1.8, rotate: -45, opacity: 0 }}
                         whileInView={{ scale: 1, rotate: -12, opacity: 1 }}
                         viewport={{ once: true, margin: "-120px" }}
+                        onViewportEnter={() => setStampInView(true)}
                         transition={{ type: "spring", damping: 12, stiffness: 90, delay: 0.2 }}
-                        className="w-44 h-44 rounded-full border-4 border-dashed border-[#BA5536]/80 text-[#BA5536] flex flex-col items-center justify-center font-serif uppercase text-center relative z-10 shadow-xs select-none"
+                        className="w-44 h-44 rounded-full border-4 border-dashed border-[#FF6B2C]/80 text-[#FF6B2C] flex flex-col items-center justify-center font-serif uppercase text-center relative z-10 shadow-xs select-none bg-[#FAF6F0]"
                       >
                         <span className="text-[10px] tracking-widest font-bold">Approved</span>
                         <span className="text-lg font-black tracking-tight my-0.5">TripWise</span>
                         <span className="text-[8px] tracking-[0.2em] font-extrabold text-[#7A7268]">Concierge</span>
                         
                         {/* Innermost ink circle stamp details */}
-                        <div className="absolute inset-1 border border-solid border-[#BA5536]/25 rounded-full pointer-events-none" />
+                        <div className="absolute inset-1 border border-solid border-[#FF6B2C]/25 rounded-full pointer-events-none" />
                         <div className="absolute bottom-2 text-[6px] text-[#7A7268] tracking-widest font-sans font-bold uppercase">Private Guide</div>
                       </motion.div>
 
@@ -904,15 +1018,15 @@ export default function ItineraryPage() {
                       </div>
                       <div className="flex flex-col gap-1">
                         <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Estimated Cost</span>
-                        <span className="text-2xl sm:text-3xl font-serif font-black text-[#BA5536]">{itinerary.estimatedCost || '$1,450'}</span>
+                        <span className="text-2xl sm:text-3xl font-serif font-black text-[#FF6B2C]">{itinerary.estimatedCost || '$1,450'}</span>
                       </div>
                     </div>
 
                     {/* Trip-Level Dining Rollup Banner */}
                     {tripDiningRollup.total > 0 && (
-                      <div className="p-6 rounded-3xl bg-[#FAF6F0] border border-[#BA5536]/30 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      <div className="p-6 rounded-3xl bg-[#FAF6F0] border border-[#FF6B2C]/30 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div className="flex items-center gap-3.5">
-                          <div className="w-12 h-12 rounded-2xl bg-[#BA5536]/10 border border-[#BA5536]/25 flex items-center justify-center text-[#BA5536] shrink-0">
+                          <div className="w-12 h-12 rounded-2xl bg-[#FF6B2C]/10 border border-[#FF6B2C]/25 flex items-center justify-center text-[#FF6B2C] shrink-0">
                             <Utensils className="w-6 h-6 stroke-[2.2]" />
                           </div>
                           <div>
@@ -925,14 +1039,14 @@ export default function ItineraryPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-3 self-end sm:self-auto flex-wrap">
-                          <span className="px-3.5 py-1.5 rounded-full bg-[#BA5536]/15 border border-[#BA5536]/30 text-[#BA5536] font-mono text-xs font-extrabold tracking-wider">
+                          <span className="px-3.5 py-1.5 rounded-full bg-[#FF6B2C]/15 border border-[#FF6B2C]/30 text-[#FF6B2C] font-mono text-xs font-extrabold tracking-wider">
                             {tripDiningRollup.markedReserved} / {tripDiningRollup.total} MARKED AS BOOKED
                           </span>
                           {tripDiningRollup.firstUnbooked && (
                             <button
                               type="button"
                               onClick={() => scrollToFirstUnbookedDining(tripDiningRollup.firstUnbooked)}
-                              className="px-4 py-2 rounded-xl bg-[#1E1C1A] text-white hover:bg-[#BA5536] font-sans text-xs font-bold transition-all cursor-pointer shadow-2xs flex items-center gap-1.5"
+                              className="px-4 py-2 rounded-xl bg-[#1E1C1A] text-white hover:bg-[#FF6B2C] font-sans text-xs font-bold transition-all cursor-pointer shadow-2xs flex items-center gap-1.5"
                             >
                               <span>Mark Day {tripDiningRollup.firstUnbooked.dayNum} Table →</span>
                             </button>
@@ -944,7 +1058,7 @@ export default function ItineraryPage() {
                     {/* Reminders grids */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="bg-white p-6 rounded-2xl border border-[#E6DFD5] shadow-2xs">
-                      <h3 className="text-sm font-sans font-bold uppercase tracking-widest text-[#BA5536] border-b border-[#E6DFD5] pb-2.5 mb-3.5 flex items-center gap-2">
+                      <h3 className="text-sm font-sans font-bold uppercase tracking-widest text-[#FF6B2C] border-b border-[#E6DFD5] pb-2.5 mb-3.5 flex items-center gap-2">
                         <Calendar className="w-4 h-4" />
                         <span>Concierge Packing &amp; Prep Reminders</span>
                       </h3>
@@ -962,21 +1076,21 @@ export default function ItineraryPage() {
                     </div>
 
                     <div className="bg-white p-6 rounded-2xl border border-[#E6DFD5] shadow-2xs">
-                      <h3 className="text-sm font-sans font-bold uppercase tracking-widest text-[#BA5536] border-b border-[#E6DFD5] pb-2.5 mb-3.5 flex items-center gap-2">
+                      <h3 className="text-sm font-sans font-bold uppercase tracking-widest text-[#FF6B2C] border-b border-[#E6DFD5] pb-2.5 mb-3.5 flex items-center gap-2">
                         <Layers className="w-4 h-4" />
                         <span>Booking &amp; Tickets Status Overview</span>
                       </h3>
                       <div className="flex flex-col gap-3">
                         {preBookedItems.map((item, keyIdx) => (
-                          <div key={keyIdx} className="flex items-center justify-between text-xs border-b border-[#FAF6F0] pb-2.5 last:border-b-0 last:pb-0">
-                            <div>
+                          <div key={keyIdx} className="flex items-center justify-between text-xs border-b border-[#FAF6F0] pb-2.5 last:border-b-0 last:pb-0 gap-4">
+                            <div className="min-w-0 flex-1 pr-2">
                               <strong className="block text-[#1E1C1A] font-serif">{item.item}</strong>
                               <span className="text-[10px] text-[#7A7268] font-sans">{item.code || 'Instant access link available'}</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap shrink-0 ${
                                 item.status === 'Pre-booked' ? 'bg-emerald-500/10 text-emerald-700' :
-                                item.status === 'Open Access' ? 'bg-blue-500/10 text-blue-700' : 'bg-amber-600/10 text-amber-700'
+                                item.status === 'Open Access' ? 'bg-blue-500/10 text-blue-700' : 'bg-[#FF6B2C]/10 text-[#FF6B2C]'
                               }`}>
                                 {item.status}
                               </span>
@@ -984,7 +1098,7 @@ export default function ItineraryPage() {
                                 <button
                                   type="button"
                                   onClick={() => scrollToStopCard(item.dayNum, item.stopNum)}
-                                  className="px-2.5 py-1 rounded-lg bg-[#1E1C1A] text-white hover:bg-[#BA5536] font-sans text-[10px] font-bold transition-all cursor-pointer shadow-2xs shrink-0 flex items-center gap-1"
+                                  className="px-2.5 py-1 rounded-lg bg-[#1E1C1A] text-white hover:bg-[#FF6B2C] font-sans text-[10px] font-bold transition-all cursor-pointer shadow-2xs shrink-0 flex items-center gap-1"
                                   title="Jump to this stop card to review booking options"
                                 >
                                   <span>View Stop →</span>
@@ -1000,8 +1114,24 @@ export default function ItineraryPage() {
                   {/* Closing signature and bottom page-turns */}
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-8 border-t border-[#E6DFD5]">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-[#1E1C1A] text-[#FAF6F0] flex items-center justify-center font-serif italic text-lg font-bold">
-                        T
+                      <div className="h-10 w-10 shrink-0 flex items-center justify-center">
+                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 object-contain">
+                          <path
+                            d="M24 170 C 70 135, 105 105, 168 42"
+                            fill="none"
+                            stroke="#8CA3A8"
+                            strokeWidth="5"
+                            strokeDasharray="3 12"
+                            strokeLinecap="round"
+                          />
+                          <circle cx="24" cy="170" r="11" fill="#0D9488" />
+                          <g transform="translate(136,28) rotate(45) scale(0.95)">
+                            <path
+                              d="M0 34 L8 0 L16 34 L34 44 L34 52 L16 46 L13 64 L21 70 L21 76 L8 70 L-5 76 L-5 70 L3 64 L0 46 L-18 52 L-18 44 Z"
+                              fill="#FF6B2C"
+                            />
+                          </g>
+                        </svg>
                       </div>
                       <div>
                         <h4 className="text-sm font-serif font-bold text-[#1E1C1A]">TripWise Travel Concierge</h4>
@@ -1020,7 +1150,7 @@ export default function ItineraryPage() {
                       <button
                         type="button"
                         onClick={handlePrintOrDownload}
-                        className="px-6 py-3 rounded-full border border-[#1E1C1A] bg-[#1E1C1A] text-[#FAF6F0] hover:bg-[#BA5536] hover:border-[#BA5536] text-xs font-sans font-bold uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer flex items-center gap-2"
+                        className="px-6 py-3 rounded-full border border-[#1E1C1A] bg-[#1E1C1A] text-[#FAF6F0] hover:bg-[#FF6B2C] hover:border-[#FF6B2C] text-xs font-sans font-bold uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer flex items-center gap-2"
                       >
                         <Printer className="w-4 h-4" />
                         <span>Print Dossier Booklet</span>
@@ -1042,7 +1172,7 @@ export default function ItineraryPage() {
                       {/* Chapter Header Card & daylight pacing gradient */}
                       <div className="border-b-2 border-[#1E1C1A] pb-6 mb-8 flex flex-col gap-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <span className="text-xs font-mono uppercase tracking-widest text-[#BA5536] font-extrabold">
+                          <span className="text-xs font-mono uppercase tracking-widest text-[#FF6B2C] font-extrabold">
                             CHAPTER {toRomanNumeral(activeDay)}  —  DAY {activeDay}
                           </span>
                           
@@ -1064,7 +1194,7 @@ export default function ItineraryPage() {
                                 <button
                                   type="button"
                                   onClick={() => scrollToFirstUnbookedDining(dayDiningRollup.firstUnbooked)}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#BA5536]/30 bg-[#BA5536]/10 text-[#BA5536] font-sans text-xs font-bold hover:bg-[#BA5536]/20 transition-all cursor-pointer shadow-2xs"
+                                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#FF6B2C]/30 bg-[#FF6B2C]/10 text-[#FF6B2C] font-sans text-xs font-bold hover:bg-[#FF6B2C]/20 transition-all cursor-pointer shadow-2xs"
                                   title="Tap to jump to first unbooked dining stop"
                                 >
                                   <Utensils className="w-3.5 h-3.5 shrink-0" />
@@ -1104,7 +1234,7 @@ export default function ItineraryPage() {
                                   title={`${act.time}: ${act.title}`}
                                 >
                                   {/* Pin dot */}
-                                  <div className="w-5 h-5 rounded-full border border-white bg-[#BA5536] shadow-xs flex items-center justify-center text-[9px] font-bold text-white transition-all group-hover/marker:scale-125 group-hover/marker:bg-[#1E1C1A]">
+                                  <div className="w-5 h-5 rounded-full border border-white bg-[#FF6B2C] shadow-xs flex items-center justify-center text-[9px] font-bold text-white transition-all group-hover/marker:scale-125 group-hover/marker:bg-[#1E1C1A]">
                                     {idx + 1}
                                   </div>
                                   
@@ -1125,7 +1255,7 @@ export default function ItineraryPage() {
                             onClick={() => setActiveModalDay(activeDay)}
                             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-[#1E1C1A] bg-white hover:bg-[#1E1C1A] hover:text-white text-xs font-sans font-bold uppercase tracking-wider text-[#1E1C1A] transition-all duration-300 shadow-2xs cursor-pointer"
                           >
-                            <Compass className="w-4 h-4 text-[#BA5536]" />
+                            <Compass className="w-4 h-4 text-[#FF6B2C]" />
                             <span>Explore Day {toRomanNumeral(activeDay)} Overlay Map →</span>
                           </button>
                         </div>
@@ -1205,7 +1335,7 @@ export default function ItineraryPage() {
                               const gapHours = (diffMins / 60).toFixed(1);
                               gapElement = (
                                 <div className="my-6 py-5 px-6 rounded-2xl border border-dashed border-[#E6DFD5] bg-[#FDFBF7] text-center max-w-xl mx-auto relative z-10">
-                                  <span className="text-[10px] font-mono uppercase tracking-widest text-[#BA5536] font-bold block mb-1">
+                                  <span className="text-[10px] font-mono uppercase tracking-widest text-[#FF6B2C] font-bold block mb-1">
                                     Intentional Intermission
                                   </span>
                                   <p className="font-serif italic text-sm text-[#7A7268] leading-relaxed">
@@ -1289,7 +1419,7 @@ export default function ItineraryPage() {
                                       if (hasTicketNote) {
                                         return (
                                           <div className="absolute top-4 right-4 px-3.5 py-1.5 rounded-full bg-emerald-600/95 backdrop-blur-sm text-white font-mono text-xs font-bold tracking-wider shadow-md border border-emerald-400/40 flex items-center gap-1.5 animate-in fade-in zoom-in duration-300 z-10">
-                                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                            <Check className="w-3.5 h-3.5 stroke-3" />
                                             <span>Reference saved ✓</span>
                                           </div>
                                         );
@@ -1305,7 +1435,7 @@ export default function ItineraryPage() {
 
                                   {/* Secondary detail card underneath image on wide viewports to balance column heights (`hidden lg:flex`) */}
                                   <div className="hidden lg:flex items-start gap-3.5 p-4 rounded-2xl border border-[#E6DFD5] bg-[#FAF6F0]/70 text-xs font-sans text-[#5F5E5A] shadow-2xs">
-                                    <div className="w-9 h-9 rounded-xl bg-white border border-[#E6DFD5] flex items-center justify-center text-[#BA5536] shrink-0 mt-0.5 shadow-2xs">
+                                    <div className="w-9 h-9 rounded-xl bg-white border border-[#E6DFD5] flex items-center justify-center text-[#FF6B2C] shrink-0 mt-0.5 shadow-2xs">
                                       <MapPin className="w-4 h-4 stroke-[2.2]" />
                                     </div>
                                     <div className="flex-1">
@@ -1327,7 +1457,7 @@ export default function ItineraryPage() {
                                   <div className="flex items-center justify-between gap-3 mb-2">
                                     <div className="flex items-center gap-2 text-xs font-sans tracking-widest uppercase text-[#7A7268] font-bold">
                                       <span>{act.time || '10:00 AM'}</span>
-                                      <span className="text-[#BA5536] font-serif">•</span>
+                                      <span className="text-[#FF6B2C] font-serif">•</span>
                                       
                                       {/* Micro-loop 3D hover rotating icon (Accesses Requirement 5) */}
                                       <motion.span
@@ -1346,11 +1476,11 @@ export default function ItineraryPage() {
                                       onClick={() => toggleSaveStop(stopKey)}
                                       className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-sans font-bold transition-all cursor-pointer ${
                                         isSaved
-                                          ? 'border-[#BA5536] bg-[#BA5536]/10 text-[#BA5536]'
+                                          ? 'border-[#FF6B2C] bg-[#FF6B2C]/10 text-[#FF6B2C]'
                                           : 'border-[#E6DFD5] bg-white text-[#7A7268] hover:border-[#1E1C1A]'
                                       }`}
                                     >
-                                      <Bookmark className={`w-3.5 h-3.5 ${isSaved ? 'fill-[#BA5536]' : ''}`} />
+                                      <Bookmark className={`w-3.5 h-3.5 ${isSaved ? 'fill-[#FF6B2C]' : ''}`} />
                                       <span>{isSaved ? 'Saved' : 'Bookmark'}</span>
                                     </button>
                                   </div>
@@ -1374,7 +1504,7 @@ export default function ItineraryPage() {
                                   </div>
 
                                   {/* Highlight: "Why this was chosen" */}
-                                  <div className="text-xs font-sans italic text-[#BA5536] mb-4 bg-[#BA5536]/5 px-3 py-1.5 rounded-lg border-l border-[#BA5536]">
+                                  <div className="text-xs font-sans italic text-[#FF6B2C] mb-4 bg-[#FF6B2C]/5 px-3 py-1.5 rounded-lg border-l border-[#FF6B2C]">
                                     ✓ Chosen for: High local authenticity, scenic context, and balanced timing pacing.
                                   </div>
 
@@ -1395,14 +1525,14 @@ export default function ItineraryPage() {
                                       />
                                     </div>
                                   ) : (
-                                    <div className="w-full rounded-2xl border border-[#E6DFD5] bg-[#FAF6F0]/80 p-4 sm:p-5 mb-5 shadow-2xs hover:border-[#BA5536]/40 transition-all duration-300 relative overflow-hidden group">
+                                    <div className="w-full rounded-2xl border border-[#E6DFD5] bg-[#FAF6F0]/80 p-4 sm:p-5 mb-5 shadow-2xs hover:border-[#FF6B2C]/40 transition-all duration-300 relative overflow-hidden group">
                                       {/* Decorative subtle terracotta glow */}
-                                      <div className="absolute -right-12 -top-12 w-36 h-36 bg-[#BA5536]/10 rounded-full blur-2xl pointer-events-none group-hover:bg-[#BA5536]/15 transition-all duration-500" />
+                                      <div className="absolute -right-12 -top-12 w-36 h-36 bg-[#FF6B2C]/10 rounded-full blur-2xl pointer-events-none group-hover:bg-[#FF6B2C]/15 transition-all duration-500" />
                                       
                                       {/* Top Row: Icon + Title + Est Rate */}
                                       <div className="flex items-start justify-between gap-3 relative z-10 mb-3.5 pb-3.5 border-b border-[#E6DFD5]/70">
                                         <div className="flex items-center gap-3">
-                                          <div className="w-10 h-10 rounded-xl bg-white border border-[#E6DFD5] shadow-2xs flex items-center justify-center text-[#BA5536] shrink-0 group-hover:scale-105 transition-transform duration-300">
+                                          <div className="w-10 h-10 rounded-xl bg-white border border-[#E6DFD5] shadow-2xs flex items-center justify-center text-[#FF6B2C] shrink-0 group-hover:scale-105 transition-transform duration-300">
                                             {isNature ? <MapPin className="w-5 h-5 stroke-[2.2]" /> : <Ticket className="w-5 h-5 stroke-[2.2]" />}
                                           </div>
                                           <div>
@@ -1422,13 +1552,13 @@ export default function ItineraryPage() {
                                                 if (hasTicketNote) {
                                                   return (
                                                     <span className="px-2.5 py-0.5 rounded-full bg-emerald-600/15 border border-emerald-600/30 text-emerald-700 font-mono text-[10px] font-bold tracking-wider uppercase flex items-center gap-1">
-                                                      <Check className="w-3 h-3 stroke-[3]" />
+                                                      <Check className="w-3 h-3 stroke-3" />
                                                       <span>Reference saved ✓</span>
                                                     </span>
                                                   );
                                                 }
                                                 return (
-                                                  <span className="px-2 py-0.5 rounded-full bg-[#BA5536]/10 border border-[#BA5536]/25 text-[#BA5536] font-mono text-[9px] font-bold tracking-wider uppercase">
+                                                  <span className="px-2 py-0.5 rounded-full bg-[#FF6B2C]/10 border border-[#FF6B2C]/25 text-[#FF6B2C] font-mono text-[9px] font-bold tracking-wider uppercase">
                                                     {ribbonBadge}
                                                   </span>
                                                 );
@@ -1450,7 +1580,7 @@ export default function ItineraryPage() {
                                           onClick={() => setActivePassModal({ activity: act, stopNum: stopNum, dayNum: activeDay })}
                                           className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#1E1C1A] hover:bg-[#2A2623] text-white text-xs font-sans font-bold shadow-sm transition-all duration-200 cursor-pointer hover:scale-[1.01] active:scale-95"
                                         >
-                                          {isNature ? <MapPin className="w-3.5 h-3.5 text-[#BA5536] shrink-0" /> : <Ticket className="w-3.5 h-3.5 text-[#BA5536] shrink-0" />}
+                                          {isNature ? <MapPin className="w-3.5 h-3.5 text-[#FF6B2C] shrink-0" /> : <Ticket className="w-3.5 h-3.5 text-[#FF6B2C] shrink-0" />}
                                           <span>
                                             {(() => {
                                               let hasTicketNote = false;
@@ -1471,11 +1601,11 @@ export default function ItineraryPage() {
                                           onClick={() => {
                                             window.open(ribbonActionUrl, '_blank', 'noopener,noreferrer');
                                           }}
-                                          className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-[#E6DFD5] hover:border-[#BA5536] bg-white text-[#1E1C1A] hover:text-[#BA5536] text-xs font-sans font-bold shadow-2xs transition-all duration-200 cursor-pointer group/btn"
+                                          className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-[#E6DFD5] hover:border-[#FF6B2C] bg-white text-[#1E1C1A] hover:text-[#FF6B2C] text-xs font-sans font-bold shadow-2xs transition-all duration-200 cursor-pointer group/btn"
                                           title={ribbonActionLabel}
                                         >
                                           <span>{ribbonActionLabel}</span>
-                                          <ExternalLink className="w-3.5 h-3.5 text-[#7A7268] group-hover/btn:text-[#BA5536] shrink-0 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
+                                          <ExternalLink className="w-3.5 h-3.5 text-[#7A7268] group-hover/btn:text-[#FF6B2C] shrink-0 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
                                         </button>
                                       </div>
                                     </div>
@@ -1495,7 +1625,7 @@ export default function ItineraryPage() {
                                     <button
                                       type="button"
                                       onClick={() => toggleAlternatives(stopKey)}
-                                      className="inline-flex items-center gap-1 px-4 py-2 rounded-full border border-[#E6DFD5] hover:border-[#BA5536] hover:text-[#BA5536] bg-white text-xs font-sans text-[#7A7268] transition-all cursor-pointer"
+                                      className="inline-flex items-center gap-1 px-4 py-2 rounded-full border border-[#E6DFD5] hover:border-[#FF6B2C] hover:text-[#FF6B2C] bg-white text-xs font-sans text-[#7A7268] transition-all cursor-pointer"
                                     >
                                       <span>Alternatives</span>
                                       {showsAlts ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -1519,7 +1649,7 @@ export default function ItineraryPage() {
 
                                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white/70 p-4 sm:p-5 rounded-2xl border border-[#E6DFD5] shadow-2xs">
                                             <div className="flex items-start gap-2.5">
-                                              <MapPin className="w-4 h-4 text-[#BA5536] shrink-0 mt-0.5" />
+                                              <MapPin className="w-4 h-4 text-[#FF6B2C] shrink-0 mt-0.5" />
                                               <div>
                                                 <strong className="block text-xs font-sans uppercase tracking-wider text-[#7A7268] font-bold">Logistics &amp; Gate Access</strong>
                                                 <p className="text-xs font-serif italic text-[#5F5E5A] mt-0.5 leading-relaxed">{logisticsNote}</p>
@@ -1536,8 +1666,8 @@ export default function ItineraryPage() {
                                           </div>
 
                                           {/* Concierge handwritten notes */}
-                                          <div className="p-5 sm:p-6 rounded-2xl bg-[#F3EFEA] border-l-2 border-[#BA5536] relative shadow-2xs">
-                                            <span className="font-serif text-3xl text-[#BA5536] absolute top-1.5 left-4 leading-none select-none">“</span>
+                                          <div className="p-5 sm:p-6 rounded-2xl bg-[#F3EFEA] border-l-2 border-[#FF6B2C] relative shadow-2xs">
+                                            <span className="font-serif text-3xl text-[#FF6B2C] absolute top-1.5 left-4 leading-none select-none">“</span>
                                             <p className="font-serif italic text-sm sm:text-base text-[#3E3A36] pl-5 leading-relaxed">
                                               {aiInsightText}
                                             </p>
@@ -1571,7 +1701,7 @@ export default function ItineraryPage() {
                                       >
                                         <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#E6DFD5] flex flex-col gap-3.5 shadow-2xs">
                                           <div className="border-b border-[#E6DFD5] pb-2.5">
-                                            <h4 className="text-xs font-sans font-bold uppercase tracking-widest text-[#BA5536]">
+                                            <h4 className="text-xs font-sans font-bold uppercase tracking-widest text-[#FF6B2C]">
                                               Nearby Alternatives
                                             </h4>
                                             <p className="text-xs font-serif italic text-[#7A7268] mt-1">
@@ -1606,7 +1736,7 @@ export default function ItineraryPage() {
                             <button
                               type="button"
                               onClick={() => scrollToFirstUnbookedDining(dayDiningRollup.firstUnbooked)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#BA5536]/30 bg-[#BA5536]/10 text-[#BA5536] font-sans text-xs font-bold hover:bg-[#BA5536]/20 transition-all cursor-pointer shadow-2xs"
+                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#FF6B2C]/30 bg-[#FF6B2C]/10 text-[#FF6B2C] font-sans text-xs font-bold hover:bg-[#FF6B2C]/20 transition-all cursor-pointer shadow-2xs"
                             >
                               <Utensils className="w-3.5 h-3.5 shrink-0" />
                               <span>{dayDiningRollup.confirmed} of {dayDiningRollup.total} table reservations confirmed</span>
@@ -1625,7 +1755,7 @@ export default function ItineraryPage() {
                               window.scrollTo({ top: 380, behavior: 'smooth' });
                             }
                           }}
-                          className="px-5 py-2.5 rounded-full bg-[#1E1C1A] text-white hover:bg-[#BA5536] text-xs font-sans font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs self-start sm:self-auto"
+                          className="px-5 py-2.5 rounded-full bg-[#1E1C1A] text-white hover:bg-[#FF6B2C] text-xs font-sans font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs self-start sm:self-auto"
                         >
                           <span>{activeDay < days.length ? `Next Chapter (Day ${toRomanNumeral(activeDay + 1)})` : "Go to Epilogue"}</span>
                           <ArrowRight className="w-4 h-4" />
@@ -1640,10 +1770,10 @@ export default function ItineraryPage() {
         </div>
 
         {/* PRINT-ONLY FULL DOSSIER SEQUENCE (All Days 1..N + Epilogue in sequence for PDF/Print) */}
-        <div className={`hidden print:block print:w-full text-[#1E1C1A] ${isPrinting ? '!block !w-full' : ''}`}>
+        <div className={`hidden print:block print:w-full text-[#1E1C1A] ${isPrinting ? 'block! w-full!' : ''}`}>
           {/* PRINT HERO HEADER (High-contrast solid brand panel, no photographic bg, 100% legibility) */}
           <header className="print-hero-section w-full pt-4 pb-8 mb-8 border-b-4 border-[#1E1C1A] block">
-            <div className="flex items-center justify-between text-xs font-mono font-bold uppercase tracking-widest text-[#BA5536] mb-3">
+            <div className="flex items-center justify-between text-xs font-mono font-bold uppercase tracking-widest text-[#FF6B2C] mb-3">
               <span>Curated Private Travel Dossier</span>
               <span>{itinerary.duration || `${days.length} Days`} • {itinerary.destinationName || 'Destination'}</span>
             </div>
@@ -1666,7 +1796,7 @@ export default function ItineraryPage() {
           <section className="print-index-section w-full pt-2 pb-8 mb-8 border-b-2 border-[#1E1C1A] block">
             <div className="flex items-end justify-between gap-4 pb-4 border-b border-[#E6DFD5] mb-6">
               <div>
-                <span className="text-xs font-mono uppercase tracking-widest text-[#BA5536] font-bold block mb-1">
+                <span className="text-xs font-mono uppercase tracking-widest text-[#FF6B2C] font-bold block mb-1">
                   The Dossier Index
                 </span>
                 <h2 className="text-3xl font-serif font-black text-[#1E1C1A] tracking-tight">
@@ -1768,7 +1898,7 @@ export default function ItineraryPage() {
                             <span className="w-6 h-6 rounded-full bg-[#1E1C1A] text-white font-serif text-xs font-bold flex items-center justify-center">
                               {stopNum}
                             </span>
-                            <span className="font-bold uppercase tracking-wider text-[#BA5536]">{categoryStyle.name}</span>
+                            <span className="font-bold uppercase tracking-wider text-[#FF6B2C]">{categoryStyle.name}</span>
                           </div>
                           <div className="font-mono text-[#5F5E5A] font-bold">
                             Planned: {act.time || '10:00 AM'} ({act.duration || '1.5 hrs'})
@@ -1792,7 +1922,7 @@ export default function ItineraryPage() {
                           )}
                         </div>
 
-                        <div className="text-xs font-sans italic text-[#BA5536] bg-[#BA5536]/5 px-3 py-1.5 rounded-lg border-l border-[#BA5536]">
+                        <div className="text-xs font-sans italic text-[#FF6B2C] bg-[#FF6B2C]/5 px-3 py-1.5 rounded-lg border-l border-[#FF6B2C]">
                           ✓ Chosen for: High local authenticity, scenic context, and balanced timing pacing.
                         </div>
 
@@ -1813,7 +1943,7 @@ export default function ItineraryPage() {
                         </div>
 
                         {/* Expanded Concierge Insight Box */}
-                        <div className="p-4 rounded-xl bg-[#F3EFEA] border-l-2 border-[#BA5536] text-xs">
+                        <div className="p-4 rounded-xl bg-[#F3EFEA] border-l-2 border-[#FF6B2C] text-xs">
                           <p className="font-serif italic text-[#3E3A36] mb-2 leading-relaxed">
                             “{aiInsightText}”
                           </p>
@@ -1825,7 +1955,7 @@ export default function ItineraryPage() {
                         {/* Expanded Alternatives */}
                         {alternatives && alternatives.length > 0 && (
                           <div className="mt-2 pt-3 border-t border-[#E6DFD5]">
-                            <strong className="text-xs font-sans font-bold uppercase tracking-widest text-[#BA5536] block mb-2">Nearby Alternatives</strong>
+                            <strong className="text-xs font-sans font-bold uppercase tracking-widest text-[#FF6B2C] block mb-2">Nearby Alternatives</strong>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                               {alternatives.map((alt, altIdx) => (
                                 <div key={`print-alt-${altIdx}`} className="p-3 bg-[#FAF6F0] rounded-lg border border-[#E6DFD5]/70">
@@ -1847,7 +1977,7 @@ export default function ItineraryPage() {
           {/* Print Epilogue Section */}
           <section className="print-epilogue-section w-full pt-8 pb-12 border-t-2 border-[#1E1C1A] block break-before-page">
             <div className="text-center max-w-2xl mx-auto mb-8">
-              <span className="text-xs font-mono uppercase tracking-widest text-[#BA5536] font-bold block mb-1">
+              <span className="text-xs font-mono uppercase tracking-widest text-[#FF6B2C] font-bold block mb-1">
                 THE EPILOGUE — DOSSIER SUMMARY
               </span>
               <h2 className="text-4xl font-serif font-black text-[#1E1C1A] tracking-tight">
@@ -1856,7 +1986,7 @@ export default function ItineraryPage() {
             </div>
 
             <div className="print-stamp-wrapper flex flex-col sm:flex-row items-center justify-between gap-6 p-6 bg-[#FAF6F0] rounded-2xl border border-[#E6DFD5] mb-6">
-              <div className="w-36 h-36 rounded-full border-4 border-dashed border-[#BA5536]/80 text-[#BA5536] flex flex-col items-center justify-center font-serif uppercase text-center shrink-0">
+              <div className="w-36 h-36 rounded-full border-4 border-dashed border-[#FF6B2C]/80 text-[#FF6B2C] flex flex-col items-center justify-center font-serif uppercase text-center shrink-0">
                 <span className="text-[9px] tracking-widest font-bold">Approved</span>
                 <span className="text-base font-black tracking-tight my-0.5">TripWise</span>
                 <span className="text-[7px] tracking-[0.2em] font-extrabold text-[#7A7268]">Concierge</span>
@@ -1886,13 +2016,13 @@ export default function ItineraryPage() {
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Estimated Cost</span>
-                <span className="text-2xl font-serif font-black text-[#BA5536]">{itinerary.estimatedCost || '$1,450'}</span>
+                <span className="text-2xl font-serif font-black text-[#FF6B2C]">{itinerary.estimatedCost || '$1,450'}</span>
               </div>
             </div>
 
             {/* Trip-Level Dining Rollup */}
             {tripDiningRollup.total > 0 && (
-              <div className="print-summary-panel p-6 rounded-2xl bg-[#FAF6F0] border border-[#BA5536]/30 flex flex-col gap-3 mb-6">
+              <div className="print-summary-panel p-6 rounded-2xl bg-[#FAF6F0] border border-[#FF6B2C]/30 flex flex-col gap-3 mb-6">
                 <div className="flex items-center gap-3">
                   <span className="text-lg font-serif font-bold text-[#1E1C1A]">🍽️ Trip-Level Dining Concierge Rollup</span>
                 </div>
@@ -1904,7 +2034,7 @@ export default function ItineraryPage() {
 
             {/* Packing & Prep Reminders */}
             <div className="print-summary-panel p-6 rounded-2xl bg-white border border-[#E6DFD5] mb-6">
-              <h3 className="text-sm font-sans font-bold uppercase tracking-widest text-[#BA5536] border-b border-[#E6DFD5] pb-2 mb-3">
+              <h3 className="text-sm font-sans font-bold uppercase tracking-widest text-[#FF6B2C] border-b border-[#E6DFD5] pb-2 mb-3">
                 Concierge Packing &amp; Prep Reminders
               </h3>
               <ul className="text-xs font-serif text-[#4A443E] leading-relaxed flex flex-col gap-2 list-disc pl-4">
@@ -1922,7 +2052,7 @@ export default function ItineraryPage() {
 
             {/* Booking Status Overview (Table layout to guarantee no WebKit/Chrome clipping across page boundaries - Issue 4) */}
             <div className="print-summary-panel p-6 rounded-2xl bg-white border border-[#E6DFD5] mb-8">
-              <h3 className="text-sm font-sans font-bold uppercase tracking-widest text-[#BA5536] border-b border-[#E6DFD5] pb-2 mb-4">
+              <h3 className="text-sm font-sans font-bold uppercase tracking-widest text-[#FF6B2C] border-b border-[#E6DFD5] pb-2 mb-4">
                 Booking &amp; Tickets Status Overview
               </h3>
               <table className="w-full text-left border-collapse">
@@ -2004,7 +2134,7 @@ export default function ItineraryPage() {
                 {!mapMounted && (
                   <div className="absolute inset-0 flex items-center justify-center bg-[#FAF6F0]">
                     <div className="flex flex-col items-center gap-3">
-                      <div className="w-8 h-8 rounded-full border-2 border-[#BA5536]/30 border-t-[#BA5536] animate-spin" />
+                      <div className="w-8 h-8 rounded-full border-2 border-[#FF6B2C]/30 border-t-[#FF6B2C] animate-spin" />
                       <span className="text-xs font-serif text-[#7A7268]">Loading map…</span>
                     </div>
                   </div>
