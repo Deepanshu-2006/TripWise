@@ -51,9 +51,8 @@ const NatureIcon = () => (
 
 const ShoppingIcon = () => (
   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-    <path d="M3 6h18" />
-    <path d="M16 10a4 4 0 0 1-8 0" />
+    <rect x="6" y="10" width="12" height="11" rx="2" />
+    <path d="M10 10V6a2 2 0 0 1 4 0v4" />
   </svg>
 );
 
@@ -775,7 +774,7 @@ export default function PlannerSidebar({
         </div>
       </div>
 
-      <div>
+      <div className="flex-1 overflow-y-auto pr-2 -mr-3 scroll-smooth min-h-0">
         {/* STATE 0: Prompt Input Setup Page */}
         {step === 'input' && (
           <div className="space-y-8 animate-fade-in">
@@ -906,7 +905,7 @@ export default function PlannerSidebar({
 
         {/* STATE 2: Confirmation */}
         {step === 'confirming' && (
-          <div className="flex flex-col gap-6 animate-fade-in">
+          <div className="flex flex-col gap-6 animate-fade-in pb-16">
             <h2 className="text-lg md:text-xl font-semibold text-(--foreground) leading-snug">
               Got it, {destinationName}. A couple quick things:
             </h2>
@@ -924,13 +923,13 @@ export default function PlannerSidebar({
                       key={item.id}
                       type="button"
                       onClick={() => toggleInterest(item.id)}
-                      className={`flex items-center gap-2 px-3.5 py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-150 cursor-pointer shadow-2xs ${
+                      className={`flex items-center gap-2 px-3.5 py-2 rounded-full text-xs md:text-sm font-semibold transition-all duration-150 cursor-pointer shadow-2xs hover:scale-[1.01] active:scale-98 ${
                         isActive
-                          ? 'bg-accent-orange-tint border border-accent-orange text-text-primary font-semibold'
-                          : 'bg-bg-white border border-[rgba(28,27,27,0.12)] text-(--foreground) hover:border-[rgba(28,27,27,0.3)]'
+                          ? 'bg-[#FF6B2C]/10 border-2 border-[#FF6B2C] text-stone-900 font-extrabold shadow-sm'
+                          : 'bg-white border border-stone-200 text-stone-650 hover:border-stone-400 font-medium'
                       }`}
                     >
-                      <span className={isActive ? 'text-text-primary' : 'text-accent-orange'}>
+                      <span className={isActive ? 'text-[#FF6B2C]' : 'text-stone-400'}>
                         {item.icon}
                       </span>
                       <span>{item.label}</span>

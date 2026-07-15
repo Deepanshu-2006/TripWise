@@ -24,6 +24,102 @@ const detectDestination = (prompt) => {
   return null;
 };
 
+const normalizeAngleDiff = (diff) => {
+  return Math.atan2(Math.sin(diff), Math.cos(diff));
+};
+
+const getCoordinatesForDestination = (name) => {
+  if (!name) return { lat: 35.0116, lng: 135.7681 };
+  const lower = name.toLowerCase();
+  if (lower.includes("kyoto")) return { lat: 35.0116, lng: 135.7681 };
+  if (lower.includes("rome")) return { lat: 41.9028, lng: 12.4964 };
+  if (lower.includes("tokyo")) return { lat: 35.6762, lng: 139.6503 };
+  if (lower.includes("swiss") || lower.includes("alps")) return { lat: 46.8182, lng: 8.2275 };
+  if (lower.includes("london")) return { lat: 51.5074, lng: -0.1278 };
+  if (lower.includes("paris")) return { lat: 48.8566, lng: 2.3522 };
+  return { lat: 35.0116, lng: 135.7681 };
+};
+
+const getGlobeRotation = (lat, lng) => {
+  return {
+    x: (lat * 0.4) * (Math.PI / 180),
+    y: (lng + 90) * (Math.PI / 180)
+  };
+};
+
+const getDestinationMetadata = (name) => {
+  if (!name) return {
+    bestSeason: "Year-Round Escapes",
+    airport: "Local Hub Airport",
+    duration: "Flexible stay",
+    timezone: "Local Timezone",
+    coords: "Locked by GPS"
+  };
+  const lower = name.toLowerCase();
+  
+  if (lower.includes("kyoto")) {
+    return {
+      bestSeason: "Mar–May • Cherry Blossom",
+      airport: "KIX (Kansai Intl)",
+      duration: "4–6 Days",
+      timezone: "GMT+9 (JST)",
+      coords: "35.0116° N, 135.7681° E"
+    };
+  }
+  if (lower.includes("rome")) {
+    return {
+      bestSeason: "Apr–Jun • Autumn Gold",
+      airport: "FCO (Fiumicino)",
+      duration: "3–5 Days",
+      timezone: "GMT+2 (CEST)",
+      coords: "41.9028° N, 12.4964° E"
+    };
+  }
+  if (lower.includes("swiss") || lower.includes("alps")) {
+    return {
+      bestSeason: "Jun–Sep • Winter Ski",
+      airport: "ZRH (Zurich Airport)",
+      duration: "4–5 Days",
+      timezone: "GMT+2 (CEST)",
+      coords: "46.8182° N, 8.2275° E"
+    };
+  }
+  if (lower.includes("tokyo")) {
+    return {
+      bestSeason: "Oct–Dec • Spring Bloom",
+      airport: "HND (Haneda)",
+      duration: "5–7 Days",
+      timezone: "GMT+9 (JST)",
+      coords: "35.6762° N, 139.6503° E"
+    };
+  }
+  if (lower.includes("london")) {
+    return {
+      bestSeason: "May–Sep • Summer Festivals",
+      airport: "LHR (Heathrow)",
+      duration: "4–6 Days",
+      timezone: "GMT+1 (BST)",
+      coords: "51.5074° N, 0.1278° W"
+    };
+  }
+  if (lower.includes("paris")) {
+    return {
+      bestSeason: "Apr–Jun • Autumn Gold",
+      airport: "CDG (Charles de Gaulle)",
+      duration: "3–5 Days",
+      timezone: "GMT+2 (CEST)",
+      coords: "48.8566° N, 2.3522° E"
+    };
+  }
+  return {
+    bestSeason: "Year-Round Escapes",
+    airport: "Local Hub Airport",
+    duration: "Flexible stay",
+    timezone: "Local Timezone",
+    coords: "Locked by GPS"
+  };
+};
+
 export default function InteractiveGlobe({
   isGenerating = false,
   isTransitioning = false,
@@ -147,47 +243,32 @@ export default function InteractiveGlobe({
     pathLine.computeLineDistances();
     flightPathGroup.add(pathLine);
 
-    // Create 3D Stylized Airplane
+    // Create Glowing Flight Pulse (Replacing Airplane)
     const planeGroup = new THREE.Group();
     planeGroup.visible = false;
     planeGroupRef.current = planeGroup;
     globeGroup.add(planeGroup);
 
-    const planeMaterial = new THREE.MeshBasicMaterial({
+    const pulseMaterial = new THREE.MeshBasicMaterial({
       color: 0xFF6B2C,
       toneMapped: false
     });
 
-    // Fuselage
-    const fuseGeom = new THREE.CylinderGeometry(0.024, 0.024, 0.28, 8);
-    fuseGeom.rotateX(Math.PI / 2);
-    const fuse = new THREE.Mesh(fuseGeom, planeMaterial);
-    planeGroup.add(fuse);
+    // Core pulse point
+    const coreGeom = new THREE.SphereGeometry(0.025, 16, 16);
+    const core = new THREE.Mesh(coreGeom, pulseMaterial);
+    planeGroup.add(core);
 
-    // Nose Cone
-    const noseGeom = new THREE.SphereGeometry(0.024, 8, 8);
-    const nose = new THREE.Mesh(noseGeom, planeMaterial);
-    nose.position.z = 0.14;
-    planeGroup.add(nose);
-
-    // Wings
-    const wingsGeom = new THREE.BoxGeometry(0.36, 0.006, 0.07);
-    const wings = new THREE.Mesh(wingsGeom, planeMaterial);
-    wings.position.z = 0.02;
-    planeGroup.add(wings);
-
-    // Tailplane
-    const tailGeom = new THREE.BoxGeometry(0.14, 0.004, 0.035);
-    const tail = new THREE.Mesh(tailGeom, planeMaterial);
-    tail.position.z = -0.12;
-    planeGroup.add(tail);
-
-    // Tail Fin
-    const finGeom = new THREE.BoxGeometry(0.004, 0.065, 0.035);
-    finGeom.translate(0, 0.032, 0);
-    const fin = new THREE.Mesh(finGeom, planeMaterial);
-    fin.position.z = -0.12;
-    planeGroup.add(fin);
+    // Outer glow ring/halo
+    const glowGeom = new THREE.SphereGeometry(0.06, 16, 16);
+    const glowMaterial = new THREE.MeshBasicMaterial({
+      color: 0xFF6B2C,
+      transparent: true,
+      opacity: 0.35,
+      toneMapped: false
+    });
+    const glow = new THREE.Mesh(glowGeom, glowMaterial);
+    planeGroup.add(glow);
 
     // 6. Lighting for Realistic Sun & Space Ambiance
     const ambientLight = new THREE.AmbientLight(0xffffff, 1.4);
@@ -252,10 +333,11 @@ export default function InteractiveGlobe({
         // PHASE: CAMERA PLUNGE / TARGET LOCK ON GENERATED TRIP!
         // Smoothly rotate right to target coordinates (Lat/Lng to radians)
         if (state.targetCoordinates?.lat !== undefined && state.targetCoordinates?.lng !== undefined) {
-          const targetLonRad = (state.targetCoordinates.lng + 90) * (Math.PI / 180);
-          const targetLatRad = (state.targetCoordinates.lat * 0.4) * (Math.PI / 180);
-          globeGroup.rotation.y += (targetLonRad - globeGroup.rotation.y) * 0.1;
-          globeGroup.rotation.x += (targetLatRad - globeGroup.rotation.x) * 0.1;
+          const rot = getGlobeRotation(state.targetCoordinates.lat, state.targetCoordinates.lng);
+          const diffY = normalizeAngleDiff(rot.y - globeGroup.rotation.y);
+          const diffX = normalizeAngleDiff(rot.x - globeGroup.rotation.x);
+          globeGroup.rotation.y += diffY * 0.035; // Slower, smooth target ease-in!
+          globeGroup.rotation.x += diffX * 0.035;
         }
 
         // Zoom camera smoothly and rapidly toward target country on Earth's surface!
@@ -296,12 +378,12 @@ export default function InteractiveGlobe({
           }
         }
       } else if (state.isGenerating) {
-        // PHASE: HYPER-SPEED SATELLITE SCANNING (While trip is generating)
-        globeGroup.rotation.y += 0.038;
-        globeGroup.rotation.x = Math.sin(Date.now() * 0.002) * 0.25;
+        // PHASE: HYPER-SPEED SATELLITE SCANNING (While trip is generating) - SLOWED DOWN FOR PREMIUM FEEL
+        globeGroup.rotation.y += 0.005;
+        globeGroup.rotation.x = Math.sin(Date.now() * 0.0004) * 0.12;
 
         // Clouds counter-rotate for dramatic atmospheric turbulence
-        cloudsMesh.rotation.y -= 0.015;
+        cloudsMesh.rotation.y -= 0.0008;
 
         if (flightPathGroupRef.current && planeGroupRef.current) {
           flightPathGroupRef.current.visible = true;
@@ -342,10 +424,20 @@ export default function InteractiveGlobe({
         camera.position.z += (6.65 - camera.position.z) * 0.05;
       } else {
         // PHASE: IDLE REALISTIC GLOBE
-        if (!isDraggingRef.current) {
-          globeGroup.rotation.y += 0.0025;
+        const detected = detectDestination(state.destinationName);
+        if (detected && !isDraggingRef.current) {
+          const coords = getCoordinatesForDestination(detected);
+          const rot = getGlobeRotation(coords.lat, coords.lng);
+          const diffY = normalizeAngleDiff(rot.y - globeGroup.rotation.y);
+          const diffX = normalizeAngleDiff(rot.x - globeGroup.rotation.x);
+          globeGroup.rotation.y += diffY * 0.02; // Slower cinematic lock
+          globeGroup.rotation.x += diffX * 0.02;
+        } else {
+          if (!isDraggingRef.current) {
+            globeGroup.rotation.y += 0.0012; // Slower idle speed
+          }
         }
-        cloudsMesh.rotation.y += 0.0008;
+        cloudsMesh.rotation.y += 0.0003;
 
         if (flightPathGroupRef.current && planeGroupRef.current) {
           flightPathGroupRef.current.visible = false;
@@ -459,66 +551,111 @@ export default function InteractiveGlobe({
         <div ref={containerRef} className="w-full h-full max-w-3xl flex items-center justify-center cursor-grab active:cursor-grabbing" />
       </div>
 
-      {/* Supporting Content: Recent Curated Dossiers Dock */}
-      {!isGenerating && !isTransitioning && (
-        <div className="w-full max-w-3xl mt-4 px-4 select-none animate-fade-in">
-          <div className="flex items-center justify-between mb-3 border-b border-stone-100 pb-2">
-            <span className="text-xs font-extrabold uppercase tracking-wider text-stone-500 flex items-center gap-1.5">
-              <span>✦</span> Pre-Built Signature Itineraries (Full Previews)
-            </span>
-            <span className="text-[10px] text-stone-400 font-semibold">Click to Load & Preview</span>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              {
-                dest: "Kyoto, Japan",
-                desc: "5 Days • Springs & Temples",
-                prompt: "🌸 5 days in Kyoto: temples, gardens & street food",
-                rating: "4.9",
-                tag: "Cultural"
-              },
-              {
-                dest: "Rome, Italy",
-                desc: "3 Days • Historic Escapes",
-                prompt: "🍕 3 budget days in Rome: hidden gems & local pasta",
-                rating: "4.8",
-                tag: "Historic"
-              },
-              {
-                dest: "Swiss Alps",
-                desc: "4 Days • Mountain Scenic",
-                prompt: "🏔️ 4 days in Swiss Alps: scenic hiking & boutique chalets",
-                rating: "4.9",
-                tag: "Nature"
-              }
-            ].map((item, idx) => (
-              <div
-                key={idx}
-                onClick={() => {
-                  if (onSelectPrompt) onSelectPrompt(item.prompt);
-                }}
-                className="bg-stone-50/50 hover:bg-[#FF6B2C]/5 hover:border-[#FF6B2C]/30 border border-stone-200/60 rounded-xl p-3 transition-all duration-200 cursor-pointer flex flex-col justify-between text-left group shadow-3xs hover:-translate-y-0.5 active:scale-98"
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-1 mb-1.5">
-                    <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-stone-200/60 text-stone-600 tracking-tight group-hover:bg-[#FF6B2C]/10 group-hover:text-[#FF6B2C]">
-                      {item.tag}
-                    </span>
-                    <span className="text-[10px] font-bold text-amber-600">★ {item.rating}</span>
+      {/* Supporting Content: Recent Curated Dossiers Dock vs Live Telemetry Console */}
+      {!isGenerating && !isTransitioning && (() => {
+        const hasInput = destinationName && destinationName !== 'Global View' && destinationName !== 'Your Destination';
+        
+        if (!hasInput) {
+          return (
+            <div className="w-full max-w-3xl mt-4 px-4 select-none animate-fade-in">
+              <div className="flex items-center justify-between mb-3 border-b border-stone-100 pb-2">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-stone-500 flex items-center gap-1.5">
+                  <span>✦</span> Pre-Built Signature Itineraries (Full Previews)
+                </span>
+                <span className="text-[10px] text-stone-400 font-semibold">Click to Load & Preview</span>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  {
+                    dest: "Kyoto, Japan",
+                    desc: "5 Days • Springs & Temples",
+                    prompt: "🌸 5 days in Kyoto: temples, gardens & street food",
+                    rating: "4.9",
+                    tag: "Cultural"
+                  },
+                  {
+                    dest: "Rome, Italy",
+                    desc: "3 Days • Historic Escapes",
+                    prompt: "🍕 3 budget days in Rome: hidden gems & local pasta",
+                    rating: "4.8",
+                    tag: "Historic"
+                  },
+                  {
+                    dest: "Swiss Alps",
+                    desc: "4 Days • Mountain Scenic",
+                    prompt: "🏔️ 4 days in Swiss Alps: scenic hiking & boutique chalets",
+                    rating: "4.9",
+                    tag: "Nature"
+                  }
+                ].map((item, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => {
+                      if (onSelectPrompt) onSelectPrompt(item.prompt);
+                    }}
+                    className="bg-stone-50/50 hover:bg-[#FF6B2C]/5 hover:border-[#FF6B2C]/30 border border-stone-200/60 rounded-xl p-3 transition-all duration-200 cursor-pointer flex flex-col justify-between text-left group shadow-3xs hover:-translate-y-0.5 active:scale-98"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-1 mb-1.5">
+                        <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-stone-200/60 text-stone-600 tracking-tight group-hover:bg-[#FF6B2C]/10 group-hover:text-[#FF6B2C]">
+                          {item.tag}
+                        </span>
+                        <span className="text-[10px] font-bold text-amber-600">★ {item.rating}</span>
+                      </div>
+                      <h4 className="text-xs font-bold text-stone-850 group-hover:text-[#FF6B2C] transition-colors truncate">
+                        {item.dest}
+                      </h4>
+                      <p className="text-[10px] text-stone-500 mt-0.5 truncate">{item.desc}</p>
+                    </div>
+                    <div className="mt-3 text-[9px] font-extrabold text-[#FF6B2C] flex items-center gap-1 opacity-80 group-hover:opacity-100">
+                      <span>Use Template</span> <span>→</span>
+                    </div>
                   </div>
-                  <h4 className="text-xs font-bold text-stone-850 group-hover:text-[#FF6B2C] transition-colors truncate">
-                    {item.dest}
-                  </h4>
-                  <p className="text-[10px] text-stone-500 mt-0.5 truncate">{item.desc}</p>
+                ))}
+              </div>
+            </div>
+          );
+        } else {
+          const meta = getDestinationMetadata(destinationName);
+          
+          return (
+            <div className="w-full max-w-3xl mt-4 px-4 select-none animate-fade-in">
+              <div className="flex items-center justify-between mb-3 border-b border-stone-200/60 pb-2">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-[#FF6B2C] flex items-center gap-1.5">
+                  <span>📍</span> Destination Profile & Travel Info
+                </span>
+                <span className="text-[10px] text-stone-400 font-bold tracking-wider uppercase">Verified Insights</span>
+              </div>
+              <div className="bg-white/80 border border-stone-200/60 rounded-2xl p-4 shadow-xs backdrop-blur-xs grid grid-cols-2 sm:grid-cols-4 gap-4 text-left">
+                <div>
+                  <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider block">Target Coordinates</span>
+                  <span className="text-xs font-extrabold text-stone-800 block mt-0.5 font-mono">
+                    {meta.coords}
+                  </span>
                 </div>
-                <div className="mt-3 text-[9px] font-extrabold text-[#FF6B2C] flex items-center gap-1 opacity-80 group-hover:opacity-100">
-                  <span>Use Template</span> <span>→</span>
+                <div>
+                  <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider block">Best Travel Window</span>
+                  <span className="text-xs font-extrabold text-stone-800 block mt-0.5">
+                    {meta.bestSeason}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider block">Primary Air Hub</span>
+                  <span className="text-xs font-extrabold text-stone-800 block mt-0.5">
+                    {meta.airport}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider block">Ideal Duration</span>
+                  <span className="text-xs font-extrabold text-stone-800 block mt-0.5">
+                    {meta.duration}
+                  </span>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
+            </div>
+          );
+        }
+      })()}
     </div>
   );
 }

@@ -30,6 +30,18 @@ const GENERATION_STEPS = [
   "✨ Finalizing your custom AI itinerary schedule..."
 ];
 
+const getCoordinatesForDestination = (name) => {
+  if (!name) return { lat: 35.0116, lng: 135.7681 };
+  const lower = name.toLowerCase();
+  if (lower.includes("kyoto")) return { lat: 35.0116, lng: 135.7681 };
+  if (lower.includes("rome")) return { lat: 41.9028, lng: 12.4964 };
+  if (lower.includes("tokyo")) return { lat: 35.6762, lng: 139.6503 };
+  if (lower.includes("swiss") || lower.includes("alps")) return { lat: 46.8182, lng: 8.2275 };
+  if (lower.includes("london")) return { lat: 51.5074, lng: -0.1278 };
+  if (lower.includes("paris")) return { lat: 48.8566, lng: 2.3522 };
+  return { lat: 35.0116, lng: 135.7681 };
+};
+
 export default function LiveTripDashboard({
   destination = "Global View",
   itinerary,
@@ -135,43 +147,12 @@ export default function LiveTripDashboard({
   const activities = currentDay?.activities || [];
 
   return (
-    <div className="w-full h-full bg-[#FFFFFF] text-[#1F1F1F] relative overflow-hidden flex flex-col justify-between p-4 md:p-5 select-none transition-colors duration-500">
-      {/* Main Container */}
-      <div className="w-full h-full flex flex-col relative z-10 min-h-0">
-        {/* Cinematic Globe Overlay during generation */}
-        {isGenerating || !itinerary || (isTransitioning && !isFadingOutGlobe) ? (
-          <div className="w-full h-full flex-1 min-h-0 flex items-center justify-center animate-fade-in">
-            <InteractiveGlobe
-              isGenerating={isGenerating}
-              isTransitioning={isTransitioning}
-              activeStepText={GENERATION_STEPS[activeStepIndex]}
-              destinationName={displayDest}
-              targetCoordinates={itinerary?.coordinates || { lat: 41.9028, lng: 12.4964 }}
-              onSelectPrompt={onSelectPrompt}
-            />
-          </div>
-        ) : null}
-
-        {/* Post-Generation / Loaded Dashboard View */}
-        {(itinerary && !isGenerating && (!isTransitioning || isFadingOutGlobe)) && (
+    <div className="w-full h-full bg-[#FFFFFF] text-[#1F1F1F] relative overflow-hidden flex flex-col p-4 md:p-5 select-none transition-colors duration-500">
+      {/* Post-Generation / Loaded Dashboard View */}
+      {itinerary && !isGenerating && (
           <div className="w-full h-full flex flex-col flex-1 min-h-0 animate-fade-in relative z-10">
-            {/* Cinematic Camera Plunge Overlay */}
-            {isTransitioning && isFadingOutGlobe && (
-              <div className="absolute inset-0 z-50 pointer-events-none animate-fade-out">
-                <InteractiveGlobe
-                  isGenerating={false}
-                  isTransitioning={true}
-                  activeStepText="Target Locked!"
-                  destinationName={displayDest}
-                  targetCoordinates={itinerary?.coordinates || { lat: 35.0116, lng: 135.7681 }}
-                />
-              </div>
-            )}
-
             {/* Single Clean Minimal Header Strip */}
-            <div className={`flex items-center justify-between shrink-0 mb-2.5 md:mb-3 transition-opacity duration-800 ${
-              isTransitioning && !isFadingOutGlobe ? 'opacity-0 pointer-events-none' : 'opacity-100'
-            }`}>
+            <div className="flex items-center justify-between shrink-0 mb-2.5 md:mb-3">
               <div className="flex items-center gap-2 flex-wrap">
                 {/* Clean Destination Badge */}
                 <div className="flex items-center gap-1.5 bg-[#FFFFFF] px-3 py-1 rounded-2xl border border-[#ECE8E2] shadow-[0_4px_16px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_6px_20px_rgba(0,0,0,0.07)]">
@@ -244,9 +225,7 @@ export default function LiveTripDashboard({
             </div>
 
             {/* Content: Route Map filling exact remaining vertical space */}
-            <div className={`w-full flex-1 min-h-0 transition-all duration-800 ${
-              isTransitioning && !isFadingOutGlobe ? 'opacity-0 pointer-events-none scale-98' : 'opacity-100'
-            }`}>
+            <div className="w-full flex-1 min-h-0">
               <InteractiveRouteMap
                 activities={activities}
                 allDays={itinerary?.days || []}
@@ -261,7 +240,30 @@ export default function LiveTripDashboard({
             </div>
           </div>
         )}
-      </div>
+
+      {/* Cinematic Globe Overlay (Renders on top during generation and transition) */}
+      {(isGenerating || !itinerary || isTransitioning) && (
+        <div 
+          className={`absolute inset-0 bg-[#FFFFFF] z-50 flex items-center justify-center transition-all duration-1000 ease-in-out transform-gpu ${
+            isFadingOutGlobe 
+              ? 'opacity-0 scale-105 pointer-events-none' 
+              : 'opacity-100 scale-100'
+          } ${
+            isTransitioning || isGenerating ? 'pointer-events-none' : 'pointer-events-auto'
+          }`}
+        >
+          <div className="w-full h-full flex items-center justify-center">
+            <InteractiveGlobe
+              isGenerating={isGenerating}
+              isTransitioning={isTransitioning}
+              activeStepText={GENERATION_STEPS[activeStepIndex]}
+              destinationName={displayDest}
+              targetCoordinates={itinerary?.coordinates || getCoordinatesForDestination(displayDest)}
+              onSelectPrompt={onSelectPrompt}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
