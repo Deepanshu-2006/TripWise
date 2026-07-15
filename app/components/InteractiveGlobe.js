@@ -3,6 +3,27 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
+const detectDestination = (prompt) => {
+  if (!prompt || prompt === 'Global View' || prompt === 'Your Destination') return null;
+  const lower = prompt.toLowerCase();
+  if (lower.includes("kyoto")) return "Kyoto, Japan 🌸";
+  if (lower.includes("rome")) return "Rome, Italy 🍕";
+  if (lower.includes("tokyo")) return "Tokyo, Japan ⚡";
+  if (lower.includes("london")) return "London, United Kingdom 👑";
+  if (lower.includes("paris")) return "Paris, France 🍷";
+  if (lower.includes("swiss") || lower.includes("alps")) return "Swiss Alps, Switzerland 🏔️";
+  
+  // Search for capitalised nouns or words after "in" or "to"
+  const match = prompt.match(/(?:in|to|visit)\s+([A-Z][a-zA-Z\s,]+)(?:for|with|during|budget|\.|\b|$)/i);
+  if (match && match[1]) {
+    const cleanCity = match[1].split(/\s+(?:for|with|during|budget)\s+/i)[0].trim().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"");
+    if (cleanCity.length > 2 && cleanCity.split(/\s+/).length <= 4) {
+      return cleanCity;
+    }
+  }
+  return null;
+};
+
 export default function InteractiveGlobe({
   isGenerating = false,
   isTransitioning = false,
@@ -13,7 +34,8 @@ export default function InteractiveGlobe({
 }) {
   const containerRef = useRef(null);
   const globeGroupRef = useRef(null);
-  const ringRef = useRef(null);
+  const flightPathGroupRef = useRef(null);
+  const planeGroupRef = useRef(null);
   const isDraggingRef = useRef(false);
   const previousMousePositionRef = useRef({ x: 0, y: 0 });
 
@@ -88,17 +110,84 @@ export default function InteractiveGlobe({
     const haloMesh = new THREE.Mesh(haloGeometry, haloMaterial);
     globeGroup.add(haloMesh);
 
-    // 5. Holographic Orbital Laser Scanning Ring (Only active during AI Triangulation / Target Lock)
-    const ringGeometry = new THREE.TorusGeometry(2.9, 0.018, 16, 100);
-    const ringMaterial = new THREE.MeshBasicMaterial({
-      color: 0xFF6B35,
+    // 5. Holographic Flight Path and Airplane
+    const flightPathGroup = new THREE.Group();
+    flightPathGroup.visible = false;
+    flightPathGroupRef.current = flightPathGroup;
+    globeGroup.add(flightPathGroup);
+
+    // Create curved flight path points
+    const numPathPoints = 90;
+    const pathPoints = [];
+    const orbitRadius = 2.65;
+    const tiltAngle = Math.PI / 5; // 36 degrees tilt
+
+    for (let i = 0; i <= numPathPoints; i++) {
+      const theta = (i / numPathPoints) * Math.PI * 2;
+      const x = Math.cos(theta) * orbitRadius;
+      const y = Math.sin(theta) * orbitRadius;
+      const z = 0;
+      
+      const rotatedY = y * Math.cos(tiltAngle);
+      const rotatedZ = y * Math.sin(tiltAngle);
+      
+      pathPoints.push(new THREE.Vector3(x, rotatedY, rotatedZ));
+    }
+
+    // Render path as a dashed line
+    const pathGeometry = new THREE.BufferGeometry().setFromPoints(pathPoints);
+    const pathMaterial = new THREE.LineDashedMaterial({
+      color: 0xFF6B2C,
+      dashSize: 0.12,
+      gapSize: 0.08,
       transparent: true,
-      opacity: 0.7
+      opacity: 0.55
     });
-    const ringMesh = new THREE.Mesh(ringGeometry, ringMaterial);
-    ringMesh.visible = false;
-    ringRef.current = ringMesh;
-    globeGroup.add(ringMesh);
+    const pathLine = new THREE.Line(pathGeometry, pathMaterial);
+    pathLine.computeLineDistances();
+    flightPathGroup.add(pathLine);
+
+    // Create 3D Stylized Airplane
+    const planeGroup = new THREE.Group();
+    planeGroup.visible = false;
+    planeGroupRef.current = planeGroup;
+    globeGroup.add(planeGroup);
+
+    const planeMaterial = new THREE.MeshBasicMaterial({
+      color: 0xFF6B2C,
+      toneMapped: false
+    });
+
+    // Fuselage
+    const fuseGeom = new THREE.CylinderGeometry(0.024, 0.024, 0.28, 8);
+    fuseGeom.rotateX(Math.PI / 2);
+    const fuse = new THREE.Mesh(fuseGeom, planeMaterial);
+    planeGroup.add(fuse);
+
+    // Nose Cone
+    const noseGeom = new THREE.SphereGeometry(0.024, 8, 8);
+    const nose = new THREE.Mesh(noseGeom, planeMaterial);
+    nose.position.z = 0.14;
+    planeGroup.add(nose);
+
+    // Wings
+    const wingsGeom = new THREE.BoxGeometry(0.36, 0.006, 0.07);
+    const wings = new THREE.Mesh(wingsGeom, planeMaterial);
+    wings.position.z = 0.02;
+    planeGroup.add(wings);
+
+    // Tailplane
+    const tailGeom = new THREE.BoxGeometry(0.14, 0.004, 0.035);
+    const tail = new THREE.Mesh(tailGeom, planeMaterial);
+    tail.position.z = -0.12;
+    planeGroup.add(tail);
+
+    // Tail Fin
+    const finGeom = new THREE.BoxGeometry(0.004, 0.065, 0.035);
+    finGeom.translate(0, 0.032, 0);
+    const fin = new THREE.Mesh(finGeom, planeMaterial);
+    fin.position.z = -0.12;
+    planeGroup.add(fin);
 
     // 6. Lighting for Realistic Sun & Space Ambiance
     const ambientLight = new THREE.AmbientLight(0xffffff, 1.4);
@@ -172,11 +261,39 @@ export default function InteractiveGlobe({
         // Zoom camera smoothly and rapidly toward target country on Earth's surface!
         camera.position.z += (3.3 - camera.position.z) * 0.08;
 
-        if (ringRef.current) {
-          ringRef.current.visible = true;
-          ringRef.current.material.color.setHex(0x10b981); // Emerald green target lock
-          ringRef.current.rotation.z += 0.12;
-          ringRef.current.scale.setScalar(1 + Math.sin(Date.now() * 0.01) * 0.05);
+        if (flightPathGroupRef.current && planeGroupRef.current) {
+          flightPathGroupRef.current.visible = true;
+          planeGroupRef.current.visible = true;
+          
+          // Animate plane position along path
+          const speed = 0.0024;
+          const planeProgress = (Date.now() * speed) % (Math.PI * 2);
+          const orbitRadius = 2.65;
+          const tiltAngle = Math.PI / 5;
+          
+          const px = Math.cos(planeProgress) * orbitRadius;
+          const py = Math.sin(planeProgress) * orbitRadius;
+          const rotatedY = py * Math.cos(tiltAngle);
+          const rotatedZ = py * Math.sin(tiltAngle);
+          
+          planeGroupRef.current.position.set(px, rotatedY, rotatedZ);
+          
+          // Look at next coordinate forward
+          const nextProgress = planeProgress + 0.02;
+          const npx = Math.cos(nextProgress) * orbitRadius;
+          const npy = Math.sin(nextProgress) * orbitRadius;
+          const nrotatedY = npy * Math.cos(tiltAngle);
+          const nrotatedZ = npy * Math.sin(tiltAngle);
+          
+          planeGroupRef.current.lookAt(new THREE.Vector3(npx, nrotatedY, nrotatedZ));
+          
+          // Recolor plane/path to target lock emerald green
+          planeGroupRef.current.children.forEach(c => {
+            if (c.material) c.material.color.setHex(0x10b981);
+          });
+          if (flightPathGroupRef.current.children[0]?.material) {
+            flightPathGroupRef.current.children[0].material.color.setHex(0x10b981);
+          }
         }
       } else if (state.isGenerating) {
         // PHASE: HYPER-SPEED SATELLITE SCANNING (While trip is generating)
@@ -186,12 +303,39 @@ export default function InteractiveGlobe({
         // Clouds counter-rotate for dramatic atmospheric turbulence
         cloudsMesh.rotation.y -= 0.015;
 
-        if (ringRef.current) {
-          ringRef.current.visible = true;
-          ringRef.current.material.color.setHex(0xFF6B35); // Orange high-energy radar scan
-          ringRef.current.rotation.z += 0.04;
-          ringRef.current.rotation.x = Math.sin(Date.now() * 0.003) * 0.6;
-          ringRef.current.scale.setScalar(1 + Math.sin(Date.now() * 0.008) * 0.08);
+        if (flightPathGroupRef.current && planeGroupRef.current) {
+          flightPathGroupRef.current.visible = true;
+          planeGroupRef.current.visible = true;
+          
+          // Animate plane position along path
+          const speed = 0.0038; // faster scan
+          const planeProgress = (Date.now() * speed) % (Math.PI * 2);
+          const orbitRadius = 2.65;
+          const tiltAngle = Math.PI / 5;
+          
+          const px = Math.cos(planeProgress) * orbitRadius;
+          const py = Math.sin(planeProgress) * orbitRadius;
+          const rotatedY = py * Math.cos(tiltAngle);
+          const rotatedZ = py * Math.sin(tiltAngle);
+          
+          planeGroupRef.current.position.set(px, rotatedY, rotatedZ);
+          
+          // Look at next coordinate forward
+          const nextProgress = planeProgress + 0.02;
+          const npx = Math.cos(nextProgress) * orbitRadius;
+          const npy = Math.sin(nextProgress) * orbitRadius;
+          const nrotatedY = npy * Math.cos(tiltAngle);
+          const nrotatedZ = npy * Math.sin(tiltAngle);
+          
+          planeGroupRef.current.lookAt(new THREE.Vector3(npx, nrotatedY, nrotatedZ));
+          
+          // Recolor plane/path back to primary orange
+          planeGroupRef.current.children.forEach(c => {
+            if (c.material) c.material.color.setHex(0xFF6B2C);
+          });
+          if (flightPathGroupRef.current.children[0]?.material) {
+            flightPathGroupRef.current.children[0].material.color.setHex(0xFF6B2C);
+          }
         }
 
         // Smoothly reset camera distance if previously zoomed
@@ -203,8 +347,9 @@ export default function InteractiveGlobe({
         }
         cloudsMesh.rotation.y += 0.0008;
 
-        if (ringRef.current) {
-          ringRef.current.visible = false;
+        if (flightPathGroupRef.current && planeGroupRef.current) {
+          flightPathGroupRef.current.visible = false;
+          planeGroupRef.current.visible = false;
         }
 
         // Smoothly return camera to space distance
@@ -270,24 +415,44 @@ export default function InteractiveGlobe({
             {activeStepText || 'Triangulating optimal GPS coordinates & scenic routes...'}
           </p>
         </div>
-      ) : (
-        <div className="text-center max-w-md mx-auto mb-2 animate-fade-in px-4">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-[#6B6B6B] bg-[#F7F5F2] px-3.5 py-1.5 rounded-full border border-[#ECE8E2] shadow-sm inline-flex items-center gap-1.5 mb-2">
-            <span>🌍</span>
-            <span>{destinationName && destinationName !== 'Global View' && destinationName !== 'Your Destination' ? 'Live Prompt Preview' : 'Interactive 3D Globe'}</span>
-          </span>
-          <h3 className="text-lg md:text-xl font-bold text-[#1F1F1F] tracking-tight truncate max-w-sm" title={destinationName}>
-            {destinationName && destinationName !== 'Global View' && destinationName !== 'Your Destination'
-              ? `Route target: "${destinationName.slice(0, 35)}${destinationName.length > 35 ? '...' : ''}"`
-              : "Explore Global Destinations"}
-          </h3>
-          <p className="text-xs text-[#6B6B6B] mt-1 leading-relaxed">
-            {destinationName && destinationName !== 'Global View' && destinationName !== 'Your Destination'
-              ? "We've got your signal. Specify budget, pace, and click 'Plan My Trip' to begin!"
-              : "Enter your trip details on the left to generate an AI route & itinerary."}
-          </p>
-        </div>
-      )}
+      ) : (() => {
+        const detected = detectDestination(destinationName);
+        const hasInput = destinationName && destinationName !== 'Global View' && destinationName !== 'Your Destination';
+        return (
+          <div className="text-center max-w-md mx-auto mb-2 animate-fade-in px-4">
+            {detected ? (
+              <span className="text-[11px] font-bold uppercase tracking-widest text-[#2FA66A] bg-[#2FA66A]/10 px-3.5 py-1.5 rounded-full border border-[#2FA66A]/30 shadow-2xs inline-flex items-center gap-1.5 mb-2 animate-[pulse_2.5s_infinite_ease-in-out]">
+                <span>📍</span>
+                <span>Location Detected: {detected}</span>
+              </span>
+            ) : hasInput ? (
+              <span className="text-[11px] font-bold uppercase tracking-widest text-[#FF6B2C] bg-[#FF6B2C]/10 px-3.5 py-1.5 rounded-full border border-[#FF6B2C]/30 shadow-2xs inline-flex items-center gap-1.5 mb-2">
+                <span>✍️</span>
+                <span>Typing Draft Prompt</span>
+              </span>
+            ) : (
+              <span className="text-[11px] font-bold uppercase tracking-widest text-[#6B6B6B] bg-[#F7F5F2] px-3.5 py-1.5 rounded-full border border-[#ECE8E2] shadow-sm inline-flex items-center gap-1.5 mb-2">
+                <span>🌍</span>
+                <span>Interactive 3D Globe</span>
+              </span>
+            )}
+            <h3 className="text-lg md:text-xl font-bold text-[#1F1F1F] tracking-tight truncate max-w-sm" title={destinationName}>
+              {detected
+                ? `Ready to Map: ${detected.split(',')[0]} Route`
+                : hasInput
+                ? `Live Route Target Preview`
+                : "Explore Global Destinations"}
+            </h3>
+            <p className="text-xs text-[#6B6B6B] mt-1 leading-relaxed">
+              {detected
+                ? "TripWise is ready to map this route. Adjust details on the left and click 'Plan My Trip' to begin!"
+                : hasInput
+                ? `Keep describing your trip. TripWise will lock coordinates as soon as you click "Plan My Trip".`
+                : "Enter your trip details on the left to generate an AI route & itinerary."}
+            </p>
+          </div>
+        );
+      })()}
 
       {/* 3D Canvas Container - made more compact to prevent visual dead space */}
       <div className="relative w-full h-64 sm:h-72 md:h-80 lg:h-88 flex items-center justify-center my-1">
@@ -299,9 +464,9 @@ export default function InteractiveGlobe({
         <div className="w-full max-w-3xl mt-4 px-4 select-none animate-fade-in">
           <div className="flex items-center justify-between mb-3 border-b border-stone-100 pb-2">
             <span className="text-xs font-extrabold uppercase tracking-wider text-stone-500 flex items-center gap-1.5">
-              <span>✦</span> Recent Curated Dossiers
+              <span>✦</span> Pre-Built Signature Itineraries (Full Previews)
             </span>
-            <span className="text-[10px] text-stone-400 font-semibold">Live Feed</span>
+            <span className="text-[10px] text-stone-400 font-semibold">Click to Load & Preview</span>
           </div>
           <div className="grid grid-cols-3 gap-3">
             {[

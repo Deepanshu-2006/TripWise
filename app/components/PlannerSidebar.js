@@ -660,8 +660,9 @@ export default function PlannerSidebar({
   const activePromptText = userPromptInput || rawPrompt || "Planning your custom journey...";
 
   const isTagActive = (tag) => {
-    const cleanTag = tag.replace('➕ ', '').replace('✓ ', '').trim().toLowerCase();
-    return userPromptInput.toLowerCase().includes(cleanTag);
+    const cleanTag = tag.replace('➕ ', '').replace('✓ ', '').replace('&', '').trim().toLowerCase().replace(/\s+/g, ' ');
+    const promptNorm = userPromptInput.toLowerCase().replace(/&/g, '').replace(/\s+/g, ' ');
+    return promptNorm.includes(cleanTag);
   };
 
   const toggleVibeEnhancer = (tag) => {
@@ -730,7 +731,7 @@ export default function PlannerSidebar({
         <div className="flex items-center justify-between max-w-md mx-auto mt-4 px-2">
           {[
             { label: 'Prompt', id: 'input' },
-            { label: 'Reading', id: 'parsing' },
+            { label: 'Details', id: 'parsing' },
             { label: 'Vibe', id: 'confirming' },
             { label: 'Generate', id: 'progress' }
           ].map((s, idx) => {
@@ -815,10 +816,10 @@ export default function PlannerSidebar({
                         key={idx}
                         type="button"
                         onClick={() => toggleVibeEnhancer(tag)}
-                        className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all duration-150 cursor-pointer shadow-2xs active:scale-95 flex items-center gap-1 ${
+                        className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all duration-150 cursor-pointer active:scale-95 flex items-center gap-1.5 ${
                           active
-                            ? 'bg-[#FF6B2C] text-white border-[#FF6B2C] shadow-sm'
-                            : 'bg-white hover:bg-[#FF6B2C]/10 hover:text-[#FF6B2C] text-stone-700 border-stone-200/60'
+                            ? 'bg-[#FF6B2C] text-white border-[#FF6B2C] shadow-sm ring-2 ring-[#FF6B2C]/30 scale-102 font-extrabold'
+                            : 'bg-white hover:bg-[#FF6B2C]/10 hover:text-[#FF6B2C] text-stone-700 border-stone-200/60 shadow-2xs'
                         }`}
                       >
                         {label}
@@ -828,11 +829,11 @@ export default function PlannerSidebar({
                 </div>
               </div>
 
-              {/* Example Prompts styled as links list */}
-              <div className="space-y-2.5 pt-4 border-t border-stone-200/60">
-                <span className="text-xs font-bold uppercase tracking-wider text-stone-500 block">
-                  Or try an example prompt:
-                </span>
+            {/* Example Prompts styled as links list */}
+            <div className="space-y-2.5 pt-4 border-t border-stone-200/60">
+              <span className="text-xs font-bold uppercase tracking-wider text-stone-500 block">
+                💡 Quick Start Ideas (Text Templates):
+              </span>
                 <div className="flex flex-col gap-2">
                   {[
                     { text: "5 days in Kyoto: temples, gardens & street food", emoji: "🌸" },
@@ -874,7 +875,7 @@ export default function PlannerSidebar({
                 }}
                 className={`w-full py-4 px-6 rounded-2xl font-extrabold text-base transition-all duration-200 flex items-center justify-center gap-2.5 ${
                   userPromptInput.trim()
-                    ? 'bg-[#FF6B2C] text-white hover:bg-[#E55A20] shadow-lg shadow-[#FF6B2C]/25 active:scale-[0.99] cursor-pointer'
+                    ? 'bg-[#FF6B2C] text-white hover:bg-[#E55A20] active:scale-[0.98] shadow-lg hover:shadow-[0_8px_24px_rgba(255,107,44,0.35)] cursor-pointer'
                     : 'bg-stone-200 text-stone-400 cursor-not-allowed opacity-60 border border-stone-300/40'
                 }`}
               >
