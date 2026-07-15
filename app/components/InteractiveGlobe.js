@@ -8,7 +8,8 @@ export default function InteractiveGlobe({
   isTransitioning = false,
   activeStepText = '',
   destinationName = 'Your Destination',
-  targetCoordinates = { lat: 35.0116, lng: 135.7681 }
+  targetCoordinates = { lat: 35.0116, lng: 135.7681 },
+  onSelectPrompt
 }) {
   const containerRef = useRef(null);
   const globeGroupRef = useRef(null);
@@ -270,24 +271,89 @@ export default function InteractiveGlobe({
           </p>
         </div>
       ) : (
-        <div className="text-center max-w-md mx-auto mb-2 animate-fade-in">
+        <div className="text-center max-w-md mx-auto mb-2 animate-fade-in px-4">
           <span className="text-[11px] font-bold uppercase tracking-widest text-[#6B6B6B] bg-[#F7F5F2] px-3.5 py-1.5 rounded-full border border-[#ECE8E2] shadow-sm inline-flex items-center gap-1.5 mb-2">
             <span>🌍</span>
-            <span>Interactive 3D Globe</span>
+            <span>{destinationName && destinationName !== 'Global View' && destinationName !== 'Your Destination' ? 'Live Prompt Preview' : 'Interactive 3D Globe'}</span>
           </span>
-          <h3 className="text-lg md:text-xl font-bold text-[#1F1F1F] tracking-tight">
-            Explore Global Destinations
+          <h3 className="text-lg md:text-xl font-bold text-[#1F1F1F] tracking-tight truncate max-w-sm" title={destinationName}>
+            {destinationName && destinationName !== 'Global View' && destinationName !== 'Your Destination'
+              ? `Route target: "${destinationName.slice(0, 35)}${destinationName.length > 35 ? '...' : ''}"`
+              : "Explore Global Destinations"}
           </h3>
-          <p className="text-xs text-[#6B6B6B] mt-1">
-            Enter your trip details on the left to generate an AI route & itinerary.
+          <p className="text-xs text-[#6B6B6B] mt-1 leading-relaxed">
+            {destinationName && destinationName !== 'Global View' && destinationName !== 'Your Destination'
+              ? "We've got your signal. Specify budget, pace, and click 'Plan My Trip' to begin!"
+              : "Enter your trip details on the left to generate an AI route & itinerary."}
           </p>
         </div>
       )}
 
-      {/* 3D Canvas Container */}
-      <div className="relative w-full h-85 sm:h-105 md:h-120 lg:h-130 flex items-center justify-center my-1">
+      {/* 3D Canvas Container - made more compact to prevent visual dead space */}
+      <div className="relative w-full h-64 sm:h-72 md:h-80 lg:h-88 flex items-center justify-center my-1">
         <div ref={containerRef} className="w-full h-full max-w-3xl flex items-center justify-center cursor-grab active:cursor-grabbing" />
       </div>
+
+      {/* Supporting Content: Recent Curated Dossiers Dock */}
+      {!isGenerating && !isTransitioning && (
+        <div className="w-full max-w-3xl mt-4 px-4 select-none animate-fade-in">
+          <div className="flex items-center justify-between mb-3 border-b border-stone-100 pb-2">
+            <span className="text-xs font-extrabold uppercase tracking-wider text-stone-500 flex items-center gap-1.5">
+              <span>✦</span> Recent Curated Dossiers
+            </span>
+            <span className="text-[10px] text-stone-400 font-semibold">Live Feed</span>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              {
+                dest: "Kyoto, Japan",
+                desc: "5 Days • Springs & Temples",
+                prompt: "🌸 5 days in Kyoto: temples, gardens & street food",
+                rating: "4.9",
+                tag: "Cultural"
+              },
+              {
+                dest: "Rome, Italy",
+                desc: "3 Days • Historic Escapes",
+                prompt: "🍕 3 budget days in Rome: hidden gems & local pasta",
+                rating: "4.8",
+                tag: "Historic"
+              },
+              {
+                dest: "Swiss Alps",
+                desc: "4 Days • Mountain Scenic",
+                prompt: "🏔️ 4 days in Swiss Alps: scenic hiking & boutique chalets",
+                rating: "4.9",
+                tag: "Nature"
+              }
+            ].map((item, idx) => (
+              <div
+                key={idx}
+                onClick={() => {
+                  if (onSelectPrompt) onSelectPrompt(item.prompt);
+                }}
+                className="bg-stone-50/50 hover:bg-[#FF6B2C]/5 hover:border-[#FF6B2C]/30 border border-stone-200/60 rounded-xl p-3 transition-all duration-200 cursor-pointer flex flex-col justify-between text-left group shadow-3xs hover:-translate-y-0.5 active:scale-98"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-1.5">
+                    <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-stone-200/60 text-stone-600 tracking-tight group-hover:bg-[#FF6B2C]/10 group-hover:text-[#FF6B2C]">
+                      {item.tag}
+                    </span>
+                    <span className="text-[10px] font-bold text-amber-600">★ {item.rating}</span>
+                  </div>
+                  <h4 className="text-xs font-bold text-stone-850 group-hover:text-[#FF6B2C] transition-colors truncate">
+                    {item.dest}
+                  </h4>
+                  <p className="text-[10px] text-stone-500 mt-0.5 truncate">{item.desc}</p>
+                </div>
+                <div className="mt-3 text-[9px] font-extrabold text-[#FF6B2C] flex items-center gap-1 opacity-80 group-hover:opacity-100">
+                  <span>Use Template</span> <span>→</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

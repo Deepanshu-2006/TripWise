@@ -69,6 +69,7 @@ export default function AIPlannerPage() {
           <div className="w-full md:w-[42%] lg:w-[40%] xl:w-[38%] h-full overflow-y-auto overflow-x-hidden shrink-0 bg-[#F7F5F2] border-r border-[#ECE8E2] flex flex-col scroll-smooth">
             <PlannerSidebar
               rawPrompt={currentPrompt}
+              onPromptChange={setCurrentPrompt}
               isGenerating={isGenerating}
               itinerary={itinerary}
               selectedDayIndex={selectedDayIndex}

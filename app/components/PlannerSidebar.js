@@ -148,6 +148,7 @@ const STATUS_ROWS = [
 
 export default function PlannerSidebar({
   rawPrompt = "",
+  onPromptChange,
   extracted = {
     destination: null,
     duration: null,
@@ -593,6 +594,9 @@ export default function PlannerSidebar({
   const handleNewPrompt = () => {
     setStep('input');
     setUserPromptInput('');
+    if (onPromptChange) {
+      onPromptChange('');
+    }
     setParsedIntent(null);
     setShowFinalCTA(false);
     setProgressPercent(0);
@@ -655,13 +659,47 @@ export default function PlannerSidebar({
   const destinationName = derivedDestination();
   const activePromptText = userPromptInput || rawPrompt || "Planning your custom journey...";
 
+  const isTagActive = (tag) => {
+    const cleanTag = tag.replace('➕ ', '').replace('✓ ', '').trim().toLowerCase();
+    return userPromptInput.toLowerCase().includes(cleanTag);
+  };
+
+  const toggleVibeEnhancer = (tag) => {
+    const cleanTag = tag.replace('➕ ', '').replace('✓ ', '').trim();
+    const searchPattern = new RegExp(`[,.\\s]*include\\s+${cleanTag.toLowerCase()}[,.\\s]*`, 'gi');
+    
+    if (isTagActive(tag)) {
+      setUserPromptInput((prev) => {
+        let updated = prev.replace(searchPattern, ' ').trim();
+        updated = updated.replace(/,\s*,/g, ',').replace(/\s+/g, ' ').trim();
+        if (updated.startsWith(',')) updated = updated.slice(1).trim();
+        if (updated.endsWith(',')) updated = updated.slice(0, -1).trim();
+        if (onPromptChange) onPromptChange(updated);
+        return updated;
+      });
+    } else {
+      setUserPromptInput((prev) => {
+        const trimmed = prev.trim();
+        let updated = '';
+        if (!trimmed) {
+          updated = `Include ${cleanTag.toLowerCase()}.`;
+        } else {
+          const cleanPrev = trimmed.endsWith('.') ? trimmed.slice(0, -1) : trimmed;
+          updated = `${cleanPrev}, include ${cleanTag.toLowerCase()}.`;
+        }
+        if (onPromptChange) onPromptChange(updated);
+        return updated;
+      });
+    }
+  };
+
   return (
     <div className={`w-full h-full min-h-160 bg-[#FAF3EE] text-stone-900 ${step === 'progress' && showFinalCTA && itinerary ? 'p-4 md:p-6' : 'p-6 md:p-8'} flex flex-col justify-between font-sans select-none border-r border-stone-200/60`}>
-      {/* Top Header Brand / Label */}
-      <div>
-        <div className={`flex items-center justify-between ${step === 'progress' && showFinalCTA && itinerary ? 'mb-3' : 'mb-8'}`}>
+      {/* Top Header Brand / Label with Sticky wrapper */}
+      <div className="sticky top-0 z-30 bg-[#FAF3EE] pt-2 pb-4 -mx-6 md:-mx-8 px-6 md:px-8 border-b border-stone-200/50 mb-6">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35]" />
+            <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B2C]" />
             <span className="text-xs font-bold tracking-widest uppercase text-stone-500">
               TripWise AI Planner
             </span>
@@ -670,31 +708,85 @@ export default function PlannerSidebar({
             <button
               type="button"
               onClick={handleNewPrompt}
-              className="text-xs font-semibold text-[#FF6B35] hover:underline cursor-pointer bg-transparent border-none"
+              className="text-xs font-semibold text-[#FF6B2C] hover:underline cursor-pointer bg-transparent border-none"
             >
               ← New Prompt
             </button>
           )}
         </div>
 
+        {step === 'input' && (
+          <div className="space-y-2 mb-4">
+            <h2 className="text-3xl md:text-4xl font-black text-stone-900 tracking-tight leading-tight">
+              Where to next?
+            </h2>
+            <p className="text-sm md:text-base text-stone-650 leading-relaxed">
+              Tell TripWise your dream destination, vibe, budget, or timeline. Our AI will craft your custom itinerary in seconds.
+            </p>
+          </div>
+        )}
+
+        {/* Visual Progress Stepper placed prominently near the top */}
+        <div className="flex items-center justify-between max-w-md mx-auto mt-4 px-2">
+          {[
+            { label: 'Prompt', id: 'input' },
+            { label: 'Reading', id: 'parsing' },
+            { label: 'Vibe', id: 'confirming' },
+            { label: 'Generate', id: 'progress' }
+          ].map((s, idx) => {
+            const stepOrder = ['input', 'parsing', 'confirming', 'progress'];
+            const currentIdx = stepOrder.indexOf(step);
+            const isCompleted = currentIdx > idx;
+            const isActive = currentIdx === idx;
+            
+            return (
+              <React.Fragment key={s.id}>
+                <div className="flex flex-col items-center gap-1.5 shrink-0">
+                  <div className={`w-6.5 h-6.5 rounded-full flex items-center justify-center text-[10px] font-black transition-all duration-300 ${
+                    isCompleted 
+                      ? 'bg-[#2FA66A] text-white shadow-xs' 
+                      : isActive 
+                      ? 'bg-[#FF6B2C] text-white ring-4 ring-[#FF6B2C]/20 scale-105 shadow-xs' 
+                      : 'bg-stone-200 text-stone-400 border border-stone-300'
+                  }`}>
+                    {isCompleted ? '✓' : idx + 1}
+                  </div>
+                  <span className={`text-[9px] font-extrabold uppercase tracking-wider ${
+                    isActive ? 'text-[#FF6B2C]' : isCompleted ? 'text-[#2FA66A]' : 'text-stone-400'
+                  }`}>
+                    {s.label}
+                  </span>
+                </div>
+                {idx < 3 && (
+                  <div className="flex-1 h-0.5 mx-2 bg-stone-200 -mt-4 relative overflow-hidden rounded-full shrink-0">
+                    <div className={`h-full bg-[#2FA66A] ${
+                      isCompleted 
+                        ? 'w-full' 
+                        : isActive 
+                        ? 'w-1/2 animate-pulse' 
+                        : 'w-0'
+                    } transition-all duration-500`} />
+                  </div>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
         {/* STATE 0: Prompt Input Setup Page */}
         {step === 'input' && (
           <div className="space-y-8 animate-fade-in">
-            {/* Header Block */}
-            <div className="space-y-2">
-              <h2 className="text-3xl md:text-4xl font-black text-stone-900 tracking-tight leading-tight">
-                Where to next?
-              </h2>
-              <p className="text-sm md:text-base text-stone-600 leading-relaxed">
-                Tell TripWise your dream destination, vibe, budget, or timeline. Our AI will craft your custom itinerary in seconds.
-              </p>
-            </div>
-
             {/* Input Block */}
             <div className="space-y-6">
               <textarea
                 value={userPromptInput}
-                onChange={(e) => setUserPromptInput(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setUserPromptInput(val);
+                  if (onPromptChange) onPromptChange(val);
+                }}
                 placeholder="e.g., 5 days in Kyoto during cherry blossom season... love historic temples, hidden gardens, authentic ramen shops, and boutique stays."
                 className="w-full h-36 p-4 md:p-5 rounded-2xl bg-white border border-stone-300 focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 text-sm md:text-base text-stone-900 placeholder:text-stone-400 focus:outline-none shadow-sm transition-all duration-150 resize-none font-medium"
               />
@@ -702,10 +794,10 @@ export default function PlannerSidebar({
               {/* Vibe Enhancers */}
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#FF6B35] flex items-center gap-1.5">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#FF6B2C] flex items-center gap-1.5">
                     <span>⚡ One-Click Vibe Enhancers</span>
                   </span>
-                  <span className="text-[11px] text-stone-500 font-normal">Click to append</span>
+                  <span className="text-[11px] text-stone-500 font-normal">Click to toggle</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {[
@@ -715,56 +807,62 @@ export default function PlannerSidebar({
                     "➕ Budget Friendly & Hostels",
                     "➕ Luxury Boutique Stays",
                     "➕ Fast-Paced Nightlife"
-                  ].map((tag, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => {
-                        const cleanTag = tag.replace('➕ ', '');
-                        setUserPromptInput((prev) => {
-                          const trimmed = prev.trim();
-                          if (!trimmed) return `Include ${cleanTag.toLowerCase()}.`;
-                          return `${trimmed}${trimmed.endsWith('.') ? '' : ','} include ${cleanTag.toLowerCase()}.`;
-                        });
-                      }}
-                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#FF6B35]/10 text-[#FF6B35] hover:bg-[#FF6B35] hover:text-white border border-[#FF6B35]/20 transition-all duration-150 cursor-pointer shadow-2xs active:scale-95"
-                    >
-                      {tag}
-                    </button>
-                  ))}
+                  ].map((tag, idx) => {
+                    const active = isTagActive(tag);
+                    const label = active ? `✓ ${tag.replace('➕ ', '')}` : tag;
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => toggleVibeEnhancer(tag)}
+                        className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all duration-150 cursor-pointer shadow-2xs active:scale-95 flex items-center gap-1 ${
+                          active
+                            ? 'bg-[#FF6B2C] text-white border-[#FF6B2C] shadow-sm'
+                            : 'bg-white hover:bg-[#FF6B2C]/10 hover:text-[#FF6B2C] text-stone-700 border-stone-200/60'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* De-emphasized Examples */}
-              <div className="space-y-2.5 pt-2 border-t border-stone-200/60">
-                <span className="text-xs font-semibold uppercase tracking-wider text-stone-500 block">
+              {/* Example Prompts styled as links list */}
+              <div className="space-y-2.5 pt-4 border-t border-stone-200/60">
+                <span className="text-xs font-bold uppercase tracking-wider text-stone-500 block">
                   Or try an example prompt:
                 </span>
-                <ul className="space-y-2">
+                <div className="flex flex-col gap-2">
                   {[
                     { text: "5 days in Kyoto: temples, gardens & street food", emoji: "🌸" },
                     { text: "3 budget days in Rome: hidden gems & local pasta", emoji: "🍕" },
                     { text: "7 fast-paced days in Tokyo: cyberpunk nightlife & tech", emoji: "⚡" }
                   ].map((ex, idx) => (
-                    <li key={idx}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setUserPromptInput(`${ex.emoji} ${ex.text}`);
-                          setStep('parsing');
-                        }}
-                        className="w-full flex items-center gap-2.5 text-left text-xs md:text-sm text-slate-500 hover:text-[#FF6B35] transition-colors cursor-pointer py-1 group font-medium"
-                      >
-                        <span className="text-stone-400 group-hover:text-[#FF6B35] transition-colors">→</span>
-                        <span className="truncate">{ex.emoji} {ex.text}</span>
-                      </button>
-                    </li>
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        setUserPromptInput(`${ex.emoji} ${ex.text}`);
+                        if (onPromptChange) onPromptChange(`${ex.emoji} ${ex.text}`);
+                        setStep('parsing');
+                      }}
+                      className="w-full flex items-center justify-between text-left text-xs sm:text-sm text-[#1F1F1F] hover:text-[#FF6B2C] transition-all bg-white hover:bg-stone-50 border border-stone-200/60 rounded-xl p-3 shadow-2xs group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="text-sm shrink-0">{ex.emoji}</span>
+                        <span className="font-semibold truncate text-stone-700 group-hover:text-stone-900">{ex.text}</span>
+                      </div>
+                      <span className="text-[#FF6B2C] opacity-0 group-hover:opacity-100 transition-all font-bold text-xs shrink-0 translate-x-[-4px] group-hover:translate-x-0">
+                        Try it →
+                      </span>
+                    </button>
                   ))}
-                </ul>
+                </div>
               </div>
             </div>
 
-            {/* Action Button */}
+            {/* Action Button: Grayed out disabled state / Solid filled orange enabled state */}
             <div className="pt-2">
               <button
                 type="button"
@@ -776,8 +874,8 @@ export default function PlannerSidebar({
                 }}
                 className={`w-full py-4 px-6 rounded-2xl font-extrabold text-base transition-all duration-200 flex items-center justify-center gap-2.5 ${
                   userPromptInput.trim()
-                    ? 'bg-[#FF6B35] text-white hover:bg-[#e85a24] shadow-lg shadow-[#FF6B35]/25 active:scale-[0.99] cursor-pointer'
-                    : 'border-2 border-dashed border-stone-300 text-stone-400 bg-transparent cursor-not-allowed'
+                    ? 'bg-[#FF6B2C] text-white hover:bg-[#E55A20] shadow-lg shadow-[#FF6B2C]/25 active:scale-[0.99] cursor-pointer'
+                    : 'bg-stone-200 text-stone-400 cursor-not-allowed opacity-60 border border-stone-300/40'
                 }`}
               >
                 <span>Plan My Trip</span>
@@ -789,7 +887,7 @@ export default function PlannerSidebar({
 
         {/* STATE 1: Parsing */}
         {step === 'parsing' && (
-          <div className="flex flex-col gap-5 animate-fade-in">
+          <div className="flex flex-col gap-5 animate-fade-in pt-4">
             <div className="flex items-center gap-3">
               <SpinnerIcon />
               <span className="text-base font-semibold text-(--foreground)">
@@ -1452,7 +1550,7 @@ export default function PlannerSidebar({
       {/* Footer / Subtle Info */}
       <div className="pt-6 border-t border-[rgba(28,27,27,0.06)] mt-8 flex items-center justify-between text-[11px] text-secondary-text">
         <span>Powered by TripWise AI</span>
-        <span>{step === 'input' ? 'Step 0 of 3' : step === 'parsing' ? 'Step 1 of 3' : step === 'confirming' ? 'Step 2 of 3' : 'Step 3 of 3'}</span>
+        <span>Real-Time Optimization Engine</span>
       </div>
     </div>
   );

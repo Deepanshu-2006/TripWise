@@ -147,6 +147,7 @@ export default function LiveTripDashboard({
               activeStepText={GENERATION_STEPS[activeStepIndex]}
               destinationName={displayDest}
               targetCoordinates={itinerary?.coordinates || { lat: 41.9028, lng: 12.4964 }}
+              onSelectPrompt={onSelectPrompt}
             />
           </div>
         ) : null}
