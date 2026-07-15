@@ -154,6 +154,47 @@ body {
   filter: sepia(48%) hue-rotate(-12deg) saturate(85%) contrast(96%) brightness(99%);
 }
 
+/* Animated stamp airplane flight path classes */
+@keyframes flyPlane {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+    transform: scale(0.3);
+  }
+
+  8% {
+    opacity: 1;
+    transform: scale(0.8);
+  }
+
+  90% {
+    opacity: 1;
+    transform: scale(0.8);
+  }
+
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+
+.flight-plane {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  left: 0;
+  top: 0;
+  offset-path: path('M 300 180 C 200 120, 100 180, 100 240 C 100 310, 220 330, 300 290 C 380 250, 440 120, 510 80 C 560 50, 580 60, 600 70');
+  offset-rotate: auto 90deg;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.animate-fly-plane {
+  animation: flyPlane 3.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
 /* Print CSS Pass for Clean Dossier Booklet Output */
 @media print {
   @page {
@@ -202,14 +243,16 @@ body {
   .print\:flex {
     display: flex !important;
   }
+
   .print\:block {
     display: block !important;
   }
+
   .print\:grid {
     display: grid !important;
   }
 
-  body, 
+  body,
   html,
   .min-h-screen,
   main,
@@ -242,10 +285,12 @@ body {
     margin-bottom: 2rem !important;
     display: block !important;
   }
+
   .print-hero-section h1 {
     color: #1E1C1A !important;
     font-weight: 900 !important;
   }
+
   .print-hero-section p {
     color: #3E3A36 !important;
   }
@@ -258,6 +303,7 @@ body {
     break-before: page !important;
     page-break-before: always !important;
   }
+
   .print-epilogue-section {
     break-before: page !important;
     page-break-before: always !important;

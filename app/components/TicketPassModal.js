@@ -126,7 +126,7 @@ export default function TicketPassModal({
 
     recommendedGateway = {
       name: 'OpenTable Table Reservation',
-      icon: <Utensils className="w-5 h-5 text-[#BA5536]" />,
+      icon: <Utensils className="w-5 h-5 text-[#FF6B2C]" />,
       url: `https://www.opentable.com/s?term=${opentableQuery}`,
       desc: `Search real-time table availability and instant online seating confirmation for ${cleanName}.`
     };
@@ -135,19 +135,19 @@ export default function TicketPassModal({
     secondaryGateways = [
       {
         name: 'Check Seating on TheFork',
-        icon: <Utensils className="w-4 h-4 text-[#BA5536]" />,
+        icon: <Utensils className="w-4 h-4 text-[#FF6B2C]" />,
         url: `https://www.thefork.com/search?q=${theforkQuery}`,
         desc: `Compare dining time slots, special chef tasting menus, and table offers for ${cleanName}.`
       },
       {
         name: 'Google Reserve Table Check',
-        icon: <Utensils className="w-4 h-4 text-[#BA5536]" />,
+        icon: <Utensils className="w-4 h-4 text-[#FF6B2C]" />,
         url: `https://www.google.com/search?q=${googleReserveQuery}`,
         desc: `Universal check across OpenTable, Resy, and direct restaurant desk reservation windows.`
       },
       {
         name: 'Google Maps Desk & Menu Photos',
-        icon: <MapPin className="w-4 h-4 text-[#BA5536]" />,
+        icon: <MapPin className="w-4 h-4 text-[#FF6B2C]" />,
         url: `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`,
         desc: `Check exact location, phone desk contact, peak crowd wait times, and customer menu photos.`
       }
@@ -160,7 +160,7 @@ export default function TicketPassModal({
 
     recommendedGateway = {
       name: 'Google Maps Navigation & Entrance Points',
-      icon: <MapPin className="w-5 h-5 text-[#BA5536]" />,
+      icon: <MapPin className="w-5 h-5 text-[#FF6B2C]" />,
       url: `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`,
       desc: `Get direct walking directions, exact entrance gate coordinates, and real-time crowd conditions for ${cleanName}.`
     };
@@ -169,19 +169,19 @@ export default function TicketPassModal({
     secondaryGateways = [
       {
         name: 'Official Park / Site Visitor Info',
-        icon: <Trees className="w-4 h-4 text-[#BA5536]" />,
+        icon: <Trees className="w-4 h-4 text-[#FF6B2C]" />,
         url: `https://www.google.com/search?q=${infoQuery}`,
         desc: `Check seasonal opening hours, public events schedules, and park access maps.`
       },
       {
         name: 'Guided Walking & Bike Tours on Viator',
-        icon: <Bike className="w-4 h-4 text-[#BA5536]" />,
+        icon: <Bike className="w-4 h-4 text-[#FF6B2C]" />,
         url: `https://www.viator.com/searchResults/all?text=${viatorQuery}`,
         desc: `Explore optional guided Segway, e-bike, and historical storytelling walking passes.`
       },
       {
         name: 'Top Photography Angles & Tips',
-        icon: <Camera className="w-4 h-4 text-[#BA5536]" />,
+        icon: <Camera className="w-4 h-4 text-[#FF6B2C]" />,
         url: `https://www.google.com/search?q=${photoQuery}`,
         desc: `Check traveler tips for the best sunset viewing angles and quiet pathways around ${cleanName}.`
       }
@@ -195,7 +195,7 @@ export default function TicketPassModal({
 
     recommendedGateway = {
       name: 'Official Venue Ticket Gateway',
-      icon: <Landmark className="w-5 h-5 text-[#BA5536]" />,
+      icon: <Landmark className="w-5 h-5 text-[#FF6B2C]" />,
       url: `https://www.google.com/search?q=${officialQuery}`,
       desc: `Search official venue box office releases and direct general admission tickets for ${cleanName}.`
     };
@@ -204,19 +204,19 @@ export default function TicketPassModal({
     secondaryGateways = [
       {
         name: 'Viator Skip-the-Line Passes',
-        icon: <Ticket className="w-4 h-4 text-[#BA5536]" />,
+        icon: <Ticket className="w-4 h-4 text-[#FF6B2C]" />,
         url: `https://www.viator.com/searchResults/all?text=${viatorQuery}`,
         desc: `Compare priority skip-the-line passes, reserved time slots, and VIP guided entry.`
       },
       {
         name: 'GetYourGuide Tours & Passes',
-        icon: <Compass className="w-4 h-4 text-[#BA5536]" />,
+        icon: <Compass className="w-4 h-4 text-[#FF6B2C]" />,
         url: `https://www.getyourguide.com/s/?q=${gygQuery}`,
         desc: `Explore instant mobile passes, audio guides, and flexible cancellation options.`
       },
       {
         name: 'Tiqets Instant Mobile Entry',
-        icon: <Ticket className="w-4 h-4 text-[#BA5536]" />,
+        icon: <Ticket className="w-4 h-4 text-[#FF6B2C]" />,
         url: `https://www.tiqets.com/en/search/?q=${tiqetsQuery}`,
         desc: `Instant mobile delivery passes and multi-attraction city bundle combinations.`
       }
@@ -278,10 +278,10 @@ export default function TicketPassModal({
               <div className="bg-[#FAF6F0] p-6 sm:p-8 pb-6 relative overflow-hidden border-b border-[#E6DFD5]">
                 <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-md bg-[#BA5536] flex items-center justify-center text-white font-serif font-black text-xs shadow-2xs">
+                    <span className="w-6 h-6 rounded-md bg-[#FF6B2C] flex items-center justify-center text-white font-serif font-black text-xs shadow-2xs">
                       TW
                     </span>
-                    <span className="font-mono text-xs tracking-widest uppercase text-[#BA5536] font-bold">
+                    <span className="font-mono text-xs tracking-widest uppercase text-[#FF6B2C] font-bold">
                       {headerSubtitle}
                     </span>
                   </div>
@@ -308,7 +308,7 @@ export default function TicketPassModal({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 p-5 sm:p-6 bg-white rounded-2xl border border-[#E6DFD5] shadow-2xs">
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-xl bg-[#FAF6F0] border border-[#E6DFD5] flex items-center justify-center shrink-0 mt-0.5">
-                      {isDining ? <Utensils className="w-4.5 h-4.5 text-[#BA5536]" /> : (isNature ? <MapPin className="w-4.5 h-4.5 text-[#BA5536]" /> : <Ticket className="w-4.5 h-4.5 text-[#BA5536]" />)}
+                      {isDining ? <Utensils className="w-4.5 h-4.5 text-[#FF6B2C]" /> : (isNature ? <MapPin className="w-4.5 h-4.5 text-[#FF6B2C]" /> : <Ticket className="w-4.5 h-4.5 text-[#FF6B2C]" />)}
                     </div>
                     <div>
                       <div className="text-xs font-sans tracking-widest uppercase text-[#7A7268] font-bold">{rateLabel}</div>
@@ -319,7 +319,7 @@ export default function TicketPassModal({
 
                   <div className="flex items-start gap-4 sm:border-l sm:border-[#E6DFD5] sm:pl-6 pt-4 sm:pt-0 border-t sm:border-t-0 border-[#E6DFD5]/60">
                     <div className="w-10 h-10 rounded-xl bg-[#FAF6F0] border border-[#E6DFD5] flex items-center justify-center shrink-0 mt-0.5">
-                      <Clock className="w-4.5 h-4.5 text-[#BA5536]" />
+                      <Clock className="w-4.5 h-4.5 text-[#FF6B2C]" />
                     </div>
                     <div>
                       <div className="text-xs font-sans tracking-widest uppercase text-[#7A7268] font-bold">{timeLabel}</div>
@@ -332,9 +332,9 @@ export default function TicketPassModal({
                 {/* ── CURATED BOOKING GATEWAYS (Point 2: Single Framing without redundant header) ── */}
                 <div className="space-y-4">
                   {/* Recommended Gateway Box */}
-                  <div className="p-5 sm:p-6 rounded-2xl bg-white border-2 border-[#BA5536]/40 shadow-sm relative overflow-hidden transition-all hover:border-[#BA5536]">
+                  <div className="p-5 sm:p-6 rounded-2xl bg-white border-2 border-[#FF6B2C]/40 shadow-sm relative overflow-hidden transition-all hover:border-[#FF6B2C]">
                     <div className="flex items-center justify-between gap-2 flex-wrap border-b border-[#E6DFD5]/60 pb-3.5 mb-4">
-                      <div className="flex items-center gap-2 text-xs font-sans font-bold text-[#BA5536]">
+                      <div className="flex items-center gap-2 text-xs font-sans font-bold text-[#FF6B2C]">
                         <Sparkles className="w-4 h-4 shrink-0" />
                         <span>{recommendedReason}</span>
                       </div>
@@ -364,7 +364,7 @@ export default function TicketPassModal({
                         href={recommendedGateway.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#BA5536] hover:bg-[#A3482D] text-white text-xs font-sans font-bold shadow-xs transition-all w-full sm:w-auto cursor-pointer"
+                        className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#FF6B2C] hover:bg-[#A3482D] text-white text-xs font-sans font-bold shadow-xs transition-all w-full sm:w-auto cursor-pointer"
                       >
                         <span>Check Official Gateway ↗</span>
                       </a>
@@ -386,7 +386,7 @@ export default function TicketPassModal({
                             Partner Gateways
                           </span>
                         </span>
-                        <span className={`text-[#BA5536] transition-transform duration-200 font-bold ${showMoreOptions ? 'rotate-180' : ''}`}>
+                        <span className={`text-[#FF6B2C] transition-transform duration-200 font-bold ${showMoreOptions ? 'rotate-180' : ''}`}>
                           ▾
                         </span>
                       </button>
@@ -406,16 +406,16 @@ export default function TicketPassModal({
                                 href={gw.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="block p-4 sm:p-5 rounded-2xl border border-[#E6DFD5] hover:border-[#BA5536]/60 bg-white transition-all duration-200 cursor-pointer shadow-2xs group"
+                                className="block p-4 sm:p-5 rounded-2xl border border-[#E6DFD5] hover:border-[#FF6B2C]/60 bg-white transition-all duration-200 cursor-pointer shadow-2xs group"
                               >
                                 <div className="flex items-start justify-between gap-3">
                                   <div className="flex items-start gap-4">
-                                    <div className="w-10 h-10 rounded-xl bg-[#FAF6F0] border border-[#E6DFD5] flex items-center justify-center shrink-0 mt-0.5 text-[#BA5536] group-hover:scale-105 transition-transform">
+                                    <div className="w-10 h-10 rounded-xl bg-[#FAF6F0] border border-[#E6DFD5] flex items-center justify-center shrink-0 mt-0.5 text-[#FF6B2C] group-hover:scale-105 transition-transform">
                                       {gw.icon}
                                     </div>
                                     <div>
                                       <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="font-serif font-bold text-base text-[#1E1C1A] group-hover:text-[#BA5536] transition-colors">
+                                        <span className="font-serif font-bold text-base text-[#1E1C1A] group-hover:text-[#FF6B2C] transition-colors">
                                           {gw.name}
                                         </span>
                                         <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-medium tracking-wider bg-[#FAF6F0] border border-[#E6DFD5] text-[#5F5E5A]">
@@ -427,7 +427,7 @@ export default function TicketPassModal({
                                       </p>
                                     </div>
                                   </div>
-                                  <ExternalLink className="w-4 h-4 text-[#7A7268] group-hover:text-[#BA5536] shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 mt-1" />
+                                  <ExternalLink className="w-4 h-4 text-[#7A7268] group-hover:text-[#FF6B2C] shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 mt-1" />
                                 </div>
                               </a>
                             ))}
@@ -436,7 +436,7 @@ export default function TicketPassModal({
                             <div className="mt-4 p-4 sm:p-5 rounded-2xl bg-[#FAF6F0] border border-[#E6DFD5] text-xs font-sans text-[#4A443E] flex items-start gap-3.5 shadow-2xs">
                               <span className="text-base leading-none shrink-0 mt-0.5">ℹ️</span>
                               <div className="leading-relaxed font-medium">
-                                <strong className="text-[#1E1C1A] font-bold">Partner Disclosure:</strong> We route you directly to official box offices whenever possible. When selecting secondary partner gateways above (such as Viator or GetYourGuide), TripWise may earn a small referral commission at <span className="underline underline-offset-2 decoration-[#BA5536]">zero extra cost to you</span>. This helps support our independent curation without display ads.
+                                <strong className="text-[#1E1C1A] font-bold">Partner Disclosure:</strong> We route you directly to official box offices whenever possible. When selecting secondary partner gateways above (such as Viator or GetYourGuide), TripWise may earn a small referral commission at <span className="underline underline-offset-2 decoration-[#FF6B2C]">zero extra cost to you</span>. This helps support our independent curation without display ads.
                               </div>
                             </div>
                           </motion.div>
@@ -448,7 +448,7 @@ export default function TicketPassModal({
 
                 {/* Important Booking Advisory using Page Standard Label Style */}
                 <div className="p-5 sm:p-6 rounded-2xl bg-white border border-[#E6DFD5] shadow-2xs flex items-start gap-4">
-                  <AlertCircle className="w-5 h-5 text-[#BA5536] shrink-0 mt-0.5" />
+                  <AlertCircle className="w-5 h-5 text-[#FF6B2C] shrink-0 mt-0.5" />
                   <div className="text-xs sm:text-sm font-sans text-[#4A443E] leading-relaxed space-y-1.5">
                     <div className="text-xs font-sans tracking-widest uppercase text-[#1E1C1A] font-bold">
                       Important Booking Advisory
@@ -463,7 +463,7 @@ export default function TicketPassModal({
                 <div className="pt-5 border-t border-[#E6DFD5] space-y-3">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <label htmlFor="ticket-note" className="text-xs font-sans font-bold uppercase tracking-wider text-[#1E1C1A] flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-[#BA5536]" />
+                      <FileText className="w-4 h-4 text-[#FF6B2C]" />
                       <span>Attach Real Confirmation / Reference Note</span>
                     </label>
                     <span className="text-xs font-sans italic text-[#7A7268]">Saved privately to your device</span>
@@ -476,7 +476,7 @@ export default function TicketPassModal({
                       value={savedNote}
                       onChange={(e) => setSavedNote(e.target.value)}
                       placeholder="Once you purchase tickets online, paste your confirmation code, entry gate, or reservation reference here (e.g. #849204 - 9:30 AM Gate B)..."
-                      className="w-full p-4 rounded-2xl bg-white border border-[#E6DFD5] focus:border-[#BA5536] focus:outline-hidden text-xs sm:text-sm font-sans text-[#1E1C1A] placeholder-[#A89F91] resize-none shadow-inner"
+                      className="w-full p-4 rounded-2xl bg-white border border-[#E6DFD5] focus:border-[#FF6B2C] focus:outline-hidden text-xs sm:text-sm font-sans text-[#1E1C1A] placeholder-[#A89F91] resize-none shadow-inner"
                     />
                     <button
                       type="button"
