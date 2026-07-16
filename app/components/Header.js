@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 function Header() {
     const [isScrolled, setIsScrolled] = useState(false)
     const pathname = usePathname()
-    const isLightPage = pathname?.startsWith('/planner') || pathname?.startsWith('/destinations') || pathname?.startsWith('/ai-planner')
+    const isLightPage = pathname?.startsWith('/planner') && !pathname?.startsWith('/planner-sidebar');
 
     useEffect(() => {
         const handleScroll = () => {

@@ -193,7 +193,7 @@ const DESTINATIONS = [
     duration: '5–7 days',
     prompt: '6 days in New York: Brooklyn food scene, MoMA, Manhattan skyline, jazz bars & Times Square',
     gradient: 'from-slate-900/70 via-gray-800/50 to-transparent',
-    imageUrl: 'https://images.unsplash.com/photo-1496442226666-8d4d0e57fe2c?w=800&auto=format&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1485871981521-5b1fd3805eee?w=800&auto=format&fit=crop&q=80',
     emoji: '🗽',
     bgColor: '#6B7BA0',
   },
@@ -440,6 +440,8 @@ export default function DestinationsPage() {
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#1F1F1F]">
       <Header />
+      {/* Solid background mask to hide scrolling content under the floating nav pill */}
+      <div className="fixed top-0 left-0 right-0 h-[68px] bg-[#FAF8F5] z-[45]" />
 
       {/* Hero */}
       <section className="pt-28 pb-12 px-4 sm:px-6 md:px-8 relative overflow-hidden">
@@ -519,14 +521,14 @@ export default function DestinationsPage() {
               {trendingDests.map(dest => (
                 <TrendingCard key={dest.id} dest={dest} onClick={handleUseTemplate} />
               ))}
-              <div
+              <a
+                href="/ai-planner"
                 className="shrink-0 w-56 rounded-2xl border-2 border-dashed border-[#FF6B2C]/30 bg-[#FF6B2C]/4 flex flex-col items-center justify-center p-6 gap-3 cursor-pointer hover:bg-[#FF6B2C]/8 transition-colors"
-                onClick={() => router.push('/ai-planner')}
               >
                 <span className="text-3xl">✨</span>
                 <p className="text-sm font-semibold text-[#FF6B2C] text-center leading-snug">Plan a custom trip</p>
                 <p className="text-xs text-stone-500 text-center">Tell AI exactly what you want</p>
-              </div>
+              </a>
             </div>
           </section>
         )}
