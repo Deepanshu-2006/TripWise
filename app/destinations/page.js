@@ -254,6 +254,158 @@ const DESTINATIONS = [
     emoji: '🪂',
     bgColor: '#7B7AB0',
   },
+  {
+    id: 'paris',
+    name: 'Paris',
+    country: 'France',
+    region: 'europe',
+    badge: '🥐 Romance & Art',
+    badgeColor: '#E11D48',
+    rating: 4.8,
+    reviews: 5410,
+    vibes: ['art', 'foodie', 'history'],
+    budget: ['premium'],
+    tagline: 'Café culture and iconic landmarks',
+    duration: '4–6 days',
+    prompt: '5 days in Paris: Louvre, Eiffel Tower, Montmartre cafés & Seine cruise',
+    gradient: 'from-rose-900/70 via-pink-800/50 to-transparent',
+    imageUrl: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&auto=format&fit=crop&q=80',
+    emoji: '🥐',
+    bgColor: '#B78C91',
+  },
+  {
+    id: 'tokyo',
+    name: 'Tokyo',
+    country: 'Japan',
+    region: 'asia',
+    badge: '🗼 Neon & Tradition',
+    badgeColor: '#EA580C',
+    rating: 4.9,
+    reviews: 6203,
+    vibes: ['nightlife', 'foodie', 'shopping'],
+    budget: ['standard', 'premium'],
+    tagline: 'A dizzying blend of future and past',
+    duration: '5–8 days',
+    prompt: '7 days in Tokyo: Shibuya crossing, sushi masterclasses, Akihabara & ancient shrines',
+    gradient: 'from-orange-900/70 via-amber-800/50 to-transparent',
+    imageUrl: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800&auto=format&fit=crop&q=80',
+    emoji: '🗼',
+    bgColor: '#967C6B',
+  },
+  {
+    id: 'london',
+    name: 'London',
+    country: 'UK',
+    region: 'europe',
+    badge: '🎡 Royal & Historic',
+    badgeColor: '#2563EB',
+    rating: 4.7,
+    reviews: 4892,
+    vibes: ['history', 'art', 'shopping'],
+    budget: ['standard', 'premium'],
+    tagline: 'Pubs, palaces, and world-class museums',
+    duration: '5–7 days',
+    prompt: '6 days in London: British Museum, West End shows, Borough Market & royal parks',
+    gradient: 'from-blue-900/70 via-indigo-800/50 to-transparent',
+    imageUrl: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&auto=format&fit=crop&q=80',
+    emoji: '🎡',
+    bgColor: '#7583A8',
+  },
+  {
+    id: 'sydney',
+    name: 'Sydney',
+    country: 'Australia',
+    region: 'oceania',
+    badge: '🏄 Beaches & Harbors',
+    badgeColor: '#0EA5E9',
+    rating: 4.8,
+    reviews: 2130,
+    vibes: ['nature', 'foodie', 'nightlife'],
+    budget: ['premium'],
+    tagline: 'Sun-drenched coasts and harbor sails',
+    duration: '6–10 days',
+    prompt: '8 days in Sydney: Opera House, Bondi surfing, coastal walks & harbor dining',
+    gradient: 'from-cyan-900/70 via-sky-800/50 to-transparent',
+    imageUrl: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=800&auto=format&fit=crop&q=80',
+    emoji: '🏄',
+    bgColor: '#6FA4B5',
+  },
+  {
+    id: 'rio',
+    name: 'Rio de Janeiro',
+    country: 'Brazil',
+    region: 'americas',
+    badge: '🏖️ Sun & Samba',
+    badgeColor: '#16A34A',
+    rating: 4.6,
+    reviews: 1845,
+    vibes: ['nature', 'nightlife', 'art'],
+    budget: ['economy', 'standard'],
+    tagline: 'Golden beaches beneath tropical mountains',
+    duration: '5–7 days',
+    prompt: '6 days in Rio: Copacabana, Christ the Redeemer, samba clubs & Tijuca forest',
+    gradient: 'from-emerald-900/70 via-green-800/50 to-transparent',
+    imageUrl: 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=800&auto=format&fit=crop&q=80',
+    emoji: '🏖️',
+    bgColor: '#6FA378',
+  },
+  {
+    id: 'cape-town',
+    name: 'Cape Town',
+    country: 'South Africa',
+    region: 'africa',
+    badge: '🐧 Wildlife & Wine',
+    badgeColor: '#8B5CF6',
+    rating: 4.9,
+    reviews: 2314,
+    vibes: ['nature', 'foodie', 'history'],
+    budget: ['economy', 'standard'],
+    tagline: 'Rugged coastlines and vineyards',
+    duration: '6–9 days',
+    prompt: '7 days in Cape Town: Table Mountain, penguin beaches, wine tasting & Robben Island',
+    gradient: 'from-purple-900/70 via-violet-800/50 to-transparent',
+    imageUrl: 'https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=800&auto=format&fit=crop&q=80',
+    emoji: '🐧',
+    bgColor: '#877EA3',
+  },
+  {
+    id: 'dubai',
+    name: 'Dubai',
+    country: 'UAE',
+    region: 'asia',
+    badge: '✨ Luxury & Desert',
+    badgeColor: '#EAB308',
+    rating: 4.7,
+    reviews: 3845,
+    vibes: ['shopping', 'nightlife', 'art'],
+    budget: ['premium'],
+    tagline: 'Futuristic skylines and golden dunes',
+    duration: '4–6 days',
+    prompt: '5 days in Dubai: Burj Khalifa, desert safaris, mega-malls & luxury beach clubs',
+    gradient: 'from-yellow-900/70 via-amber-800/50 to-transparent',
+    imageUrl: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&auto=format&fit=crop&q=80',
+    emoji: '✨',
+    bgColor: '#B5A574',
+  },
+  {
+    id: 'istanbul',
+    name: 'Istanbul',
+    country: 'Turkey',
+    region: 'europe',
+    badge: '☕ Spices & Bazaars',
+    badgeColor: '#B91C1C',
+    rating: 4.8,
+    reviews: 2987,
+    vibes: ['history', 'shopping', 'foodie'],
+    budget: ['economy', 'standard'],
+    tagline: 'Where continents collide in stunning beauty',
+    duration: '4–7 days',
+    prompt: '6 days in Istanbul: Hagia Sophia, Grand Bazaar, Bosphorus cruise & Turkish baths',
+    gradient: 'from-red-900/70 via-rose-800/50 to-transparent',
+    imageUrl: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=800&auto=format&fit=crop&q=80',
+    emoji: '☕',
+    bgColor: '#A37272',
+  },
 ];
 
 const TRENDING_IDS = ['kyoto', 'new-york', 'barcelona', 'queenstown'];
@@ -291,10 +443,13 @@ function FilterPill({ label, icon, active, onClick }) {
 }
 
 function DestCard({ dest, onClick }) {
+  const minBudget = dest.budget.includes('economy') ? 'Economy' : dest.budget.includes('standard') ? 'Standard' : 'Premium';
+  const budgetStr = minBudget === 'Economy' ? '$ Economy' : minBudget === 'Standard' ? '$$ Standard' : '$$$ Premium';
+
   return (
     <div
       onClick={() => onClick(dest)}
-      className="group cursor-pointer rounded-2xl overflow-hidden bg-white border border-[#ECE8E2] shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col"
+      className="group cursor-pointer rounded-2xl overflow-hidden bg-white border border-[#ECE8E2] shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.15)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col"
     >
       <div className="relative h-44 overflow-hidden" style={{ backgroundColor: dest.bgColor }}>
         {dest.imageUrl && (
@@ -309,9 +464,12 @@ function DestCard({ dest, onClick }) {
             {dest.badge}
           </span>
         </div>
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-3 right-3 flex flex-col items-end gap-1">
           <span className="text-[10px] font-semibold bg-black/40 text-white px-2 py-1 rounded-full backdrop-blur-sm">
             {dest.duration}
+          </span>
+          <span className="text-[9px] font-semibold bg-white/20 text-white px-2 py-0.5 rounded-full backdrop-blur-md border border-white/20">
+            From {budgetStr}
           </span>
         </div>
       </div>
@@ -319,7 +477,7 @@ function DestCard({ dest, onClick }) {
       <div className="flex flex-col gap-2 p-4 flex-1">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <h3 className="font-bold text-[#1F1F1F] text-base leading-tight">{dest.name}</h3>
+            <h3 className="font-bold text-[#1F1F1F] text-base leading-tight group-hover:text-[#FF6B2C] transition-colors">{dest.name}</h3>
             <p className="text-xs text-stone-500 font-medium">{dest.country}</p>
           </div>
           <div className="flex flex-col items-end gap-0.5 shrink-0">
@@ -333,7 +491,7 @@ function DestCard({ dest, onClick }) {
         <div className="mt-auto pt-2 border-t border-stone-100">
           <button
             type="button"
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#FF6B2C]/8 hover:bg-[#FF6B2C] text-[#FF6B2C] hover:text-white font-semibold text-xs transition-all duration-200 group/btn border border-[#FF6B2C]/20 hover:border-[#FF6B2C] hover:shadow-[0_4px_16px_rgba(255,107,44,0.3)]"
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#FF6B2C]/8 group-hover:bg-[#FF6B2C] text-[#FF6B2C] group-hover:text-white font-semibold text-xs transition-all duration-300 group/btn border border-[#FF6B2C]/20 group-hover:border-[#FF6B2C] group-hover:shadow-[0_4px_16px_rgba(255,107,44,0.3)]"
           >
             <span>Use Template</span>
             <span className="group-hover/btn:translate-x-0.5 transition-transform duration-150">
@@ -347,10 +505,13 @@ function DestCard({ dest, onClick }) {
 }
 
 function TrendingCard({ dest, onClick }) {
+  const minBudget = dest.budget.includes('economy') ? 'Economy' : dest.budget.includes('standard') ? 'Standard' : 'Premium';
+  const budgetStr = minBudget === 'Economy' ? '$ Economy' : minBudget === 'Standard' ? '$$ Standard' : '$$$ Premium';
+
   return (
     <div
       onClick={() => onClick(dest)}
-      className="group cursor-pointer shrink-0 w-64 rounded-2xl overflow-hidden border border-[#ECE8E2] shadow-[0_4px_20px_rgba(0,0,0,0.07)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.13)] hover:-translate-y-1 transition-all duration-300 bg-white flex flex-col"
+      className="group cursor-pointer shrink-0 w-64 rounded-2xl overflow-hidden border border-[#ECE8E2] shadow-[0_4px_20px_rgba(0,0,0,0.07)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.15)] hover:-translate-y-1.5 transition-all duration-300 bg-white flex flex-col"
     >
       <div className="relative h-36 overflow-hidden" style={{ backgroundColor: dest.bgColor }}>
         {dest.imageUrl && (
@@ -358,12 +519,17 @@ function TrendingCard({ dest, onClick }) {
         )}
         <div className={`absolute inset-0 bg-gradient-to-t ${dest.gradient}`} />
         <div className="absolute bottom-0 left-0 right-0 p-3">
-          <p className="text-white font-bold text-sm drop-shadow-md">{dest.name}</p>
-          <p className="text-white/80 text-xs">{dest.country}</p>
+          <p className="text-white font-bold text-sm drop-shadow-md group-hover:text-white/90 transition-colors">{dest.name}</p>
+          <div className="flex items-center justify-between">
+            <p className="text-white/80 text-xs">{dest.country}</p>
+            <span className="text-[9px] font-semibold bg-white/20 text-white px-1.5 py-0.5 rounded-full backdrop-blur-md border border-white/20">
+              {budgetStr}
+            </span>
+          </div>
         </div>
         <div className="absolute top-2.5 right-2.5">
           <span
-            className="text-[9px] font-bold px-2 py-0.5 rounded-full text-white"
+            className="text-[9px] font-bold px-2 py-0.5 rounded-full text-white shadow-sm"
             style={{ backgroundColor: dest.badgeColor + 'dd' }}
           >
             {dest.badge.split(' ').slice(1).join(' ')}
@@ -393,13 +559,25 @@ export default function DestinationsPage() {
   const [activeVibes, setActiveVibes] = useState([]);
   const [activeBudgets, setActiveBudgets] = useState([]);
   const [activeRegions, setActiveRegions] = useState([]);
+  const [sortOption, setSortOption] = useState('Most Popular');
+  const [visibleCount, setVisibleCount] = useState(8);
 
   const toggleFilter = (id, setter) => {
     setter(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+    setVisibleCount(8); // reset pagination on filter
   };
 
   const clearAll = () => {
     setActiveVibes([]); setActiveBudgets([]); setActiveRegions([]); setSearchQuery('');
+    setSortOption('Most Popular');
+    setVisibleCount(8);
+  };
+
+  const removeFilter = (id, category) => {
+    if (category === 'vibe') setActiveVibes(prev => prev.filter(x => x !== id));
+    if (category === 'budget') setActiveBudgets(prev => prev.filter(x => x !== id));
+    if (category === 'region') setActiveRegions(prev => prev.filter(x => x !== id));
+    setVisibleCount(8);
   };
 
   const hasFilters = activeVibes.length > 0 || activeBudgets.length > 0 || activeRegions.length > 0 || searchQuery.trim();
@@ -424,14 +602,35 @@ export default function DestinationsPage() {
     if (activeRegions.length > 0) {
       list = list.filter(d => activeRegions.includes(d.region));
     }
+    
+    // Sort logic
+    list = [...list].sort((a, b) => {
+      if (sortOption === 'Highest Rated') return b.rating - a.rating;
+      if (sortOption === 'Most Affordable') {
+        const costA = a.budget.includes('economy') ? 1 : a.budget.includes('standard') ? 2 : 3;
+        const costB = b.budget.includes('economy') ? 1 : b.budget.includes('standard') ? 2 : 3;
+        return costA - costB;
+      }
+      if (sortOption === 'Newest') return a.name.localeCompare(b.name); // Using name as fallback for 'newest' since there's no date
+      // Default: Most Popular
+      return b.reviews - a.reviews;
+    });
+
     // If no filters are active, exclude trending destinations from the main grid to avoid duplicates
     if (!hasFilters) {
       list = list.filter(d => !TRENDING_IDS.includes(d.id));
     }
     return list;
-  }, [searchQuery, activeVibes, activeBudgets, activeRegions, hasFilters]);
+  }, [searchQuery, activeVibes, activeBudgets, activeRegions, sortOption, hasFilters]);
 
   const trendingDests = DESTINATIONS.filter(d => TRENDING_IDS.includes(d.id));
+
+  // Get labels for active chips
+  const activeChips = [
+    ...activeVibes.map(v => ({ id: v, label: VIBE_FILTERS.find(f => f.id === v)?.label, type: 'vibe' })),
+    ...activeBudgets.map(b => ({ id: b, label: BUDGET_FILTERS.find(f => f.id === b)?.label, type: 'budget' })),
+    ...activeRegions.map(r => ({ id: r, label: REGION_FILTERS.find(f => f.id === r)?.label, type: 'region' }))
+  ];
 
   const handleUseTemplate = (dest) => {
     router.push(`/ai-planner?prompt=${encodeURIComponent(dest.prompt)}`);
@@ -478,29 +677,66 @@ export default function DestinationsPage() {
       </section>
 
       {/* Filter Bar */}
-      <section className="sticky top-17 z-40 bg-[#FAF8F5]/95 backdrop-blur-sm border-b border-[#ECE8E2] shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-          <div className="flex items-center gap-2 min-w-max">
-            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Vibe</span>
+      <section className="sticky top-[68px] z-40 bg-[#FAF8F5]/95 backdrop-blur-sm border-b border-[#ECE8E2] shadow-sm flex flex-col">
+        <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 pt-3 pb-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+          <div className="flex flex-wrap items-center gap-y-3 gap-x-2 min-w-max md:min-w-0">
+            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest shrink-0">Vibe</span>
             {VIBE_FILTERS.map(f => (
               <FilterPill key={f.id} label={f.label} icon={f.icon} active={activeVibes.includes(f.id)} onClick={() => toggleFilter(f.id, setActiveVibes)} />
             ))}
-            <div className="h-6 w-px bg-stone-200 mx-1 shrink-0" />
-            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Budget</span>
+            <div className="hidden md:block h-6 w-px bg-stone-200 mx-1 shrink-0" />
+            
+            <div className="w-full md:hidden" /> {/* Force wrap on mobile */}
+            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest shrink-0">Budget</span>
             {BUDGET_FILTERS.map(f => (
               <FilterPill key={f.id} label={f.label} active={activeBudgets.includes(f.id)} onClick={() => toggleFilter(f.id, setActiveBudgets)} />
             ))}
-            <div className="h-6 w-px bg-stone-200 mx-1 shrink-0" />
-            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Region</span>
+            <div className="hidden md:block h-6 w-px bg-stone-200 mx-1 shrink-0" />
+            
+            <div className="w-full md:hidden" /> {/* Force wrap on mobile */}
+            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest shrink-0">Region</span>
             {REGION_FILTERS.map(f => (
               <FilterPill key={f.id} label={f.label} active={activeRegions.includes(f.id)} onClick={() => toggleFilter(f.id, setActiveRegions)} />
             ))}
             {hasFilters && (
               <>
                 <div className="h-6 w-px bg-stone-200 mx-1 shrink-0" />
-                <button type="button" onClick={clearAll} className="text-[11px] font-bold text-stone-400 hover:text-[#FF6B2C] transition-colors whitespace-nowrap px-2">Clear all ×</button>
+                <button type="button" onClick={clearAll} className="text-[11px] font-bold text-stone-400 hover:text-[#FF6B2C] transition-colors whitespace-nowrap px-2 shrink-0">Clear all ×</button>
               </>
             )}
+          </div>
+        </div>
+        
+        {/* Active Chips & Sort Row */}
+        <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 py-2 flex items-center justify-between border-t border-stone-200/50">
+          <div className="flex items-center gap-2 overflow-x-auto flex-1 pr-4" style={{ scrollbarWidth: 'none' }}>
+            {hasFilters && (
+              <span className="text-[11px] font-bold text-[#FF6B2C] shrink-0">{filteredDests.length} destinations match</span>
+            )}
+            {activeChips.length > 0 && <div className="h-3 w-px bg-stone-300 mx-1 shrink-0" />}
+            {activeChips.map(chip => (
+              <button
+                key={chip.id}
+                onClick={() => removeFilter(chip.id, chip.type)}
+                className="flex items-center gap-1 bg-stone-100 border border-stone-200 text-stone-600 px-2 py-0.5 rounded text-[10px] font-bold hover:bg-stone-200 hover:text-stone-900 transition-colors shrink-0"
+              >
+                {chip.label} <span className="text-stone-400 ml-0.5 hover:text-stone-900">×</span>
+              </button>
+            ))}
+          </div>
+          
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest hidden sm:inline">Sort</span>
+            <select
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value)}
+              className="bg-transparent border border-stone-200 text-stone-700 text-xs font-semibold rounded-lg px-2.5 py-1 focus:outline-none focus:border-[#FF6B2C] cursor-pointer"
+            >
+              <option>Most Popular</option>
+              <option>Highest Rated</option>
+              <option>Most Affordable</option>
+              <option>Newest</option>
+            </select>
           </div>
         </div>
       </section>
@@ -547,20 +783,33 @@ export default function DestinationsPage() {
           </div>
 
           {filteredDests.length === 0 ? (
-            <div className="text-center py-20">
-              <span className="text-5xl">🗺️</span>
-              <p className="text-lg font-semibold text-stone-500 mt-4">No destinations match your filters</p>
-              <p className="text-sm text-stone-400 mt-1">Try broadening your search or clearing filters</p>
-              <button type="button" onClick={clearAll} className="mt-5 px-6 py-2.5 bg-[#FF6B2C] text-white font-bold text-sm rounded-full hover:bg-[#E55A20] transition-colors shadow-md hover:shadow-[0_6px_20px_rgba(255,107,44,0.3)]">
-                Clear all filters
-              </button>
+            <div className="text-center py-24 px-4 bg-white border border-dashed border-stone-200 rounded-3xl shadow-sm max-w-2xl mx-auto">
+              <span className="text-5xl block mb-4">🏜️</span>
+              <h3 className="text-xl font-bold text-[#1F1F1F] mb-2">Can't find your match?</h3>
+              <p className="text-sm text-stone-500 mb-6 max-w-md mx-auto">Let our AI build something custom. Describe your dream destination, vibe, and budget, and we'll craft the perfect itinerary.</p>
+              <a href="/ai-planner" className="inline-block px-6 py-3 bg-[#FF6B2C] text-white font-bold text-sm rounded-full hover:bg-[#E55A20] transition-colors shadow-md hover:shadow-[0_6px_20px_rgba(255,107,44,0.3)] hover:scale-105 active:scale-95">
+                Go to AI Planner ✨
+              </a>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {filteredDests.map(dest => (
-                <DestCard key={dest.id} dest={dest} onClick={handleUseTemplate} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                {filteredDests.slice(0, visibleCount).map(dest => (
+                  <DestCard key={dest.id} dest={dest} onClick={handleUseTemplate} />
+                ))}
+              </div>
+              
+              {visibleCount < filteredDests.length && (
+                <div className="pt-10 flex justify-center">
+                  <button
+                    onClick={() => setVisibleCount(prev => prev + 8)}
+                    className="px-6 py-2.5 bg-white border border-stone-200 text-stone-700 font-bold text-sm rounded-full shadow-sm hover:border-stone-300 hover:bg-stone-50 transition-all hover:-translate-y-0.5 active:scale-95"
+                  >
+                    Load More Destinations ↓
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </section>
 
