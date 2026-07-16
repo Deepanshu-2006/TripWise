@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 function Header() {
     const [isScrolled, setIsScrolled] = useState(false)
     const pathname = usePathname()
-    const isLightPage = pathname?.startsWith('/planner')
+    const isLightPage = pathname?.startsWith('/planner') || pathname?.startsWith('/destinations') || pathname?.startsWith('/ai-planner')
 
     useEffect(() => {
         const handleScroll = () => {
@@ -36,19 +36,19 @@ function Header() {
         <header className={`fixed left-0 right-0 z-50 transition-all duration-500 ease-out mx-auto backdrop-blur-2xl border rounded-full ${
             isScrolled
                 ? isLightPage
-                    ? "top-2.5 max-w-5xl w-[calc(100%-2.5rem)] bg-white/95 border-[#ECE8E2] shadow-[0_16px_48px_rgba(0,0,0,0.08)] hover:border-[#FF6B2C]/30"
+                    ? "top-2.5 max-w-5xl w-[calc(100%-2.5rem)] bg-white border-[#ECE8E2] shadow-[0_16px_48px_rgba(0,0,0,0.08)] hover:border-[#FF6B2C]/30"
                     : "top-2.5 max-w-5xl w-[calc(100%-2.5rem)] bg-[#111111]/92 border-white/20 shadow-[0_16px_48px_rgba(0,0,0,0.38)] hover:border-white/30"
                 : isLightPage
-                    ? "top-3 max-w-350 w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)] bg-white/90 border-[#ECE8E2] shadow-[0_12px_40px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.1)] hover:border-[#FF6B2C]/30"
+                    ? "top-3 max-w-350 w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)] bg-white border-[#ECE8E2] shadow-[0_12px_40px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.1)] hover:border-[#FF6B2C]/30"
                     : "top-3 max-w-350 w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)] bg-[#111111]/85 border-white/15 shadow-[0_12px_40px_rgba(0,0,0,0.25)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.35)] hover:border-white/25"
         }`}>
             <div className="px-6 md:px-8 flex items-center justify-between md:grid md:grid-cols-3 transition-all duration-500 ease-in-out h-15">
                 {/* Left Side: Destinations & AI Planner (Desktop) */}
                 <div className={`hidden md:flex items-center justify-start transition-all duration-500 ${isScrolled ? "gap-6" : "gap-8"}`}>
                     {['Destinations', 'AI Planner'].map((item) => (
-                        <a
+                    <a
                             key={item}
-                            href={item === 'AI Planner' ? '/ai-planner' : `#${item.toLowerCase().replace(' ', '-')}`}
+                            href={item === 'AI Planner' ? '/ai-planner' : item === 'Destinations' ? '/destinations' : `#${item.toLowerCase().replace(' ', '-')}`}
                             className={`font-mono text-[11px] font-bold ${isLightPage ? 'text-[#1F1F1F]/80 hover:text-[#FF6B2C]' : 'text-white/70 hover:text-[#FF7A1A]'} transition-all duration-300 relative py-2 nav-link-underline uppercase whitespace-nowrap ${
                                 isScrolled ? "tracking-widest" : "tracking-[0.16em]"
                             }`}
