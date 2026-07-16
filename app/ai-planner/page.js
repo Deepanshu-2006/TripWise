@@ -1,9 +1,20 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import PlannerSidebar from '../components/PlannerSidebar';
 import Header from '../components/Header';
 import LiveTripDashboard from '../components/LiveTripDashboard';
+
+// Separate component so useSearchParams is inside a Suspense boundary
+function PromptSeeder({ onPrompt }) {
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const urlPrompt = searchParams.get('prompt');
+    if (urlPrompt) onPrompt(urlPrompt);
+  }, [searchParams, onPrompt]);
+  return null;
+}
 
 export default function AIPlannerPage() {
   const [currentPrompt, setCurrentPrompt] = useState('');
@@ -13,7 +24,7 @@ export default function AIPlannerPage() {
   const [hoveredStopIdx, setHoveredStopIdx] = useState(null);
   const [selectedStopIdx, setSelectedStopIdx] = useState(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('tripwise_itinerary');
       if (stored) {
@@ -61,6 +72,9 @@ export default function AIPlannerPage() {
   return (
     <div className="w-full h-screen min-h-160 flex flex-col bg-[#FAF8F5] text-[#1F1F1F] overflow-hidden pt-20 sm:pt-22">
       <Header />
+      <Suspense fallback={null}>
+        <PromptSeeder onPrompt={setCurrentPrompt} />
+      </Suspense>
       
       {/* Unified Parent Container (Wrap BOTH Itinerary Panel and Map Section inside one shared parent container) */}
       <div className="flex-1 w-full h-full overflow-hidden p-3 sm:p-4 md:p-6 pb-4 sm:pb-6 flex flex-col min-h-0">
