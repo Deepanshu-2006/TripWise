@@ -1,8 +1,13 @@
 'use client';
 
-import React, { useState, useMemo, useRef } from 'react';
-import Header from '../components/Header';
+import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
+import Header from '../components/Header';
+const DestinationsGlobe = dynamic(() => import('../components/DestinationsGlobe'), {
+  ssr: false,
+  loading: () => <div className="w-full h-[500px] md:h-[600px] bg-[#FAF8F5] animate-pulse" />
+});
 
 // ─── Icon Components (match PlannerSidebar exactly) ────────────────────────
 const FoodieIcon = () => (
@@ -442,14 +447,38 @@ function FilterPill({ label, icon, active, onClick }) {
   );
 }
 
-function DestCard({ dest, onClick }) {
+function DestCard({ dest, onClick, isHighlighted }) {
   const minBudget = dest.budget.includes('economy') ? 'Economy' : dest.budget.includes('standard') ? 'Standard' : 'Premium';
   const budgetStr = minBudget === 'Economy' ? '$ Economy' : minBudget === 'Standard' ? '$$ Standard' : '$$$ Premium';
 
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    setTilt({ 
+      x: -(y / (rect.height / 2)) * 5, 
+      y: (x / (rect.width / 2)) * 5 
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setTilt({ x: 0, y: 0 });
+  };
+
   return (
     <div
+      id={`dest-card-${dest.id}`}
       onClick={() => onClick(dest)}
-      className="group cursor-pointer rounded-2xl overflow-hidden bg-white border border-[#ECE8E2] shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.15)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className={`group cursor-pointer rounded-2xl overflow-hidden bg-white border ${isHighlighted ? 'border-[#FF6B2C]' : 'border-[#ECE8E2]'} shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.15)] flex flex-col`}
+      style={{ 
+        transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateY(${tilt.x === 0 ? '0' : '-6px'})`,
+        transition: tilt.x === 0 ? 'all 0.5s ease-out' : 'box-shadow 0.3s ease-out',
+        boxShadow: isHighlighted ? '0 0 0 2px #FF6B2C, 0 0 30px rgba(255,107,44,0.4)' : undefined
+      }}
     >
       <div className="relative h-44 overflow-hidden" style={{ backgroundColor: dest.bgColor }}>
         {dest.imageUrl && (
@@ -504,14 +533,38 @@ function DestCard({ dest, onClick }) {
   );
 }
 
-function TrendingCard({ dest, onClick }) {
+function TrendingCard({ dest, onClick, isHighlighted }) {
   const minBudget = dest.budget.includes('economy') ? 'Economy' : dest.budget.includes('standard') ? 'Standard' : 'Premium';
   const budgetStr = minBudget === 'Economy' ? '$ Economy' : minBudget === 'Standard' ? '$$ Standard' : '$$$ Premium';
 
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    setTilt({ 
+      x: -(y / (rect.height / 2)) * 5, 
+      y: (x / (rect.width / 2)) * 5 
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setTilt({ x: 0, y: 0 });
+  };
+
   return (
     <div
+      id={`dest-card-${dest.id}`}
       onClick={() => onClick(dest)}
-      className="group cursor-pointer shrink-0 w-64 rounded-2xl overflow-hidden border border-[#ECE8E2] shadow-[0_4px_20px_rgba(0,0,0,0.07)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.15)] hover:-translate-y-1.5 transition-all duration-300 bg-white flex flex-col"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className={`group cursor-pointer shrink-0 w-64 rounded-2xl overflow-hidden border ${isHighlighted ? 'border-[#FF6B2C]' : 'border-[#ECE8E2]'} shadow-[0_4px_20px_rgba(0,0,0,0.07)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.15)] bg-white flex flex-col`}
+      style={{ 
+        transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateY(${tilt.x === 0 ? '0' : '-6px'})`,
+        transition: tilt.x === 0 ? 'all 0.5s ease-out' : 'box-shadow 0.3s ease-out',
+        boxShadow: isHighlighted ? '0 0 0 2px #FF6B2C, 0 0 30px rgba(255,107,44,0.4)' : undefined
+      }}
     >
       <div className="relative h-36 overflow-hidden" style={{ backgroundColor: dest.bgColor }}>
         {dest.imageUrl && (
@@ -561,6 +614,7 @@ export default function DestinationsPage() {
   const [activeRegions, setActiveRegions] = useState([]);
   const [sortOption, setSortOption] = useState('Most Popular');
   const [visibleCount, setVisibleCount] = useState(8);
+  const [highlightedDestId, setHighlightedDestId] = useState(null);
 
   const toggleFilter = (id, setter) => {
     setter(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -636,6 +690,17 @@ export default function DestinationsPage() {
     router.push(`/ai-planner?prompt=${encodeURIComponent(dest.prompt)}`);
   };
 
+  const handleGlobePinClick = (id) => {
+    const el = document.getElementById(`dest-card-${id}`);
+    if (el) {
+      // Add slight offset for the sticky header
+      const y = el.getBoundingClientRect().top + window.scrollY - 180;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+      setHighlightedDestId(id);
+      setTimeout(() => setHighlightedDestId(null), 1200);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#1F1F1F]">
       <Header />
@@ -643,21 +708,28 @@ export default function DestinationsPage() {
       <div className="fixed top-0 left-0 right-0 h-[68px] bg-[#FAF8F5] z-[45]" />
 
       {/* Hero */}
-      <section className="pt-28 pb-12 px-4 sm:px-6 md:px-8 relative overflow-hidden">
-        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-175 h-95 rounded-full bg-[#FF6B2C]/6 blur-3xl pointer-events-none" />
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#FF6B2C]/10 border border-[#FF6B2C]/25 rounded-full mb-5">
+      <section className="relative w-full h-[500px] md:h-[600px] overflow-hidden pt-16">
+        <div className="absolute inset-0 z-0">
+          <DestinationsGlobe 
+            destinations={DESTINATIONS} 
+            filteredDestIds={filteredDests.map(d => d.id)} 
+            onPinClick={handleGlobePinClick} 
+          />
+        </div>
+        
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-4 pointer-events-none mt-10">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white/60 backdrop-blur-md border border-white/50 rounded-full mb-5 shadow-sm pointer-events-auto">
             <GlobeIcon />
             <span className="text-xs font-bold text-[#FF6B2C] uppercase tracking-widest">Explore the World</span>
           </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.08] text-[#1F1F1F] mb-4">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.08] text-[#1F1F1F] mb-4 drop-shadow-sm pointer-events-auto">
             Find your next{' '}
             <span className="text-[#FF6B2C]">adventure</span>
           </h1>
-          <p className="text-base sm:text-lg text-stone-500 max-w-xl mx-auto mb-8 leading-relaxed">
+          <p className="text-base sm:text-lg text-stone-800 font-medium max-w-xl mx-auto mb-8 leading-relaxed drop-shadow-sm pointer-events-auto bg-white/40 backdrop-blur-md px-4 py-2 rounded-xl">
             Browse hand-curated destinations. Pick a vibe, set your budget, and let TripWise AI build your perfect itinerary in seconds.
           </p>
-          <div className="relative max-w-xl mx-auto">
+          <div className="relative max-w-xl mx-auto w-full pointer-events-auto">
             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none">
               <SearchIcon />
             </div>
@@ -667,7 +739,7 @@ export default function DestinationsPage() {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search destinations, cities, or vibes..."
-              className="w-full pl-12 pr-12 py-4 rounded-2xl bg-white border border-[#ECE8E2] shadow-[0_8px_32px_rgba(0,0,0,0.07)] text-[#1F1F1F] text-sm placeholder:text-stone-400 focus:outline-none focus:border-[#FF6B2C]/60 focus:ring-2 focus:ring-[#FF6B2C]/15 transition-all duration-200"
+              className="w-full pl-12 pr-12 py-4 rounded-2xl bg-white/95 backdrop-blur-xl border border-white/60 shadow-[0_12px_40px_rgba(0,0,0,0.12)] text-[#1F1F1F] text-sm placeholder:text-stone-400 focus:outline-none focus:border-[#FF6B2C]/60 focus:ring-2 focus:ring-[#FF6B2C]/15 transition-all duration-200"
             />
             {searchQuery && (
               <button type="button" onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 transition-colors text-lg leading-none">×</button>
@@ -753,9 +825,9 @@ export default function DestinationsPage() {
               </div>
               <a href="#all-destinations" className="text-xs font-bold text-[#FF6B2C] hover:underline">See all →</a>
             </div>
-            <div className="flex gap-4 overflow-x-auto pb-3 -mx-1 px-1 scroll-smooth" style={{ scrollbarWidth: 'none' }}>
+            <div className="flex gap-4 overflow-x-auto pb-5 pt-2 -mx-1 px-1 scroll-smooth" style={{ scrollbarWidth: 'none' }}>
               {trendingDests.map(dest => (
-                <TrendingCard key={dest.id} dest={dest} onClick={handleUseTemplate} />
+                <TrendingCard key={dest.id} dest={dest} onClick={handleUseTemplate} isHighlighted={highlightedDestId === dest.id} />
               ))}
               <a
                 href="/ai-planner"
@@ -793,9 +865,9 @@ export default function DestinationsPage() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 pt-2">
                 {filteredDests.slice(0, visibleCount).map(dest => (
-                  <DestCard key={dest.id} dest={dest} onClick={handleUseTemplate} />
+                  <DestCard key={dest.id} dest={dest} onClick={handleUseTemplate} isHighlighted={highlightedDestId === dest.id} />
                 ))}
               </div>
               
