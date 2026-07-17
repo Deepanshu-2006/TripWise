@@ -341,13 +341,13 @@ export default function DestinationsGlobe({
   }, [destinations, onPinClick]);
 
   return (
-    <div className="relative w-full h-[500px] md:h-[600px] bg-[#FAF8F5]">
+    <div className="relative w-full h-125 md:h-150 bg-[#FAF8F5]">
       {/* Globe Container */}
       <div ref={containerRef} className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing" />
       
       {/* Search Overlay Gradient (to blend globe into content below) */}
-      <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-[#FAF8F5] to-transparent pointer-events-none" />
-      <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-[#FAF8F5] to-transparent pointer-events-none" />
+      <div className="absolute bottom-0 left-0 right-0 h-40 bg-linear-to-t from-[#FAF8F5] to-transparent pointer-events-none" />
+      <div className="absolute top-0 left-0 right-0 h-24 bg-linear-to-b from-[#FAF8F5] to-transparent pointer-events-none" />
 
       {/* Hover Tooltip Preview Card */}
       {hoveredDest && (

@@ -2,12 +2,8 @@
 
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
+import { motion, AnimatePresence } from 'framer-motion';
 import Header from '../components/Header';
-const DestinationsGlobe = dynamic(() => import('../components/DestinationsGlobe'), {
-  ssr: false,
-  loading: () => <div className="w-full h-[500px] md:h-[600px] bg-[#FAF8F5] animate-pulse" />
-});
 
 // ─── Icon Components (match PlannerSidebar exactly) ────────────────────────
 const FoodieIcon = () => (
@@ -452,8 +448,10 @@ function DestCard({ dest, onClick, isHighlighted }) {
   const budgetStr = minBudget === 'Economy' ? '$ Economy' : minBudget === 'Standard' ? '$$ Standard' : '$$$ Premium';
 
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [isZooming, setIsZooming] = useState(false);
 
   const handleMouseMove = (e) => {
+    if (isZooming) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left - rect.width / 2;
     const y = e.clientY - rect.top - rect.height / 2;
@@ -464,31 +462,72 @@ function DestCard({ dest, onClick, isHighlighted }) {
   };
 
   const handleMouseLeave = () => {
-    setTilt({ x: 0, y: 0 });
+    if (!isZooming) setTilt({ x: 0, y: 0 });
+  };
+
+  const handleClick = () => {
+    setIsZooming(true);
+    setTilt({ x: 0, y: 0 }); // reset tilt for clean zoom
+    setTimeout(() => {
+      onClick(dest);
+    }, 450);
   };
 
   return (
-    <div
-      id={`dest-card-${dest.id}`}
-      onClick={() => onClick(dest)}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      className={`group cursor-pointer rounded-2xl overflow-hidden bg-white border ${isHighlighted ? 'border-[#FF6B2C]' : 'border-[#ECE8E2]'} shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.15)] flex flex-col`}
-      style={{ 
-        transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateY(${tilt.x === 0 ? '0' : '-6px'})`,
-        transition: tilt.x === 0 ? 'all 0.5s ease-out' : 'box-shadow 0.3s ease-out',
-        boxShadow: isHighlighted ? '0 0 0 2px #FF6B2C, 0 0 30px rgba(255,107,44,0.4)' : undefined
-      }}
-    >
-      <div className="relative h-44 overflow-hidden" style={{ backgroundColor: dest.bgColor }}>
+    <>
+      <AnimatePresence>
+        {isZooming && (
+          <motion.div 
+            className="fixed inset-0 bg-white z-[100]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+          />
+        )}
+      </AnimatePresence>
+      <motion.div
+        id={`dest-card-${dest.id}`}
+        onClick={handleClick}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        className={`group cursor-pointer rounded-2xl overflow-hidden bg-white border ${isHighlighted ? 'border-[#FF6B2C]' : 'border-[#ECE8E2]'} shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.15)] flex flex-col relative ${isZooming ? 'z-[101]' : 'z-10'}`}
+        style={{ 
+          transform: isZooming 
+            ? 'scale(1.05)' 
+            : `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateY(${tilt.x === 0 ? '0' : '-6px'})`,
+          transition: isZooming ? 'transform 0.45s ease-in-out' : (tilt.x === 0 ? 'all 0.5s ease-out' : 'box-shadow 0.3s ease-out'),
+          boxShadow: isHighlighted ? '0 0 0 2px #FF6B2C, 0 0 30px rgba(255,107,44,0.4)' : undefined
+        }}
+      >
+        <div className="relative h-44 overflow-hidden" style={{ backgroundColor: dest.bgColor }}>
+          <motion.svg 
+            className="absolute top-0 left-0 w-full h-8 z-10 pointer-events-none" 
+            viewBox="0 0 100 10" preserveAspectRatio="none"
+          >
+            <motion.path 
+              d="M 0 5 Q 50 -2 100 5" 
+              fill="transparent" 
+              stroke="white" 
+              strokeWidth="0.5" 
+              strokeDasharray="2 2"
+              initial={{ pathLength: 0, opacity: 0 }}
+              whileInView={{ pathLength: 1, opacity: [0, 0.8, 0] }}
+              transition={{ duration: 1.2, ease: "easeOut", times: [0, 0.3, 1] }}
+              viewport={{ once: false, margin: "-50px" }}
+            />
+          </motion.svg>
         {dest.imageUrl && (
           <img src={dest.imageUrl} alt={dest.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
         )}
         <div className={`absolute inset-0 bg-gradient-to-t ${dest.gradient}`} />
-        <div className="absolute top-3 left-3">
+        <div className="absolute top-3 left-3 z-10">
           <span
-            className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full text-white"
-            style={{ backgroundColor: dest.badgeColor + 'dd' }}
+            className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full text-white backdrop-blur-sm"
+            style={{ 
+              backgroundColor: dest.badgeColor + 'dd',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.15)'
+            }}
           >
             {dest.badge}
           </span>
@@ -529,7 +568,8 @@ function DestCard({ dest, onClick, isHighlighted }) {
           </button>
         </div>
       </div>
-    </div>
+      </motion.div>
+    </>
   );
 }
 
@@ -538,8 +578,10 @@ function TrendingCard({ dest, onClick, isHighlighted }) {
   const budgetStr = minBudget === 'Economy' ? '$ Economy' : minBudget === 'Standard' ? '$$ Standard' : '$$$ Premium';
 
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [isZooming, setIsZooming] = useState(false);
 
   const handleMouseMove = (e) => {
+    if (isZooming) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left - rect.width / 2;
     const y = e.clientY - rect.top - rect.height / 2;
@@ -550,23 +592,61 @@ function TrendingCard({ dest, onClick, isHighlighted }) {
   };
 
   const handleMouseLeave = () => {
+    if (!isZooming) setTilt({ x: 0, y: 0 });
+  };
+
+  const handleClick = () => {
+    setIsZooming(true);
     setTilt({ x: 0, y: 0 });
+    setTimeout(() => {
+      onClick(dest);
+    }, 450);
   };
 
   return (
-    <div
-      id={`dest-card-${dest.id}`}
-      onClick={() => onClick(dest)}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      className={`group cursor-pointer shrink-0 w-64 rounded-2xl overflow-hidden border ${isHighlighted ? 'border-[#FF6B2C]' : 'border-[#ECE8E2]'} shadow-[0_4px_20px_rgba(0,0,0,0.07)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.15)] bg-white flex flex-col`}
-      style={{ 
-        transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateY(${tilt.x === 0 ? '0' : '-6px'})`,
-        transition: tilt.x === 0 ? 'all 0.5s ease-out' : 'box-shadow 0.3s ease-out',
-        boxShadow: isHighlighted ? '0 0 0 2px #FF6B2C, 0 0 30px rgba(255,107,44,0.4)' : undefined
-      }}
-    >
-      <div className="relative h-36 overflow-hidden" style={{ backgroundColor: dest.bgColor }}>
+    <>
+      <AnimatePresence>
+        {isZooming && (
+          <motion.div 
+            className="fixed inset-0 bg-white z-[100]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+          />
+        )}
+      </AnimatePresence>
+      <motion.div
+        id={`dest-card-${dest.id}`}
+        onClick={handleClick}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        className={`group cursor-pointer shrink-0 w-64 rounded-2xl overflow-hidden border ${isHighlighted ? 'border-[#FF6B2C]' : 'border-[#ECE8E2]'} shadow-[0_4px_20px_rgba(0,0,0,0.07)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.15)] bg-white flex flex-col relative ${isZooming ? 'z-[101]' : 'z-10'}`}
+        style={{ 
+          transform: isZooming 
+            ? 'scale(1.05)' 
+            : `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateY(${tilt.x === 0 ? '0' : '-6px'})`,
+          transition: isZooming ? 'transform 0.45s ease-in-out' : (tilt.x === 0 ? 'all 0.5s ease-out' : 'box-shadow 0.3s ease-out'),
+          boxShadow: isHighlighted ? '0 0 0 2px #FF6B2C, 0 0 30px rgba(255,107,44,0.4)' : undefined
+        }}
+      >
+        <div className="relative h-36 overflow-hidden" style={{ backgroundColor: dest.bgColor }}>
+          <motion.svg 
+            className="absolute top-0 left-0 w-full h-8 z-10 pointer-events-none" 
+            viewBox="0 0 100 10" preserveAspectRatio="none"
+          >
+            <motion.path 
+              d="M 0 5 Q 50 -2 100 5" 
+              fill="transparent" 
+              stroke="white" 
+              strokeWidth="0.5" 
+              strokeDasharray="2 2"
+              initial={{ pathLength: 0, opacity: 0 }}
+              whileInView={{ pathLength: 1, opacity: [0, 0.8, 0] }}
+              transition={{ duration: 1.2, ease: "easeOut", times: [0, 0.3, 1] }}
+              viewport={{ once: false, margin: "-50px" }}
+            />
+          </motion.svg>
         {dest.imageUrl && (
           <img src={dest.imageUrl} alt={dest.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
         )}
@@ -580,10 +660,13 @@ function TrendingCard({ dest, onClick, isHighlighted }) {
             </span>
           </div>
         </div>
-        <div className="absolute top-2.5 right-2.5">
+        <div className="absolute top-2.5 right-2.5 z-10">
           <span
-            className="text-[9px] font-bold px-2 py-0.5 rounded-full text-white shadow-sm"
-            style={{ backgroundColor: dest.badgeColor + 'dd' }}
+            className="text-[9px] font-bold px-2 py-0.5 rounded-full text-white backdrop-blur-sm"
+            style={{ 
+              backgroundColor: dest.badgeColor + 'dd',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.15)'
+            }}
           >
             {dest.badge.split(' ').slice(1).join(' ')}
           </span>
@@ -602,7 +685,8 @@ function TrendingCard({ dest, onClick, isHighlighted }) {
           <ArrowRightIcon />
         </button>
       </div>
-    </div>
+      </motion.div>
+    </>
   );
 }
 
@@ -708,28 +792,40 @@ export default function DestinationsPage() {
       <div className="fixed top-0 left-0 right-0 h-[68px] bg-[#FAF8F5] z-[45]" />
 
       {/* Hero */}
-      <section className="relative w-full h-[500px] md:h-[600px] overflow-hidden pt-16">
-        <div className="absolute inset-0 z-0">
-          <DestinationsGlobe 
-            destinations={DESTINATIONS} 
-            filteredDestIds={filteredDests.map(d => d.id)} 
-            onPinClick={handleGlobePinClick} 
-          />
-        </div>
+      <section className="pt-28 pb-12 px-4 sm:px-6 md:px-8 relative overflow-hidden">
+        {/* Ambient Blobs */}
+        <motion.div 
+          className="absolute -top-20 left-[20%] w-[500px] h-[500px] rounded-full bg-[#FF6B2C] blur-[120px] pointer-events-none mix-blend-multiply"
+          animate={{ 
+            x: [0, 60, -40, 0], 
+            y: [0, -40, 50, 0], 
+            opacity: [0.03, 0.06, 0.03] 
+          }}
+          transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+        />
+        <motion.div 
+          className="absolute top-10 right-[15%] w-[400px] h-[400px] rounded-full bg-[#3b82f6] blur-[100px] pointer-events-none mix-blend-multiply"
+          animate={{ 
+            x: [0, -50, 40, 0], 
+            y: [0, 50, -30, 0], 
+            opacity: [0.02, 0.05, 0.02] 
+          }}
+          transition={{ duration: 45, repeat: Infinity, ease: "linear" }}
+        />
         
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-4 pointer-events-none mt-10">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white/60 backdrop-blur-md border border-white/50 rounded-full mb-5 shadow-sm pointer-events-auto">
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#FF6B2C]/10 border border-[#FF6B2C]/25 rounded-full mb-5">
             <GlobeIcon />
             <span className="text-xs font-bold text-[#FF6B2C] uppercase tracking-widest">Explore the World</span>
           </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.08] text-[#1F1F1F] mb-4 drop-shadow-sm pointer-events-auto">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.08] text-[#1F1F1F] mb-4">
             Find your next{' '}
             <span className="text-[#FF6B2C]">adventure</span>
           </h1>
-          <p className="text-base sm:text-lg text-stone-800 font-medium max-w-xl mx-auto mb-8 leading-relaxed drop-shadow-sm pointer-events-auto bg-white/40 backdrop-blur-md px-4 py-2 rounded-xl">
+          <p className="text-base sm:text-lg text-stone-500 max-w-xl mx-auto mb-8 leading-relaxed">
             Browse hand-curated destinations. Pick a vibe, set your budget, and let TripWise AI build your perfect itinerary in seconds.
           </p>
-          <div className="relative max-w-xl mx-auto w-full pointer-events-auto">
+          <div className="relative max-w-xl mx-auto">
             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none">
               <SearchIcon />
             </div>
@@ -739,7 +835,7 @@ export default function DestinationsPage() {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search destinations, cities, or vibes..."
-              className="w-full pl-12 pr-12 py-4 rounded-2xl bg-white/95 backdrop-blur-xl border border-white/60 shadow-[0_12px_40px_rgba(0,0,0,0.12)] text-[#1F1F1F] text-sm placeholder:text-stone-400 focus:outline-none focus:border-[#FF6B2C]/60 focus:ring-2 focus:ring-[#FF6B2C]/15 transition-all duration-200"
+              className="w-full pl-12 pr-12 py-4 rounded-2xl bg-white border border-[#ECE8E2] shadow-[0_8px_32px_rgba(0,0,0,0.07)] text-[#1F1F1F] text-sm placeholder:text-stone-400 focus:outline-none focus:border-[#FF6B2C]/60 focus:ring-2 focus:ring-[#FF6B2C]/15 transition-all duration-200"
             />
             {searchQuery && (
               <button type="button" onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 transition-colors text-lg leading-none">×</button>
