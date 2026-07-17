@@ -4,6 +4,8 @@ import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '../components/Header';
+import BentoShowcase from '../components/BentoShowcase';
+import AtlasRadarMap from '../components/AtlasRadarMap';
 
 // ─── Icon Components (match PlannerSidebar exactly) ────────────────────────
 const FoodieIcon = () => (
@@ -409,7 +411,113 @@ const DESTINATIONS = [
   },
 ];
 
+const TELEMETRY_MAP = {
+  rome: {
+    weather: '☀️ 24°C • Perfect Spring Pacing',
+    aiTip: '💡 AI Verdict: Best visited for 5 days to balance historic landmarks with relaxation.',
+    crowdLevel: '🟡 Moderate Season',
+    coords: { lat: 41.9028, lng: 12.4964 }
+  },
+  kyoto: {
+    weather: '🌸 18°C • Cherry Blossom Peak',
+    aiTip: '💡 AI Verdict: #1 Top Rated Cultural Retreat in Asia right now.',
+    crowdLevel: '🟢 Low Crowds',
+    coords: { lat: 35.0116, lng: 135.7681 }
+  },
+  'swiss-alps': {
+    weather: '🌤️ 14°C • Crisp Alpine Air',
+    aiTip: '💡 AI Verdict: Scenic train loops & light valley hikes are prime right now.',
+    crowdLevel: '🟢 Low Crowds',
+    coords: { lat: 46.5580, lng: 8.5610 }
+  },
+  marrakech: {
+    weather: '☀️ 28°C • Warm & Sunny',
+    aiTip: '💡 AI Verdict: 4 days is the sweet spot for souks, riads, and a desert excursion.',
+    crowdLevel: '🟡 Moderate Season',
+    coords: { lat: 31.6295, lng: -8.0088 }
+  },
+  'new-york': {
+    weather: '☀️ 22°C • Clear Rooftop Season',
+    aiTip: '💡 AI Verdict: Ideal for urban nightlife & architectural discovery.',
+    crowdLevel: '🟡 Moderate Season',
+    coords: { lat: 40.7128, lng: -74.0060 }
+  },
+  bali: {
+    weather: '🌴 29°C • Tropical Breeze',
+    aiTip: '💡 AI Verdict: Split time between Ubud rice terraces and Uluwatu coast.',
+    crowdLevel: '🟢 Low Crowds',
+    coords: { lat: -8.4095, lng: 115.1889 }
+  },
+  barcelona: {
+    weather: '☀️ 25°C • Mediterranean Warmth',
+    aiTip: '💡 AI Verdict: Reserve Sagrada Família early; evening tapas crawls recommended.',
+    crowdLevel: '🟡 Moderate Season',
+    coords: { lat: 41.3851, lng: 2.1734 }
+  },
+  queenstown: {
+    weather: '⛰️ 12°C • Crisp Mountain Views',
+    aiTip: '💡 AI Verdict: Top choice for thrill seekers; 5 days covers Milford Sound & skiing.',
+    crowdLevel: '🟢 Low Crowds',
+    coords: { lat: -45.0312, lng: 168.6626 }
+  },
+  paris: {
+    weather: '🥐 20°C • Mild & Romantic',
+    aiTip: '💡 AI Verdict: Evening Seine cruise combined with Montmartre sunset is unbeatable.',
+    crowdLevel: '🔴 High Season',
+    coords: { lat: 48.8566, lng: 2.3522 }
+  },
+  tokyo: {
+    weather: '🗼 21°C • Ideal City Walking',
+    aiTip: '💡 AI Verdict: Group neighborhoods by transit line (Shibuya/Shinjuku then Asakusa/Akihabara).',
+    crowdLevel: '🟡 Moderate Season',
+    coords: { lat: 35.6762, lng: 139.6503 }
+  },
+  london: {
+    weather: '🌤️ 17°C • Classic English Sunshine',
+    aiTip: '💡 AI Verdict: Free national museums make this exceptional value right now.',
+    crowdLevel: '🟡 Moderate Season',
+    coords: { lat: 51.5074, lng: -0.1278 }
+  },
+  sydney: {
+    weather: '🏄 24°C • Coastal Sunshine',
+    aiTip: '💡 AI Verdict: The Bondi to Coogee coastal walk is in peak weather window.',
+    crowdLevel: '🟢 Low Crowds',
+    coords: { lat: -33.8688, lng: 151.2093 }
+  },
+  rio: {
+    weather: '🏖️ 27°C • Golden Beach Days',
+    aiTip: '💡 AI Verdict: Sunset at Sugarloaf Mountain followed by Lapa samba nightlife.',
+    crowdLevel: '🟡 Moderate Season',
+    coords: { lat: -22.9068, lng: -43.1729 }
+  },
+  'cape-town': {
+    weather: '🐧 23°C • Clear Table Mountain Views',
+    aiTip: '💡 AI Verdict: Combine wine country tasting with Boulders Beach penguin colony.',
+    crowdLevel: '🟢 Low Crowds',
+    coords: { lat: -33.9249, lng: 18.4241 }
+  },
+  dubai: {
+    weather: '✨ 32°C • Evening Desert Breezes',
+    aiTip: '💡 AI Verdict: Late afternoon sunset dune safaris and rooftop lounges are prime.',
+    crowdLevel: '🔴 High Season',
+    coords: { lat: 25.2048, lng: 55.2708 }
+  },
+  istanbul: {
+    weather: '☕ 22°C • Bosphorus Breeze',
+    aiTip: '💡 AI Verdict: Cross continents by ferry at sunset; explore hidden rooftop tea gardens.',
+    crowdLevel: '🟢 Low Crowds',
+    coords: { lat: 41.0082, lng: 28.9784 }
+  }
+};
+
+DESTINATIONS.forEach(d => {
+  if (TELEMETRY_MAP[d.id]) {
+    Object.assign(d, TELEMETRY_MAP[d.id]);
+  }
+});
+
 const TRENDING_IDS = ['kyoto', 'new-york', 'barcelona', 'queenstown'];
+
 
 function Stars({ rating }) {
   const full = Math.floor(rating);
@@ -478,7 +586,7 @@ function DestCard({ dest, onClick, isHighlighted }) {
       <AnimatePresence>
         {isZooming && (
           <motion.div 
-            className="fixed inset-0 bg-white z-[100]"
+            className="fixed inset-0 bg-white z-100"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -491,7 +599,7 @@ function DestCard({ dest, onClick, isHighlighted }) {
         onClick={handleClick}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        className={`group cursor-pointer rounded-2xl overflow-hidden bg-white border ${isHighlighted ? 'border-[#FF6B2C]' : 'border-[#ECE8E2]'} shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.15)] flex flex-col relative ${isZooming ? 'z-[101]' : 'z-10'}`}
+        className={`group cursor-pointer rounded-2xl overflow-hidden bg-white border ${isHighlighted ? 'border-[#FF6B2C]' : 'border-[#ECE8E2]'} shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.15)] flex flex-col relative ${isZooming ? 'z-101' : 'z-10'}`}
         style={{ 
           transform: isZooming 
             ? 'scale(1.05)' 
@@ -520,10 +628,10 @@ function DestCard({ dest, onClick, isHighlighted }) {
         {dest.imageUrl && (
           <img src={dest.imageUrl} alt={dest.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
         )}
-        <div className={`absolute inset-0 bg-gradient-to-t ${dest.gradient}`} />
-        <div className="absolute top-3 left-3 z-10">
+        <div className={`absolute inset-0 bg-linear-to-t ${dest.gradient}`} />
+        <div className="absolute top-3 left-3 z-10 flex flex-col items-start gap-1">
           <span
-            className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full text-white backdrop-blur-sm"
+            className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full text-white backdrop-blur-sm shadow-xs"
             style={{ 
               backgroundColor: dest.badgeColor + 'dd',
               boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.15)'
@@ -531,6 +639,11 @@ function DestCard({ dest, onClick, isHighlighted }) {
           >
             {dest.badge}
           </span>
+          {dest.weather && (
+            <span className="text-[9px] font-semibold bg-black/50 text-white/90 px-2 py-0.5 rounded-full backdrop-blur-md border border-white/10">
+              {dest.weather.split('•')[0]}
+            </span>
+          )}
         </div>
         <div className="absolute top-3 right-3 flex flex-col items-end gap-1">
           <span className="text-[10px] font-semibold bg-black/40 text-white px-2 py-1 rounded-full backdrop-blur-sm">
@@ -540,28 +653,50 @@ function DestCard({ dest, onClick, isHighlighted }) {
             From {budgetStr}
           </span>
         </div>
+        {dest.crowdLevel && (
+          <div className="absolute bottom-2.5 right-2.5 z-10">
+            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md border ${
+              dest.crowdLevel.includes('Low') 
+                ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40' 
+                : dest.crowdLevel.includes('Moderate') 
+                ? 'bg-amber-950/80 text-amber-300 border-amber-500/40' 
+                : 'bg-rose-950/80 text-rose-300 border-rose-500/40'
+            }`}>
+              {dest.crowdLevel}
+            </span>
+          </div>
+        )}
       </div>
 
-      <div className="flex flex-col gap-2 p-4 flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <h3 className="font-bold text-[#1F1F1F] text-base leading-tight group-hover:text-[#FF6B2C] transition-colors">{dest.name}</h3>
-            <p className="text-xs text-stone-500 font-medium">{dest.country}</p>
+      <div className="flex flex-col gap-2 p-4 flex-1 justify-between">
+        <div>
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <div>
+              <h3 className="font-bold text-[#1F1F1F] text-base leading-tight group-hover:text-[#FF6B2C] transition-colors">{dest.name}</h3>
+              <p className="text-xs text-stone-500 font-medium">{dest.country}</p>
+            </div>
+            <div className="flex flex-col items-end gap-0.5 shrink-0">
+              <Stars rating={dest.rating} />
+              <span className="text-[10px] text-stone-400">{dest.reviews.toLocaleString()} trips</span>
+            </div>
           </div>
-          <div className="flex flex-col items-end gap-0.5 shrink-0">
-            <Stars rating={dest.rating} />
-            <span className="text-[10px] text-stone-400">{dest.reviews.toLocaleString()} trips</span>
-          </div>
+
+          <p className="text-xs text-stone-500 leading-relaxed italic">{dest.tagline}</p>
         </div>
 
-        <p className="text-xs text-stone-500 leading-relaxed italic">{dest.tagline}</p>
+        {dest.aiTip && (
+          <div className="bg-stone-50 rounded-xl p-2.5 border border-stone-200/70 my-1 text-[11px] text-stone-600 font-medium leading-snug flex items-start gap-1.5 shadow-2xs">
+            <span className="shrink-0">💡</span>
+            <span className="truncate sm:whitespace-normal sm:line-clamp-2">{dest.aiTip.replace('💡 AI Verdict: ', '')}</span>
+          </div>
+        )}
 
-        <div className="mt-auto pt-2 border-t border-stone-100">
+        <div className="pt-2 border-t border-stone-100 mt-auto">
           <button
             type="button"
             className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#FF6B2C]/8 group-hover:bg-[#FF6B2C] text-[#FF6B2C] group-hover:text-white font-semibold text-xs transition-all duration-300 group/btn border border-[#FF6B2C]/20 group-hover:border-[#FF6B2C] group-hover:shadow-[0_4px_16px_rgba(255,107,44,0.3)]"
           >
-            <span>Use Template</span>
+            <span>Use Prompt</span>
             <span className="group-hover/btn:translate-x-0.5 transition-transform duration-150">
               <ArrowRightIcon />
             </span>
@@ -608,7 +743,7 @@ function TrendingCard({ dest, onClick, isHighlighted }) {
       <AnimatePresence>
         {isZooming && (
           <motion.div 
-            className="fixed inset-0 bg-white z-[100]"
+            className="fixed inset-0 bg-white z-100"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -621,7 +756,7 @@ function TrendingCard({ dest, onClick, isHighlighted }) {
         onClick={handleClick}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        className={`group cursor-pointer shrink-0 w-64 rounded-2xl overflow-hidden border ${isHighlighted ? 'border-[#FF6B2C]' : 'border-[#ECE8E2]'} shadow-[0_4px_20px_rgba(0,0,0,0.07)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.15)] bg-white flex flex-col relative ${isZooming ? 'z-[101]' : 'z-10'}`}
+        className={`group cursor-pointer shrink-0 w-64 rounded-2xl overflow-hidden border ${isHighlighted ? 'border-[#FF6B2C]' : 'border-[#ECE8E2]'} shadow-[0_4px_20px_rgba(0,0,0,0.07)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.15)] bg-white flex flex-col relative ${isZooming ? 'z-101' : 'z-10'}`}
         style={{ 
           transform: isZooming 
             ? 'scale(1.05)' 
@@ -650,7 +785,7 @@ function TrendingCard({ dest, onClick, isHighlighted }) {
         {dest.imageUrl && (
           <img src={dest.imageUrl} alt={dest.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
         )}
-        <div className={`absolute inset-0 bg-gradient-to-t ${dest.gradient}`} />
+        <div className={`absolute inset-0 bg-linear-to-t ${dest.gradient}`} />
         <div className="absolute bottom-0 left-0 right-0 p-3">
           <p className="text-white font-bold text-sm drop-shadow-md group-hover:text-white/90 transition-colors">{dest.name}</p>
           <div className="flex items-center justify-between">
@@ -660,9 +795,9 @@ function TrendingCard({ dest, onClick, isHighlighted }) {
             </span>
           </div>
         </div>
-        <div className="absolute top-2.5 right-2.5 z-10">
+        <div className="absolute top-2.5 right-2.5 z-10 flex flex-col items-end gap-1">
           <span
-            className="text-[9px] font-bold px-2 py-0.5 rounded-full text-white backdrop-blur-sm"
+            className="text-[9px] font-bold px-2 py-0.5 rounded-full text-white backdrop-blur-sm shadow-xs"
             style={{ 
               backgroundColor: dest.badgeColor + 'dd',
               boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.15)'
@@ -670,18 +805,43 @@ function TrendingCard({ dest, onClick, isHighlighted }) {
           >
             {dest.badge.split(' ').slice(1).join(' ')}
           </span>
+          {dest.weather && (
+            <span className="text-[8px] font-semibold bg-black/60 text-white px-1.5 py-0.5 rounded-full backdrop-blur-md border border-white/10">
+              {dest.weather.split('•')[0]}
+            </span>
+          )}
         </div>
+        {dest.crowdLevel && (
+          <div className="absolute top-2.5 left-2.5 z-10">
+            <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full backdrop-blur-md border ${
+              dest.crowdLevel.includes('Low') 
+                ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40' 
+                : dest.crowdLevel.includes('Moderate') 
+                ? 'bg-amber-950/80 text-amber-300 border-amber-500/40' 
+                : 'bg-rose-950/80 text-rose-300 border-rose-500/40'
+            }`}>
+              {dest.crowdLevel}
+            </span>
+          </div>
+        )}
       </div>
-      <div className="p-3 flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <Stars rating={dest.rating} />
-          <span className="text-[10px] text-stone-400">{dest.reviews.toLocaleString()} trips</span>
+      <div className="p-3 flex flex-col gap-2 flex-1 justify-between">
+        <div>
+          <div className="flex items-center justify-between">
+            <Stars rating={dest.rating} />
+            <span className="text-[10px] text-stone-400">{dest.reviews.toLocaleString()} trips</span>
+          </div>
+          {dest.aiTip && (
+            <p className="text-[10px] text-stone-500 italic mt-1 truncate">
+              {dest.aiTip.replace('💡 AI Verdict: ', '')}
+            </p>
+          )}
         </div>
         <button
           type="button"
-          className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#FF6B2C]/8 hover:bg-[#FF6B2C] text-[#FF6B2C] hover:text-white font-semibold text-xs transition-all duration-200 border border-[#FF6B2C]/20 hover:border-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.25)]"
+          className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#FF6B2C]/8 hover:bg-[#FF6B2C] text-[#FF6B2C] hover:text-white font-semibold text-xs transition-all duration-200 border border-[#FF6B2C]/20 hover:border-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.25)] mt-auto"
         >
-          <span>Use Template</span>
+          <span>Use Prompt</span>
           <ArrowRightIcon />
         </button>
       </div>
@@ -699,6 +859,8 @@ export default function DestinationsPage() {
   const [sortOption, setSortOption] = useState('Most Popular');
   const [visibleCount, setVisibleCount] = useState(8);
   const [highlightedDestId, setHighlightedDestId] = useState(null);
+  const [viewMode, setViewMode] = useState('bento');
+
 
   const toggleFilter = (id, setter) => {
     setter(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -789,13 +951,13 @@ export default function DestinationsPage() {
     <div className="min-h-screen bg-[#FAF8F5] text-[#1F1F1F]">
       <Header />
       {/* Solid background mask to hide scrolling content under the floating nav pill */}
-      <div className="fixed top-0 left-0 right-0 h-[68px] bg-[#FAF8F5] z-[45]" />
+      <div className="fixed top-0 left-0 right-0 h-17 bg-[#FAF8F5] z-45" />
 
       {/* Hero */}
       <section className="pt-28 pb-12 px-4 sm:px-6 md:px-8 relative overflow-hidden">
         {/* Ambient Blobs */}
         <motion.div 
-          className="absolute -top-20 left-[20%] w-[500px] h-[500px] rounded-full bg-[#FF6B2C] blur-[120px] pointer-events-none mix-blend-multiply"
+          className="absolute -top-20 left-[20%] w-125 h-125 rounded-full bg-[#FF6B2C] blur-[120px] pointer-events-none mix-blend-multiply"
           animate={{ 
             x: [0, 60, -40, 0], 
             y: [0, -40, 50, 0], 
@@ -804,7 +966,7 @@ export default function DestinationsPage() {
           transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
         />
         <motion.div 
-          className="absolute top-10 right-[15%] w-[400px] h-[400px] rounded-full bg-[#3b82f6] blur-[100px] pointer-events-none mix-blend-multiply"
+          className="absolute top-10 right-[15%] w-100 h-100 rounded-full bg-[#3b82f6] blur-[100px] pointer-events-none mix-blend-multiply"
           animate={{ 
             x: [0, -50, 40, 0], 
             y: [0, 50, -30, 0], 
@@ -845,7 +1007,7 @@ export default function DestinationsPage() {
       </section>
 
       {/* Filter Bar */}
-      <section className="sticky top-[68px] z-40 bg-[#FAF8F5]/95 backdrop-blur-sm border-b border-[#ECE8E2] shadow-sm flex flex-col">
+      <section className="sticky top-17 z-40 bg-[#FAF8F5]/95 backdrop-blur-sm border-b border-[#ECE8E2] shadow-sm flex flex-col">
         <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 pt-3 pb-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
           <div className="flex flex-wrap items-center gap-y-3 gap-x-2 min-w-max md:min-w-0">
             <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest shrink-0">Vibe</span>
@@ -909,36 +1071,66 @@ export default function DestinationsPage() {
         </div>
       </section>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-14">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-12">
+        {/* View Mode Toggle & Command Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-200">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setViewMode('bento')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs ${
+                viewMode === 'bento'
+                  ? 'bg-[#1F1F1F] text-white shadow-md'
+                  : 'bg-white border border-stone-200 text-stone-600 hover:border-stone-400'
+              }`}
+            >
+              <span>▦</span>
+              <span>Magazine Bento & Grid</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('atlas')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs ${
+                viewMode === 'atlas'
+                  ? 'bg-[#FF6B2C] text-white shadow-md shadow-[#FF6B2C]/30'
+                  : 'bg-white border border-stone-200 text-stone-600 hover:border-stone-400'
+              }`}
+            >
+              <span>◉</span>
+              <span>AI Atlas & Radar Mode</span>
+            </button>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-stone-500 font-mono">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>{viewMode === 'bento' ? 'Editorial High-Contrast Showcase' : 'Dark-Mode Telemetry Feed'}</span>
+          </div>
+        </div>
 
-        {/* Trending row */}
-        {!hasFilters && (
-          <section>
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h2 className="text-xl font-extrabold text-[#1F1F1F] tracking-tight">🔥 Trending This Month</h2>
-                <p className="text-sm text-stone-500 mt-0.5">Most planned trips from our community</p>
-              </div>
-              <a href="#all-destinations" className="text-xs font-bold text-[#FF6B2C] hover:underline">See all →</a>
-            </div>
-            <div className="flex gap-4 overflow-x-auto pb-5 pt-2 -mx-1 px-1 scroll-smooth" style={{ scrollbarWidth: 'none' }}>
-              {trendingDests.map(dest => (
-                <TrendingCard key={dest.id} dest={dest} onClick={handleUseTemplate} isHighlighted={highlightedDestId === dest.id} />
-              ))}
-              <a
-                href="/ai-planner"
-                className="shrink-0 w-56 rounded-2xl border-2 border-dashed border-[#FF6B2C]/30 bg-[#FF6B2C]/4 flex flex-col items-center justify-center p-6 gap-3 cursor-pointer hover:bg-[#FF6B2C]/8 transition-colors"
-              >
-                <span className="text-3xl">✨</span>
-                <p className="text-sm font-semibold text-[#FF6B2C] text-center leading-snug">Plan a custom trip</p>
-                <p className="text-xs text-stone-500 text-center">Tell AI exactly what you want</p>
-              </a>
-            </div>
+        {viewMode === 'atlas' ? (
+          <section className="pt-2">
+            <AtlasRadarMap destinations={filteredDests} onCardClick={handleUseTemplate} />
           </section>
-        )}
+        ) : (
+          <>
+            {/* Bento Showcase for Trending */}
+            {!hasFilters && (
+              <section>
+                <div className="flex items-center justify-between mb-5">
+                  <div>
+                    <h2 className="text-2xl font-extrabold text-[#1F1F1F] tracking-tight flex items-center gap-2">
+                      <span>✨ AI Magazine Feature</span>
+                      <span className="text-xs font-mono font-bold bg-[#FF6B2C]/15 text-[#FF6B2C] px-2.5 py-0.5 rounded-full border border-[#FF6B2C]/30">Trending This Month</span>
+                    </h2>
+                    <p className="text-sm text-stone-500 mt-0.5">Top-selected AI destinations with real-time seasonal telemetry</p>
+                  </div>
+                  <a href="#all-destinations" className="text-xs font-bold text-[#FF6B2C] hover:underline">Browse all below ↓</a>
+                </div>
+                <BentoShowcase destinations={trendingDests} onCardClick={handleUseTemplate} />
+              </section>
+            )}
 
-        {/* All destinations grid */}
-        <section id="all-destinations">
+            {/* All destinations grid */}
+            <section id="all-destinations" className="pt-4">
           <div className="flex items-center justify-between mb-5">
             <div>
               <h2 className="text-xl font-extrabold text-[#1F1F1F] tracking-tight">
@@ -980,6 +1172,8 @@ export default function DestinationsPage() {
             </>
           )}
         </section>
+        </>
+      )}
 
         {/* Bottom CTA */}
         <section className="rounded-3xl bg-[#1C1B1B] p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_20px_60px_rgba(0,0,0,0.12)] relative overflow-hidden">
