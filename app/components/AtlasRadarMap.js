@@ -23,12 +23,15 @@ function Stars({ rating }) {
 
 // Convert lat/lng to SVG coordinates in a 1000x500 map viewBox
 function coordsToXY(lat, lng) {
-  // Clamp coordinates
-  const clat = Math.max(-80, Math.min(80, lat));
-  const clng = Math.max(-180, Math.min(180, lng));
+  // Clamp and scale coordinates to focus on populated regions and distribute nodes better
+  const minLat = -55, maxLat = 65;
+  const minLng = -125, maxLng = 175;
   
-  const x = ((clng + 180) / 360) * 940 + 30; // 30px padding
-  const y = ((80 - clat) / 160) * 440 + 30;
+  const clat = Math.max(minLat, Math.min(maxLat, lat));
+  const clng = Math.max(minLng, Math.min(maxLng, lng));
+  
+  const x = ((clng - minLng) / (maxLng - minLng)) * 940 + 30; // 30px padding
+  const y = ((maxLat - clat) / (maxLat - minLat)) * 440 + 30;
   return { x, y };
 }
 
@@ -36,7 +39,10 @@ export default function AtlasRadarMap({ destinations = [], onCardClick }) {
   const [hoveredId, setHoveredId] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
 
-  const activeDest = destinations.find(d => d.id === (selectedId || hoveredId)) || destinations[0];
+  // Two-way sync: prioritize hovered item for temporary preview, fallback to selected, then first item
+  const activeDest = destinations.find(d => d.id === (hoveredId || selectedId)) || destinations[0];
+
+  const lockedCoordsCount = destinations.filter(d => d.coords).length;
 
   const handleSelect = (dest) => {
     setSelectedId(dest.id === selectedId ? null : dest.id);
@@ -75,7 +81,7 @@ export default function AtlasRadarMap({ destinations = [], onCardClick }) {
             </span>
           </div>
           <div className="text-xs font-mono text-white/60 bg-white/5 px-3 py-1 rounded-full border border-white/10">
-            {destinations.length} Coordinates Locked
+            {lockedCoordsCount} Coordinates Locked
           </div>
         </div>
 
@@ -286,9 +292,9 @@ export default function AtlasRadarMap({ destinations = [], onCardClick }) {
                       e.stopPropagation();
                       onCardClick(dest);
                     }}
-                    className="shrink-0 text-[11px] font-bold text-[#FF6B2C] hover:text-white bg-[#FF6B2C]/10 hover:bg-[#FF6B2C] px-2.5 py-1 rounded-lg transition-colors border border-[#FF6B2C]/30"
+                    className="shrink-0 text-[11px] font-bold text-[#FF6B2C] hover:text-white bg-[#FF6B2C]/10 hover:bg-[#FF6B2C] px-2.5 py-1 rounded-lg transition-colors border border-[#FF6B2C]/30 whitespace-nowrap"
                   >
-                    Use Prompt
+                    Launch AI Itinerary
                   </button>
                 </div>
               </div>

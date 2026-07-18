@@ -34,14 +34,14 @@ function HandDrawnAnnotations({ destId }) {
   return (
     <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden">
       {/* Milford Sound Pointer */}
-      <svg className="absolute bottom-[30%] left-[20%] w-[120px] h-[80px] overflow-visible drop-shadow-md">
+      <svg className="absolute bottom-[30%] left-[20%] w-30 h-20 overflow-visible drop-shadow-md">
         <path d="M 10 70 Q 50 10 110 30" fill="transparent" stroke="rgba(255,255,255,0.9)" strokeWidth="2" strokeDasharray="4 4" strokeLinecap="round" />
         <circle cx="110" cy="30" r="4" fill="#FF6B2C" />
         <text x="15" y="85" fill="white" fontSize="11" fontWeight="bold" className="font-mono tracking-widest drop-shadow-sm uppercase">Milford Sound</text>
       </svg>
       
       {/* Ski Area Circle */}
-      <svg className="absolute top-[25%] right-[25%] w-[100px] h-[100px] overflow-visible drop-shadow-md">
+      <svg className="absolute top-[25%] right-[25%] w-25 h-25 overflow-visible drop-shadow-md">
         <path d="M 50 10 C 80 10 90 40 80 70 C 70 100 30 90 20 60 C 10 30 20 10 50 10" fill="transparent" stroke="rgba(255,107,44,0.9)" strokeWidth="2.5" strokeDasharray="6 4" strokeLinecap="round" />
         <text x="80" y="20" fill="#FF6B2C" fontSize="10" fontWeight="bold" className="font-mono tracking-widest drop-shadow-sm uppercase">Ski Area</text>
       </svg>
@@ -121,13 +121,13 @@ export default function BentoShowcase({ destinations, onCardClick }) {
       </AnimatePresence>
 
       {/* True Editorial Masonry Layout */}
-      <div className="flex flex-col lg:flex-row gap-5 h-auto lg:h-[700px]">
+      <div className="flex flex-col lg:flex-row gap-5 h-auto lg:h-175">
         
         {/* ─── LEFT: COVER STORY (Full Height) ─── */}
         <motion.div
           onClick={() => handleClick(coverDest)}
           whileHover="hover"
-          className="group relative w-full lg:w-5/12 h-[500px] lg:h-full rounded-3xl overflow-hidden bg-stone-900 cursor-pointer shadow-[0_12px_40px_rgba(0,0,0,0.12)] border border-[#ECE8E2]/60 flex flex-col p-6 lg:p-8"
+          className="group relative w-full lg:w-5/12 h-125 lg:h-full rounded-3xl overflow-hidden bg-stone-900 cursor-pointer shadow-[0_12px_40px_rgba(0,0,0,0.12)] border border-[#ECE8E2]/60 flex flex-col p-6 lg:p-8"
         >
           {coverDest.imageUrl && (
             <motion.div className="absolute inset-[-10%] w-[120%] h-[120%]" style={{ y: yParallax }}>
@@ -140,7 +140,7 @@ export default function BentoShowcase({ destinations, onCardClick }) {
           )}
           {/* Default Gradient */}
           <motion.div 
-            className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/40 to-black/20"
+            className="absolute inset-0 bg-linear-to-t from-stone-950 via-stone-950/40 to-black/20"
             variants={{ hover: { opacity: 0 } }}
             transition={{ duration: 0.4 }}
           />
@@ -217,7 +217,7 @@ export default function BentoShowcase({ destinations, onCardClick }) {
           <motion.div
             onClick={() => handleClick(activeMegaDest)}
             whileHover="hover"
-            className="group relative w-full h-[380px] lg:h-[400px] rounded-3xl overflow-hidden bg-stone-900 cursor-pointer shadow-[0_12px_40px_rgba(0,0,0,0.12)] border border-[#ECE8E2]/60 flex flex-col p-6"
+            className="group relative w-full h-95 lg:h-100 rounded-3xl overflow-hidden bg-stone-900 cursor-pointer shadow-[0_12px_40px_rgba(0,0,0,0.12)] border border-[#ECE8E2]/60 flex flex-col p-6"
           >
             <AnimatePresence mode="wait">
               <motion.div
@@ -237,7 +237,7 @@ export default function BentoShowcase({ destinations, onCardClick }) {
               </motion.div>
             </AnimatePresence>
             
-            <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-900/30 to-black/20 pointer-events-none" />
+            <div className="absolute inset-0 bg-linear-to-t from-stone-950 via-stone-900/30 to-black/20 pointer-events-none" />
             <motion.div 
               className="absolute inset-0 bg-black/60 pointer-events-none"
               initial={{ opacity: 0 }}
@@ -298,7 +298,7 @@ export default function BentoShowcase({ destinations, onCardClick }) {
                   key={dest.id}
                   onClick={() => handleClick(dest)}
                   whileHover="hover"
-                  className="group relative w-full h-[250px] sm:h-full rounded-3xl overflow-hidden bg-stone-900 cursor-pointer shadow-[0_12px_32px_rgba(0,0,0,0.1)] border border-[#ECE8E2]/60 flex flex-col p-5"
+                  className="group relative w-full h-62.5 sm:h-full rounded-3xl overflow-hidden bg-stone-900 cursor-pointer shadow-[0_12px_32px_rgba(0,0,0,0.1)] border border-[#ECE8E2]/60 flex flex-col p-5"
                 >
                   {dest.imageUrl && (
                     <motion.div className="absolute inset-[-10%] w-[120%] h-[120%]" style={{ y: yParallax }}>
@@ -309,7 +309,7 @@ export default function BentoShowcase({ destinations, onCardClick }) {
                       />
                     </motion.div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-900/40 to-black/20 pointer-events-none" />
+                  <div className="absolute inset-0 bg-linear-to-t from-stone-950 via-stone-900/40 to-black/20 pointer-events-none" />
                   <motion.div 
                     className="absolute inset-0 bg-black/65 pointer-events-none"
                     initial={{ opacity: 0 }}

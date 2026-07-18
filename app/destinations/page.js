@@ -628,7 +628,7 @@ function DestCard({ dest, onClick, isHighlighted }) {
         {dest.imageUrl && (
           <img src={dest.imageUrl} alt={dest.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
         )}
-        <div className={`absolute inset-0 bg-gradient-to-t ${dest.gradient}`} />
+        <div className={`absolute inset-0 bg-linear-to-t ${dest.gradient}`} />
         
         {/* Top Info Bar: Category & Duration */}
         <div className="absolute top-3 left-3 right-3 z-10 flex items-start justify-between">
@@ -647,7 +647,7 @@ function DestCard({ dest, onClick, isHighlighted }) {
         </div>
 
         {/* Bottom Info Bar: Weather, Season & Price */}
-        <div className="absolute bottom-0 left-0 right-0 z-10 p-3 pt-6 flex items-end justify-between bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+        <div className="absolute bottom-0 left-0 right-0 z-10 p-3 pt-6 flex items-end justify-between bg-linear-to-t from-black/80 via-black/40 to-transparent">
           <div className="flex flex-col gap-1.5">
             {dest.weather && (
               <span className="text-[9px] font-semibold text-white/90 drop-shadow-md">
@@ -672,7 +672,7 @@ function DestCard({ dest, onClick, isHighlighted }) {
         </div>
       </div>
 
-      <div className="flex flex-col p-4 flex-1 h-[210px]">
+      <div className="flex flex-col p-4 flex-1 h-52.5">
         <div className="mb-1.5">
           <h3 className="font-bold text-[#1F1F1F] text-base leading-tight group-hover:text-[#FF6B2C] transition-colors truncate">{dest.name}</h3>
           <div className="flex items-center gap-1.5 mt-1">
@@ -876,7 +876,7 @@ const HERO_IMAGES = [
     tip: '💡 AI Tip: Ideal for urban nightlife & cultural discovery.',
     tickers: ['✨ #1 trending for August', '☀️ Perfect 24°C patio weather']
   },
-  { 
+  {
     url: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1600&auto=format&fit=crop&q=80', 
     name: 'Rome', country: 'Italy', destId: 'rome-1', 
     tip: '💡 AI Tip: Perfect 3-day historic itinerary available.',
@@ -1019,16 +1019,16 @@ export default function DestinationsPage() {
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#1F1F1F]">
-      {/* Solid background mask to hide scrolling content behind the floating nav pill */}
+      {/* Solid background mask to hide scrolling content behind the floating nav pill and the filter deck gap */}
       <div 
-        className={`fixed top-0 left-0 right-0 h-17 bg-[#FAF8F5] z-[49] transition-opacity duration-500 pointer-events-none ${
+        className={`fixed top-0 left-0 right-0 h-24 bg-[#FAF8F5] z-49 transition-opacity duration-500 pointer-events-none ${
           isScrolledPastHero ? 'opacity-100' : 'opacity-0'
         }`} 
       />
       <Header />
 
       {/* Hero */}
-      <section className="relative w-full h-[550px] md:h-[650px] bg-[#111] overflow-hidden flex items-center pt-17">
+      <section className="relative w-full h-137.5 md:h-162.5 bg-[#111] overflow-hidden flex items-center pt-17">
         {/* Background Images Cross-Fade */}
         <AnimatePresence>
           <motion.img
@@ -1047,7 +1047,7 @@ export default function DestinationsPage() {
         </AnimatePresence>
         
         {/* Dark Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-r from-black/90 via-black/50 to-transparent" />
         
         <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 md:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Left Column: Text & Search */}
@@ -1101,7 +1101,7 @@ export default function DestinationsPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-stone-200 overflow-hidden z-50 max-h-[300px] overflow-y-auto"
+                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-stone-200 overflow-hidden z-50 max-h-75 overflow-y-auto"
                   >
                     {filteredDests.length > 0 ? (
                       filteredDests.slice(0, 5).map(dest => (
@@ -1139,7 +1139,7 @@ export default function DestinationsPage() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.8 }}
               onClick={() => handleGlobePinClick(HERO_IMAGES[bgIndex].destId)}
-              className="group cursor-pointer relative w-full h-[400px] rounded-3xl overflow-hidden bg-stone-900 shadow-[0_16px_48px_rgba(0,0,0,0.5)] border border-white/20 flex flex-col justify-between p-5"
+              className="group cursor-pointer relative w-full h-100 rounded-3xl overflow-hidden bg-stone-900 shadow-[0_16px_48px_rgba(0,0,0,0.5)] border border-white/20 flex flex-col justify-between p-5"
             >
               <img src={HERO_IMAGES[bgIndex].url} alt="Featured" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
               <div className="absolute inset-0 bg-linear-to-t from-stone-950 via-stone-900/40 to-black/20" />
@@ -1160,67 +1160,73 @@ export default function DestinationsPage() {
         </div>
       </section>
 
-      {/* Filter Bar */}
-      <section className="sticky top-17 z-40 bg-[#FAF8F5]/95 backdrop-blur-sm border-b border-[#ECE8E2] shadow-sm flex flex-col">
-        <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 pt-3 pb-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-          <div className="flex flex-wrap items-center gap-y-3 gap-x-2 min-w-max md:min-w-0">
-            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest shrink-0">Vibe</span>
-            {VIBE_FILTERS.map(f => (
-              <FilterPill key={f.id} label={f.label} icon={f.icon} active={activeVibes.includes(f.id)} onClick={() => toggleFilter(f.id, setActiveVibes)} />
-            ))}
-            <div className="hidden md:block h-6 w-px bg-stone-200 mx-1 shrink-0" />
-            
-            <div className="w-full md:hidden" /> {/* Force wrap on mobile */}
-            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest shrink-0">Budget</span>
-            {BUDGET_FILTERS.map(f => (
-              <FilterPill key={f.id} label={f.label} active={activeBudgets.includes(f.id)} onClick={() => toggleFilter(f.id, setActiveBudgets)} />
-            ))}
-            <div className="hidden md:block h-6 w-px bg-stone-200 mx-1 shrink-0" />
-            
-            <div className="w-full md:hidden" /> {/* Force wrap on mobile */}
-            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest shrink-0">Region</span>
-            {REGION_FILTERS.map(f => (
-              <FilterPill key={f.id} label={f.label} active={activeRegions.includes(f.id)} onClick={() => toggleFilter(f.id, setActiveRegions)} />
-            ))}
-            {hasFilters && (
-              <>
-                <div className="h-6 w-px bg-stone-200 mx-1 shrink-0" />
-                <button type="button" onClick={clearAll} className="text-[11px] font-bold text-stone-400 hover:text-[#FF6B2C] transition-colors whitespace-nowrap px-2 shrink-0">Clear all ×</button>
-              </>
-            )}
-          </div>
-        </div>
-        
-        {/* Active Chips & Sort Row */}
-        <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 py-2 flex items-center justify-between border-t border-stone-200/50">
-          <div className="flex items-center gap-2 overflow-x-auto flex-1 pr-4" style={{ scrollbarWidth: 'none' }}>
-            {hasFilters && (
-              <span className="text-[11px] font-bold text-[#FF6B2C] shrink-0">{filteredDests.length} destinations match</span>
-            )}
-            {activeChips.length > 0 && <div className="h-3 w-px bg-stone-300 mx-1 shrink-0" />}
-            {activeChips.map(chip => (
-              <button
-                key={chip.id}
-                onClick={() => removeFilter(chip.id, chip.type)}
-                className="flex items-center gap-1 bg-stone-100 border border-stone-200 text-stone-600 px-2 py-0.5 rounded text-[10px] font-bold hover:bg-stone-200 hover:text-stone-900 transition-colors shrink-0"
-              >
-                {chip.label} <span className="text-stone-400 ml-0.5 hover:text-stone-900">×</span>
-              </button>
-            ))}
+      {/* Filter Bar - Floating Control Deck */}
+      <section className="sticky top-24 z-40 max-w-6xl mx-auto w-full px-4 sm:px-6 -mt-8 mb-8 pointer-events-none">
+        {/* Solid sharp-cornered mask to hide scrolling content that peeks through the rounded corners */}
+        <div className={`absolute top-0 bottom-0 left-4 right-4 sm:left-6 sm:right-6 bg-[#FAF8F5] -z-10 transition-opacity duration-500 ${isScrolledPastHero ? 'opacity-100' : 'opacity-0'}`} />
+        <div className="bg-white/90 backdrop-blur-2xl rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.08)] border border-[#ECE8E2]/80 flex flex-col pointer-events-auto transition-shadow hover:shadow-[0_16px_50px_rgba(0,0,0,0.12)]">
+          <div className="px-5 pt-4 pb-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+            <div className="flex flex-wrap items-center gap-y-3 gap-x-2 min-w-max md:min-w-0">
+              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest shrink-0 mr-1">Vibe</span>
+              {VIBE_FILTERS.map(f => (
+                <FilterPill key={f.id} label={f.label} icon={f.icon} active={activeVibes.includes(f.id)} onClick={() => toggleFilter(f.id, setActiveVibes)} />
+              ))}
+              <div className="hidden md:block h-6 w-px bg-stone-200 mx-2 shrink-0" />
+              
+              <div className="w-full md:hidden" /> {/* Force wrap on mobile */}
+              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest shrink-0 mr-1">Budget</span>
+              {BUDGET_FILTERS.map(f => (
+                <FilterPill key={f.id} label={f.label} active={activeBudgets.includes(f.id)} onClick={() => toggleFilter(f.id, setActiveBudgets)} />
+              ))}
+              <div className="hidden md:block h-6 w-px bg-stone-200 mx-2 shrink-0" />
+              
+              <div className="w-full md:hidden" /> {/* Force wrap on mobile */}
+              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest shrink-0 mr-1">Region</span>
+              {REGION_FILTERS.map(f => (
+                <FilterPill key={f.id} label={f.label} active={activeRegions.includes(f.id)} onClick={() => toggleFilter(f.id, setActiveRegions)} />
+              ))}
+              {hasFilters && (
+                <>
+                  <div className="h-6 w-px bg-stone-200 mx-2 shrink-0" />
+                  <button type="button" onClick={clearAll} className="text-[11px] font-bold text-stone-400 hover:text-[#FF6B2C] transition-colors whitespace-nowrap px-2 shrink-0">Clear all ×</button>
+                </>
+              )}
+            </div>
           </div>
           
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest hidden sm:inline">Sort</span>
-            <select
-              value={sortOption}
-              onChange={(e) => setSortOption(e.target.value)}
-              className="bg-transparent border border-stone-200 text-stone-700 text-xs font-semibold rounded-lg px-2.5 py-1 focus:outline-none focus:border-[#FF6B2C] cursor-pointer"
-            >
-              <option>Most Popular</option>
-              <option>Highest Rated</option>
-              <option>Most Affordable</option>
-              <option>Newest</option>
-            </select>
+          {/* Active Chips & Sort Row */}
+          <div className="px-5 py-3 flex items-center justify-between border-t border-stone-100 bg-[#FAF8F5]/50 rounded-b-2xl">
+            <div className="flex items-center gap-2 overflow-x-auto flex-1 pr-4" style={{ scrollbarWidth: 'none' }}>
+              {hasFilters ? (
+                <span className="text-[11px] font-bold text-[#FF6B2C] shrink-0">{filteredDests.length} destinations match</span>
+              ) : (
+                <span className="text-[11px] font-bold text-stone-400 shrink-0">Filter your perfect trip</span>
+              )}
+              {activeChips.length > 0 && <div className="h-3 w-px bg-stone-300 mx-1 shrink-0" />}
+              {activeChips.map(chip => (
+                <button
+                  key={chip.id}
+                  onClick={() => removeFilter(chip.id, chip.type)}
+                  className="flex items-center gap-1 bg-white border border-stone-200 shadow-xs text-stone-600 px-2 py-0.5 rounded-md text-[10px] font-bold hover:bg-stone-50 hover:border-stone-300 hover:text-stone-900 transition-all shrink-0"
+                >
+                  {chip.label} <span className="text-stone-400 ml-0.5 hover:text-stone-900">×</span>
+                </button>
+              ))}
+            </div>
+            
+            <div className="flex items-center gap-3 shrink-0">
+              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest hidden sm:inline">Sort</span>
+              <select
+                value={sortOption}
+                onChange={(e) => setSortOption(e.target.value)}
+                className="bg-white shadow-xs border border-stone-200 text-stone-700 text-xs font-semibold rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#FF6B2C] focus:ring-1 focus:ring-[#FF6B2C]/20 cursor-pointer transition-all"
+              >
+                <option>Most Popular</option>
+                <option>Highest Rated</option>
+                <option>Most Affordable</option>
+                <option>Newest</option>
+              </select>
+            </div>
           </div>
         </div>
       </section>
