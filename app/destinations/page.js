@@ -628,8 +628,10 @@ function DestCard({ dest, onClick, isHighlighted }) {
         {dest.imageUrl && (
           <img src={dest.imageUrl} alt={dest.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
         )}
-        <div className={`absolute inset-0 bg-linear-to-t ${dest.gradient}`} />
-        <div className="absolute top-3 left-3 z-10 flex flex-col items-start gap-1">
+        <div className={`absolute inset-0 bg-gradient-to-t ${dest.gradient}`} />
+        
+        {/* Top Info Bar: Category & Duration */}
+        <div className="absolute top-3 left-3 right-3 z-10 flex items-start justify-between">
           <span
             className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full text-white backdrop-blur-sm shadow-xs"
             style={{ 
@@ -639,55 +641,66 @@ function DestCard({ dest, onClick, isHighlighted }) {
           >
             {dest.badge}
           </span>
-          {dest.weather && (
-            <span className="text-[9px] font-semibold bg-black/50 text-white/90 px-2 py-0.5 rounded-full backdrop-blur-md border border-white/10">
-              {dest.weather.split('•')[0]}
-            </span>
-          )}
-        </div>
-        <div className="absolute top-3 right-3 flex flex-col items-end gap-1">
-          <span className="text-[10px] font-semibold bg-black/40 text-white px-2 py-1 rounded-full backdrop-blur-sm">
+          <span className="text-[10px] font-semibold bg-black/50 text-white px-2 py-1 rounded-full backdrop-blur-sm border border-white/10 shadow-sm">
             {dest.duration}
           </span>
-          <span className="text-[9px] font-semibold bg-white/20 text-white px-2 py-0.5 rounded-full backdrop-blur-md border border-white/20">
+        </div>
+
+        {/* Bottom Info Bar: Weather, Season & Price */}
+        <div className="absolute bottom-0 left-0 right-0 z-10 p-3 pt-6 flex items-end justify-between bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+          <div className="flex flex-col gap-1.5">
+            {dest.weather && (
+              <span className="text-[9px] font-semibold text-white/90 drop-shadow-md">
+                {dest.weather.split('•')[0]}
+              </span>
+            )}
+            {dest.crowdLevel && (
+              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md backdrop-blur-md border shadow-sm w-fit ${
+                dest.crowdLevel.includes('Low') 
+                  ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40' 
+                  : dest.crowdLevel.includes('Moderate') 
+                  ? 'bg-amber-950/80 text-amber-300 border-amber-500/40' 
+                  : 'bg-rose-950/80 text-rose-300 border-rose-500/40'
+              }`}>
+                {dest.crowdLevel}
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] font-semibold bg-white/20 text-white px-2.5 py-1 rounded-md backdrop-blur-md border border-white/20 shadow-sm">
             From {budgetStr}
           </span>
         </div>
-        {dest.crowdLevel && (
-          <div className="absolute bottom-2.5 right-2.5 z-10">
-            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md border ${
-              dest.crowdLevel.includes('Low') 
-                ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40' 
-                : dest.crowdLevel.includes('Moderate') 
-                ? 'bg-amber-950/80 text-amber-300 border-amber-500/40' 
-                : 'bg-rose-950/80 text-rose-300 border-rose-500/40'
-            }`}>
-              {dest.crowdLevel}
-            </span>
-          </div>
-        )}
       </div>
 
-      <div className="flex flex-col gap-2 p-4 flex-1 justify-between">
-        <div>
-          <div className="flex items-start justify-between gap-2 mb-1">
-            <div>
-              <h3 className="font-bold text-[#1F1F1F] text-base leading-tight group-hover:text-[#FF6B2C] transition-colors">{dest.name}</h3>
-              <p className="text-xs text-stone-500 font-medium">{dest.country}</p>
-            </div>
-            <div className="flex flex-col items-end gap-0.5 shrink-0">
+      <div className="flex flex-col p-4 flex-1 h-[210px]">
+        <div className="mb-1.5">
+          <h3 className="font-bold text-[#1F1F1F] text-base leading-tight group-hover:text-[#FF6B2C] transition-colors truncate">{dest.name}</h3>
+          <div className="flex items-center gap-1.5 mt-1">
+            <p className="text-[10px] text-stone-500 font-bold uppercase tracking-widest">{dest.country}</p>
+            <span className="text-stone-300 text-[10px]">•</span>
+            <div className="flex items-center gap-1">
               <Stars rating={dest.rating} />
-              <span className="text-[10px] text-stone-400">{dest.reviews.toLocaleString()} trips</span>
+              <span className="text-[10px] font-semibold text-stone-600">
+                {dest.rating.toFixed(1)} <span className="font-normal text-stone-400">({dest.reviews.toLocaleString()})</span>
+              </span>
             </div>
           </div>
-
-          <p className="text-xs text-stone-500 leading-relaxed italic">{dest.tagline}</p>
         </div>
 
+        <p className="text-xs text-stone-500 leading-relaxed italic truncate">{dest.tagline}</p>
+
+        {/* AI Tip Box - Dynamic color, vertically centered */}
         {dest.aiTip && (
-          <div className="bg-stone-50 rounded-xl p-2.5 border border-stone-200/70 my-1 text-[11px] text-stone-600 font-medium leading-snug flex items-start gap-1.5 shadow-2xs">
-            <span className="shrink-0">💡</span>
-            <span className="truncate sm:whitespace-normal sm:line-clamp-2">{dest.aiTip.replace('💡 AI Verdict: ', '')}</span>
+          <div 
+            className="rounded-xl p-2.5 border my-auto text-[11px] font-medium leading-snug flex items-start gap-1.5 shadow-2xs"
+            style={{ 
+              backgroundColor: `${dest.badgeColor}0A`, 
+              borderColor: `${dest.badgeColor}33`,
+              color: '#555' 
+            }}
+          >
+            <span className="shrink-0 text-xs" style={{ textShadow: `0 0 10px ${dest.badgeColor}` }}>✨</span>
+            <span className="line-clamp-2">{dest.aiTip.replace('💡 AI Verdict: ', '').replace('💡 AI Tip: ', '')}</span>
           </div>
         )}
 

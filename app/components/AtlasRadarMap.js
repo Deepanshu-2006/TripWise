@@ -52,9 +52,9 @@ export default function AtlasRadarMap({ destinations = [], onCardClick }) {
   return (
     <div className="w-full flex flex-col lg:flex-row gap-6 items-stretch">
       {/* ─── LEFT PANEL: RADAR MAP VIEW ─── */}
-      <div className="lg:w-7/12 xl:w-2/3 bg-stone-950 border border-white/15 rounded-3xl p-5 sm:p-6 relative overflow-hidden shadow-2xl min-h-[480px] sm:min-h-[560px] flex flex-col justify-between">
+      <div className="lg:w-7/12 xl:w-2/3 bg-stone-950 border border-white/15 rounded-3xl p-5 sm:p-6 relative overflow-hidden shadow-2xl min-h-120 sm:min-h-140 flex flex-col justify-between">
         {/* Radar Background Effects */}
-        <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-40 pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] bg-size-[24px_24px] opacity-40 pointer-events-none" />
         <motion.div 
           className="absolute -top-1/4 -left-1/4 w-3/2 h-3/2 rounded-full border border-cyan-500/10 pointer-events-none"
           animate={{ rotate: 360 }}
@@ -81,7 +81,7 @@ export default function AtlasRadarMap({ destinations = [], onCardClick }) {
 
         {/* Interactive SVG World Map Canvas */}
         <div className="relative flex-1 my-4 w-full flex items-center justify-center">
-          <svg viewBox="0 0 1000 500" className="w-full h-full max-h-[440px] overflow-visible select-none">
+          <svg viewBox="0 0 1000 500" className="w-full h-full max-h-110 overflow-visible select-none">
             {/* Stylized World Continents Background Grid Lines */}
             <g className="opacity-20 stroke-stone-600 stroke-1 fill-none">
               <path d="M 100 150 Q 250 80 400 160 T 700 140 T 900 200" strokeDasharray="4 4" />
@@ -229,7 +229,7 @@ export default function AtlasRadarMap({ destinations = [], onCardClick }) {
       </div>
 
       {/* ─── RIGHT PANEL: TELEMETRY CARD DRAWER ─── */}
-      <div className="lg:w-5/12 xl:w-1/3 bg-stone-900 border border-white/15 rounded-3xl p-5 flex flex-col max-h-[640px]">
+      <div className="lg:w-5/12 xl:w-1/3 bg-stone-900 border border-white/15 rounded-3xl p-5 flex flex-col max-h-160">
         <div className="flex items-center justify-between pb-3.5 border-b border-white/10 mb-3.5">
           <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
             <span>◉</span>
