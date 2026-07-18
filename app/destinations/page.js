@@ -666,45 +666,44 @@ function DestCard({ dest, onClick, isHighlighted }) {
         </div>
       </div>
 
-      <div className="flex flex-col p-4 flex-1 h-52.5">
-        <div className="mb-1.5">
-          <h3 className="font-bold text-[#1F1F1F] text-base leading-tight group-hover:text-[#FF6B2C] transition-colors truncate">{dest.name}</h3>
-          <div className="flex items-center gap-1.5 mt-1">
-            <p className="text-[10px] text-stone-500 font-bold uppercase tracking-widest">{dest.country}</p>
-            <span className="text-stone-300 text-[10px]">•</span>
+      <div className="flex flex-col p-5 flex-1 bg-white h-[14.5rem]">
+        <div className="mb-2">
+          {/* Editorial hierarchy: Country above City */}
+          <div className="flex items-center justify-between mb-1.5">
+            <p className="text-[9px] text-stone-400 font-extrabold uppercase tracking-[0.2em]">{dest.country}</p>
             <div className="flex items-center gap-1">
               <Stars rating={dest.rating} />
-              <span className="text-[10px] font-semibold text-stone-600">
-                {dest.rating.toFixed(1)} <span className="font-normal text-stone-400">({dest.reviews.toLocaleString()})</span>
+              <span className="text-[10px] font-bold text-stone-800 ml-0.5">
+                {dest.rating.toFixed(1)}
               </span>
+              <span className="text-[9px] font-medium text-stone-400 ml-0.5 hidden sm:inline-block">({dest.reviews.toLocaleString()})</span>
             </div>
           </div>
+          <h3 className="font-extrabold text-[#1F1F1F] text-xl leading-tight group-hover:text-[#FF6B2C] transition-colors truncate">{dest.name}</h3>
         </div>
 
-        <p className="text-xs text-stone-500 leading-relaxed italic truncate">{dest.tagline}</p>
+        <p className="text-xs text-stone-500 leading-relaxed truncate">{dest.tagline}</p>
 
-        {/* AI Tip Box - Dynamic color, vertically centered */}
+        {/* AI Tip Box - Clean minimal look */}
         {dest.aiTip && (
-          <div 
-            className="rounded-xl p-2.5 border my-auto text-[11px] font-medium leading-snug flex items-start gap-1.5 shadow-2xs"
-            style={{ 
-              backgroundColor: `${dest.badgeColor}0A`, 
-              borderColor: `${dest.badgeColor}33`,
-              color: '#555' 
-            }}
-          >
-            <span className="shrink-0 text-xs" style={{ textShadow: `0 0 10px ${dest.badgeColor}` }}>✨</span>
-            <span className="line-clamp-2">{dest.aiTip.replace('💡 AI Verdict: ', '').replace('💡 AI Tip: ', '')}</span>
+          <div className="mt-3.5 mb-4 rounded-xl p-3 bg-stone-50/80 border border-stone-100 flex items-start gap-2.5">
+            <div className="shrink-0 w-5 h-5 rounded-full bg-linear-to-br from-amber-100 to-orange-100 border border-orange-200/50 flex items-center justify-center shadow-xs">
+              <span className="text-[10px]">✨</span>
+            </div>
+            <p className="text-[11px] font-medium text-stone-600 leading-snug line-clamp-2">
+              {dest.aiTip.replace('💡 AI Verdict: ', '').replace('💡 AI Tip: ', '')}
+            </p>
           </div>
         )}
 
-        <div className="pt-2 border-t border-stone-100 mt-auto">
+        {/* Use Prompt Button - Premium interaction */}
+        <div className="mt-auto pt-1">
           <button
             type="button"
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#FF6B2C]/8 group-hover:bg-[#FF6B2C] text-[#FF6B2C] group-hover:text-white font-semibold text-xs transition-all duration-300 group/btn border border-[#FF6B2C]/20 group-hover:border-[#FF6B2C] group-hover:shadow-[0_4px_16px_rgba(255,107,44,0.3)]"
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-stone-200 text-stone-600 group-hover:bg-[#FF6B2C] group-hover:border-[#FF6B2C] group-hover:text-white font-bold text-xs transition-all duration-300 shadow-xs group-hover:shadow-[0_8px_20px_rgba(255,107,44,0.25)]"
           >
-            <span>Use Prompt</span>
-            <span className="group-hover/btn:translate-x-0.5 transition-transform duration-150">
+            <span className="uppercase tracking-wider text-[10px]">Customize AI Prompt</span>
+            <span className="group-hover:translate-x-1 transition-transform duration-200">
               <ArrowRightIcon />
             </span>
           </button>

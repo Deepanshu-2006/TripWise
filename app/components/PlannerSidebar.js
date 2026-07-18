@@ -398,6 +398,7 @@ export default function PlannerSidebar({
   );
   const [selectedBudget, setSelectedBudget] = useState(() => extracted?.budget || 'standard');
   const [selectedPace, setSelectedPace] = useState(() => extracted?.travelStyle || 'balanced');
+  const [selectedDays, setSelectedDays] = useState(() => extracted?.duration || 3);
 
   // State 3 Progress
   const [progressPercent, setProgressPercent] = useState(0);
@@ -521,6 +522,9 @@ export default function PlannerSidebar({
             else if (p.includes('relax')) setSelectedPace('relaxed');
             else setSelectedPace('balanced');
           }
+          if (intent.days) {
+            setSelectedDays(Number(intent.days));
+          }
         }
       } catch (err) {
         console.error("Error parsing intent:", err);
@@ -624,6 +628,7 @@ export default function PlannerSidebar({
       interests: selectedInterests,
       budget: selectedBudget,
       pace: selectedPace,
+      days: selectedDays,
     });
   };
 
@@ -632,6 +637,7 @@ export default function PlannerSidebar({
       interests: extracted?.interests || [],
       budget: extracted?.budget || 'standard',
       pace: extracted?.travelStyle || 'balanced',
+      days: extracted?.duration || parsedIntent?.days || 3,
     });
   };
 
@@ -910,6 +916,21 @@ export default function PlannerSidebar({
               Got it, {destinationName}. A couple quick things:
             </h2>
 
+            {/* Editable Prompt */}
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-secondary-text mb-2.5">
+                Your Prompt
+              </label>
+              <textarea
+                value={userPromptInput}
+                onChange={(e) => setUserPromptInput(e.target.value)}
+                rows={3}
+                className="w-full p-3 rounded-xl border border-[rgba(28,27,27,0.1)] bg-bg-white text-(--foreground) text-sm shadow-2xs focus:outline-none focus:ring-2 focus:ring-accent-orange/40 focus:border-accent-orange transition-all resize-none"
+                placeholder="E.g., 5 days in Tokyo focusing on street food and neon lights..."
+              />
+            </div>
+
+
             {/* Tune your vibe */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-secondary-text mb-2.5">
@@ -992,6 +1013,33 @@ export default function PlannerSidebar({
                     </button>
                   );
                 })}
+              </div>
+            </div>
+
+            {/* Trip duration */}
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-secondary-text mb-2.5">
+                Trip duration (days)
+              </label>
+              <div className="flex items-center justify-between p-1.5 rounded-xl bg-bg-white border border-[rgba(28,27,27,0.1)] shadow-2xs">
+                <button
+                  type="button"
+                  onClick={() => setSelectedDays(prev => Math.max(1, prev - 1))}
+                  className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-stone-100 text-stone-500 font-bold transition-colors cursor-pointer"
+                >
+                  –
+                </button>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-lg font-bold text-[#1F1F1F]">{selectedDays}</span>
+                  <span className="text-xs font-medium text-stone-400">days</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedDays(prev => Math.min(14, prev + 1))}
+                  className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-stone-100 text-stone-500 font-bold transition-colors cursor-pointer"
+                >
+                  +
+                </button>
               </div>
             </div>
 
