@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '../components/Header';
@@ -850,6 +850,33 @@ function TrendingCard({ dest, onClick, isHighlighted }) {
   );
 }
 
+const HERO_IMAGES = [
+  { 
+    url: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1600&auto=format&fit=crop&q=80', 
+    name: 'Kyoto', country: 'Japan', destId: 'kyoto-1', 
+    tip: '💡 AI Tip: Peak cherry blossom season starts in two weeks.',
+    tickers: ['🌸 Cherry blossoms peaking now', '🔥 1,245 trips planned this month']
+  },
+  { 
+    url: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1600&auto=format&fit=crop&q=80', 
+    name: 'Paris', country: 'France', destId: 'paris-1', 
+    tip: '💡 AI Tip: Ideal for urban nightlife & cultural discovery.',
+    tickers: ['✨ #1 trending for August', '☀️ Perfect 24°C patio weather']
+  },
+  { 
+    url: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1600&auto=format&fit=crop&q=80', 
+    name: 'Rome', country: 'Italy', destId: 'rome-1', 
+    tip: '💡 AI Tip: Perfect 3-day historic itinerary available.',
+    tickers: ['🏛️ Avoid crowds: Book Colosseum early', '🍝 34 Michelin starred restaurants']
+  },
+  { 
+    url: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1600&auto=format&fit=crop&q=80', 
+    name: 'Bali', country: 'Indonesia', destId: 'bali-1', 
+    tip: '💡 AI Tip: Best value destination for digital nomads right now.',
+    tickers: ['🏄‍♂️ Peak surf season in Uluwatu', '📉 Flights down 12% this week']
+  }
+];
+
 export default function DestinationsPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
@@ -860,6 +887,36 @@ export default function DestinationsPage() {
   const [visibleCount, setVisibleCount] = useState(8);
   const [highlightedDestId, setHighlightedDestId] = useState(null);
   const [viewMode, setViewMode] = useState('bento');
+  const [bgIndex, setBgIndex] = useState(0);
+  const [tickerIndex, setTickerIndex] = useState(0);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [isScrolledPastHero, setIsScrolledPastHero] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Show mask ONLY after the hero section (h-[550px] or h-[650px]) is completely scrolled past
+      const heroHeight = window.innerWidth >= 768 ? 650 : 550;
+      setIsScrolledPastHero(window.scrollY >= heroHeight - 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    
+    const bgInterval = setInterval(() => {
+      setBgIndex((prev) => {
+        setTickerIndex(0);
+        return (prev + 1) % HERO_IMAGES.length;
+      });
+    }, 8000);
+    
+    const tickerInterval = setInterval(() => {
+      setTickerIndex((prev) => prev === 0 ? 1 : 0);
+    }, 4000);
+
+    return () => {
+      clearInterval(bgInterval);
+      clearInterval(tickerInterval);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
 
   const toggleFilter = (id, setter) => {
@@ -949,59 +1006,143 @@ export default function DestinationsPage() {
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#1F1F1F]">
+      {/* Solid background mask to hide scrolling content behind the floating nav pill */}
+      <div 
+        className={`fixed top-0 left-0 right-0 h-17 bg-[#FAF8F5] z-[49] transition-opacity duration-500 pointer-events-none ${
+          isScrolledPastHero ? 'opacity-100' : 'opacity-0'
+        }`} 
+      />
       <Header />
-      {/* Solid background mask to hide scrolling content under the floating nav pill */}
-      <div className="fixed top-0 left-0 right-0 h-17 bg-[#FAF8F5] z-45" />
 
       {/* Hero */}
-      <section className="pt-28 pb-12 px-4 sm:px-6 md:px-8 relative overflow-hidden">
-        {/* Ambient Blobs */}
-        <motion.div 
-          className="absolute -top-20 left-[20%] w-125 h-125 rounded-full bg-[#FF6B2C] blur-[120px] pointer-events-none mix-blend-multiply"
-          animate={{ 
-            x: [0, 60, -40, 0], 
-            y: [0, -40, 50, 0], 
-            opacity: [0.03, 0.06, 0.03] 
-          }}
-          transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-        />
-        <motion.div 
-          className="absolute top-10 right-[15%] w-100 h-100 rounded-full bg-[#3b82f6] blur-[100px] pointer-events-none mix-blend-multiply"
-          animate={{ 
-            x: [0, -50, 40, 0], 
-            y: [0, 50, -30, 0], 
-            opacity: [0.02, 0.05, 0.02] 
-          }}
-          transition={{ duration: 45, repeat: Infinity, ease: "linear" }}
-        />
+      <section className="relative w-full h-[550px] md:h-[650px] bg-[#111] overflow-hidden flex items-center pt-17">
+        {/* Background Images Cross-Fade */}
+        <AnimatePresence>
+          <motion.img
+            key={bgIndex}
+            src={HERO_IMAGES[bgIndex].url}
+            alt="Hero Background"
+            className="absolute inset-0 w-full h-full object-cover origin-center"
+            initial={{ opacity: 0, scale: 1 }}
+            animate={{ opacity: 1, scale: 1.15 }}
+            exit={{ opacity: 0 }}
+            transition={{
+              opacity: { duration: 1.5 },
+              scale: { duration: 10, ease: "linear" }
+            }}
+          />
+        </AnimatePresence>
         
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#FF6B2C]/10 border border-[#FF6B2C]/25 rounded-full mb-5">
-            <GlobeIcon />
-            <span className="text-xs font-bold text-[#FF6B2C] uppercase tracking-widest">Explore the World</span>
-          </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.08] text-[#1F1F1F] mb-4">
-            Find your next{' '}
-            <span className="text-[#FF6B2C]">adventure</span>
-          </h1>
-          <p className="text-base sm:text-lg text-stone-500 max-w-xl mx-auto mb-8 leading-relaxed">
-            Browse hand-curated destinations. Pick a vibe, set your budget, and let TripWise AI build your perfect itinerary in seconds.
-          </p>
-          <div className="relative max-w-xl mx-auto">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none">
-              <SearchIcon />
+        {/* Dark Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent" />
+        
+        <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 md:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          {/* Left Column: Text & Search */}
+          <div>
+            <div className="inline-flex items-center gap-2 mb-4">
+              <span className="text-[10px] font-bold text-[#FF6B2C] uppercase tracking-[0.2em]">ISSUE — JULY 2026 • AI ATLAS</span>
             </div>
-            <input
-              id="destinations-search"
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search destinations, cities, or vibes..."
-              className="w-full pl-12 pr-12 py-4 rounded-2xl bg-white border border-[#ECE8E2] shadow-[0_8px_32px_rgba(0,0,0,0.07)] text-[#1F1F1F] text-sm placeholder:text-stone-400 focus:outline-none focus:border-[#FF6B2C]/60 focus:ring-2 focus:ring-[#FF6B2C]/15 transition-all duration-200"
-            />
-            {searchQuery && (
-              <button type="button" onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 transition-colors text-lg leading-none">×</button>
-            )}
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.08] text-white mb-6">
+              Find your next <br />
+              <span className="text-[#FF6B2C]">adventure</span>
+            </h1>
+            
+            {/* Live Data Ticker */}
+            <div className="flex items-center overflow-hidden mb-8 w-full max-w-md border-l-2 border-[#FF6B2C] pl-4 h-6">
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={`${bgIndex}-${tickerIndex}`}
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -20, opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="text-white/80 text-sm font-medium tracking-wide whitespace-nowrap"
+                >
+                  {HERO_IMAGES[bgIndex].tickers[tickerIndex % HERO_IMAGES[bgIndex].tickers.length]}
+                </motion.p>
+              </AnimatePresence>
+            </div>
+            
+            <div className="relative max-w-xl">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none z-10">
+                <SearchIcon />
+              </div>
+              <input
+                id="destinations-search"
+                type="text"
+                value={searchQuery}
+                onFocus={() => setShowSearchDropdown(true)}
+                onBlur={() => setTimeout(() => setShowSearchDropdown(false), 200)}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search destinations, cities, or vibes..."
+                className="w-full pl-12 pr-12 py-4 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl text-white text-sm placeholder:text-white/50 focus:outline-none focus:border-[#FF6B2C]/60 focus:bg-white/20 transition-all duration-200"
+              />
+              {searchQuery && (
+                <button type="button" onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors text-lg leading-none z-10">×</button>
+              )}
+              
+              {/* Autocomplete Dropdown */}
+              <AnimatePresence>
+                {showSearchDropdown && searchQuery.trim() && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-stone-200 overflow-hidden z-50 max-h-[300px] overflow-y-auto"
+                  >
+                    {filteredDests.length > 0 ? (
+                      filteredDests.slice(0, 5).map(dest => (
+                        <div 
+                          key={dest.id}
+                          onClick={() => {
+                            setSearchQuery(dest.name);
+                            setShowSearchDropdown(false);
+                            handleGlobePinClick(dest.id);
+                          }}
+                          className="flex items-center gap-3 p-3 hover:bg-stone-50 cursor-pointer transition-colors border-b border-stone-100 last:border-0"
+                        >
+                          <img src={dest.imageUrl} alt={dest.name} className="w-10 h-10 rounded-lg object-cover" />
+                          <div>
+                            <h4 className="text-sm font-bold text-[#1F1F1F]">{dest.name}, {dest.country}</h4>
+                            <p className="text-xs text-stone-500 truncate">{dest.tagline}</p>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-4 text-sm text-stone-500 text-center">No destinations found.</div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+          
+          {/* Right Column: Featured Destination Mini-Card */}
+          <div className="hidden lg:block relative justify-self-end w-full max-w-[320px]">
+            <motion.div
+              key={bgIndex}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.8 }}
+              onClick={() => handleGlobePinClick(HERO_IMAGES[bgIndex].destId)}
+              className="group cursor-pointer relative w-full h-[400px] rounded-3xl overflow-hidden bg-stone-900 shadow-[0_16px_48px_rgba(0,0,0,0.5)] border border-white/20 flex flex-col justify-between p-5"
+            >
+              <img src={HERO_IMAGES[bgIndex].url} alt="Featured" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
+              <div className="absolute inset-0 bg-linear-to-t from-stone-950 via-stone-900/40 to-black/20" />
+              
+              <div className="relative z-10 self-start bg-[#FF6B2C] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+                Featured Cover
+              </div>
+              
+              <div className="relative z-10 mt-auto">
+                <p className="text-white/80 text-[11px] font-semibold uppercase tracking-widest">{HERO_IMAGES[bgIndex].country}</p>
+                <h3 className="text-3xl font-extrabold text-white group-hover:text-[#FF6B2C] transition-colors">{HERO_IMAGES[bgIndex].name}</h3>
+                <div className="mt-3 bg-black/60 backdrop-blur-md border border-white/15 rounded-xl p-3 text-xs text-white/90 italic leading-relaxed">
+                  {HERO_IMAGES[bgIndex].tip}
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -1115,13 +1256,14 @@ export default function DestinationsPage() {
             {/* Bento Showcase for Trending */}
             {!hasFilters && (
               <section>
+                <hr className="border-stone-300 mb-6" />
                 <div className="flex items-center justify-between mb-5">
                   <div>
-                    <h2 className="text-2xl font-extrabold text-[#1F1F1F] tracking-tight flex items-center gap-2">
-                      <span>✨ AI Magazine Feature</span>
-                      <span className="text-xs font-mono font-bold bg-[#FF6B2C]/15 text-[#FF6B2C] px-2.5 py-0.5 rounded-full border border-[#FF6B2C]/30">Trending This Month</span>
+                    <h2 className="text-sm font-bold text-[#FF6B2C] uppercase tracking-[0.2em] flex items-center gap-2">
+                      <span>FEATURED — ISSUE 47</span>
+                      <span className="text-[10px] font-mono font-bold bg-[#FF6B2C]/15 text-[#FF6B2C] px-2 py-0.5 rounded-full border border-[#FF6B2C]/30">Trending This Month</span>
                     </h2>
-                    <p className="text-sm text-stone-500 mt-0.5">Top-selected AI destinations with real-time seasonal telemetry</p>
+                    <p className="text-xl font-extrabold text-[#1F1F1F] mt-1 tracking-tight">Top-selected AI destinations</p>
                   </div>
                   <a href="#all-destinations" className="text-xs font-bold text-[#FF6B2C] hover:underline">Browse all below ↓</a>
                 </div>
