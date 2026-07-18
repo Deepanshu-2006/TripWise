@@ -45,17 +45,28 @@ function Header() {
             <div className="px-6 md:px-8 flex items-center justify-between md:grid md:grid-cols-3 transition-all duration-500 ease-in-out h-15">
                 {/* Left Side: Destinations & AI Planner (Desktop) */}
                 <div className={`hidden md:flex items-center justify-start transition-all duration-500 ${isScrolled ? "gap-6" : "gap-8"}`}>
-                    {['Destinations', 'AI Planner'].map((item) => (
-                    <a
-                            key={item}
-                            href={item === 'AI Planner' ? '/ai-planner' : item === 'Destinations' ? '/destinations' : `#${item.toLowerCase().replace(' ', '-')}`}
-                            className={`font-mono text-[11px] font-bold ${isLightPage ? 'text-[#1F1F1F]/80 hover:text-[#FF6B2C]' : 'text-white/70 hover:text-[#FF7A1A]'} transition-all duration-300 relative py-2 nav-link-underline uppercase whitespace-nowrap ${
-                                isScrolled ? "tracking-widest" : "tracking-[0.16em]"
-                            }`}
-                        >
-                            {item}
-                        </a>
-                    ))}
+                    {['Destinations', 'AI Planner'].map((item) => {
+                        const itemPath = item === 'AI Planner' ? '/ai-planner' : item === 'Destinations' ? '/destinations' : `#${item.toLowerCase().replace(' ', '-')}`;
+                        const isActive = pathname === itemPath || pathname?.startsWith(`${itemPath}/`);
+                        return (
+                            <a
+                                key={item}
+                                href={itemPath}
+                                className={`font-mono text-[11px] font-bold ${
+                                    isActive
+                                        ? 'text-[#FF6B2C]' 
+                                        : isLightPage ? 'text-[#1F1F1F]/80 hover:text-[#FF6B2C]' : 'text-white/70 hover:text-[#FF7A1A]'
+                                } transition-all duration-300 relative py-2 ${!isActive ? 'nav-link-underline' : ''} uppercase whitespace-nowrap ${
+                                    isScrolled ? "tracking-widest" : "tracking-[0.16em]"
+                                }`}
+                            >
+                                {item}
+                                {isActive && (
+                                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#FF6B2C] rounded-full" />
+                                )}
+                            </a>
+                        );
+                    })}
                 </div>
 
                 {/* Center: Logo (Centered on desktop, left on mobile) */}
