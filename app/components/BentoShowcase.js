@@ -173,13 +173,7 @@ export default function BentoShowcase({ destinations, onCardClick }) {
             variants={{ hover: { opacity: 0, y: -10 } }}
             transition={{ duration: 0.3 }}
           >
-            <span 
-              className="text-xs font-bold px-3 py-1.5 rounded-full text-white backdrop-blur-md shadow-sm"
-              style={{ 
-                backgroundColor: (coverDest.badgeColor || '#FF6B2C') + 'dd',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.2)'
-              }}
-            >
+            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full text-white bg-black/40 backdrop-blur-md border border-white/20 shadow-sm">
               ★ TOP RATED
             </span>
             <div className="flex gap-2">
@@ -334,10 +328,7 @@ export default function BentoShowcase({ destinations, onCardClick }) {
                     variants={{ hover: { opacity: 0, y: -5 } }}
                     transition={{ duration: 0.3 }}
                   >
-                    <span 
-                      className="text-[9px] font-bold px-2 py-0.5 rounded-full text-white backdrop-blur-md shadow-sm tracking-wider uppercase"
-                      style={{ backgroundColor: (dest.badgeColor || '#F59E0B') + 'dd' }}
-                    >
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full text-white bg-black/40 backdrop-blur-md border border-white/20 shadow-sm tracking-wider uppercase">
                       {dest.badge.replace(/[^\x00-\x7F]/g, '')} {/* Remove emoji for space */}
                     </span>
                     {dest.weather && (

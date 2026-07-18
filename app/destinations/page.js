@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '../components/Header';
@@ -631,17 +631,11 @@ function DestCard({ dest, onClick, isHighlighted }) {
         <div className={`absolute inset-0 bg-linear-to-t ${dest.gradient}`} />
         
         {/* Top Info Bar: Category & Duration */}
-        <div className="absolute top-3 left-3 right-3 z-10 flex items-start justify-between">
-          <span
-            className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full text-white backdrop-blur-sm shadow-xs"
-            style={{ 
-              backgroundColor: dest.badgeColor + 'dd',
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.15)'
-            }}
-          >
+        <div className="absolute top-3 left-3 right-3 z-10 flex items-start justify-between gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full text-white bg-black/40 backdrop-blur-md border border-white/20 shadow-sm whitespace-nowrap overflow-hidden text-ellipsis">
             {dest.badge}
           </span>
-          <span className="text-[10px] font-semibold bg-black/50 text-white px-2 py-1 rounded-full backdrop-blur-sm border border-white/10 shadow-sm">
+          <span className="text-[10px] font-semibold bg-black/50 text-white px-2 py-1 rounded-full backdrop-blur-sm border border-white/10 shadow-sm whitespace-nowrap shrink-0">
             {dest.duration}
           </span>
         </div>
@@ -666,7 +660,7 @@ function DestCard({ dest, onClick, isHighlighted }) {
               </span>
             )}
           </div>
-          <span className="text-[10px] font-semibold bg-white/20 text-white px-2.5 py-1 rounded-md backdrop-blur-md border border-white/20 shadow-sm">
+          <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white shadow-sm">
             From {budgetStr}
           </span>
         </div>
@@ -900,10 +894,20 @@ export default function DestinationsPage() {
   const [visibleCount, setVisibleCount] = useState(8);
   const [highlightedDestId, setHighlightedDestId] = useState(null);
   const [viewMode, setViewMode] = useState('bento');
+  const [hoverMode, setHoverMode] = useState(null);
   const [bgIndex, setBgIndex] = useState(0);
   const [tickerIndex, setTickerIndex] = useState(0);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [isScrolledPastHero, setIsScrolledPastHero] = useState(false);
+  const resultsRef = useRef(null);
+
+  const scrollToResults = () => {
+    if (resultsRef.current) {
+      if (resultsRef.current.getBoundingClientRect().top > 150) {
+        resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -935,12 +939,14 @@ export default function DestinationsPage() {
   const toggleFilter = (id, setter) => {
     setter(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
     setVisibleCount(8); // reset pagination on filter
+    scrollToResults();
   };
 
   const clearAll = () => {
     setActiveVibes([]); setActiveBudgets([]); setActiveRegions([]); setSearchQuery('');
     setSortOption('Most Popular');
     setVisibleCount(8);
+    scrollToResults();
   };
 
   const removeFilter = (id, category) => {
@@ -948,6 +954,7 @@ export default function DestinationsPage() {
     if (category === 'budget') setActiveBudgets(prev => prev.filter(x => x !== id));
     if (category === 'region') setActiveRegions(prev => prev.filter(x => x !== id));
     setVisibleCount(8);
+    scrollToResults();
   };
 
   const hasFilters = activeVibes.length > 0 || activeBudgets.length > 0 || activeRegions.length > 0 || searchQuery.trim();
@@ -1161,180 +1168,231 @@ export default function DestinationsPage() {
       </section>
 
       {/* Filter Bar - Floating Control Deck */}
-      <section className="sticky top-24 z-40 max-w-6xl mx-auto w-full px-4 sm:px-6 -mt-8 mb-8 pointer-events-none">
-        {/* Solid sharp-cornered mask to hide scrolling content that peeks through the rounded corners */}
-        <div className={`absolute top-0 bottom-0 left-4 right-4 sm:left-6 sm:right-6 bg-[#FAF8F5] -z-10 transition-opacity duration-500 ${isScrolledPastHero ? 'opacity-100' : 'opacity-0'}`} />
-        <div className="bg-white/90 backdrop-blur-2xl rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.08)] border border-[#ECE8E2]/80 flex flex-col pointer-events-auto transition-shadow hover:shadow-[0_16px_50px_rgba(0,0,0,0.12)]">
-          <div className="px-5 pt-4 pb-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-            <div className="flex flex-wrap items-center gap-y-3 gap-x-2 min-w-max md:min-w-0">
-              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest shrink-0 mr-1">Vibe</span>
-              {VIBE_FILTERS.map(f => (
-                <FilterPill key={f.id} label={f.label} icon={f.icon} active={activeVibes.includes(f.id)} onClick={() => toggleFilter(f.id, setActiveVibes)} />
-              ))}
-              <div className="hidden md:block h-6 w-px bg-stone-200 mx-2 shrink-0" />
-              
-              <div className="w-full md:hidden" /> {/* Force wrap on mobile */}
-              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest shrink-0 mr-1">Budget</span>
-              {BUDGET_FILTERS.map(f => (
-                <FilterPill key={f.id} label={f.label} active={activeBudgets.includes(f.id)} onClick={() => toggleFilter(f.id, setActiveBudgets)} />
-              ))}
-              <div className="hidden md:block h-6 w-px bg-stone-200 mx-2 shrink-0" />
-              
-              <div className="w-full md:hidden" /> {/* Force wrap on mobile */}
-              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest shrink-0 mr-1">Region</span>
-              {REGION_FILTERS.map(f => (
-                <FilterPill key={f.id} label={f.label} active={activeRegions.includes(f.id)} onClick={() => toggleFilter(f.id, setActiveRegions)} />
-              ))}
-              {hasFilters && (
-                <>
-                  <div className="h-6 w-px bg-stone-200 mx-2 shrink-0" />
-                  <button type="button" onClick={clearAll} className="text-[11px] font-bold text-stone-400 hover:text-[#FF6B2C] transition-colors whitespace-nowrap px-2 shrink-0">Clear all ×</button>
-                </>
-              )}
-            </div>
-          </div>
-          
-          {/* Active Chips & Sort Row */}
-          <div className="px-5 py-3 flex items-center justify-between border-t border-stone-100 bg-[#FAF8F5]/50 rounded-b-2xl">
-            <div className="flex items-center gap-2 overflow-x-auto flex-1 pr-4" style={{ scrollbarWidth: 'none' }}>
-              {hasFilters ? (
-                <span className="text-[11px] font-bold text-[#FF6B2C] shrink-0">{filteredDests.length} destinations match</span>
-              ) : (
-                <span className="text-[11px] font-bold text-stone-400 shrink-0">Filter your perfect trip</span>
-              )}
-              {activeChips.length > 0 && <div className="h-3 w-px bg-stone-300 mx-1 shrink-0" />}
-              {activeChips.map(chip => (
-                <button
-                  key={chip.id}
-                  onClick={() => removeFilter(chip.id, chip.type)}
-                  className="flex items-center gap-1 bg-white border border-stone-200 shadow-xs text-stone-600 px-2 py-0.5 rounded-md text-[10px] font-bold hover:bg-stone-50 hover:border-stone-300 hover:text-stone-900 transition-all shrink-0"
-                >
-                  {chip.label} <span className="text-stone-400 ml-0.5 hover:text-stone-900">×</span>
-                </button>
-              ))}
+      {viewMode === 'bento' && (
+        <section className="sticky top-24 z-40 max-w-6xl mx-auto w-full px-4 sm:px-6 -mt-8 mb-8 pointer-events-none">
+          {/* Solid sharp-cornered mask to hide scrolling content that peeks through the rounded corners */}
+          <div className={`absolute top-0 bottom-0 left-4 right-4 sm:left-6 sm:right-6 bg-[#FAF8F5] -z-10 transition-opacity duration-500 ${isScrolledPastHero ? 'opacity-100' : 'opacity-0'}`} />
+          <div className="bg-white/90 backdrop-blur-2xl rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.08)] border border-[#ECE8E2]/80 flex flex-col pointer-events-auto transition-shadow hover:shadow-[0_16px_50px_rgba(0,0,0,0.12)]">
+            <div className="px-5 pt-4 pb-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+              <div className="flex flex-wrap items-center gap-y-3 gap-x-2 min-w-max md:min-w-0">
+                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest shrink-0 mr-1">Vibe</span>
+                {VIBE_FILTERS.map(f => (
+                  <FilterPill key={f.id} label={f.label} icon={f.icon} active={activeVibes.includes(f.id)} onClick={() => toggleFilter(f.id, setActiveVibes)} />
+                ))}
+                <div className="hidden md:block h-6 w-px bg-stone-200 mx-2 shrink-0" />
+                
+                <div className="w-full md:hidden" /> {/* Force wrap on mobile */}
+                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest shrink-0 mr-1">Budget</span>
+                {BUDGET_FILTERS.map(f => (
+                  <FilterPill key={f.id} label={f.label} active={activeBudgets.includes(f.id)} onClick={() => toggleFilter(f.id, setActiveBudgets)} />
+                ))}
+                <div className="hidden md:block h-6 w-px bg-stone-200 mx-2 shrink-0" />
+                
+                <div className="w-full md:hidden" /> {/* Force wrap on mobile */}
+                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest shrink-0 mr-1">Region</span>
+                {REGION_FILTERS.map(f => (
+                  <FilterPill key={f.id} label={f.label} active={activeRegions.includes(f.id)} onClick={() => toggleFilter(f.id, setActiveRegions)} />
+                ))}
+                {hasFilters && (
+                  <>
+                    <div className="h-6 w-px bg-stone-200 mx-2 shrink-0" />
+                    <button type="button" onClick={clearAll} className="text-[11px] font-bold text-stone-400 hover:text-[#FF6B2C] transition-colors whitespace-nowrap px-2 shrink-0">Clear all ×</button>
+                  </>
+                )}
+              </div>
             </div>
             
-            <div className="flex items-center gap-3 shrink-0">
-              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest hidden sm:inline">Sort</span>
-              <select
-                value={sortOption}
-                onChange={(e) => setSortOption(e.target.value)}
-                className="bg-white shadow-xs border border-stone-200 text-stone-700 text-xs font-semibold rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#FF6B2C] focus:ring-1 focus:ring-[#FF6B2C]/20 cursor-pointer transition-all"
-              >
-                <option>Most Popular</option>
-                <option>Highest Rated</option>
-                <option>Most Affordable</option>
-                <option>Newest</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-12">
-        {/* View Mode Toggle & Command Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-200">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setViewMode('bento')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs ${
-                viewMode === 'bento'
-                  ? 'bg-[#1F1F1F] text-white shadow-md'
-                  : 'bg-white border border-stone-200 text-stone-600 hover:border-stone-400'
-              }`}
-            >
-              <span>▦</span>
-              <span>Magazine Bento & Grid</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('atlas')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs ${
-                viewMode === 'atlas'
-                  ? 'bg-[#FF6B2C] text-white shadow-md shadow-[#FF6B2C]/30'
-                  : 'bg-white border border-stone-200 text-stone-600 hover:border-stone-400'
-              }`}
-            >
-              <span>◉</span>
-              <span>AI Atlas & Radar Mode</span>
-            </button>
-          </div>
-          <div className="flex items-center gap-2 text-xs text-stone-500 font-mono">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>{viewMode === 'bento' ? 'Editorial High-Contrast Showcase' : 'Dark-Mode Telemetry Feed'}</span>
-          </div>
-        </div>
-
-        {viewMode === 'atlas' ? (
-          <section className="pt-2">
-            <AtlasRadarMap destinations={filteredDests} onCardClick={handleUseTemplate} />
-          </section>
-        ) : (
-          <>
-            {/* Bento Showcase for Trending */}
-            {!hasFilters && (
-              <section>
-                <hr className="border-stone-300 mb-6" />
-                <div className="flex items-center justify-between mb-5">
-                  <div>
-                    <h2 className="text-sm font-bold text-[#FF6B2C] uppercase tracking-[0.2em] flex items-center gap-2">
-                      <span>FEATURED — ISSUE 47</span>
-                      <span className="text-[10px] font-mono font-bold bg-[#FF6B2C]/15 text-[#FF6B2C] px-2 py-0.5 rounded-full border border-[#FF6B2C]/30">Trending This Month</span>
-                    </h2>
-                    <p className="text-xl font-extrabold text-[#1F1F1F] mt-1 tracking-tight">Top-selected AI destinations</p>
-                  </div>
-                  <a href="#all-destinations" className="text-xs font-bold text-[#FF6B2C] hover:underline">Browse all below ↓</a>
-                </div>
-                <BentoShowcase destinations={trendingDests} onCardClick={handleUseTemplate} />
-              </section>
-            )}
-
-            {/* All destinations grid */}
-            <section id="all-destinations" className="pt-4">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h2 className="text-xl font-extrabold text-[#1F1F1F] tracking-tight">
-                {hasFilters
-                  ? `${filteredDests.length} destination${filteredDests.length !== 1 ? 's' : ''} found`
-                  : "✈️ Editor's Picks"}
-              </h2>
-              {!hasFilters && <p className="text-sm text-stone-500 mt-0.5">Curated itinerary templates, ready to customize</p>}
-            </div>
-          </div>
-
-          {filteredDests.length === 0 ? (
-            <div className="text-center py-24 px-4 bg-white border border-dashed border-stone-200 rounded-3xl shadow-sm max-w-2xl mx-auto">
-              <span className="text-5xl block mb-4">🏜️</span>
-              <h3 className="text-xl font-bold text-[#1F1F1F] mb-2">Can't find your match?</h3>
-              <p className="text-sm text-stone-500 mb-6 max-w-md mx-auto">Let our AI build something custom. Describe your dream destination, vibe, and budget, and we'll craft the perfect itinerary.</p>
-              <a href="/ai-planner" className="inline-block px-6 py-3 bg-[#FF6B2C] text-white font-bold text-sm rounded-full hover:bg-[#E55A20] transition-colors shadow-md hover:shadow-[0_6px_20px_rgba(255,107,44,0.3)] hover:scale-105 active:scale-95">
-                Go to AI Planner ✨
-              </a>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 pt-2">
-                {filteredDests.slice(0, visibleCount).map(dest => (
-                  <DestCard key={dest.id} dest={dest} onClick={handleUseTemplate} isHighlighted={highlightedDestId === dest.id} />
+            {/* Active Chips & Sort Row */}
+            <div className="px-5 py-3 flex items-center justify-between border-t border-stone-100 bg-[#FAF8F5]/50 rounded-b-2xl">
+              <div className="flex items-center gap-2 overflow-x-auto flex-1 pr-4" style={{ scrollbarWidth: 'none' }}>
+                {hasFilters ? (
+                  <span className="text-[11px] font-bold text-[#FF6B2C] shrink-0">{filteredDests.length} destinations match</span>
+                ) : (
+                  <span className="text-[11px] font-bold text-stone-400 shrink-0">Filter your perfect trip</span>
+                )}
+                {activeChips.length > 0 && <div className="h-3 w-px bg-stone-300 mx-1 shrink-0" />}
+                {activeChips.map(chip => (
+                  <button
+                    key={chip.id}
+                    onClick={() => removeFilter(chip.id, chip.type)}
+                    className="flex items-center gap-1.5 bg-[#fe7717]/10 border border-[#fe7717]/20 text-[#fe7717] px-2.5 py-1 rounded-full text-[10px] font-bold hover:bg-[#fe7717]/20 hover:border-[#fe7717]/30 transition-all shrink-0 group"
+                  >
+                    {chip.label} <span className="text-[#fe7717]/50 text-xs leading-none font-normal group-hover:text-[#fe7717] transition-colors">×</span>
+                  </button>
                 ))}
               </div>
               
-              {visibleCount < filteredDests.length && (
-                <div className="pt-10 flex justify-center">
-                  <button
-                    onClick={() => setVisibleCount(prev => prev + 8)}
-                    className="px-6 py-2.5 bg-white border border-stone-200 text-stone-700 font-bold text-sm rounded-full shadow-sm hover:border-stone-300 hover:bg-stone-50 transition-all hover:-translate-y-0.5 active:scale-95"
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest hidden sm:inline">Sort</span>
+                <div className="relative group">
+                  <select
+                    value={sortOption}
+                    onChange={(e) => setSortOption(e.target.value)}
+                    className="appearance-none bg-white shadow-xs border border-stone-200 group-hover:border-stone-300 text-stone-700 text-[11px] font-bold rounded-full pl-3 pr-8 py-1.5 focus:outline-none focus:border-[#fe7717] focus:ring-1 focus:ring-[#fe7717]/20 cursor-pointer transition-all"
                   >
-                    Load More Destinations ↓
-                  </button>
+                    <option>Most Popular</option>
+                    <option>Highest Rated</option>
+                    <option>Most Affordable</option>
+                    <option>Newest</option>
+                  </select>
+                  <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400 group-hover:text-stone-600 transition-colors">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </div>
                 </div>
-              )}
-            </>
-          )}
+              </div>
+            </div>
+          </div>
         </section>
-        </>
       )}
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-12">
+        {/* View Mode Toggle & Command Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-200 hover:relative hover:z-50">
+          <div className="relative flex items-center bg-stone-200/50 p-1 rounded-full border border-stone-200/80 shadow-inner hover:z-50">
+            {['bento', 'atlas'].map((mode) => (
+              <div
+                key={mode}
+                role="button"
+                tabIndex={0}
+                onMouseEnter={() => setHoverMode(mode)}
+                onMouseLeave={() => setHoverMode(null)}
+                onClick={() => setViewMode(mode)}
+                className={`relative z-10 cursor-pointer flex items-center gap-2 px-5 py-2 rounded-full text-[11px] font-bold transition-colors ${
+                  viewMode === mode ? 'text-white font-bold' : 'text-stone-500 hover:text-[#fe7717]'
+                }`}
+                title={mode === 'bento' ? 'Magazine Bento & Grid' : 'AI Atlas & Radar Mode'}
+              >
+                {viewMode === mode && (
+                  <motion.div
+                    layoutId="view-toggle"
+                    className="absolute inset-0 bg-[#fe7717] rounded-full shadow-xs border border-stone-200/50"
+                    transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
+                  />
+                )}
+                <span className="relative z-10">{mode === 'bento' ? '▦' : '◉'}</span>
+                <span className="relative z-10 uppercase tracking-widest">{mode === 'bento' ? 'Magazine View' : 'Radar View'}</span>
+                
+                {/* Hover Preview Thumbnail */}
+                <AnimatePresence>
+                  {hoverMode === mode && viewMode !== mode && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 5, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 bg-stone-900 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-stone-200/20 overflow-hidden pointer-events-none z-50"
+                      style={{ width: 320, height: mode === 'bento' ? 240 : 200 }}
+                    >
+                      {mode === 'bento' ? (
+                        <div style={{ width: 1024, height: 768, transform: 'scale(0.3125)', transformOrigin: 'top left' }} className="absolute top-0 left-0 bg-white pt-8 px-6">
+                          <BentoShowcase destinations={trendingDests} onCardClick={() => {}} />
+                        </div>
+                      ) : (
+                        <div style={{ width: 1024, height: 640, transform: 'scale(0.3125)', transformOrigin: 'top left' }} className="absolute top-0 left-0 bg-[#0a0a0a] p-8">
+                          <AtlasRadarMap destinations={filteredDests} onCardClick={() => {}} />
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 text-xs text-stone-500 font-mono">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="transition-all duration-300">{viewMode === 'bento' ? 'Editorial High-Contrast Showcase' : 'Dark-Mode Telemetry Feed'}</span>
+          </div>
+        </div>
+
+        <div ref={resultsRef} className="scroll-mt-48">
+          <AnimatePresence mode="wait">
+          {viewMode === 'atlas' ? (
+            <motion.section 
+              key="atlas"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.3 }}
+              className="pt-2"
+            >
+              <AtlasRadarMap destinations={filteredDests} onCardClick={handleUseTemplate} />
+            </motion.section>
+          ) : (
+            <motion.div 
+              key="bento"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.3 }}
+              className="flex flex-col gap-12"
+            >
+              {/* Bento Showcase for Trending */}
+              {!hasFilters && (
+                <section>
+                  <hr className="border-stone-300 mb-6" />
+                  <div className="flex items-center justify-between mb-5">
+                    <div>
+                      <h2 className="text-sm font-bold text-[#FF6B2C] uppercase tracking-[0.2em] flex items-center gap-2">
+                        <span>FEATURED — ISSUE 47</span>
+                        <span className="text-[10px] font-mono font-bold bg-[#FF6B2C]/15 text-[#FF6B2C] px-2 py-0.5 rounded-full border border-[#FF6B2C]/30">Trending This Month</span>
+                      </h2>
+                      <p className="text-xl font-extrabold text-[#1F1F1F] mt-1 tracking-tight">Top-selected AI destinations</p>
+                    </div>
+                    <a href="#all-destinations" className="text-xs font-bold text-[#FF6B2C] hover:underline">Browse all below ↓</a>
+                  </div>
+                  <BentoShowcase destinations={trendingDests} onCardClick={handleUseTemplate} />
+                </section>
+              )}
+
+              {/* All destinations grid */}
+              <section id="all-destinations" className="pt-4">
+                <div className="flex items-center justify-between mb-5">
+                  <div>
+                    <h2 className="text-xl font-extrabold text-[#1F1F1F] tracking-tight">
+                      {hasFilters
+                        ? `${filteredDests.length} destination${filteredDests.length !== 1 ? 's' : ''} found`
+                        : "✈️ Editor's Picks"}
+                    </h2>
+                    {!hasFilters && <p className="text-sm text-stone-500 mt-0.5">Curated itinerary templates, ready to customize</p>}
+                  </div>
+                </div>
+
+                {filteredDests.length === 0 ? (
+                  <div className="text-center py-24 px-4 bg-white border border-dashed border-stone-200 rounded-3xl shadow-sm max-w-2xl mx-auto">
+                    <span className="text-5xl block mb-4">🏜️</span>
+                    <h3 className="text-xl font-bold text-[#1F1F1F] mb-2">Can't find your match?</h3>
+                    <p className="text-sm text-stone-500 mb-6 max-w-md mx-auto">Let our AI build something custom. Describe your dream destination, vibe, and budget, and we'll craft the perfect itinerary.</p>
+                    <a href="/ai-planner" className="inline-block px-6 py-3 bg-[#FF6B2C] text-white font-bold text-sm rounded-full hover:bg-[#E55A20] transition-colors shadow-md hover:shadow-[0_6px_20px_rgba(255,107,44,0.3)] hover:scale-105 active:scale-95">
+                      Go to AI Planner ✨
+                    </a>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 pt-2">
+                      {filteredDests.slice(0, visibleCount).map(dest => (
+                        <DestCard key={dest.id} dest={dest} onClick={handleUseTemplate} isHighlighted={highlightedDestId === dest.id} />
+                      ))}
+                    </div>
+                    
+                    {visibleCount < filteredDests.length && (
+                      <div className="pt-10 flex justify-center">
+                        <button
+                          onClick={() => setVisibleCount(prev => prev + 8)}
+                          className="px-6 py-2.5 bg-white border border-stone-200 text-stone-700 font-bold text-sm rounded-full shadow-sm hover:border-stone-300 hover:bg-stone-50 transition-all hover:-translate-y-0.5 active:scale-95"
+                        >
+                          Load More Destinations ↓
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </section>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        </div>
 
         {/* Bottom CTA */}
         <section className="rounded-3xl bg-[#1C1B1B] p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_20px_60px_rgba(0,0,0,0.12)] relative overflow-hidden">
