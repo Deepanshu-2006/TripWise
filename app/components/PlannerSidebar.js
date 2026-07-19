@@ -398,7 +398,17 @@ export default function PlannerSidebar({
   );
   const [selectedBudget, setSelectedBudget] = useState(() => extracted?.budget || 'standard');
   const [selectedPace, setSelectedPace] = useState(() => extracted?.travelStyle || 'balanced');
-  const [selectedDays, setSelectedDays] = useState(() => extracted?.duration || 3);
+  const [selectedDays, setSelectedDays] = useState(() => {
+    if (extracted?.duration) return extracted.duration;
+    if (rawPrompt) {
+      const match = rawPrompt.match(/\b(\d+)\s*days?\b/i);
+      if (match && match[1]) {
+        const d = parseInt(match[1], 10);
+        if (d > 0 && d <= 30) return d;
+      }
+    }
+    return 3;
+  });
 
   // State 3 Progress
   const [progressPercent, setProgressPercent] = useState(0);
@@ -480,11 +490,14 @@ export default function PlannerSidebar({
 
   // Sync when rawPrompt is updated from external click (e.g. clicking a destination card on the right radar map)
   useEffect(() => {
-    if (rawPrompt) {
+    if (rawPrompt && rawPrompt !== userPromptInput) {
       setUserPromptInput(rawPrompt);
-      if (step === 'input' || rawPrompt !== userPromptInput) {
-        setStep('parsing');
+      const match = rawPrompt.match(/\b(\d+)\s*days?\b/i);
+      if (match && match[1]) {
+        const d = parseInt(match[1], 10);
+        if (d > 0 && d <= 30) setSelectedDays(d);
       }
+      setStep('parsing');
     }
   }, [rawPrompt]);
 
@@ -617,6 +630,38 @@ export default function PlannerSidebar({
       }
     }
   };
+
+  const handlePromptTextChange = (e) => {
+    const newVal = e.target.value;
+    setUserPromptInput(newVal);
+    
+    // Look for X days in the prompt
+    const match = newVal.match(/\b(\d+)\s*days?\b/i);
+    if (match && match[1]) {
+      const parsedDays = parseInt(match[1], 10);
+      if (parsedDays > 0 && parsedDays <= 30) {
+        setSelectedDays(parsedDays);
+      }
+    }
+  };
+
+  const handleDaysCounterChange = (newDays) => {
+    setSelectedDays(newDays);
+    
+    setUserPromptInput((prev) => {
+      const current = prev || "";
+      const match = current.match(/\b(\d+)\s*days?\b/i);
+      if (match) {
+        // Replace the number
+        return current.replace(/\b(\d+)(\s*days?)\b/i, `${newDays}$2`);
+      } else {
+        // Append if not found
+        const trimmed = current.trim();
+        return trimmed ? `${trimmed} for ${newDays} days` : `${newDays} days`;
+      }
+    });
+  };
+
   const toggleInterest = (id) => {
     setSelectedInterests((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
@@ -780,7 +825,7 @@ export default function PlannerSidebar({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pr-2 -mr-3 scroll-smooth min-h-0">
+      <div data-lenis-prevent="true" className="flex-1 overflow-y-auto pr-2 -mr-3 scroll-smooth min-h-0">
         {/* STATE 0: Prompt Input Setup Page */}
         {step === 'input' && (
           <div className="space-y-8 animate-fade-in">
@@ -859,7 +904,7 @@ export default function PlannerSidebar({
                         <span className="text-sm shrink-0">{ex.emoji}</span>
                         <span className="font-semibold truncate text-stone-700 group-hover:text-stone-900">{ex.text}</span>
                       </div>
-                      <span className="text-[#FF6B2C] opacity-0 group-hover:opacity-100 transition-all font-bold text-xs shrink-0 translate-x-[-4px] group-hover:translate-x-0">
+                      <span className="text-[#FF6B2C] opacity-0 group-hover:opacity-100 transition-all font-bold text-xs shrink-0 -translate-x-1 group-hover:translate-x-0">
                         Try it →
                       </span>
                     </button>
@@ -868,7 +913,6 @@ export default function PlannerSidebar({
               </div>
             </div>
 
-            {/* Action Button: Grayed out disabled state / Solid filled orange enabled state */}
             <div className="pt-2">
               <button
                 type="button"
@@ -878,14 +922,21 @@ export default function PlannerSidebar({
                     setStep('parsing');
                   }
                 }}
-                className={`w-full py-4 px-6 rounded-2xl font-extrabold text-base transition-all duration-200 flex items-center justify-center gap-2.5 ${
+                className={`group relative w-full py-4 px-6 rounded-2xl font-extrabold text-base transition-all duration-300 flex items-center justify-center gap-2.5 overflow-hidden ${
                   userPromptInput.trim()
-                    ? 'bg-[#FF6B2C] text-white hover:bg-[#E55A20] active:scale-[0.98] shadow-lg hover:shadow-[0_8px_24px_rgba(255,107,44,0.35)] cursor-pointer'
+                    ? 'bg-linear-to-r from-[#FF6B2C] to-[#E55A20] text-white shadow-[0_8px_20px_rgba(255,107,44,0.4)] hover:shadow-[0_12px_30px_rgba(255,107,44,0.6)] hover:-translate-y-1 active:scale-[0.98] active:translate-y-0 cursor-pointer border border-[#FF854F]/30'
                     : 'bg-stone-200 text-stone-400 cursor-not-allowed opacity-60 border border-stone-300/40'
                 }`}
               >
-                <span>Plan My Trip</span>
-                <ArrowRightIcon />
+                {/* Hover Shine Effect */}
+                {userPromptInput.trim() && (
+                  <div className="absolute inset-0 w-full h-full bg-linear-to-r from-transparent via-white/30 to-transparent -skew-x-12 translate-x-[-150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out" />
+                )}
+                
+                <span className="relative z-10 tracking-wide drop-shadow-sm text-lg">Plan My Trip</span>
+                <div className="relative z-10 transition-transform duration-300 group-hover:translate-x-2">
+                  <ArrowRightIcon />
+                </div>
               </button>
             </div>
           </div>
@@ -923,7 +974,7 @@ export default function PlannerSidebar({
               </label>
               <textarea
                 value={userPromptInput}
-                onChange={(e) => setUserPromptInput(e.target.value)}
+                onChange={handlePromptTextChange}
                 rows={3}
                 className="w-full p-3 rounded-xl border border-[rgba(28,27,27,0.1)] bg-bg-white text-(--foreground) text-sm shadow-2xs focus:outline-none focus:ring-2 focus:ring-accent-orange/40 focus:border-accent-orange transition-all resize-none"
                 placeholder="E.g., 5 days in Tokyo focusing on street food and neon lights..."
@@ -1024,7 +1075,7 @@ export default function PlannerSidebar({
               <div className="flex items-center justify-between p-1.5 rounded-xl bg-bg-white border border-[rgba(28,27,27,0.1)] shadow-2xs">
                 <button
                   type="button"
-                  onClick={() => setSelectedDays(prev => Math.max(1, prev - 1))}
+                  onClick={() => handleDaysCounterChange(Math.max(1, selectedDays - 1))}
                   className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-stone-100 text-stone-500 font-bold transition-colors cursor-pointer"
                 >
                   –
@@ -1035,7 +1086,7 @@ export default function PlannerSidebar({
                 </div>
                 <button
                   type="button"
-                  onClick={() => setSelectedDays(prev => Math.min(14, prev + 1))}
+                  onClick={() => handleDaysCounterChange(Math.min(14, selectedDays + 1))}
                   className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-stone-100 text-stone-500 font-bold transition-colors cursor-pointer"
                 >
                   +
@@ -1518,7 +1569,7 @@ export default function PlannerSidebar({
                     className="group w-full h-12 px-5 rounded-2xl font-bold bg-linear-to-r from-[#FF6B2C] to-[#E65D20] text-white hover:from-[#FF7A3D] hover:to-[#FF6B2C] transition-all duration-300 ease-out text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-[0_8px_24px_rgba(255,107,44,0.3)] hover:shadow-[0_12px_32px_rgba(255,107,44,0.5)] hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
                   >
                     <span>📍 View Detailed Itinerary</span>
-                    <span className="transition-transform duration-300 ease-out group-hover:translate-x-1.5 flex items-center">
+                    <span className="transition-transform duration-300 ease-out group-hover:translate-x-1.5 flex items-center hover:font-bold hover:translate-1">
                       <ArrowRightIcon />
                     </span>
                   </button>
@@ -1594,6 +1645,7 @@ export default function PlannerSidebar({
           </div>
         )}
       </div>
+
 
       {/* Footer / Subtle Info */}
       <div className="pt-6 border-t border-[rgba(28,27,27,0.06)] mt-8 flex items-center justify-between text-[11px] text-secondary-text">
