@@ -223,7 +223,7 @@ export default function RealTimeAdjuster() {
                             {/* Cursor arrow element (absolute relative to phone mockup wrapper) */}
                             <div
                                 ref={cursorRef}
-                                className="mouse-cursor absolute pointer-events-none z-50 w-6 h-6 opacity-0"
+                                className="mouse-cursor absolute pointer-events-none z-50 w-3 h-5 opacity-0"
                                 style={{
                                     filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.6))',
                                     transformOrigin: 'top left',
@@ -231,7 +231,7 @@ export default function RealTimeAdjuster() {
                                     left: 0,
                                 }}
                             >
-                                <svg viewBox="0 0 24 24" className="w-full h-full fill-[#FF5B1D] stroke-white stroke-1">
+                                <svg viewBox="0 0 24 24" className="w-full h-full fill-[#000000] stroke-white stroke-1">
                                     <path d="M4.5 2.5 L22.5 12.5 L14.5 14.5 L20.5 20.5 L17.5 22.5 L11.5 16.5 L4.5 20.5 Z" />
                                 </svg>
                             </div>
@@ -243,13 +243,10 @@ export default function RealTimeAdjuster() {
                                 <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/3 to-white/8 pointer-events-none z-40" />
                                 <div className="absolute top-0 inset-x-0 h-32 bg-linear-to-b from-white/6 to-transparent pointer-events-none z-40" />
 
-                                {/* Earpiece Speaker Grille */}
-                                <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-12 h-0.75 bg-white/20 rounded-full z-30" />
-
                                 {/* iPhone 15 Pro Dynamic Island */}
-                                <div className="absolute top-3 left-1/2 -translate-x-1/2 w-28 h-7 rounded-full bg-black z-30 flex items-center justify-between px-2.5 border border-white/10 shadow-[0_4px_12px_rgba(0,0,0,0.9)]">
+                                <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-28 h-7 rounded-full bg-black z-30 flex items-center justify-between px-2.5 border border-white/10 shadow-[0_4px_12px_rgba(0,0,0,0.9)]">
                                     {/* Front Camera Lens */}
-                                    <div className="w-3 h-3 rounded-full bg-[#121116] border border-white/15 flex items-center justify-center shadow-inner">
+                                    <div className="w-3.5 h-3.5 rounded-full bg-[#121116] border border-white/15 flex items-center justify-center shadow-inner">
                                         <div className="w-1.5 h-1.5 rounded-full bg-blue-500/50 shadow-[0_0_4px_#3b82f6]" />
                                     </div>
                                     {/* FaceID & Recording Dot */}
@@ -262,16 +259,9 @@ export default function RealTimeAdjuster() {
                                 {/* iOS Status Bar */}
                                 <div className="pt-3 px-6 flex items-center justify-between z-20 text-white select-none shrink-0">
                                     <span className="text-[11px] font-bold tracking-tight font-sans">9:41</span>
-                                    <div className="flex items-center gap-1.5">
-                                        {/* Signal Bars */}
-                                        <div className="flex items-end gap-[1.5px] h-2.5">
-                                            <div className="w-0.5 h-1 bg-white rounded-t-[0.5px]" />
-                                            <div className="w-0.5 h-1.5 bg-white rounded-t-[0.5px]" />
-                                            <div className="w-0.5 h-2 bg-white rounded-t-[0.5px]" />
-                                            <div className="w-0.5 h-2.5 bg-white rounded-t-[0.5px]" />
-                                        </div>
+                                    <div className="flex items-center gap-2 opacity-90">
                                         {/* Wi-Fi Icon */}
-                                        <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                                        <svg className="w-3.5 h-3.5 text-bold fill-current" viewBox="0 0 24 24">
                                             <path d="M12 3c-4.97 0-9.5 2.01-12.8 5.28l1.4 1.42C3.62 6.74 7.6 5 12 5c4.4 0 8.38 1.74 11.4 4.7l1.4-1.42C21.5 5.01 16.97 3 12 3zm0 5c-3.59 0-6.83 1.46-9.19 3.82l1.41 1.41C6.15 11.3 9.04 10 12 10c2.96 0 5.85 1.3 7.78 3.23l1.41-1.41C18.83 9.46 15.59 8 12 8zm0 5c-2.21 0-4.21.9-5.66 2.34l1.41 1.41C8.84 15.66 10.34 15 12 15c1.66 0 3.16.66 4.24 1.76l1.41-1.41C16.21 13.9 14.21 13 12 13zm0 5l-2.83 2.83C10.02 21.68 10.98 22 12 22s1.98-.32 2.83-1.17L12 18z"/>
                                         </svg>
                                         {/* Battery Icon */}

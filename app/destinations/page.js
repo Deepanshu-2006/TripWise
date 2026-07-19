@@ -666,7 +666,7 @@ function DestCard({ dest, onClick, isHighlighted }) {
         </div>
       </div>
 
-      <div className="flex flex-col p-5 flex-1 bg-white h-[14.5rem]">
+      <div className="flex flex-col p-5 flex-1 bg-white h-58">
         <div className="mb-2">
           {/* Editorial hierarchy: Country above City */}
           <div className="flex items-center justify-between mb-1.5">
