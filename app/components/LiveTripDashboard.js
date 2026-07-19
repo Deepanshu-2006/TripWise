@@ -246,7 +246,7 @@ export default function LiveTripDashboard({
         <div 
           className={`absolute inset-0 bg-[#FFFFFF] z-50 flex items-center justify-center transition-all duration-1000 ease-in-out transform-gpu ${
             isFadingOutGlobe 
-              ? 'opacity-0 scale-105 pointer-events-none' 
+              ? 'opacity-0 scale-[1.5] pointer-events-none' 
               : 'opacity-100 scale-100'
           } ${
             isTransitioning || isGenerating ? 'pointer-events-none' : 'pointer-events-auto'
