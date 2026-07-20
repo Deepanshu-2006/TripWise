@@ -130,7 +130,7 @@ export default function BentoShowcase({ destinations, onCardClick }) {
           className="group relative w-full lg:w-5/12 h-125 lg:h-full rounded-3xl overflow-hidden bg-stone-900 cursor-pointer shadow-[0_12px_40px_rgba(0,0,0,0.12)] border border-[#ECE8E2]/60 flex flex-col p-6 lg:p-8"
         >
           {coverDest.imageUrl && (
-            <motion.div className="absolute inset-[-10%] w-[120%] h-[120%]" style={{ y: yParallax }}>
+            <motion.div className="absolute inset-[-10%] w-[120%] h-[120%] will-change-transform" style={{ y: yParallax }}>
               <img 
                 src={coverDest.imageUrl} 
                 alt={coverDest.name} 
@@ -220,7 +220,7 @@ export default function BentoShowcase({ destinations, onCardClick }) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 1.2 }}
-                className="absolute inset-[-10%] w-[120%] h-[120%]"
+                className="absolute inset-[-10%] w-[120%] h-[120%] will-change-transform"
                 style={{ y: yParallax }}
               >
                 <img 
@@ -295,7 +295,7 @@ export default function BentoShowcase({ destinations, onCardClick }) {
                   className="group relative w-full h-62.5 sm:h-full rounded-3xl overflow-hidden bg-stone-900 cursor-pointer shadow-[0_12px_32px_rgba(0,0,0,0.1)] border border-[#ECE8E2]/60 flex flex-col p-5"
                 >
                   {dest.imageUrl && (
-                    <motion.div className="absolute inset-[-10%] w-[120%] h-[120%]" style={{ y: yParallax }}>
+                    <motion.div className="absolute inset-[-10%] w-[120%] h-[120%] will-change-transform" style={{ y: yParallax }}>
                       <img 
                         src={dest.imageUrl} 
                         alt={dest.name} 

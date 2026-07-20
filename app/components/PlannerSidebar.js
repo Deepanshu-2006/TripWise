@@ -211,7 +211,7 @@ export default function PlannerSidebar({
     if (!opts.isScrollSync && typeof document !== 'undefined' && idx !== null && idx !== undefined) {
       const cardEl = document.getElementById(`itinerary-card-${selectedDayIndex}-${idx}`);
       if (cardEl) {
-        cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        cardEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }
   }, [onSelectStop, selectedDayIndex]);
@@ -240,7 +240,7 @@ export default function PlannerSidebar({
     if (selectedStopIdx !== null && selectedStopIdx !== undefined && typeof document !== 'undefined') {
       const cardEl = document.getElementById(`itinerary-card-${selectedDayIndex}-${selectedStopIdx}`);
       if (cardEl) {
-        cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        cardEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }
   }, [selectedStopIdx, selectedDayIndex]);
@@ -825,7 +825,7 @@ export default function PlannerSidebar({
   };
 
   return (
-    <div className={`w-full h-full min-h-160 bg-[#FAF3EE] text-stone-900 ${step === 'progress' && showFinalCTA && itinerary ? 'p-4 md:p-6' : 'p-6 md:p-8'} flex flex-col justify-between font-sans select-none border-r border-stone-200/60`}>
+    <div className={`w-full flex-1 min-h-full bg-[#FAF3EE] text-stone-900 ${step === 'progress' && showFinalCTA && itinerary ? 'p-4 md:p-6' : 'p-6 md:p-8'} flex flex-col justify-between font-sans select-none border-r border-stone-200/60`}>
       {/* Top Header Brand / Label with Sticky wrapper */}
       <div className="sticky top-0 z-30 bg-[#FAF3EE] pt-2 pb-4 -mx-6 md:-mx-8 px-6 md:px-8 border-b border-stone-200/50 mb-6">
         <div className="flex items-center justify-between mb-4">
@@ -1534,7 +1534,7 @@ export default function PlannerSidebar({
                       initial={{ opacity: 1 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0, y: -10, transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] } }}
-                      className="relative flex flex-col gap-3.5 w-full"
+                      className="relative flex flex-col gap-3.5 w-full pb-6"
                     >
                       {/* Point 5 & 1: Subtle orange continuous vertical timeline connecting stops */}
                       <div className="absolute left-8 top-8 bottom-8 w-0.5 bg-linear-to-b from-[#FF6B2C] via-[#FF6B2C]/50 to-[#FF6B2C]/20 pointer-events-none z-0" />
@@ -1585,7 +1585,7 @@ export default function PlannerSidebar({
                                 handleSelectStop(isSelected ? null : stopNum);
                                 handleHoverStop(stopNum);
                               }}
-                              className={`w-full box-border p-4 rounded-2xl border transition-all duration-300 ease-out flex flex-col gap-3 cursor-pointer select-none relative z-10 ${
+                              className={`scroll-mt-40 w-full box-border p-4 rounded-2xl border transition-all duration-300 ease-out flex flex-col gap-3 cursor-pointer select-none relative z-10 ${
                                 dragOverStopIdx === idx
                                   ? 'border-[#FF6B2C] border-2 bg-[#FFF8F5] scale-[1.02] ring-4 ring-[#FF6B2C]/30 shadow-2xl z-30'
                                   : draggedStopIdx === idx
@@ -1769,12 +1769,12 @@ export default function PlannerSidebar({
             )}
           </div>
         )}
+      </div>
 
-        {/* Footer / Subtle Info */}
-        <div className="pt-6 border-t border-[rgba(28,27,27,0.06)] mt-8 flex items-center justify-between text-[11px] text-secondary-text pb-4">
-          <span>Powered by TripWise AI</span>
-          <span>Real-Time Optimization Engine</span>
-        </div>
+      {/* Footer / Subtle Info - Pinned to bottom */}
+      <div className="pt-4 mt-auto border-t border-[rgba(28,27,27,0.06)] flex items-center justify-between text-[11px] text-secondary-text shrink-0">
+        <span>Powered by TripWise AI</span>
+        <span>Real-Time Optimization Engine</span>
       </div>
     </div>
   );

@@ -555,27 +555,10 @@ function DestCard({ dest, onClick, isHighlighted }) {
   const minBudget = dest.budget.includes('economy') ? 'Economy' : dest.budget.includes('standard') ? 'Standard' : 'Premium';
   const budgetStr = minBudget === 'Economy' ? '$ Economy' : minBudget === 'Standard' ? '$$ Standard' : '$$$ Premium';
 
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [isZooming, setIsZooming] = useState(false);
-
-  const handleMouseMove = (e) => {
-    if (isZooming) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left - rect.width / 2;
-    const y = e.clientY - rect.top - rect.height / 2;
-    setTilt({ 
-      x: -(y / (rect.height / 2)) * 5, 
-      y: (x / (rect.width / 2)) * 5 
-    });
-  };
-
-  const handleMouseLeave = () => {
-    if (!isZooming) setTilt({ x: 0, y: 0 });
-  };
 
   const handleClick = () => {
     setIsZooming(true);
-    setTilt({ x: 0, y: 0 }); // reset tilt for clean zoom
     setTimeout(() => {
       onClick(dest);
     }, 450);
@@ -597,18 +580,12 @@ function DestCard({ dest, onClick, isHighlighted }) {
       <motion.div
         id={`dest-card-${dest.id}`}
         onClick={handleClick}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        className={`group cursor-pointer rounded-2xl overflow-hidden bg-white border ${isHighlighted ? 'border-[#FF6B2C]' : 'border-[#ECE8E2]'} shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.15)] flex flex-col relative ${isZooming ? 'z-101' : 'z-10'}`}
+        className={`group cursor-pointer rounded-2xl overflow-hidden bg-white border ${isHighlighted ? 'border-[#FF6B2C]' : 'border-stone-200/50'} shadow-sm hover:border-[#FF6B2C]/30 hover:shadow-[0_20px_50px_rgba(255,107,44,0.2)] flex flex-col relative ${isZooming ? 'z-101 scale-105' : 'z-10 hover:-translate-y-1.5'} transition-all duration-300 ease-out`}
         style={{ 
-          transform: isZooming 
-            ? 'scale(1.05)' 
-            : `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateY(${tilt.x === 0 ? '0' : '-6px'})`,
-          transition: isZooming ? 'transform 0.45s ease-in-out' : (tilt.x === 0 ? 'all 0.5s ease-out' : 'box-shadow 0.3s ease-out'),
           boxShadow: isHighlighted ? '0 0 0 2px #FF6B2C, 0 0 30px rgba(255,107,44,0.4)' : undefined
         }}
       >
-        <div className="relative h-44 overflow-hidden" style={{ backgroundColor: dest.bgColor }}>
+        <div className="relative h-52 overflow-hidden" style={{ backgroundColor: dest.bgColor }}>
           <motion.svg 
             className="absolute top-0 left-0 w-full h-8 z-10 pointer-events-none" 
             viewBox="0 0 100 10" preserveAspectRatio="none"
@@ -632,10 +609,10 @@ function DestCard({ dest, onClick, isHighlighted }) {
         
         {/* Top Info Bar: Category & Duration */}
         <div className="absolute top-3 left-3 right-3 z-10 flex items-start justify-between gap-2">
-          <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full text-white bg-black/40 backdrop-blur-md border border-white/20 shadow-sm whitespace-nowrap overflow-hidden text-ellipsis">
+          <span className="text-[10px] font-bold uppercase tracking-[0.15em] px-2.5 py-1 rounded-full text-white/95 bg-black/30 backdrop-blur-md border border-white/10 shadow-sm whitespace-nowrap overflow-hidden text-ellipsis">
             {dest.badge}
           </span>
-          <span className="text-[10px] font-semibold bg-black/50 text-white px-2 py-1 rounded-full backdrop-blur-sm border border-white/10 shadow-sm whitespace-nowrap shrink-0">
+          <span className="text-[10px] font-semibold bg-black/40 text-white/90 px-2 py-1 rounded-full backdrop-blur-sm border border-white/10 shadow-sm whitespace-nowrap shrink-0">
             {dest.duration}
           </span>
         </div>
@@ -670,7 +647,7 @@ function DestCard({ dest, onClick, isHighlighted }) {
         <div className="mb-2">
           {/* Editorial hierarchy: Country above City */}
           <div className="flex items-center justify-between mb-1.5">
-            <p className="text-[9px] text-stone-400 font-extrabold uppercase tracking-[0.2em]">{dest.country}</p>
+            <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest">{dest.country}</p>
             <div className="flex items-center gap-1">
               <Stars rating={dest.rating} />
               <span className="text-[10px] font-bold text-stone-800 ml-0.5">
@@ -679,18 +656,18 @@ function DestCard({ dest, onClick, isHighlighted }) {
               <span className="text-[9px] font-medium text-stone-400 ml-0.5 hidden sm:inline-block">({dest.reviews.toLocaleString()})</span>
             </div>
           </div>
-          <h3 className="font-extrabold text-[#1F1F1F] text-xl leading-tight group-hover:text-[#FF6B2C] transition-colors truncate">{dest.name}</h3>
+          <h3 className="font-serif font-bold text-[#1F1F1F] text-2xl tracking-tight leading-tight group-hover:text-[#FF6B2C] transition-colors truncate">{dest.name}</h3>
         </div>
 
         <p className="text-xs text-stone-500 leading-relaxed truncate">{dest.tagline}</p>
 
         {/* AI Tip Box - Clean minimal look */}
         {dest.aiTip && (
-          <div className="mt-3.5 mb-4 rounded-xl p-3 bg-stone-50/80 border border-stone-100 flex items-start gap-2.5">
-            <div className="shrink-0 w-5 h-5 rounded-full bg-linear-to-br from-amber-100 to-orange-100 border border-orange-200/50 flex items-center justify-center shadow-xs">
+          <div className="mt-3.5 mb-4 rounded-xl p-3 bg-[#FF6B2C]/[0.03] border border-[#FF6B2C]/10 flex items-start gap-2.5">
+            <div className="shrink-0 w-5 h-5 rounded-full bg-white border border-[#FF6B2C]/20 flex items-center justify-center shadow-xs">
               <span className="text-[10px]">✨</span>
             </div>
-            <p className="text-[11px] font-medium text-stone-600 leading-snug line-clamp-2">
+            <p className="text-[11px] font-medium text-stone-700/90 leading-snug line-clamp-2">
               {dest.aiTip.replace('💡 AI Verdict: ', '').replace('💡 AI Tip: ', '')}
             </p>
           </div>
@@ -700,9 +677,9 @@ function DestCard({ dest, onClick, isHighlighted }) {
         <div className="mt-auto pt-1">
           <button
             type="button"
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-stone-200 text-stone-600 group-hover:bg-[#FF6B2C] group-hover:border-[#FF6B2C] group-hover:text-white font-bold text-xs transition-all duration-300 shadow-xs group-hover:shadow-[0_8px_20px_rgba(255,107,44,0.25)]"
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-stone-100/50 border border-transparent text-stone-600 group-hover:bg-[#FF6B2C] group-hover:text-white font-bold text-xs transition-all duration-300 group-hover:shadow-[0_8px_20px_rgba(255,107,44,0.25)]"
           >
-            <span className="uppercase tracking-wider text-[10px]">Customize AI Prompt</span>
+            <span className="uppercase tracking-wider text-[10px]">Plan trip to {dest.name.split(',')[0]}</span>
             <span className="group-hover:translate-x-1 transition-transform duration-200">
               <ArrowRightIcon />
             </span>
@@ -718,27 +695,10 @@ function TrendingCard({ dest, onClick, isHighlighted }) {
   const minBudget = dest.budget.includes('economy') ? 'Economy' : dest.budget.includes('standard') ? 'Standard' : 'Premium';
   const budgetStr = minBudget === 'Economy' ? '$ Economy' : minBudget === 'Standard' ? '$$ Standard' : '$$$ Premium';
 
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [isZooming, setIsZooming] = useState(false);
-
-  const handleMouseMove = (e) => {
-    if (isZooming) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left - rect.width / 2;
-    const y = e.clientY - rect.top - rect.height / 2;
-    setTilt({ 
-      x: -(y / (rect.height / 2)) * 5, 
-      y: (x / (rect.width / 2)) * 5 
-    });
-  };
-
-  const handleMouseLeave = () => {
-    if (!isZooming) setTilt({ x: 0, y: 0 });
-  };
 
   const handleClick = () => {
     setIsZooming(true);
-    setTilt({ x: 0, y: 0 });
     setTimeout(() => {
       onClick(dest);
     }, 450);
@@ -760,18 +720,12 @@ function TrendingCard({ dest, onClick, isHighlighted }) {
       <motion.div
         id={`dest-card-${dest.id}`}
         onClick={handleClick}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        className={`group cursor-pointer shrink-0 w-64 rounded-2xl overflow-hidden border ${isHighlighted ? 'border-[#FF6B2C]' : 'border-[#ECE8E2]'} shadow-[0_4px_20px_rgba(0,0,0,0.07)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.15)] bg-white flex flex-col relative ${isZooming ? 'z-101' : 'z-10'}`}
+        className={`group cursor-pointer shrink-0 w-64 rounded-2xl overflow-hidden border ${isHighlighted ? 'border-[#FF6B2C]' : 'border-stone-200/50'} shadow-sm hover:border-[#FF6B2C]/30 hover:shadow-[0_20px_50px_rgba(255,107,44,0.2)] bg-white flex flex-col relative ${isZooming ? 'z-101 scale-105' : 'z-10 hover:-translate-y-1.5'} transition-all duration-300 ease-out`}
         style={{ 
-          transform: isZooming 
-            ? 'scale(1.05)' 
-            : `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateY(${tilt.x === 0 ? '0' : '-6px'})`,
-          transition: isZooming ? 'transform 0.45s ease-in-out' : (tilt.x === 0 ? 'all 0.5s ease-out' : 'box-shadow 0.3s ease-out'),
           boxShadow: isHighlighted ? '0 0 0 2px #FF6B2C, 0 0 30px rgba(255,107,44,0.4)' : undefined
         }}
       >
-        <div className="relative h-36 overflow-hidden" style={{ backgroundColor: dest.bgColor }}>
+        <div className="relative h-44 overflow-hidden" style={{ backgroundColor: dest.bgColor }}>
           <motion.svg 
             className="absolute top-0 left-0 w-full h-8 z-10 pointer-events-none" 
             viewBox="0 0 100 10" preserveAspectRatio="none"
@@ -792,12 +746,12 @@ function TrendingCard({ dest, onClick, isHighlighted }) {
           <img src={dest.imageUrl} alt={dest.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
         )}
         <div className={`absolute inset-0 bg-linear-to-t ${dest.gradient}`} />
-        <div className="absolute bottom-0 left-0 right-0 p-3">
-          <p className="text-white font-bold text-sm drop-shadow-md group-hover:text-white/90 transition-colors">{dest.name}</p>
-          <div className="flex items-center justify-between">
-            <p className="text-white/80 text-xs">{dest.country}</p>
-            <span className="text-[9px] font-semibold bg-white/20 text-white px-1.5 py-0.5 rounded-full backdrop-blur-md border border-white/20">
-              {budgetStr}
+        <div className="absolute bottom-0 left-0 right-0 p-4 pt-8 bg-linear-to-t from-black/80 via-black/30 to-transparent">
+          <p className="text-white font-serif font-bold text-2xl drop-shadow-lg group-hover:text-[#FF6B2C] transition-colors">{dest.name}</p>
+          <div className="flex items-center justify-between mt-1">
+            <p className="text-white/90 text-xs font-bold tracking-wide uppercase">{dest.country}</p>
+            <span className="text-[10px] font-bold bg-white/20 text-white px-2 py-0.5 rounded-full backdrop-blur-md border border-white/20 shadow-sm">
+              From {budgetStr}
             </span>
           </div>
         </div>
@@ -845,10 +799,12 @@ function TrendingCard({ dest, onClick, isHighlighted }) {
         </div>
         <button
           type="button"
-          className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#FF6B2C]/8 hover:bg-[#FF6B2C] text-[#FF6B2C] hover:text-white font-semibold text-xs transition-all duration-200 border border-[#FF6B2C]/20 hover:border-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.25)] mt-auto"
+          className="w-full flex items-center justify-center gap-2 py-3 px-3 rounded-xl bg-stone-100/50 border border-transparent hover:bg-stone-200/50 text-stone-600 group-hover:bg-[#FF6B2C] group-hover:text-white font-bold text-xs transition-all duration-300 group-hover:shadow-[0_8px_20px_rgba(255,107,44,0.25)] mt-auto"
         >
-          <span>Use Prompt</span>
-          <ArrowRightIcon />
+          <span className="uppercase tracking-wider text-[10px]">Plan trip</span>
+          <span className="group-hover:translate-x-1 transition-transform duration-200">
+            <ArrowRightIcon />
+          </span>
         </button>
       </div>
       </motion.div>
@@ -909,12 +865,18 @@ export default function DestinationsPage() {
   };
 
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      // Show mask ONLY after the hero section (h-[550px] or h-[650px]) is completely scrolled past
-      const heroHeight = window.innerWidth >= 768 ? 650 : 550;
-      setIsScrolledPastHero(window.scrollY >= heroHeight - 10);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const heroHeight = window.innerWidth >= 768 ? 650 : 550;
+          setIsScrolledPastHero(window.scrollY >= heroHeight - 10);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     
     const bgInterval = setInterval(() => {
       setBgIndex((prev) => {
@@ -1041,7 +1003,7 @@ export default function DestinationsPage() {
             key={bgIndex}
             src={HERO_IMAGES[bgIndex].url}
             alt="Hero Background"
-            className="absolute inset-0 w-full h-full object-cover origin-center"
+            className="absolute inset-0 w-full h-full object-cover origin-center will-change-transform"
             initial={{ opacity: 0, scale: 1 }}
             animate={{ opacity: 1, scale: 1.15 }}
             exit={{ opacity: 0 }}
@@ -1171,7 +1133,7 @@ export default function DestinationsPage() {
         <section className="sticky top-24 z-40 max-w-6xl mx-auto w-full px-4 sm:px-6 -mt-8 mb-8 pointer-events-none">
           {/* Solid sharp-cornered mask to hide scrolling content that peeks through the rounded corners */}
           <div className={`absolute top-0 bottom-0 left-4 right-4 sm:left-6 sm:right-6 bg-[#FAF8F5] -z-10 transition-opacity duration-500 ${isScrolledPastHero ? 'opacity-100' : 'opacity-0'}`} />
-          <div className="bg-white/90 backdrop-blur-2xl rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.08)] border border-[#ECE8E2]/80 flex flex-col pointer-events-auto transition-shadow hover:shadow-[0_16px_50px_rgba(0,0,0,0.12)]">
+          <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.08)] border border-[#ECE8E2]/80 flex flex-col pointer-events-auto transition-shadow hover:shadow-[0_16px_50px_rgba(0,0,0,0.12)]">
             <div className="px-5 pt-4 pb-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
               <div className="flex flex-wrap items-center gap-y-3 gap-x-2 min-w-max md:min-w-0">
                 <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest shrink-0 mr-1">Vibe</span>
