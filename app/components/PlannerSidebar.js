@@ -391,6 +391,11 @@ export default function PlannerSidebar({
   // If a prompt was passed in (e.g. from demo controls or homepage), start at 'parsing'; otherwise start at 'input'
   const [step, setStep] = useState(() => (rawPrompt ? 'parsing' : 'input'));
   const [userPromptInput, setUserPromptInput] = useState(() => rawPrompt || '');
+  const [basecamp, setBasecamp] = useState('');
+  const [basecampSuggestions, setBasecampSuggestions] = useState([]);
+  const [isSearchingBasecamp, setIsSearchingBasecamp] = useState(false);
+  const [showBasecampDropdown, setShowBasecampDropdown] = useState(false);
+  const basecampSearchTimeoutRef = useRef(null);
 
   // State 2 Form Selections
   const [selectedInterests, setSelectedInterests] = useState(() =>
@@ -422,6 +427,80 @@ export default function PlannerSidebar({
   const [newStopCategory, setNewStopCategory] = useState('Highlight');
   const [newStopTitle, setNewStopTitle] = useState('');
   const [newStopDesc, setNewStopDesc] = useState('');
+
+  useEffect(() => {
+    // Dynamically load Google Maps script if a key is provided and not already loaded
+    if (typeof window !== 'undefined' && !window.google && process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }, []);
+
+  const fetchBasecampSuggestions = async (query) => {
+    if (!query || query.trim().length < 3) {
+      setBasecampSuggestions([]);
+      setShowBasecampDropdown(false);
+      return;
+    }
+    setIsSearchingBasecamp(true);
+
+    // 1. Google Places API (Requires NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in .env.local)
+    if (typeof window !== 'undefined' && window.google && window.google.maps && window.google.maps.places) {
+      const service = new window.google.maps.places.AutocompleteService();
+      // 'lodging' type strictly returns hotels, motels, and accommodations
+      service.getPlacePredictions({ input: query, types: ['lodging'] }, (predictions, status) => {
+        setIsSearchingBasecamp(false);
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+          setBasecampSuggestions(predictions.map(p => ({
+            place_id: p.place_id,
+            name: p.structured_formatting.main_text,
+            display_name: p.description
+          })));
+          setShowBasecampDropdown(true);
+        } else {
+          setBasecampSuggestions([]);
+          setShowBasecampDropdown(false);
+        }
+      });
+      return;
+    }
+
+    // 2. Fallback: Highly optimized Nominatim strict hotel search
+    try {
+      const searchUrl = `https://nominatim.openstreetmap.org/search?q=hotel+${encodeURIComponent(query)}&format=json&limit=8`;
+      const res = await fetch(searchUrl);
+      const data = await res.json();
+      
+      // Filter strictly for accommodations to ensure it only shows hotels
+      const hotels = data.filter(d => 
+        ['hotel', 'guest_house', 'hostel', 'motel', 'apartment'].includes(d.type) || 
+        d.class === 'tourism'
+      );
+      
+      const finalSuggestions = hotels.length > 0 ? hotels : data;
+      setBasecampSuggestions(finalSuggestions);
+      setShowBasecampDropdown(finalSuggestions.length > 0);
+    } catch (err) {
+      console.error("Autocomplete error:", err);
+    } finally {
+      setIsSearchingBasecamp(false);
+    }
+  };
+
+  const handleBasecampChange = (e) => {
+    const val = e.target.value;
+    setBasecamp(val);
+    if (basecampSearchTimeoutRef.current) clearTimeout(basecampSearchTimeoutRef.current);
+    if (val.trim().length === 0) {
+      setShowBasecampDropdown(false);
+      return;
+    }
+    basecampSearchTimeoutRef.current = setTimeout(() => {
+      fetchBasecampSuggestions(val);
+    }, 500);
+  };
 
   const handleAddCustomStop = () => {
     if (!newStopTitle.trim() || !itinerary?.days?.[selectedDayIndex]) return;
@@ -482,11 +561,12 @@ export default function PlannerSidebar({
     if (onGenerate && selections) {
       onGenerate({
         ...selections,
+        basecamp: basecamp,
         prompt: userPromptInput || rawPrompt || "Planning a trip",
         destination: parsedIntent?.destination || extracted?.destination || userPromptInput || rawPrompt || "Your Destination"
       });
     }
-  }, [onGenerate, userPromptInput, rawPrompt, extracted?.destination, parsedIntent?.destination]);
+  }, [onGenerate, userPromptInput, rawPrompt, extracted?.destination, parsedIntent?.destination, basecamp]);
 
   // Sync when rawPrompt is updated from external click (e.g. clicking a destination card on the right radar map)
   useEffect(() => {
@@ -535,8 +615,8 @@ export default function PlannerSidebar({
             else if (p.includes('relax')) setSelectedPace('relaxed');
             else setSelectedPace('balanced');
           }
-          if (intent.days) {
-            setSelectedDays(Number(intent.days));
+          if (intent.duration_days) {
+            setSelectedDays(Number(intent.duration_days));
           }
         }
       } catch (err) {
@@ -842,6 +922,45 @@ export default function PlannerSidebar({
                 className="w-full h-36 p-4 md:p-5 rounded-2xl bg-white border border-stone-300 focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 text-sm md:text-base text-stone-900 placeholder:text-stone-400 focus:outline-none shadow-sm transition-all duration-150 resize-none font-medium"
               />
 
+              {/* Basecamp Input */}
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  {isSearchingBasecamp ? (
+                    <div className="w-4 h-4 border-2 border-[#FF6B35] border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <MapPin className="w-4 h-4 text-stone-400" />
+                  )}
+                </div>
+                <input
+                  type="text"
+                  value={basecamp}
+                  onChange={handleBasecampChange}
+                  onFocus={() => { if (basecampSuggestions.length > 0) setShowBasecampDropdown(true); }}
+                  onBlur={() => setTimeout(() => setShowBasecampDropdown(false), 200)}
+                  placeholder="Where are you staying? (e.g. Hotel Artemide, Rome)"
+                  className="w-full py-3.5 pl-11 pr-4 rounded-xl bg-white border border-stone-300 focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 text-sm md:text-base text-stone-900 placeholder:text-stone-400 focus:outline-none shadow-sm transition-all duration-150 font-medium"
+                />
+                
+                {/* Autocomplete Dropdown */}
+                {showBasecampDropdown && (
+                  <div className="absolute z-50 w-full mt-2 bg-white border border-stone-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                    {basecampSuggestions.map((place) => (
+                      <div
+                        key={place.place_id}
+                        className="px-4 py-3 hover:bg-stone-50 cursor-pointer border-b border-stone-100 last:border-0 transition-colors"
+                        onClick={() => {
+                          setBasecamp(place.name || place.display_name.split(',')[0]);
+                          setShowBasecampDropdown(false);
+                        }}
+                      >
+                        <div className="font-semibold text-stone-800 text-sm">{place.name || place.display_name.split(',')[0]}</div>
+                        <div className="text-xs text-stone-500 truncate mt-0.5">{place.display_name}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Vibe Enhancers */}
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
@@ -919,6 +1038,11 @@ export default function PlannerSidebar({
                 disabled={!userPromptInput.trim()}
                 onClick={() => {
                   if (userPromptInput.trim()) {
+                    const match = userPromptInput.match(/\b(\d+)\s*days?\b/i);
+                    if (match && match[1]) {
+                      const d = parseInt(match[1], 10);
+                      if (d > 0 && d <= 30) setSelectedDays(d);
+                    }
                     setStep('parsing');
                   }
                 }}
