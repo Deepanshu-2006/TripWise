@@ -201,7 +201,7 @@ function getDynamicMockItinerary(promptOrDest = "", destination = "") {
 
 export async function POST(req) {
   try {
-    const { prompt = "", destination = "", interests = [], budget = 'standard', pace = 'balanced' } = await req.json();
+    const { prompt = "", destination = "", basecamp = "", interests = [], budget = 'standard', pace = 'balanced' } = await req.json();
 
     const apiKey = process.env.GEMINI_API_KEY;
     const mockPayload = getDynamicMockItinerary(prompt, destination);
@@ -213,12 +213,20 @@ export async function POST(req) {
 
     const ai = new GoogleGenAI({ apiKey });
 
+    const basecampInstruction = basecamp 
+      ? `\nCRITICAL GEOGRAPHY RULE: The user is staying at "${basecamp}". This is their "Basecamp". 
+1. Morning coffee and breakfast MUST be within a 10-15 minute walk from this location.
+2. Route the rest of the day logically starting from and ending near this location.
+3. Provide realistic travel times and distances from this basecamp.`
+      : '';
+
     const systemPrompt = `You are TripWise AI, an elite travel routing engine.
 Create a high-impact, beautifully tailored travel itinerary based on the user's prompt.
 User Prompt: "${prompt}"
 Selected Vibe/Interests: ${interests.join(', ') || 'General highlights'}
 Budget Level: ${budget}
 Travel Pace: ${pace}
+${basecampInstruction}
 
 CRITICAL RULES FOR SPEED & QUALITY:
 1. Generate exactly 3 to 4 days of itinerary (unless a specific duration is requested in the prompt).

@@ -48,6 +48,7 @@ export default function AIPlannerPage() {
         body: JSON.stringify({
           prompt: selections.prompt || currentPrompt || "A dream vacation",
           destination: selections.destination || selections.prompt || currentPrompt || "",
+          basecamp: selections.basecamp || "",
           interests: selections.interests || [],
           budget: selections.budget || 'standard',
           pace: selections.pace || 'balanced'

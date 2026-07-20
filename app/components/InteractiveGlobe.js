@@ -134,9 +134,22 @@ export default function InteractiveGlobe({
         htmlElement={(d) => {
           const el = document.createElement('div');
           el.innerHTML = `
-            <div class="relative flex items-center justify-center" style="transform: translate(-50%, -50%)">
-              <div class="w-5 h-5 bg-[#FF6B2C] rounded-full shadow-[0_0_15px_#FF6B2C]"></div>
-              <div class="absolute w-12 h-12 bg-[#FF6B2C]/30 rounded-full animate-ping"></div>
+            <div class="relative pointer-events-none flex items-center justify-center" style="width: 120px; height: 120px;">
+              
+              <!-- 3D Ground Rings (Tilted to lay flat on the globe) -->
+              <div class="absolute inset-0 flex items-center justify-center" style="transform: rotateX(65deg);">
+                <div class="absolute w-24 h-24 border-2 border-[#FF6B2C]/40 rounded-full animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite]"></div>
+                <div class="absolute w-12 h-12 border-2 border-[#FF6B2C]/60 rounded-full animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite]" style="animation-delay: 1.5s"></div>
+                <!-- Core ground glow -->
+                <div class="absolute w-10 h-10 bg-[#FF6B2C]/30 rounded-full blur-md"></div>
+              </div>
+              
+              <!-- Vertical Holographic Beam -->
+              <div class="absolute bottom-[50%] w-[2px] h-24 origin-bottom animate-pulse" style="background: linear-gradient(to top, rgba(255, 107, 44, 0.8), transparent); box-shadow: 0 0 10px 2px rgba(255, 107, 44, 0.4);"></div>
+              
+              <!-- Core Anchor Dot -->
+              <div class="absolute w-3.5 h-3.5 bg-white rounded-full border-[3px] border-[#FF6B2C] shadow-[0_0_20px_5px_rgba(255,107,44,0.6)]"></div>
+
             </div>
           `;
           return el;
