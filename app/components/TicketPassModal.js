@@ -65,6 +65,18 @@ export default function TicketPassModal({
     }
   }, [activity, isOpen, destinationName, dayNumber, stopNumber]);
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = 'hidden';
+      
+      return () => {
+        document.body.style.overflow = originalStyle;
+      };
+    }
+  }, [isOpen]);
+
   if (!isOpen || !activity) return null;
 
   const title = activity.title || 'Featured Stop';
@@ -236,7 +248,7 @@ export default function TicketPassModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div data-lenis-prevent="true" className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 overflow-hidden">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -252,30 +264,27 @@ export default function TicketPassModal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 24 }}
             transition={{ type: 'spring', damping: 26, stiffness: 320 }}
-            className="relative w-full max-w-xl my-auto z-10"
+            className="relative w-full max-w-xl my-auto z-10 max-h-[90vh] flex flex-col drop-shadow-2xl"
           >
-            {/* Close Button Top Right (Desktop outside, Mobile inside modal header) */}
+            {/* Close Button Top Right */}
             <button
               onClick={onClose}
-              className="absolute -top-12 right-0 hidden sm:flex w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white items-center justify-center transition-all cursor-pointer border border-white/15"
-              aria-label="Close ticket modal"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 sm:hidden z-50 w-8 h-8 rounded-full bg-[#1E1C1A]/10 hover:bg-[#1E1C1A]/20 text-[#1E1C1A] flex items-center justify-center transition-all cursor-pointer"
+              className="absolute -top-3 -right-3 z-50 w-8 h-8 rounded-full bg-white border border-[#E6DFD5] text-[#1E1C1A] flex items-center justify-center transition-all cursor-pointer shadow-sm hover:scale-105"
               aria-label="Close ticket modal"
             >
               <X className="w-4 h-4" />
             </button>
 
             {/* ── EDITORIAL DOSSIER PASS CARD ── */}
-            <div className="w-full bg-[#FAF6F0] rounded-3xl shadow-2xl overflow-hidden border border-[#E6DFD5] text-[#1E1C1A] relative">
+            <div className="w-full text-[#1E1C1A] relative flex flex-col flex-1 min-h-0">
               
               {/* TOP HEADER — Warm Editorial Spacing & Serif Display Font (Point 1) */}
-              <div className="bg-[#FAF6F0] p-6 sm:p-8 pb-6 relative overflow-hidden border-b border-[#E6DFD5]">
+              <div 
+                className="p-6 sm:p-8 pt-10 pb-6 relative shrink-0"
+                style={{
+                  background: 'radial-gradient(circle 5px at 50% 0, transparent 5px, #FAF6F0 6px) top / 16px 10px repeat-x, linear-gradient(#FAF6F0, #FAF6F0) bottom / 100% calc(100% - 5px) no-repeat'
+                }}
+              >
                 <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                   <div className="flex items-center gap-2">
                     <span className="w-6 h-6 rounded-md bg-[#FF6B2C] flex items-center justify-center text-white font-serif font-black text-xs shadow-2xs">
@@ -302,7 +311,7 @@ export default function TicketPassModal({
               </div>
 
               {/* MAIN DOSSIER PASS DETAILS — Generous Whitespace (`space-y-8`) */}
-              <div className="p-6 sm:p-8 sm:pb-10 space-y-8 bg-[#FAF6F0] max-h-[75vh] overflow-y-auto">
+              <div className="p-6 sm:p-8 sm:pb-10 pt-4 space-y-8 bg-[#FAF6F0] relative overflow-y-auto flex-1">
                 
                 {/* Expected Cost & Arrival Quick Grid using Standard Label Style (Point 1) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 p-5 sm:p-6 bg-white rounded-2xl border border-[#E6DFD5] shadow-2xs">
@@ -359,14 +368,24 @@ export default function TicketPassModal({
                       </div>
                     </div>
 
-                    <div className="mt-5 pt-3.5 border-t border-[#E6DFD5]/60 flex justify-end">
+                    <div className="mt-5 pt-3.5 border-t border-[#E6DFD5]/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <img 
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(recommendedGateway.url)}&color=1E1C1A&bgcolor=FFFFFF`} 
+                          alt="Scan to Book" 
+                          className="w-12 h-12 rounded bg-white border border-[#E6DFD5] shadow-xs p-1" 
+                        />
+                        <div className="text-[10px] font-sans text-[#7A7268] leading-tight max-w-35">
+                          Scan with your phone camera to book tickets on mobile.
+                        </div>
+                      </div>
                       <a
                         href={recommendedGateway.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#FF6B2C] hover:bg-[#A3482D] text-white text-xs font-sans font-bold shadow-xs transition-all w-full sm:w-auto cursor-pointer"
+                        className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#1E1C1A] hover:bg-[#FF6B2C] text-white text-xs font-sans font-bold shadow-xs transition-all w-full sm:w-auto cursor-pointer shrink-0"
                       >
-                        <span>Check Official Gateway ↗</span>
+                        <span>Official Gateway ↗</span>
                       </a>
                     </div>
                   </div>
@@ -448,12 +467,12 @@ export default function TicketPassModal({
 
                 {/* Important Booking Advisory using Page Standard Label Style */}
                 <div className="p-5 sm:p-6 rounded-2xl bg-white border border-[#E6DFD5] shadow-2xs flex items-start gap-4">
-                  <AlertCircle className="w-5 h-5 text-[#FF6B2C] shrink-0 mt-0.5" />
-                  <div className="text-xs sm:text-sm font-sans text-[#4A443E] leading-relaxed space-y-1.5">
-                    <div className="text-xs font-sans tracking-widest uppercase text-[#1E1C1A] font-bold">
-                      Important Booking Advisory
-                    </div>
-                    <p>
+                  <div className="w-8 h-8 rounded-full bg-[#FAF6F0] border border-[#E6DFD5] flex items-center justify-center shrink-0 mt-0.5">
+                    <AlertCircle className="w-4 h-4 text-[#FF6B2C]" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-sans font-bold uppercase tracking-widest text-[#1E1C1A]">Booking Advisory</h4>
+                    <p className="text-xs sm:text-sm font-sans text-[#4A443E] mt-1.5 leading-relaxed">
                       TripWise acts solely as a curated routing concierge connecting you to official venue box offices and verified booking platforms. We do not process payments, hold tickets, or guarantee live pricing and slot availability shown. All transactions and ticket reservations occur directly on the chosen provider’s secure gateway.
                     </p>
                   </div>
@@ -501,10 +520,31 @@ export default function TicketPassModal({
 
               </div>
 
+              {/* TICKET PERFORATION DIVIDER (Moved to bottom) */}
+              <div 
+                className="relative w-full h-10 flex items-center justify-center z-20 shrink-0"
+                style={{
+                  background: `
+                    radial-gradient(circle 20px at -2px 50%, transparent 20px, #FAF6F0 21px) left / 51% 100% no-repeat,
+                    radial-gradient(circle 20px at calc(100% + 2px) 50%, transparent 20px, #FAF6F0 21px) right / 51% 100% no-repeat
+                  `
+                }}
+              >
+                 {/* Solid thin line like the reference image */}
+                 <div className="w-full mx-10 border-t border-[#D2C8BA] opacity-70"></div>
+              </div>
+
               {/* FOOTER */}
-              <div className="p-4 bg-white border-t border-[#E6DFD5] flex items-center justify-between text-xs font-serif italic text-[#7A7268] px-6 sm:px-8">
-                <span>TripWise Curated Ticket Concierge</span>
-                <span>Verified Direct Gateways</span>
+              <div 
+                className="pt-2 pb-8 flex flex-col items-center justify-center text-xs font-serif italic text-[#7A7268] px-6 sm:px-8 shrink-0 z-20"
+                style={{
+                  background: 'radial-gradient(circle 5px at 50% 100%, transparent 5px, #FAF6F0 6px) bottom / 16px 10px repeat-x, linear-gradient(#FAF6F0, #FAF6F0) top / 100% calc(100% - 5px) no-repeat'
+                }}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span>TripWise Curated Ticket Concierge</span>
+                  <span>Verified Direct Gateways</span>
+                </div>
               </div>
 
             </div>
