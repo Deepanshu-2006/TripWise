@@ -59,8 +59,15 @@ export default function BentoShowcase({ destinations, onCardClick }) {
   });
   const yParallax = useTransform(scrollYProgress, [0, 1], ["-8%", "8%"]);
 
-  // Mega Card Rotation State
   const [megaIndex, setMegaIndex] = useState(0);
+
+  const { scrollYProgress: blurProgress } = useScroll({
+    target: containerRef,
+    offset: ["start 100px", "end start"]
+  });
+  
+  const blurFilter = useTransform(blurProgress, [0, 1], ["blur(0px)", "blur(12px)"]);
+  const opacityFade = useTransform(blurProgress, [0, 1], [1, 0.4]);
 
   if (!destinations || destinations.length < 4) return null;
 
@@ -107,7 +114,7 @@ export default function BentoShowcase({ destinations, onCardClick }) {
   };
 
   return (
-    <div className="w-full relative" ref={containerRef}>
+    <motion.div className="w-full relative" ref={containerRef} style={{ filter: blurFilter, opacity: opacityFade }}>
       <AnimatePresence>
         {zoomingId && (
           <motion.div 
@@ -208,80 +215,83 @@ export default function BentoShowcase({ destinations, onCardClick }) {
         <div className="flex flex-col gap-5 w-full lg:w-7/12 h-full">
           
           {/* ─── ROTATING MEGA CARD (Top Right) ─── */}
-          <motion.div
-            onClick={() => handleClick(activeMegaDest)}
-            whileHover="hover"
-            className="group relative w-full h-95 lg:h-100 rounded-3xl overflow-hidden bg-stone-900 cursor-pointer shadow-[0_12px_40px_rgba(0,0,0,0.12)] border border-[#ECE8E2]/60 flex flex-col p-6"
+          <div
+            className="relative w-full h-95 lg:h-100 rounded-3xl bg-stone-900 shadow-[0_12px_40px_rgba(0,0,0,0.12)] border border-[#ECE8E2]/60 pointer-events-auto"
+            style={{ perspective: 1200 }}
           >
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
               <motion.div
                 key={activeMegaDest.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 1.2 }}
-                className="absolute inset-[-10%] w-[120%] h-[120%] will-change-transform"
-                style={{ y: yParallax }}
+                onClick={() => handleClick(activeMegaDest)}
+                whileHover="hover"
+                initial={{ rotateX: -90 }}
+                animate={{ rotateX: 0 }}
+                exit={{ rotateX: 90 }}
+                transition={{ duration: 1.2, type: 'spring', bounce: 0.15 }}
+                className="group absolute inset-0 flex flex-col p-6 overflow-hidden rounded-3xl cursor-pointer"
+                style={{ transformStyle: 'preserve-3d', transformOrigin: 'center center -200px', backfaceVisibility: 'hidden' }}
               >
-                <img 
-                  src={activeMegaDest.imageUrl} 
-                  alt={activeMegaDest.name} 
-                  className="w-full h-full object-cover"
+                <motion.div className="absolute inset-[-10%] w-[120%] h-[120%] will-change-transform" style={{ y: yParallax }}>
+                  <img 
+                    src={activeMegaDest.imageUrl} 
+                    alt={activeMegaDest.name} 
+                    className="w-full h-full object-cover"
+                  />
+                </motion.div>
+                
+                <div className="absolute inset-0 bg-linear-to-t from-stone-950 via-stone-900/30 to-black/20 pointer-events-none" />
+                <motion.div 
+                  className="absolute inset-0 bg-black/60 pointer-events-none"
+                  initial={{ opacity: 0 }}
+                  variants={{ hover: { opacity: 1 } }}
+                  transition={{ duration: 0.4 }}
                 />
+
+                <HandDrawnAnnotations destId={activeMegaDest.id} />
+
+                {/* Interactive Verdict Overlay */}
+                <motion.div 
+                  className="absolute inset-0 z-20 flex flex-col items-center justify-center p-8 pointer-events-none"
+                  initial={{ opacity: 0, y: 10 }}
+                  variants={{ hover: { opacity: 1, y: 0 } }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                >
+                  <p className="text-white text-2xl leading-tight font-serif italic text-center drop-shadow-xl max-w-sm">
+                    "{activeMegaDest.aiTip ? activeMegaDest.aiTip.replace('💡 AI Tip: ', '').replace('💡 AI Verdict: ', '') : activeMegaDest.tagline}"
+                  </p>
+                </motion.div>
+
+                <motion.div 
+                  className="relative z-10 flex items-center justify-between"
+                  variants={{ hover: { opacity: 0, y: -10 } }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <span className="text-[11px] font-bold px-3 py-1 rounded-full text-white bg-black/40 backdrop-blur-md border border-white/20 uppercase tracking-widest shadow-sm">
+                    EDITOR'S PICK
+                  </span>
+                  {activeMegaDest.crowdLevel && (
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border backdrop-blur-md ${getCrowdBadgeStyle(activeMegaDest.crowdLevel)}`}>
+                      {activeMegaDest.crowdLevel}
+                    </span>
+                  )}
+                </motion.div>
+
+                <motion.div 
+                  className="relative z-10 mt-auto flex flex-col gap-1"
+                  variants={{ hover: { opacity: 0, y: 10 } }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <p className="text-white/80 text-[11px] font-semibold uppercase tracking-wider">{activeMegaDest.country}</p>
+                  <div className="flex items-end justify-between">
+                    <h3 className="text-3xl font-extrabold text-white tracking-tight">{activeMegaDest.name}</h3>
+                    <div className="bg-white/95 backdrop-blur-md px-2 py-0.5 rounded-md shadow-xs mb-1 border border-stone-200/50">
+                      <Stars rating={activeMegaDest.rating} />
+                    </div>
+                  </div>
+                </motion.div>
               </motion.div>
             </AnimatePresence>
-            
-            <div className="absolute inset-0 bg-linear-to-t from-stone-950 via-stone-900/30 to-black/20 pointer-events-none" />
-            <motion.div 
-              className="absolute inset-0 bg-black/60 pointer-events-none"
-              initial={{ opacity: 0 }}
-              variants={{ hover: { opacity: 1 } }}
-              transition={{ duration: 0.4 }}
-            />
-
-            <HandDrawnAnnotations destId={activeMegaDest.id} />
-
-            {/* Interactive Verdict Overlay */}
-            <motion.div 
-              className="absolute inset-0 z-20 flex flex-col items-center justify-center p-8 pointer-events-none"
-              initial={{ opacity: 0, y: 10 }}
-              variants={{ hover: { opacity: 1, y: 0 } }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <p className="text-white text-2xl leading-tight font-serif italic text-center drop-shadow-xl max-w-sm">
-                "{activeMegaDest.aiTip ? activeMegaDest.aiTip.replace('💡 AI Tip: ', '').replace('💡 AI Verdict: ', '') : activeMegaDest.tagline}"
-              </p>
-            </motion.div>
-
-            <motion.div 
-              className="relative z-10 flex items-center justify-between"
-              variants={{ hover: { opacity: 0, y: -10 } }}
-              transition={{ duration: 0.3 }}
-            >
-              <span className="text-[11px] font-bold px-3 py-1 rounded-full text-white bg-black/40 backdrop-blur-md border border-white/20 uppercase tracking-widest shadow-sm">
-                EDITOR'S PICK
-              </span>
-              {activeMegaDest.crowdLevel && (
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border backdrop-blur-md ${getCrowdBadgeStyle(activeMegaDest.crowdLevel)}`}>
-                  {activeMegaDest.crowdLevel}
-                </span>
-              )}
-            </motion.div>
-
-            <motion.div 
-              className="relative z-10 mt-auto flex flex-col gap-1"
-              variants={{ hover: { opacity: 0, y: 10 } }}
-              transition={{ duration: 0.3 }}
-            >
-              <p className="text-white/80 text-[11px] font-semibold uppercase tracking-wider">{activeMegaDest.country}</p>
-              <div className="flex items-end justify-between">
-                <h3 className="text-3xl font-extrabold text-white tracking-tight">{activeMegaDest.name}</h3>
-                <div className="bg-white/95 backdrop-blur-md px-2 py-0.5 rounded-md shadow-xs mb-1 border border-stone-200/50">
-                  <Stars rating={activeMegaDest.rating} />
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
+          </div>
 
           {/* ─── HORIZONTAL DUO (Bottom Right) ─── */}
           <div className="flex flex-col sm:flex-row gap-5 h-full">
@@ -353,6 +363,6 @@ export default function BentoShowcase({ destinations, onCardClick }) {
           
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

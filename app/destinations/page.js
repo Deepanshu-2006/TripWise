@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '../components/Header';
+import OrigamiFilterBar from '../components/OrigamiFilterBar';
 import BentoShowcase from '../components/BentoShowcase';
 import AtlasRadarMap from '../components/AtlasRadarMap';
 
@@ -561,133 +563,156 @@ function DestCard({ dest, onClick, isHighlighted }) {
     setIsZooming(true);
     setTimeout(() => {
       onClick(dest);
-    }, 450);
+    }, 800);
   };
 
   return (
-    <>
-      <AnimatePresence>
-        {isZooming && (
-          <motion.div 
-            className="fixed inset-0 bg-white z-100"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-          />
-        )}
-      </AnimatePresence>
+    <motion.div 
+      className="relative w-full h-full"
+      style={{ perspective: 1200 }}
+      initial={{ opacity: 0, rotateX: -40, y: 40 }}
+      whileInView={{ opacity: 1, rotateX: 0, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.7, type: "spring", bounce: 0.4 }}
+    >
       <motion.div
-        id={`dest-card-${dest.id}`}
-        onClick={handleClick}
-        className={`group cursor-pointer rounded-2xl overflow-hidden bg-white border ${isHighlighted ? 'border-[#FF6B2C]' : 'border-stone-200/50'} shadow-sm hover:border-[#FF6B2C]/30 hover:shadow-[0_20px_50px_rgba(255,107,44,0.2)] flex flex-col relative ${isZooming ? 'z-101 scale-105' : 'z-10 hover:-translate-y-1.5'} transition-all duration-300 ease-out`}
-        style={{ 
-          boxShadow: isHighlighted ? '0 0 0 2px #FF6B2C, 0 0 30px rgba(255,107,44,0.4)' : undefined
-        }}
+        className="w-full h-full relative"
+        style={{ transformStyle: 'preserve-3d' }}
+        animate={{ rotateY: isZooming ? 180 : 0 }}
+        transition={{ duration: 0.8, type: "spring", bounce: 0.3 }}
       >
-        <div className="relative h-52 overflow-hidden" style={{ backgroundColor: dest.bgColor }}>
-          <motion.svg 
-            className="absolute top-0 left-0 w-full h-8 z-10 pointer-events-none" 
-            viewBox="0 0 100 10" preserveAspectRatio="none"
+        {/* FRONT FACE */}
+        <div className="w-full h-full" style={{ backfaceVisibility: 'hidden' }}>
+          <div
+            id={`dest-card-${dest.id}`}
+            onClick={handleClick}
+            className={`group cursor-pointer rounded-2xl overflow-hidden bg-white border ${isHighlighted ? 'border-[#FF6B2C]' : 'border-stone-200/50'} shadow-sm hover:border-[#FF6B2C]/30 hover:shadow-[0_20px_50px_rgba(255,107,44,0.2)] flex flex-col relative h-full transition-all duration-300 ease-out z-10 hover:-translate-y-1.5`}
+            style={{ 
+              boxShadow: isHighlighted ? '0 0 0 2px #FF6B2C, 0 0 30px rgba(255,107,44,0.4)' : undefined
+            }}
           >
-            <motion.path 
-              d="M 0 5 Q 50 -2 100 5" 
-              fill="transparent" 
-              stroke="white" 
-              strokeWidth="0.5" 
-              strokeDasharray="2 2"
-              initial={{ pathLength: 0, opacity: 0 }}
-              whileInView={{ pathLength: 1, opacity: [0, 0.8, 0] }}
-              transition={{ duration: 1.2, ease: "easeOut", times: [0, 0.3, 1] }}
-              viewport={{ once: false, margin: "-50px" }}
-            />
-          </motion.svg>
-        {dest.imageUrl && (
-          <img src={dest.imageUrl} alt={dest.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-        )}
-        <div className={`absolute inset-0 bg-linear-to-t ${dest.gradient}`} />
-        
-        {/* Top Info Bar: Category & Duration */}
-        <div className="absolute top-3 left-3 right-3 z-10 flex items-start justify-between gap-2">
-          <span className="text-[10px] font-bold uppercase tracking-[0.15em] px-2.5 py-1 rounded-full text-white/95 bg-black/30 backdrop-blur-md border border-white/10 shadow-sm whitespace-nowrap overflow-hidden text-ellipsis">
-            {dest.badge}
-          </span>
-          <span className="text-[10px] font-semibold bg-black/40 text-white/90 px-2 py-1 rounded-full backdrop-blur-sm border border-white/10 shadow-sm whitespace-nowrap shrink-0">
-            {dest.duration}
-          </span>
-        </div>
+            <div className="relative h-52 overflow-hidden group-hover:scale-[1.02] transition-transform duration-500 ease-out" style={{ backgroundColor: dest.bgColor }}>
+              <motion.svg 
+                className="absolute top-0 left-0 w-full h-8 z-10 pointer-events-none" 
+                viewBox="0 0 100 10" preserveAspectRatio="none"
+              >
+                <motion.path 
+                  d="M 0 5 Q 50 -2 100 5" 
+                  fill="transparent" 
+                  stroke="white" 
+                  strokeWidth="0.5" 
+                  strokeDasharray="2 2"
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  whileInView={{ pathLength: 1, opacity: [0, 0.8, 0] }}
+                  transition={{ duration: 1.2, ease: "easeOut", times: [0, 0.3, 1] }}
+                  viewport={{ once: false, margin: "-50px" }}
+                />
+              </motion.svg>
+              
+              <div className="absolute inset-0 transition-transform duration-500 ease-out group-hover:scale-110">
+                {dest.imageUrl && (
+                  <img src={dest.imageUrl} alt={dest.name} className="w-full h-full object-cover" />
+                )}
+                <div className={`absolute inset-0 bg-linear-to-t ${dest.gradient}`} />
+              </div>
+              
+              {/* Top Info Bar: Category & Duration */}
+              <div className="absolute top-3 left-3 right-3 z-10 flex items-start justify-between gap-2 transition-transform duration-500 ease-out group-hover:scale-105 group-hover:-translate-y-1 origin-top">
+                <span className="text-[10px] font-bold uppercase tracking-[0.15em] px-2.5 py-1 rounded-full text-white/95 bg-black/30 backdrop-blur-md border border-white/10 shadow-sm whitespace-nowrap overflow-hidden text-ellipsis">
+                  {dest.badge}
+                </span>
+                <span className="text-[10px] font-semibold bg-black/40 text-white/90 px-2 py-1 rounded-full backdrop-blur-sm border border-white/10 shadow-sm whitespace-nowrap shrink-0">
+                  {dest.duration}
+                </span>
+              </div>
+              
+              {/* Bottom Info Bar: Weather, Season & Price */}
+              <div className="absolute bottom-0 left-0 right-0 z-10 p-3 pt-6 flex items-end justify-between bg-linear-to-t from-black/80 via-black/40 to-transparent transition-transform duration-500 ease-out group-hover:scale-105 group-hover:-translate-y-1 origin-bottom">
+                <div className="flex flex-col gap-1.5">
+                  {dest.weather && (
+                    <span className="text-[9px] font-semibold text-white/90 drop-shadow-md">
+                      {dest.weather.split('•')[0]}
+                    </span>
+                  )}
+                  {dest.crowdLevel && (
+                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md backdrop-blur-md border shadow-sm w-fit ${
+                      dest.crowdLevel.includes('Low') 
+                        ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40' 
+                        : dest.crowdLevel.includes('Moderate') 
+                        ? 'bg-amber-950/80 text-amber-300 border-amber-500/40' 
+                        : 'bg-rose-950/80 text-rose-300 border-rose-500/40'
+                    }`}>
+                      {dest.crowdLevel}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white shadow-sm">
+                  From {budgetStr}
+                </span>
+              </div>
+            </div>
 
-        {/* Bottom Info Bar: Weather, Season & Price */}
-        <div className="absolute bottom-0 left-0 right-0 z-10 p-3 pt-6 flex items-end justify-between bg-linear-to-t from-black/80 via-black/40 to-transparent">
-          <div className="flex flex-col gap-1.5">
-            {dest.weather && (
-              <span className="text-[9px] font-semibold text-white/90 drop-shadow-md">
-                {dest.weather.split('•')[0]}
-              </span>
-            )}
-            {dest.crowdLevel && (
-              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md backdrop-blur-md border shadow-sm w-fit ${
-                dest.crowdLevel.includes('Low') 
-                  ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40' 
-                  : dest.crowdLevel.includes('Moderate') 
-                  ? 'bg-amber-950/80 text-amber-300 border-amber-500/40' 
-                  : 'bg-rose-950/80 text-rose-300 border-rose-500/40'
-              }`}>
-                {dest.crowdLevel}
-              </span>
-            )}
-          </div>
-          <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white shadow-sm">
-            From {budgetStr}
-          </span>
-        </div>
-      </div>
+            <div className="flex flex-col p-5 flex-1 bg-white h-58">
+              <div className="mb-2">
+                {/* Editorial hierarchy: Country above City */}
+                <div className="flex items-center justify-between mb-1.5">
+                  <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest">{dest.country}</p>
+                  <div className="flex items-center gap-1">
+                    <Stars rating={dest.rating} />
+                    <span className="text-[10px] font-bold text-stone-800 ml-0.5">
+                      {dest.rating.toFixed(1)}
+                    </span>
+                    <span className="text-[9px] font-medium text-stone-400 ml-0.5 hidden sm:inline-block">({dest.reviews.toLocaleString()})</span>
+                  </div>
+                </div>
+                <h3 className="font-serif font-bold text-[#1F1F1F] text-2xl tracking-tight leading-tight group-hover:text-[#FF6B2C] transition-colors truncate">{dest.name}</h3>
+              </div>
 
-      <div className="flex flex-col p-5 flex-1 bg-white h-58">
-        <div className="mb-2">
-          {/* Editorial hierarchy: Country above City */}
-          <div className="flex items-center justify-between mb-1.5">
-            <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest">{dest.country}</p>
-            <div className="flex items-center gap-1">
-              <Stars rating={dest.rating} />
-              <span className="text-[10px] font-bold text-stone-800 ml-0.5">
-                {dest.rating.toFixed(1)}
-              </span>
-              <span className="text-[9px] font-medium text-stone-400 ml-0.5 hidden sm:inline-block">({dest.reviews.toLocaleString()})</span>
+              <p className="text-xs text-stone-500 leading-relaxed truncate">{dest.tagline}</p>
+
+              {/* AI Tip Box - Clean minimal look */}
+              {dest.aiTip && (
+                <div className="mt-3.5 mb-4 rounded-xl p-3 bg-[#FF6B2C]/[0.03] border border-[#FF6B2C]/10 flex items-start gap-2.5">
+                  <div className="shrink-0 w-5 h-5 rounded-full bg-white border border-[#FF6B2C]/20 flex items-center justify-center shadow-xs">
+                    <span className="text-[10px]">✨</span>
+                  </div>
+                  <p className="text-[11px] font-medium text-stone-700/90 leading-snug line-clamp-2">
+                    {dest.aiTip.replace('💡 AI Verdict: ', '').replace('💡 AI Tip: ', '')}
+                  </p>
+                </div>
+              )}
+
+              {/* Use Prompt Button - Premium interaction */}
+              <div className="mt-auto pt-1">
+                <button
+                  type="button"
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-stone-100/50 border border-transparent text-stone-600 group-hover:bg-[#FF6B2C] group-hover:text-white font-bold text-xs transition-all duration-300 group-hover:shadow-[0_8px_20px_rgba(255,107,44,0.25)]"
+                >
+                  <span className="uppercase tracking-wider text-[10px]">Plan trip to {dest.name.split(',')[0]}</span>
+                  <span className="group-hover:translate-x-1 transition-transform duration-200">
+                    <ArrowRightIcon />
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
-          <h3 className="font-serif font-bold text-[#1F1F1F] text-2xl tracking-tight leading-tight group-hover:text-[#FF6B2C] transition-colors truncate">{dest.name}</h3>
         </div>
 
-        <p className="text-xs text-stone-500 leading-relaxed truncate">{dest.tagline}</p>
-
-        {/* AI Tip Box - Clean minimal look */}
-        {dest.aiTip && (
-          <div className="mt-3.5 mb-4 rounded-xl p-3 bg-[#FF6B2C]/[0.03] border border-[#FF6B2C]/10 flex items-start gap-2.5">
-            <div className="shrink-0 w-5 h-5 rounded-full bg-white border border-[#FF6B2C]/20 flex items-center justify-center shadow-xs">
-              <span className="text-[10px]">✨</span>
-            </div>
-            <p className="text-[11px] font-medium text-stone-700/90 leading-snug line-clamp-2">
-              {dest.aiTip.replace('💡 AI Verdict: ', '').replace('💡 AI Tip: ', '')}
-            </p>
-          </div>
-        )}
-
-        {/* Use Prompt Button - Premium interaction */}
-        <div className="mt-auto pt-1">
-          <button
-            type="button"
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-stone-100/50 border border-transparent text-stone-600 group-hover:bg-[#FF6B2C] group-hover:text-white font-bold text-xs transition-all duration-300 group-hover:shadow-[0_8px_20px_rgba(255,107,44,0.25)]"
-          >
-            <span className="uppercase tracking-wider text-[10px]">Plan trip to {dest.name.split(',')[0]}</span>
-            <span className="group-hover:translate-x-1 transition-transform duration-200">
-              <ArrowRightIcon />
-            </span>
-          </button>
+        {/* BACK FACE */}
+        <div 
+          className="absolute inset-0 rounded-2xl bg-stone-900 border border-stone-800 shadow-2xl flex flex-col items-center justify-center overflow-hidden pointer-events-none"
+          style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+        >
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,107,44,0.15),transparent_70%)]" />
+          <svg className="w-10 h-10 text-[#FF6B2C] animate-spin mb-4 relative z-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+          </svg>
+          <h4 className="text-white font-serif font-bold text-xl mb-1 relative z-10">Plotting course...</h4>
+          <p className="text-stone-400 text-xs relative z-10">Generating {dest.name.split(',')[0]} itinerary</p>
         </div>
-      </div>
       </motion.div>
-    </>
+    </motion.div>
   );
 }
 
@@ -701,31 +726,35 @@ function TrendingCard({ dest, onClick, isHighlighted }) {
     setIsZooming(true);
     setTimeout(() => {
       onClick(dest);
-    }, 450);
+    }, 800);
   };
 
   return (
-    <>
-      <AnimatePresence>
-        {isZooming && (
-          <motion.div 
-            className="fixed inset-0 bg-white z-100"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-          />
-        )}
-      </AnimatePresence>
+    <motion.div 
+      className="relative shrink-0 w-64 h-full"
+      style={{ perspective: 1200 }}
+      initial={{ opacity: 0, rotateX: -40, y: 40 }}
+      whileInView={{ opacity: 1, rotateX: 0, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.7, type: "spring", bounce: 0.4 }}
+    >
       <motion.div
-        id={`dest-card-${dest.id}`}
-        onClick={handleClick}
-        className={`group cursor-pointer shrink-0 w-64 rounded-2xl overflow-hidden border ${isHighlighted ? 'border-[#FF6B2C]' : 'border-stone-200/50'} shadow-sm hover:border-[#FF6B2C]/30 hover:shadow-[0_20px_50px_rgba(255,107,44,0.2)] bg-white flex flex-col relative ${isZooming ? 'z-101 scale-105' : 'z-10 hover:-translate-y-1.5'} transition-all duration-300 ease-out`}
-        style={{ 
-          boxShadow: isHighlighted ? '0 0 0 2px #FF6B2C, 0 0 30px rgba(255,107,44,0.4)' : undefined
-        }}
+        className="w-full h-full relative"
+        style={{ transformStyle: 'preserve-3d' }}
+        animate={{ rotateY: isZooming ? 180 : 0 }}
+        transition={{ duration: 0.8, type: "spring", bounce: 0.3 }}
       >
-        <div className="relative h-44 overflow-hidden" style={{ backgroundColor: dest.bgColor }}>
+        {/* FRONT FACE */}
+        <div className="w-full h-full" style={{ backfaceVisibility: 'hidden' }}>
+          <div
+            id={`dest-card-${dest.id}`}
+            onClick={handleClick}
+            className={`group cursor-pointer rounded-2xl overflow-hidden border ${isHighlighted ? 'border-[#FF6B2C]' : 'border-stone-200/50'} shadow-sm hover:border-[#FF6B2C]/30 hover:shadow-[0_20px_50px_rgba(255,107,44,0.2)] bg-white flex flex-col relative h-full transition-all duration-300 ease-out z-10 hover:-translate-y-1.5`}
+            style={{ 
+              boxShadow: isHighlighted ? '0 0 0 2px #FF6B2C, 0 0 30px rgba(255,107,44,0.4)' : undefined
+            }}
+          >
+            <div className="relative h-44 overflow-hidden group-hover:scale-[1.02] transition-transform duration-500 ease-out" style={{ backgroundColor: dest.bgColor }}>
           <motion.svg 
             className="absolute top-0 left-0 w-full h-8 z-10 pointer-events-none" 
             viewBox="0 0 100 10" preserveAspectRatio="none"
@@ -755,7 +784,7 @@ function TrendingCard({ dest, onClick, isHighlighted }) {
             </span>
           </div>
         </div>
-        <div className="absolute top-2.5 right-2.5 z-10 flex flex-col items-end gap-1">
+        <div className="absolute top-2.5 right-2.5 z-10 flex flex-col items-end gap-1 transition-transform duration-500 ease-out group-hover:scale-105 group-hover:-translate-y-1 origin-top">
           <span
             className="text-[9px] font-bold px-2 py-0.5 rounded-full text-white backdrop-blur-sm shadow-xs"
             style={{ 
@@ -772,7 +801,7 @@ function TrendingCard({ dest, onClick, isHighlighted }) {
           )}
         </div>
         {dest.crowdLevel && (
-          <div className="absolute top-2.5 left-2.5 z-10">
+          <div className="absolute top-2.5 left-2.5 z-10 transition-transform duration-500 ease-out group-hover:scale-105 group-hover:-translate-y-1 origin-top">
             <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full backdrop-blur-md border ${
               dest.crowdLevel.includes('Low') 
                 ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40' 
@@ -807,8 +836,24 @@ function TrendingCard({ dest, onClick, isHighlighted }) {
           </span>
         </button>
       </div>
+      </div>
+      </div>
+
+        {/* BACK FACE */}
+        <div 
+          className="absolute inset-0 rounded-2xl bg-stone-900 border border-stone-800 shadow-2xl flex flex-col items-center justify-center overflow-hidden pointer-events-none"
+          style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+        >
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,107,44,0.15),transparent_70%)]" />
+          <svg className="w-10 h-10 text-[#FF6B2C] animate-spin mb-4 relative z-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+          </svg>
+          <h4 className="text-white font-serif font-bold text-xl mb-1 relative z-10">Plotting course...</h4>
+          <p className="text-stone-400 text-xs relative z-10">Generating {dest.name.split(',')[0]} itinerary</p>
+        </div>
       </motion.div>
-    </>
+    </motion.div>
   );
 }
 
@@ -838,6 +883,46 @@ const HERO_IMAGES = [
     tickers: ['🏄‍♂️ Peak surf season in Uluwatu', '📉 Flights down 12% this week']
   }
 ];
+
+const FloatingEmbers = () => {
+  return (
+    <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden bg-[#FAF8F5]">
+      {/* Dynamic Background Embers */}
+      {Array.from({ length: 15 }).map((_, i) => {
+        const size = Math.random() * 80 + 20;
+        const startX = Math.random() * 100;
+        const duration = Math.random() * 15 + 10;
+        const delay = Math.random() * 10;
+        const blur = Math.random() * 20 + 10;
+        return (
+          <motion.div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              width: size,
+              height: size,
+              left: `${startX}%`,
+              bottom: -150,
+              background: `radial-gradient(circle, rgba(255,107,44,0.15) 0%, rgba(255,107,44,0) 70%)`,
+              filter: `blur(${blur}px)`,
+            }}
+            animate={{
+              y: [0, -window.innerHeight - 300],
+              x: [0, (Math.random() - 0.5) * 200],
+              opacity: [0, 1, 0]
+            }}
+            transition={{
+              duration: duration,
+              repeat: Infinity,
+              delay: delay,
+              ease: "linear"
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+};
 
 export default function DestinationsPage() {
   const router = useRouter();
@@ -1130,10 +1215,13 @@ export default function DestinationsPage() {
 
       {/* Filter Bar - Floating Control Deck */}
       {viewMode === 'bento' && (
-        <section className="sticky top-24 z-40 max-w-6xl mx-auto w-full px-4 sm:px-6 -mt-8 mb-8 pointer-events-none">
-          {/* Solid sharp-cornered mask to hide scrolling content that peeks through the rounded corners */}
-          <div className={`absolute top-0 bottom-0 left-4 right-4 sm:left-6 sm:right-6 bg-[#FAF8F5] -z-10 transition-opacity duration-500 ${isScrolledPastHero ? 'opacity-100' : 'opacity-0'}`} />
-          <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.08)] border border-[#ECE8E2]/80 flex flex-col pointer-events-auto transition-shadow hover:shadow-[0_16px_50px_rgba(0,0,0,0.12)]">
+        <OrigamiFilterBar>
+          <section className="sticky top-24 z-40 max-w-6xl mx-auto w-full px-4 sm:px-6 -mt-8 mb-8">
+            {/* Solid sharp-cornered mask to hide scrolling content that peeks through the rounded corners */}
+            <div className={`absolute top-0 bottom-0 left-4 right-4 sm:left-6 sm:right-6 bg-[#FAF8F5] -z-10 transition-opacity duration-500 ${isScrolledPastHero ? 'opacity-100' : 'opacity-0'}`} />
+            <div 
+              className="bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.08)] border border-[#ECE8E2]/80 flex flex-col transition-shadow hover:shadow-[0_16px_50px_rgba(0,0,0,0.12)]"
+            >
             <div className="px-5 pt-4 pb-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
               <div className="flex flex-wrap items-center gap-y-3 gap-x-2 min-w-max md:min-w-0">
                 <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest shrink-0 mr-1">Vibe</span>
@@ -1204,8 +1292,9 @@ export default function DestinationsPage() {
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+            </div>
+          </section>
+        </OrigamiFilterBar>
       )}
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-12">
@@ -1332,9 +1421,20 @@ export default function DestinationsPage() {
                 ) : (
                   <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 pt-2">
-                      {filteredDests.slice(0, visibleCount).map(dest => (
-                        <DestCard key={dest.id} dest={dest} onClick={handleUseTemplate} isHighlighted={highlightedDestId === dest.id} />
-                      ))}
+                      <AnimatePresence mode="popLayout">
+                        {filteredDests.slice(0, visibleCount).map(dest => (
+                          <motion.div
+                            key={dest.id}
+                            layout
+                            initial={{ opacity: 0, rotateX: -90, scale: 0.8 }}
+                            animate={{ opacity: 1, rotateX: 0, scale: 1 }}
+                            exit={{ opacity: 0, rotateX: 90, scale: 0.8 }}
+                            transition={{ duration: 0.5, type: 'spring', bounce: 0.3 }}
+                          >
+                            <DestCard dest={dest} onClick={handleUseTemplate} isHighlighted={highlightedDestId === dest.id} />
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
                     </div>
                     
                     {visibleCount < filteredDests.length && (

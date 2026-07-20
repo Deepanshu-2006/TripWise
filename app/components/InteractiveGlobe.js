@@ -145,7 +145,7 @@ export default function InteractiveGlobe({
               </div>
               
               <!-- Vertical Holographic Beam -->
-              <div class="absolute bottom-[50%] w-[2px] h-24 origin-bottom animate-pulse" style="background: linear-gradient(to top, rgba(255, 107, 44, 0.8), transparent); box-shadow: 0 0 10px 2px rgba(255, 107, 44, 0.4);"></div>
+              <div class="absolute bottom-[50%] w-0.5 h-24 origin-bottom animate-pulse" style="background: linear-gradient(to top, rgba(255, 107, 44, 0.8), transparent); box-shadow: 0 0 10px 2px rgba(255, 107, 44, 0.4);"></div>
               
               <!-- Core Anchor Dot -->
               <div class="absolute w-3.5 h-3.5 bg-white rounded-full border-[3px] border-[#FF6B2C] shadow-[0_0_20px_5px_rgba(255,107,44,0.6)]"></div>
