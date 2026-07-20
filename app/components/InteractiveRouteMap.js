@@ -1946,7 +1946,7 @@ export default function InteractiveRouteMap({
         };
 
         return (
-          <div className="absolute bottom-4 sm:bottom-auto sm:top-16 right-3 left-3 sm:left-auto sm:right-6 sm:w-110 max-w-[95vw] sm:max-h-[calc(100%-85px)] max-h-[82vh] z-850 bg-[#FFFFFF] rounded-3xl border border-[#ECE8E2] shadow-[0_24px_64px_rgba(0,0,0,0.16),0_8px_24px_rgba(0,0,0,0.06)] overflow-y-auto pointer-events-auto flex flex-col transition-all duration-300 animate-in fade-in zoom-in-95 sm:slide-in-from-right-6 ease-out transform-gpu text-[#1F1F1F]">
+          <div data-lenis-prevent="true" className="absolute bottom-4 sm:bottom-auto sm:top-16 right-3 left-3 sm:left-auto sm:right-6 sm:w-110 max-w-[95vw] sm:max-h-[calc(100%-85px)] max-h-[82vh] z-850 bg-[#FFFFFF] rounded-3xl border border-[#ECE8E2] shadow-[0_24px_64px_rgba(0,0,0,0.16),0_8px_24px_rgba(0,0,0,0.06)] overflow-y-auto pointer-events-auto flex flex-col transition-all duration-300 animate-in fade-in zoom-in-95 sm:slide-in-from-right-6 ease-out transform-gpu text-[#1F1F1F]">
             {/* Subtle pointer triangle connecting visually toward the marker on the map */}
             <div className="hidden sm:block absolute -left-2.5 top-28 w-5 h-5 bg-[#FFFFFF] border-l border-b border-[#ECE8E2] transform rotate-45 pointer-events-none shadow-[-3px_3px_8px_rgba(0,0,0,0.04)] z-50" />
 

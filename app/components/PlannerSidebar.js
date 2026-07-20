@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun } from 'lucide-react';
+import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw } from 'lucide-react';
 import {
   getActivityThumbnail,
   getTransportBetweenStops,
@@ -825,7 +825,7 @@ export default function PlannerSidebar({
         </div>
       </div>
 
-      <div data-lenis-prevent="true" className="flex-1 overflow-y-auto pr-2 -mr-3 scroll-smooth min-h-0">
+      <div data-lenis-prevent="true" className="flex-1 overflow-y-auto overflow-x-hidden pr-2 -mr-3 scroll-smooth min-h-0">
         {/* STATE 0: Prompt Input Setup Page */}
         {step === 'input' && (
           <div className="space-y-8 animate-fade-in">
@@ -1133,9 +1133,10 @@ export default function PlannerSidebar({
                   <button
                     type="button"
                     onClick={handleNewPrompt}
-                    className="px-3 py-1.5 rounded-xl text-[11px] font-bold bg-white border border-[rgba(28,27,27,0.15)] text-[#4B4745] hover:bg-[#FFF8F5] hover:text-[#FF7A1A] transition-all duration-200 cursor-pointer shadow-xs hover:shadow-sm hover:-translate-y-0.5 shrink-0"
+                    className="group px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-bold bg-white border border-[#E6DFD5] text-[#1E1C1A] hover:border-[#FF6B2C]/40 hover:bg-[#FAF6F0] hover:text-[#FF6B2C] transition-all duration-300 cursor-pointer shadow-xs hover:shadow-sm hover:-translate-y-0.5 shrink-0 flex items-center gap-1.5 sm:gap-2"
                   >
-                    🔄 New Prompt
+                    <RefreshCw className="w-3.5 h-3.5 text-[#A89F91] group-hover:text-[#FF6B2C] transition-all duration-500 group-hover:rotate-180" />
+                    <span>New Prompt</span>
                   </button>
                 </div>
 
@@ -1644,13 +1645,12 @@ export default function PlannerSidebar({
             )}
           </div>
         )}
-      </div>
 
-
-      {/* Footer / Subtle Info */}
-      <div className="pt-6 border-t border-[rgba(28,27,27,0.06)] mt-8 flex items-center justify-between text-[11px] text-secondary-text">
-        <span>Powered by TripWise AI</span>
-        <span>Real-Time Optimization Engine</span>
+        {/* Footer / Subtle Info */}
+        <div className="pt-6 border-t border-[rgba(28,27,27,0.06)] mt-8 flex items-center justify-between text-[11px] text-secondary-text pb-4">
+          <span>Powered by TripWise AI</span>
+          <span>Real-Time Optimization Engine</span>
+        </div>
       </div>
     </div>
   );
