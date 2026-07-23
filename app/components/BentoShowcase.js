@@ -78,9 +78,16 @@ export default function BentoShowcase({ destinations, onCardClick }) {
   
   // The rest go into the mega rotating slot or the bottom duo
   const remainingDests = sortedDests.slice(1);
-  const megaOptions = remainingDests.slice(0, 3); // Rotating Queenstown, etc.
-  const duoDest1 = remainingDests[remainingDests.length - 2];
-  const duoDest2 = remainingDests[remainingDests.length - 1];
+  
+  // Filter out specific destinations for the rotating cube to ensure variety
+  const excludedCubeIds = ['new-york', 'queenstown', 'barcelona'];
+  const cubeCandidates = remainingDests.filter(dest => !excludedCubeIds.includes(dest.id));
+  
+  const megaOptions = cubeCandidates.slice(0, 3); // Rotating cube options (e.g., Swiss Alps, Bali, Marrakech)
+  
+  // For the duo cards, specifically use Queenstown and Barcelona if they exist, otherwise next best
+  const duoDest1 = remainingDests.find(d => d.id === 'queenstown') || remainingDests[3];
+  const duoDest2 = remainingDests.find(d => d.id === 'barcelona') || remainingDests[4];
   
   const activeMegaDest = megaOptions[megaIndex % megaOptions.length];
 
@@ -216,9 +223,16 @@ export default function BentoShowcase({ destinations, onCardClick }) {
           
           {/* ─── ROTATING MEGA CARD (Top Right) ─── */}
           <div
-            className="relative w-full h-95 lg:h-100 rounded-3xl bg-stone-900 shadow-[0_12px_40px_rgba(0,0,0,0.12)] border border-[#ECE8E2]/60 pointer-events-auto"
+            className="relative w-full h-[400px] rounded-3xl bg-stone-900 shadow-[0_12px_40px_rgba(0,0,0,0.12)] border border-[#ECE8E2]/60 pointer-events-auto"
             style={{ perspective: 1200 }}
           >
+            {/* Preload images to prevent black flashes during 3D rotation */}
+            <div className="hidden">
+              {megaOptions.map(dest => (
+                <img key={`preload-${dest.id}`} src={dest.imageUrl} alt="" />
+              ))}
+            </div>
+
             <AnimatePresence>
               <motion.div
                 key={activeMegaDest.id}
