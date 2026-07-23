@@ -1215,19 +1215,20 @@ export default function DestinationsPage() {
 
       {/* Filter Bar - Floating Control Deck */}
       {viewMode === 'bento' && (
-        <OrigamiFilterBar>
-          <section className="sticky top-24 z-40 max-w-6xl mx-auto w-full px-4 sm:px-6 -mt-8 mb-8">
-            {/* Solid sharp-cornered mask to hide scrolling content that peeks through the rounded corners */}
-            <div className={`absolute top-0 bottom-0 left-4 right-4 sm:left-6 sm:right-6 bg-[#FAF8F5] -z-10 transition-opacity duration-500 ${isScrolledPastHero ? 'opacity-100' : 'opacity-0'}`} />
-            <div 
-              className="bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.08)] border border-[#ECE8E2]/80 flex flex-col transition-shadow hover:shadow-[0_16px_50px_rgba(0,0,0,0.12)]"
-            >
-            <div className="px-5 pt-4 pb-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-              <div className="flex flex-wrap items-center gap-y-3 gap-x-2 min-w-max md:min-w-0">
-                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest shrink-0 mr-1">Vibe</span>
-                {VIBE_FILTERS.map(f => (
-                  <FilterPill key={f.id} label={f.label} icon={f.icon} active={activeVibes.includes(f.id)} onClick={() => toggleFilter(f.id, setActiveVibes)} />
-                ))}
+        <div className="sticky top-24 z-40">
+          <OrigamiFilterBar>
+            <section className="max-w-6xl mx-auto w-full px-4 sm:px-6 -mt-8 mb-8">
+              {/* Solid sharp-cornered mask to hide scrolling content that peeks through the rounded corners */}
+              <div className={`absolute top-0 bottom-0 left-4 right-4 sm:left-6 sm:right-6 bg-[#FAF8F5] -z-10 transition-opacity duration-500 ${isScrolledPastHero ? 'opacity-100' : 'opacity-0'}`} />
+              <div 
+                className="bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.08)] border border-[#ECE8E2]/80 flex flex-col transition-shadow hover:shadow-[0_16px_50px_rgba(0,0,0,0.12)]"
+              >
+              <div className="px-5 pt-4 pb-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+                <div className="flex flex-wrap items-center gap-y-3 gap-x-2 min-w-max md:min-w-0">
+                  <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest shrink-0 mr-1">Vibe</span>
+                  {VIBE_FILTERS.map(f => (
+                    <FilterPill key={f.id} label={f.label} icon={f.icon} active={activeVibes.includes(f.id)} onClick={() => toggleFilter(f.id, setActiveVibes)} />
+                  ))}
                 <div className="hidden md:block h-6 w-px bg-stone-200 mx-2 shrink-0" />
                 
                 <div className="w-full md:hidden" /> {/* Force wrap on mobile */}
@@ -1295,6 +1296,7 @@ export default function DestinationsPage() {
             </div>
           </section>
         </OrigamiFilterBar>
+        </div>
       )}
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-12">
@@ -1392,7 +1394,7 @@ export default function DestinationsPage() {
                     </div>
                     <a href="#all-destinations" className="text-xs font-bold text-[#FF6B2C] hover:underline">Browse all below ↓</a>
                   </div>
-                  <BentoShowcase destinations={trendingDests} onCardClick={handleUseTemplate} />
+                  <BentoShowcase destinations={DESTINATIONS} onCardClick={handleUseTemplate} />
                 </section>
               )}
 
