@@ -1,145 +1,107 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import PlannerSidebar from '../components/PlannerSidebar';
+import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
-import LiveTripDashboard from '../components/LiveTripDashboard';
+import { useUser } from '@clerk/nextjs';
+import { Compass, Plus, MapPin, Calendar, ArrowRight } from 'lucide-react';
 
-// Separate component so useSearchParams is inside a Suspense boundary
-function PromptSeeder({ onPrompt }) {
-  const searchParams = useSearchParams();
-  useEffect(() => {
-    const urlPrompt = searchParams.get('prompt');
-    if (urlPrompt) onPrompt(urlPrompt);
-  }, [searchParams, onPrompt]);
-  return null;
-}
+export default function AIPlannerDashboard() {
+    const { isLoaded, isSignedIn, user } = useUser();
+    const [savedTrips, setSavedTrips] = useState([]);
 
-export default function AIPlannerPage() {
-  const [currentPrompt, setCurrentPrompt] = useState('');
-  const [itinerary, setItinerary] = useState(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedDayIndex, setSelectedDayIndex] = useState(0);
-  const [hoveredStopIdx, setHoveredStopIdx] = useState(null);
-  const [selectedStopIdx, setSelectedStopIdx] = useState(null);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('tripwise_itinerary');
-      if (stored) {
-        try {
-          setItinerary(JSON.parse(stored));
-        } catch (e) {
-          console.error("Failed to parse itinerary from localStorage", e);
-        }
-      }
-    }
-  }, []);
-
-  const handleGenerate = async (selections) => {
-    setIsGenerating(true);
-    setSelectedDayIndex(0);
-    setSelectedStopIdx(null);
-    try {
-      const response = await fetch('/api/generate-trip', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: selections.prompt || currentPrompt || "A dream vacation",
-          destination: selections.destination || selections.prompt || currentPrompt || "",
-          basecamp: selections.basecamp || "",
-          interests: selections.interests || [],
-          budget: selections.budget || 'standard',
-          pace: selections.pace || 'balanced'
-        })
-      });
-      const data = await response.json();
-      if (data.success && data.itinerary) {
-        setItinerary(data.itinerary);
+    useEffect(() => {
         if (typeof window !== 'undefined') {
-          localStorage.setItem('tripwise_itinerary', JSON.stringify(data.itinerary));
+            const stored = localStorage.getItem('tripwise_itinerary');
+            if (stored) {
+                try {
+                    const parsed = JSON.parse(stored);
+                    if (parsed && parsed.destinationName) {
+                        setSavedTrips([parsed]); // Mock array with one item for now
+                    }
+                } catch (e) {
+                    console.error("Failed to parse itinerary from localStorage", e);
+                }
+            }
         }
-      } else {
-        console.error("API Error:", data.error);
-      }
-    } catch (err) {
-      console.error("Error generating trip:", err);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+    }, []);
 
-  return (
-    <div className="w-full h-screen min-h-160 flex flex-col bg-[#FAF8F5] text-[#1F1F1F] overflow-hidden pt-20 sm:pt-22">
-      <Header />
-      <Suspense fallback={null}>
-        <PromptSeeder onPrompt={setCurrentPrompt} />
-      </Suspense>
-      
-      {/* Unified Parent Container (Wrap BOTH Itinerary Panel and Map Section inside one shared parent container) */}
-      <div className="flex-1 w-full h-full overflow-hidden p-3 sm:p-4 md:p-6 pb-4 sm:pb-6 flex flex-col min-h-0">
-        <div className="flex-1 flex w-full h-full min-h-0 bg-[#FFFFFF] rounded-3xl border border-[#ECE8E2] shadow-[0_20px_60px_rgba(0,0,0,0.06)] overflow-hidden relative">
-          {/* Left Panel: Itinerary & Prompt Controls (One single scrollable container for the entire left panel) */}
-          <div data-lenis-prevent="true" className="w-full md:w-[42%] lg:w-[40%] xl:w-[38%] h-full overflow-y-auto overflow-x-hidden shrink-0 bg-[#F7F5F2] border-r border-[#ECE8E2] flex flex-col scroll-smooth">
-            <PlannerSidebar
-              rawPrompt={currentPrompt}
-              onPromptChange={setCurrentPrompt}
-              isGenerating={isGenerating}
-              itinerary={itinerary}
-              selectedDayIndex={selectedDayIndex}
-              onSelectDay={setSelectedDayIndex}
-              hoveredStopIdx={hoveredStopIdx}
-              onHoverStop={setHoveredStopIdx}
-              selectedStopIdx={selectedStopIdx}
-              onSelectStop={setSelectedStopIdx}
-              onUpdateItinerary={(updated) => {
-                setItinerary(updated);
-                if (typeof window !== 'undefined') {
-                  if (!updated) {
-                    localStorage.removeItem('tripwise_itinerary');
-                  } else {
-                    localStorage.setItem('tripwise_itinerary', JSON.stringify(updated));
-                  }
-                }
-              }}
-              onResetPrompt={() => {
-                setCurrentPrompt('');
-                setItinerary(null);
-                setSelectedDayIndex(0);
-                setSelectedStopIdx(null);
-                if (typeof window !== 'undefined') {
-                  localStorage.removeItem('tripwise_itinerary');
-                }
-              }}
-              onGenerate={handleGenerate}
-              onViewItinerary={() => {
-                if (typeof window !== 'undefined') {
-                  window.location.href = '/itinerary';
-                }
-              }}
-            />
-          </div>
+    return (
+        <div className="w-full min-h-screen bg-[#FAF8F5] text-[#1F1F1F] flex flex-col pt-24 sm:pt-32 px-6 lg:px-12">
+            <Header />
+            
+            <div className="max-w-6xl w-full mx-auto flex-1 flex flex-col pb-20 mt-8">
+                {/* Dashboard Header */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+                    <div>
+                        <h1 className="font-sans font-extrabold text-3xl md:text-4xl tracking-tight mb-2">
+                            Your Planning Sessions
+                        </h1>
+                        <p className="font-mono text-[11px] md:text-sm tracking-wide text-[#8CA3A8] uppercase">
+                            Manage and review your AI trip drafts
+                        </p>
+                    </div>
+                    
+                    <a 
+                        href="/ai-planner/new"
+                        className="group relative px-6 py-3.5 bg-[#FF6B2C] hover:bg-[#FF8A4C] text-white font-bold text-[12px] rounded-2xl transition-all duration-300 uppercase tracking-[0.15em] flex items-center justify-center gap-2 shadow-[0_8px_20px_rgba(255,107,44,0.25)] hover:shadow-[0_12px_24px_rgba(255,107,44,0.35)] shrink-0"
+                    >
+                        <Plus size={16} />
+                        New Trip
+                    </a>
+                </div>
 
-          {/* Right Panel: Map View & Interactive Dashboard */}
-          <div className="hidden md:flex flex-1 h-full overflow-hidden flex-col bg-[#FFFFFF]">
-            <LiveTripDashboard
-              destination={itinerary?.destinationName || currentPrompt}
-              itinerary={itinerary}
-              isGenerating={isGenerating}
-              selectedDayIndex={selectedDayIndex}
-              onSelectDay={setSelectedDayIndex}
-              hoveredStopIdx={hoveredStopIdx}
-              onHoverStop={setHoveredStopIdx}
-              selectedStopIdx={selectedStopIdx}
-              onSelectStop={setSelectedStopIdx}
-              onSelectPrompt={(promptText) => {
-                setCurrentPrompt(promptText);
-              }}
-            />
-          </div>
+                {/* Empty State / Grid */}
+                {savedTrips.length === 0 ? (
+                    <div className="flex-1 flex flex-col items-center justify-center bg-white rounded-3xl border border-[#ECE8E2] border-dashed p-12 text-center min-h-[400px]">
+                        <div className="w-20 h-20 bg-[#F7F5F2] rounded-full flex items-center justify-center mb-6 shadow-sm">
+                            <Compass size={32} className="text-[#8CA3A8]" />
+                        </div>
+                        <h3 className="font-sans font-bold text-xl text-[#1F1F1F] mb-3">No active trips yet</h3>
+                        <p className="text-[#8CA3A8] max-w-md mx-auto mb-8 leading-relaxed">
+                            You haven't started planning any trips. Click the button below to generate your first personalized AI-powered itinerary.
+                        </p>
+                        <a 
+                            href="/ai-planner/new"
+                            className="px-6 py-3 bg-[#F7F5F2] hover:bg-[#ECE8E2] text-[#1F1F1F] font-bold text-[11px] rounded-full transition-colors uppercase tracking-[0.1em]"
+                        >
+                            Start Planning
+                        </a>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {savedTrips.map((trip, idx) => (
+                            <a 
+                                key={idx} 
+                                href="/ai-planner/new?action=view" 
+                                className="group flex flex-col bg-white rounded-3xl border border-[#ECE8E2] shadow-[0_12px_40px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_60px_rgba(0,0,0,0.08)] transition-all duration-300 overflow-hidden cursor-pointer"
+                            >
+                                <div className="h-32 bg-[#F7F5F2] relative overflow-hidden flex items-center justify-center border-b border-[#ECE8E2]">
+                                    {/* Abstract shapes or placeholder image for trip */}
+                                    <Compass size={40} className="text-[#8CA3A8] opacity-20" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                                    <div className="absolute bottom-3 left-4 right-4 flex justify-between items-end">
+                                        <span className="px-2.5 py-1 bg-white/90 backdrop-blur-sm rounded-lg text-[10px] font-bold tracking-wider text-[#1F1F1F] uppercase shadow-sm">
+                                            {trip.days?.length || 0} Days
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="p-5 flex flex-col flex-1">
+                                    <h3 className="font-sans font-bold text-lg text-[#1F1F1F] mb-1 line-clamp-1">
+                                        {trip.destinationName || "Draft Trip"}
+                                    </h3>
+                                    <p className="text-sm text-[#8CA3A8] mb-4 line-clamp-2">
+                                        {trip.days?.[0]?.description || "AI-generated personalized itinerary."}
+                                    </p>
+                                    <div className="mt-auto flex items-center justify-between text-[11px] font-bold text-[#FF6B2C] uppercase tracking-[0.1em]">
+                                        <span>View Itinerary</span>
+                                        <ArrowRight size={14} className="transform transition-transform group-hover:translate-x-1" />
+                                    </div>
+                                </div>
+                            </a>
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 }
