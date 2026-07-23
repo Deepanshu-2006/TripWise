@@ -11,6 +11,8 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
+import { ClerkProvider } from '@clerk/nextjs'
+
 export const metadata = {
   title: "TripWise AI Planner",
   description: "AI-powered travel planner",
@@ -20,15 +22,17 @@ import SmoothScroll from "./components/SmoothScroll";
 
 export default function RootLayout({ children }) {
   return (
-    <html
-      lang="en"
-      className={`${fraunces.variable} ${inter.variable} antialiased`}
-    >
-      <body className="flex flex-col min-h-screen">
-        <SmoothScroll>
-          {children}
-        </SmoothScroll>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html
+        lang="en"
+        className={`${fraunces.variable} ${inter.variable} antialiased`}
+      >
+        <body className="flex flex-col min-h-screen">
+          <SmoothScroll>
+            {children}
+          </SmoothScroll>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
