@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import gsap from 'gsap';
+import { useAuth } from "@clerk/nextjs";
 
 const faqData = [
   {
@@ -35,6 +36,7 @@ const citiesTrack2 = [
 ];
 
 export default function FAQAndMarqueeCTA() {
+  const { isSignedIn } = useAuth();
   const [openIdx, setOpenIdx] = useState(null);
   const contentRefs = useRef([]);
   const iconRefs = useRef([]);
@@ -43,6 +45,57 @@ export default function FAQAndMarqueeCTA() {
   const ctaContainerRef = useRef(null);
   const marqueeTrack1Ref = useRef(null);
   const marqueeTrack2Ref = useRef(null);
+
+  const [isFlying, setIsFlying] = useState(false);
+  const plane1Ref = useRef(null);
+  const plane2Ref = useRef(null);
+  const plane3Ref = useRef(null);
+  const wipeOverlayRef = useRef(null);
+
+  const handleFlyTransition = (e) => {
+    if (e) e.preventDefault();
+    
+    setIsFlying(true);
+    
+    const tl = gsap.timeline();
+
+    // Plane 1: Swoops high and right
+    tl.fromTo(plane1Ref.current, 
+        { x: 0, y: 0, rotation: 0, scale: 0.5, opacity: 0 },
+        { x: window.innerWidth * 0.6, ease: "power2.out", duration: 1.2, opacity: 1 }, 0
+    ).to(plane1Ref.current, 
+        { y: -window.innerHeight * 0.8, rotation: 75, scale: 2, ease: "power3.in", duration: 1.2 }, 0
+    );
+
+    // Plane 2: Swoops far right, lower
+    tl.fromTo(plane2Ref.current, 
+        { x: 0, y: 0, rotation: 0, scale: 0.3, opacity: 0 },
+        { x: window.innerWidth * 0.8, ease: "power1.out", duration: 1.4, opacity: 1 }, 0.1
+    ).to(plane2Ref.current, 
+        { y: -window.innerHeight * 0.3, rotation: 85, scale: 1.2, ease: "power2.in", duration: 1.4 }, 0.1
+    );
+
+    // Plane 3: Swoops left and very high
+    tl.fromTo(plane3Ref.current, 
+        { x: 0, y: 0, rotation: 0, scale: 0.4, opacity: 0 },
+        { x: -window.innerWidth * 0.4, ease: "power2.out", duration: 1.3, opacity: 1 }, 0.05
+    ).to(plane3Ref.current, 
+        { y: -window.innerHeight * 0.9, rotation: -45, scale: 1.5, ease: "power4.in", duration: 1.3 }, 0.05
+    );
+
+    // Cinematic Circle Wipe Transition
+    tl.to(wipeOverlayRef.current, {
+        scale: 250, // Massive scale to cover any screen
+        opacity: 1,
+        duration: 1.0,
+        ease: "power3.inOut"
+    }, 0.4);
+
+    // Wait for the transition to finish
+    setTimeout(() => {
+        window.location.href = isSignedIn ? '/ai-planner' : '/sign-in';
+    }, 1300);
+  };
 
   // Handle Accordion Click with GSAP
   const toggleAccordion = (index) => {
@@ -320,17 +373,19 @@ export default function FAQAndMarqueeCTA() {
           <div className="relative inline-block p-4">
             <button
               ref={buttonRef}
-              onClick={() => window.location.href = '/ai-planner'}
-              className="group relative inline-flex items-center justify-center px-8 sm:px-12 py-5 sm:py-6 rounded-full bg-[#FF5B1D] hover:bg-[#ff6c34] text-white font-extrabold text-lg sm:text-2xl tracking-wide shadow-[0_0_50px_rgba(249,115,22,0.4)] hover:shadow-[0_0_80px_rgba(249,115,22,0.6)] transition-shadow duration-300 cursor-pointer overflow-hidden border border-white/20"
+              onClick={handleFlyTransition}
+              className={`group relative inline-flex items-center justify-center px-8 sm:px-12 py-5 sm:py-6 rounded-full bg-[#FF5B1D] text-white font-extrabold text-lg sm:text-2xl tracking-wide shadow-[0_0_50px_rgba(249,115,22,0.4)] transition-shadow duration-300 cursor-pointer overflow-visible border border-white/20 ${isFlying ? 'scale-95 shadow-[0_0_80px_rgba(249,115,22,0.8)]' : 'hover:bg-[#ff6c34] hover:shadow-[0_0_80px_rgba(249,115,22,0.6)]'}`}
             >
               {/* Button inner highlight sheen */}
-              <span className="absolute inset-0 w-1/2 h-full bg-white/20 skew-x-[-25deg] -translate-x-full group-hover:translate-x-[300%] transition-transform duration-1000 ease-out pointer-events-none" />
+              <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none">
+                <span className={`absolute inset-0 w-1/2 h-full bg-white/20 skew-x-[-25deg] -translate-x-full transition-transform duration-1000 ease-out pointer-events-none ${isFlying ? 'opacity-0' : 'group-hover:translate-x-[300%]'}`} />
+              </div>
 
               {/* Parallax Button Text */}
-              <span ref={buttonTextRef} className="relative z-10 flex items-center gap-3">
+              <span ref={buttonTextRef} className={`relative z-10 flex items-center gap-3 transition-colors duration-300 ${isFlying ? 'text-[#FF5B1D] opacity-0' : ''}`}>
                 <span>[ Plan My Trip — It&apos;s Free ]</span>
                 <svg
-                  className="w-6 h-6 transition-transform duration-300 group-hover:translate-x-1.5"
+                  className={`w-6 h-6 transition-transform duration-300 ${isFlying ? 'translate-x-10 opacity-0' : 'group-hover:translate-x-1.5'}`}
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -339,10 +394,31 @@ export default function FAQAndMarqueeCTA() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </span>
+
+              {/* Plane 1 (Main, fast) */}
+              <svg ref={plane1Ref} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 text-white z-50 pointer-events-none opacity-0" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M1.946 9.315c-.522-.174-.527-.455.01-.634l19.087-6.362c.529-.176.832.12.684.638l-5.454 19.086c-.15.524-.46.529-.65-.013l-3.35-9.404-9.327-3.311Zm9.638 4.27 2.656 7.457 4.148-14.52-14.52 4.839 8.358 2.966c.277.098.423.238.455.514l-2.083 6.945-1.014-8.197Z" />
+              </svg>
+              
+              {/* Plane 2 (Smaller, flies wider right) */}
+              <svg ref={plane2Ref} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 text-[#FFF8F5] z-50 pointer-events-none opacity-0" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M1.946 9.315c-.522-.174-.527-.455.01-.634l19.087-6.362c.529-.176.832.12.684.638l-5.454 19.086c-.15.524-.46.529-.65-.013l-3.35-9.404-9.327-3.311Zm9.638 4.27 2.656 7.457 4.148-14.52-14.52 4.839 8.358 2.966c.277.098.423.238.455.514l-2.083 6.945-1.014-8.197Z" />
+              </svg>
+
+              {/* Plane 3 (Medium, flies higher left) */}
+              <svg ref={plane3Ref} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-[#FFE6DA] z-50 pointer-events-none opacity-0" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M1.946 9.315c-.522-.174-.527-.455.01-.634l19.087-6.362c.529-.176.832.12.684.638l-5.454 19.086c-.15.524-.46.529-.65-.013l-3.35-9.404-9.327-3.311Zm9.638 4.27 2.656 7.457 4.148-14.52-14.52 4.839 8.358 2.966c.277.098.423.238.455.514l-2.083 6.945-1.014-8.197Z" />
+              </svg>
             </button>
           </div>
         </div>
       </section>
+
+      {/* Cinematic Circle Wipe Transition Overlay */}
+      <div 
+          ref={wipeOverlayRef} 
+          className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[20px] h-[20px] bg-[#0A0A0A] rounded-full z-[99999] pointer-events-none opacity-0 origin-center" 
+      />
     </div>
   );
 }
