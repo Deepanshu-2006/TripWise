@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import Header from '../components/Header';
 import { useUser } from '@clerk/nextjs';
 import { Compass, Plus, MapPin, Calendar, ArrowRight, Loader2, Trash2, Share2, Check, Map } from 'lucide-react';
@@ -35,6 +36,35 @@ const getTotalActivities = (trip) => {
     return trip.days.reduce((total, day) => total + (day.activities ? day.activities.length : 0), 0);
 };
 
+export const STEP_ORDER = ['destination', 'preferences', 'itinerary', 'places', 'logistics', 'review'];
+export const STEP_PROGRESS = {
+    'destination': 15,
+    'preferences': 30,
+    'itinerary': 50,
+    'places': 80,
+    'logistics': 90,
+    'review': 100
+};
+
+export const getNextStep = (lastCompletedStep) => {
+    if (!lastCompletedStep) return 'destination';
+    const idx = STEP_ORDER.indexOf(lastCompletedStep);
+    if (idx === -1 || idx === STEP_ORDER.length - 1) return 'review';
+    return STEP_ORDER[idx + 1];
+};
+
+const calculateTripProgress = (trip) => {
+    if (!trip.lastCompletedStep) return 0;
+    return STEP_PROGRESS[trip.lastCompletedStep] || 0;
+};
+
+const getProgressLabel = (progress) => {
+    if (progress < 30) return "Just Started";
+    if (progress < 70) return "In Progress";
+    if (progress < 100) return "Almost Ready";
+    return "Ready to Confirm";
+};
+
 const formatDates = (startDate, endDate) => {
     const startStr = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     if (startDate.getMonth() === endDate.getMonth() && startDate.getFullYear() === endDate.getFullYear()) {
@@ -42,6 +72,42 @@ const formatDates = (startDate, endDate) => {
     }
     return `${startStr}–${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
 };
+
+const AnimatedTrashIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-stone-400 shrink-0">
+        {/* Paper falling in */}
+        <motion.rect 
+            x="9" y="0" width="6" height="6" rx="1"
+            fill="currentColor"
+            stroke="none"
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: [ -20, -5, 10 ], opacity: [0, 1, 0] }}
+            transition={{ delay: 0.4, duration: 0.35, times: [0, 0.5, 1], ease: "easeIn" }}
+        />
+        
+        {/* The Bin */}
+        <motion.g
+            initial={{ y: 0 }}
+            animate={{ y: [0, 0, 0, 2, -1, 0] }}
+            transition={{ delay: 0.3, duration: 0.7, times: [0, 0.2, 0.7, 0.8, 0.9, 1] }}
+        >
+            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+            <line x1="10" x2="10" y1="11" y2="17"/>
+            <line x1="14" x2="14" y1="11" y2="17"/>
+        </motion.g>
+
+        {/* The Lid */}
+        <motion.g
+            initial={{ rotate: 0 }}
+            animate={{ rotate: [0, -45, -45, 0] }}
+            transition={{ delay: 0.3, duration: 0.6, times: [0, 0.15, 0.85, 1] }}
+            style={{ originX: "4px", originY: "6px" }}
+        >
+            <path d="M3 6h18"/>
+            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+        </motion.g>
+    </svg>
+);
 
 const FILTERS = ['All', 'Drafts', 'Upcoming', 'Past'];
 const SORTS = ['Most Recent', 'Upcoming First', 'Alphabetical'];
@@ -67,47 +133,62 @@ export default function AIPlannerDashboard() {
                     // Demo Mode: Map DB trips to diverse realistic sample data to demonstrate range
                     const demoTrips = trips.map((t, idx) => {
                         const now = new Date();
+                        let tripObj = {};
                         
                         // 1. CONFIRMED trip (Rome)
                         if (idx % 4 === 0) {
                             const start = new Date(now); start.setDate(start.getDate() + 10);
                             const end = new Date(start); end.setDate(end.getDate() + 4);
-                            return {
+                            tripObj = {
                                 db_id: t.id, destinationName: "Rome, Italy", country: "Italy",
-                                status: "CONFIRMED", progress: 100, days: Array(4).fill({ activities: [1,2] }),
+                                status: "DRAFT", lastCompletedStep: 'review',
+                                days: Array(4).fill({ activities: [1,2] }),
                                 startDate: start, endDate: end, created_at: new Date(now.getTime() - 2*86400000).toISOString()
                             };
                         }
                         // 2. DRAFT trip (Tokyo)
-                        if (idx % 4 === 1) {
+                        else if (idx % 4 === 1) {
                             const start = new Date(now); start.setDate(start.getDate() + 30);
                             const end = new Date(start); end.setDate(end.getDate() + 6);
-                            return {
+                            tripObj = {
                                 db_id: t.id, destinationName: "Tokyo, Japan", country: "Japan",
-                                status: "DRAFT", progress: 65, days: [],
+                                status: "DRAFT", lastCompletedStep: 'preferences',
+                                days: [],
                                 startDate: start, endDate: end, created_at: new Date(now.getTime() - 1*86400000).toISOString()
                             };
                         }
-                        // 3. UPCOMING/CONFIRMED trip (Bali)
-                        if (idx % 4 === 2) {
+                        // 3. UPCOMING trip (Bali)
+                        else if (idx % 4 === 2) {
                             const start = new Date(now); start.setDate(start.getDate() + 45);
                             const end = new Date(start); end.setDate(end.getDate() + 7);
-                            return {
+                            tripObj = {
                                 db_id: t.id, destinationName: "Bali, Indonesia", country: "Indonesia",
-                                status: "CONFIRMED", progress: 100, days: Array(6).fill({ activities: [1,2,3] }),
+                                status: "DRAFT", lastCompletedStep: 'review',
+                                days: Array(6).fill({ activities: [1,2,3] }),
                                 startDate: start, endDate: end, created_at: new Date(now.getTime() - 5*86400000).toISOString()
                             };
                         }
                         // 4. PAST trip (Paris)
-                        if (idx % 4 === 3) {
+                        else if (idx % 4 === 3) {
                             const start = new Date(now); start.setDate(start.getDate() - 40);
                             const end = new Date(start); end.setDate(end.getDate() + 5);
-                            return {
+                            tripObj = {
                                 db_id: t.id, destinationName: "Paris, France", country: "France",
-                                status: "COMPLETED", progress: 100, days: Array(5).fill({ activities: [1,2,3] }),
+                                status: "COMPLETED", lastCompletedStep: 'review',
+                                days: Array(5).fill({ activities: [1,2,3] }),
                                 startDate: start, endDate: end, created_at: new Date(now.getTime() - 60*86400000).toISOString()
                             };
                         }
+
+                        // Calculate computed progress
+                        tripObj.progress = calculateTripProgress(tripObj);
+                        
+                        // Auto-promote DRAFT to CONFIRMED if 100%
+                        if (tripObj.progress === 100 && tripObj.status === 'DRAFT') {
+                            tripObj.status = 'CONFIRMED';
+                        }
+                        
+                        return tripObj;
                     });
 
                     const formatted = demoTrips.map(dt => {
@@ -329,12 +410,12 @@ export default function AIPlannerDashboard() {
                         <p className="text-stone-500 max-w-md mx-auto text-center mb-8 text-sm">
                             Your itinerary canvas is completely blank. Start a new planning session to discover your next adventure.
                         </p>
-                        <a 
-                            href="/ai-planner/new"
+                        <Link 
+                            href="/ai-planner/new?action=new"
                             className="px-6 py-3 bg-[#1F1F1F] hover:bg-[#333] text-white font-bold text-[11px] rounded-full transition-all uppercase tracking-[0.15em] shadow-md hover:-translate-y-0.5"
                         >
                             Start Planning
-                        </a>
+                        </Link>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -348,9 +429,9 @@ export default function AIPlannerDashboard() {
                                     exit={{ opacity: 0, scale: 0.95 }}
                                     transition={{ duration: 0.3 }}
                                 >
-                                    <a 
-                                        href={`/ai-planner/new?action=view&trip_id=${trip.db_id}`} 
-                                        className={`block group h-full flex-col bg-white rounded-3xl border shadow-sm transition-all duration-300 overflow-hidden cursor-pointer relative hover:-translate-y-1 ${trip.status === 'COMPLETED' ? 'opacity-60 grayscale-[0.4] hover:opacity-100 hover:grayscale-0 border-stone-200/50' : 'border-stone-200/70 hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] hover:border-[#FF6B2C]/30'}`}
+                                    <Link 
+                                        href={`/ai-planner/new?action=view&trip_id=${trip.db_id}${trip.status === 'DRAFT' ? '&step=' + getNextStep(trip.lastCompletedStep) : ''}`}
+                                        className={`flex group h-full flex-col bg-white rounded-3xl border shadow-sm transition-all duration-300 overflow-hidden cursor-pointer relative hover:-translate-y-1 ${trip.status === 'COMPLETED' ? 'opacity-60 grayscale-[0.4] hover:opacity-100 hover:grayscale-0 border-stone-200/50' : 'border-stone-200/70 hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)] hover:border-[#FF6B2C]/40'}`}
                                     >
                                         <div 
                                             className="h-44 relative overflow-hidden flex items-center justify-center transition-transform duration-700 bg-stone-100"
@@ -421,43 +502,46 @@ export default function AIPlannerDashboard() {
                                                 {trip.country || 'Destination'}
                                             </p>
                                             
-                                            <div className="mt-auto pt-4 border-t border-stone-100 flex items-center justify-between">
-                                                {trip.status === 'DRAFT' ? (
+                                            <div className="mt-auto pt-4 border-t border-stone-100 flex flex-col gap-3">
+                                                {trip.status === 'DRAFT' && (
                                                     <div className="w-full">
-                                                        <div className="flex justify-between text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1.5">
-                                                            <span>Planning Progress</span>
-                                                            <span>{trip.progress}%</span>
+                                                        <div className="flex justify-between items-end mb-1.5">
+                                                            <div className="flex flex-col gap-0.5">
+                                                                <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider leading-none">Planning Progress</span>
+                                                                <span className="text-[9px] font-medium text-stone-400 uppercase tracking-widest leading-none">{getProgressLabel(trip.progress)}</span>
+                                                            </div>
+                                                            <span className="text-[10px] font-bold text-[#FF6B2C] uppercase tracking-wider">{trip.progress}%</span>
                                                         </div>
                                                         <div className="w-full bg-stone-100 rounded-full h-1.5 overflow-hidden">
                                                             <div className="bg-[#FF6B2C] h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${trip.progress}%` }} />
                                                         </div>
                                                     </div>
-                                                ) : (
-                                                    <>
-                                                        <span className="text-[10px] font-bold text-[#1F1F1F] uppercase tracking-[0.1em] group-hover:text-[#FF6B2C] transition-colors">
-                                                            View Full Itinerary
-                                                        </span>
-                                                        <ArrowRight size={14} className="text-stone-400 transform transition-all group-hover:translate-x-1 group-hover:text-[#FF6B2C]" />
-                                                    </>
                                                 )}
+                                                
+                                                <div className="flex items-center justify-between mt-auto">
+                                                    <span className="text-[10px] font-bold text-[#1F1F1F] uppercase tracking-[0.1em] group-hover:text-[#FF6B2C] transition-colors">
+                                                        {trip.status === 'DRAFT' ? 'Continue Planning' : 'View Full Itinerary'}
+                                                    </span>
+                                                    <ArrowRight size={14} className="text-stone-400 transform transition-all group-hover:translate-x-1 group-hover:text-[#FF6B2C]" />
+                                                </div>
                                             </div>
                                         </div>
-                                    </a>
+                                    </Link>
                                 </motion.div>
                             ))}
 
                             {/* Ghost Card for uneven rows */}
                             {needsGhostCard && (
                                 <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full">
-                                    <a 
-                                        href="/ai-planner/new"
-                                        className="h-full min-h-[280px] flex flex-col items-center justify-center bg-stone-50/50 rounded-3xl border-2 border-stone-200 border-dashed hover:border-[#FF6B2C]/50 hover:bg-[#FF6B2C]/5 transition-all duration-300 group cursor-pointer"
+                                    <Link 
+                                        href="/ai-planner/new?action=new"
+                                        className="h-full min-h-[280px] flex flex-col items-center justify-center bg-stone-50/50 rounded-3xl border-2 border-stone-200 border-dashed hover:border-[#FF6B2C]/50 hover:bg-[#FF6B2C]/5 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 group cursor-pointer"
                                     >
                                         <div className="w-12 h-12 rounded-full bg-white border border-stone-200 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:border-[#FF6B2C]/30 transition-all duration-300 shadow-sm">
                                             <Plus size={20} className="text-stone-400 group-hover:text-[#FF6B2C] transition-colors" />
                                         </div>
                                         <span className="font-bold text-sm text-stone-500 group-hover:text-[#FF6B2C] transition-colors">Plan Another Trip</span>
-                                    </a>
+                                    </Link>
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -466,12 +550,12 @@ export default function AIPlannerDashboard() {
             </div>
             
             {/* Mobile FAB for New Trip */}
-            <a 
-                href="/ai-planner/new"
+            <Link 
+                href="/ai-planner/new?action=new"
                 className="sm:hidden fixed bottom-6 right-6 w-14 h-14 bg-[#FF6B2C] rounded-full shadow-xl flex items-center justify-center text-white z-50 hover:scale-105 active:scale-95 transition-all"
             >
                 <Plus size={24} />
-            </a>
+            </Link>
 
             {/* Custom Delete Confirmation Modal */}
             <AnimatePresence>
@@ -559,17 +643,7 @@ export default function AIPlannerDashboard() {
                         transition={{ type: "spring", bounce: 0.35, duration: 0.7 }}
                         className="fixed bottom-10 left-1/2 z-[100] flex items-center gap-4 bg-stone-900/90 backdrop-blur-xl border border-white/10 text-white pl-5 pr-3 py-2.5 rounded-2xl shadow-[0_30px_60px_rgba(0,0,0,0.6)] overflow-hidden min-w-[300px] origin-bottom"
                     >
-                        <motion.div 
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1, rotate: [0, -15, 15, -10, 10, 0] }}
-                            transition={{ 
-                                scale: { type: "spring", bounce: 0.5, delay: 0.2 },
-                                rotate: { delay: 0.4, duration: 0.5 }
-                            }}
-                            className="shrink-0"
-                        >
-                            <Trash2 size={16} className="text-stone-400" />
-                        </motion.div>
+                        <AnimatedTrashIcon />
                         
                         <p className="text-[13px] text-stone-200 flex-1 truncate">
                             Deleted <strong className="text-white font-semibold">{toast.destinationName}</strong>
