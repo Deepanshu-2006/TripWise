@@ -31,8 +31,8 @@ function Header() {
     
     const headerBgLight = useTransform(progress, [0, 1], ["rgba(255,255,255,0.6)", "rgba(255,255,255,0.85)"]);
     
-    const darkBgStart = isHomePage ? "rgba(17,17,17,0.5)" : "rgba(20,20,20,0.85)";
-    const darkBgEnd = "rgba(20,20,20,0.95)";
+    const darkBgStart = isHomePage ? "rgba(17,17,17,0.5)" : "rgba(10,10,10,0.92)";
+    const darkBgEnd = "rgba(10,10,10,0.98)";
     const headerBgDark = useTransform(progress, [0, 1], [darkBgStart, darkBgEnd]);
     
     const headerShadowLight = useTransform(progress, [0, 1], ["0 12px 40px rgba(0,0,0,0.06)", "0 16px 48px rgba(0,0,0,0.08)"]);

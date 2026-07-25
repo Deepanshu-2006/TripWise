@@ -379,6 +379,7 @@ export default function ItineraryPage() {
   const foreY = useTransform(scrollY, [0, 600], ["0%", "4%"]);
   const foreScale = useTransform(scrollY, [0, 600], [1, 1.04]);
   const heroOpacity = useTransform(scrollY, [0, 600], [1, 0]);
+  const maskOpacity = useTransform(scrollY, [450, 550], [0, 1]);
 
 
 
@@ -635,6 +636,10 @@ export default function ItineraryPage() {
       />
 
       <div className="print:hidden">
+        <motion.div 
+            style={{ opacity: maskOpacity }} 
+            className="fixed top-0 left-0 right-0 h-[72px] sm:h-[88px] bg-[#FAF6F0] z-30 pointer-events-none" 
+        />
         <Header />
       </div>
 

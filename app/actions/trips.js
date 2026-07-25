@@ -29,6 +29,31 @@ export async function saveTrip(destinationName, itineraryData) {
     return { success: true, trip: data[0] };
 }
 
+export async function updateTrip(tripId, destinationName, itineraryData) {
+    const { userId } = await auth();
+
+    if (!userId) {
+        throw new Error('You must be signed in to save a trip');
+    }
+
+    const { data, error } = await supabase
+        .from('trips')
+        .update({
+            destination_name: destinationName,
+            itinerary_data: itineraryData,
+        })
+        .eq('id', tripId)
+        .eq('user_id', userId)
+        .select();
+
+    if (error) {
+        console.error("Supabase Error updating trip:", error);
+        throw new Error(`Failed to update trip: ${error.message || JSON.stringify(error)}`);
+    }
+
+    return { success: true, trip: data[0] };
+}
+
 export async function getUserTrips() {
     const { userId } = await auth();
 
