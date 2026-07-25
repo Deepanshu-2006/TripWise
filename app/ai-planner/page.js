@@ -491,49 +491,54 @@ export default function AIPlannerDashboard() {
                                     animate={{ scale: 1, opacity: 1, y: 0 }}
                                     exit={{ scale: 0.95, opacity: 0, y: 20 }}
                                     transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
-                                    className="bg-white rounded-3xl max-w-sm w-full shadow-2xl border border-stone-200/50 overflow-hidden flex flex-col"
+                                    className="bg-white rounded-[2rem] max-w-sm w-full shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-stone-200/50 flex flex-col relative overflow-hidden"
                                     onClick={e => e.stopPropagation()}
                                 >
                                     {/* Modal Header with Trip Image */}
-                                    <div className="h-32 relative overflow-hidden bg-stone-100 flex items-center justify-center">
+                                    <div className="h-44 relative bg-stone-100 w-full overflow-hidden">
                                         {trip?.imageUrl ? (
                                             <img src={trip.imageUrl} alt={trip.destinationName} className="absolute inset-0 w-full h-full object-cover" />
                                         ) : (
                                             <div className="absolute inset-0" style={generateGradient(trip?.destinationName)}></div>
                                         )}
-                                        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                                        
+                                        {/* Soft fade to white at the bottom */}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-black/20" />
+                                    </div>
+                                    
+                                    {/* Overlapping Icon */}
+                                    <div className="relative -mt-8 flex justify-center z-10">
                                         <motion.div 
                                             initial={{ rotate: 0 }}
                                             animate={{ rotate: [0, -15, 15, -15, 15, 0] }}
                                             transition={{ delay: 0.3, duration: 0.5, ease: "easeInOut" }}
-                                            className="relative z-10 w-14 h-14 bg-rose-500/20 backdrop-blur-md rounded-full flex items-center justify-center border border-rose-500/30 shadow-[0_0_20px_rgba(244,63,94,0.3)]"
+                                            className="w-16 h-16 bg-white rounded-full flex items-center justify-center p-1.5 shadow-[0_8px_20px_rgba(0,0,0,0.08)]"
                                         >
-                                            <Trash2 size={24} className="text-rose-200" />
+                                            <div className="w-full h-full bg-rose-50 rounded-full flex items-center justify-center border border-rose-100">
+                                                <Trash2 size={24} className="text-rose-500" />
+                                            </div>
                                         </motion.div>
                                     </div>
-                                    
-                                    {/* Modal Body */}
-                                    <div className="p-8 pt-6">
-                                        <h3 className="font-serif font-bold text-2xl text-stone-900 text-center mb-2">Delete Trip?</h3>
-                                        <p className="text-stone-500 text-center mb-8 text-[13px] leading-relaxed">
-                                            Are you sure you want to delete your planning session for <strong className="text-stone-800">{trip?.destinationName?.split(',')[0] || "this destination"}</strong>? This action is permanent.
-                                        </p>
 
-                                        {/* Actions */}
-                                        <div className="flex flex-col gap-3">
-                                            <button 
-                                                onClick={confirmDelete}
-                                                className="w-full px-5 py-3.5 rounded-2xl text-[12px] font-bold uppercase tracking-[0.1em] text-white bg-rose-500 hover:bg-rose-600 shadow-[0_8px_20px_rgba(244,63,94,0.25)] hover:shadow-[0_12px_25px_rgba(244,63,94,0.35)] transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5"
-                                            >
-                                                Yes, Delete Trip
-                                            </button>
+                                    {/* Modal Body */}
+                                    <div className="p-8 pt-5 flex flex-col items-center text-center">
+                                        <h3 className="font-serif font-bold text-3xl text-stone-900 mb-2">Delete {trip?.destinationName?.split(',')[0]}?</h3>
+                                        <p className="text-stone-500 text-[13px] leading-relaxed mb-8 max-w-[260px]">
+                                            You are about to permanently delete this planning session. This cannot be undone.
+                                        </p>
+                                        
+                                        {/* Actions - Horizontal Layout */}
+                                        <div className="flex w-full gap-3 mt-2">
                                             <button 
                                                 onClick={() => setTripToDelete(null)}
-                                                className="w-full px-5 py-3.5 rounded-2xl text-[12px] font-bold uppercase tracking-[0.1em] text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors"
+                                                className="flex-1 px-4 py-3.5 rounded-2xl text-[12px] font-bold uppercase tracking-[0.1em] text-stone-600 bg-white border border-stone-200 shadow-sm hover:bg-stone-50 hover:border-stone-300 transition-all active:scale-[0.98]"
                                             >
                                                 Cancel
+                                            </button>
+                                            <button 
+                                                onClick={confirmDelete}
+                                                className="flex-1 px-4 py-3.5 rounded-2xl text-[12px] font-bold uppercase tracking-[0.1em] text-white bg-gradient-to-b from-rose-500 to-rose-600 border border-rose-600 shadow-[0_8px_20px_rgba(225,29,72,0.25)] hover:shadow-[0_12px_25px_rgba(225,29,72,0.4)] transition-all hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0"
+                                            >
+                                                Delete
                                             </button>
                                         </div>
                                     </div>
@@ -548,12 +553,23 @@ export default function AIPlannerDashboard() {
             <AnimatePresence>
                 {toast && (
                     <motion.div
-                        initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 20, scale: 0.9 }}
-                        className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-4 bg-stone-900/90 backdrop-blur-xl border border-white/10 text-white pl-5 pr-3 py-2.5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden min-w-[300px]"
+                        initial={{ x: "-50%", opacity: 0, y: 80, scale: 0.8, rotateX: -60, transformPerspective: 1000 }}
+                        animate={{ x: "-50%", opacity: 1, y: 0, scale: 1, rotateX: 0 }}
+                        exit={{ x: "-50%", opacity: 0, y: 40, scale: 0.8, rotateX: 60 }}
+                        transition={{ type: "spring", bounce: 0.35, duration: 0.7 }}
+                        className="fixed bottom-10 left-1/2 z-[100] flex items-center gap-4 bg-stone-900/90 backdrop-blur-xl border border-white/10 text-white pl-5 pr-3 py-2.5 rounded-2xl shadow-[0_30px_60px_rgba(0,0,0,0.6)] overflow-hidden min-w-[300px] origin-bottom"
                     >
-                        <Trash2 size={16} className="text-stone-400 shrink-0" />
+                        <motion.div 
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1, rotate: [0, -15, 15, -10, 10, 0] }}
+                            transition={{ 
+                                scale: { type: "spring", bounce: 0.5, delay: 0.2 },
+                                rotate: { delay: 0.4, duration: 0.5 }
+                            }}
+                            className="shrink-0"
+                        >
+                            <Trash2 size={16} className="text-stone-400" />
+                        </motion.div>
                         
                         <p className="text-[13px] text-stone-200 flex-1 truncate">
                             Deleted <strong className="text-white font-semibold">{toast.destinationName}</strong>
