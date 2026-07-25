@@ -51,7 +51,8 @@ export default function AIPlannerDashboard() {
     const [savedTrips, setSavedTrips] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    const [isDeleting, setIsDeleting] = useState(null);
+    const [tripToDelete, setTripToDelete] = useState(null);
+    const [toast, setToast] = useState(null);
     const [copiedId, setCopiedId] = useState(null);
 
     const [activeTab, setActiveTab] = useState('All');
@@ -133,21 +134,58 @@ export default function AIPlannerDashboard() {
         }
     }, [isLoaded, isSignedIn]);
 
-    const handleDelete = async (e, tripId) => {
+    // Handle Escape key to close modal
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape' && tripToDelete) {
+                setTripToDelete(null);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [tripToDelete]);
+
+    const handleDelete = (e, tripId) => {
         e.preventDefault();
         e.stopPropagation();
-        
-        if (!confirm("Are you sure you want to delete this trip?")) return;
+        setTripToDelete(tripId);
+    };
 
-        setIsDeleting(tripId);
-        try {
-            await deleteTrip(tripId);
-            setSavedTrips(prev => prev.filter(t => t.db_id !== tripId));
-        } catch (err) {
-            console.error("Error deleting trip:", err);
-            alert("Failed to delete trip.");
-        }
-        setIsDeleting(null);
+    const confirmDelete = () => {
+        if (!tripToDelete) return;
+        
+        const tripId = tripToDelete;
+        const tripToRestore = savedTrips.find(t => t.db_id === tripId);
+        
+        // Optimistically remove from UI
+        setSavedTrips(prev => prev.filter(t => t.db_id !== tripId));
+        setTripToDelete(null); // Close modal instantly
+        
+        // Setup actual backend deletion after 5 seconds
+        const timeoutId = setTimeout(async () => {
+            try {
+                await deleteTrip(tripId);
+            } catch (err) {
+                console.error("Error deleting trip:", err);
+            }
+            setToast(null);
+        }, 5000);
+        
+        // Show Toast
+        setToast({
+            tripId,
+            timeoutId,
+            tripData: tripToRestore,
+            destinationName: tripToRestore.destinationName.split(',')[0]
+        });
+    };
+
+    const handleUndo = () => {
+        if (!toast) return;
+        clearTimeout(toast.timeoutId);
+        // Restore trip to local state
+        setSavedTrips(prev => [...prev, toast.tripData]);
+        setToast(null);
     };
 
     const handleShare = (e, tripId) => {
@@ -361,11 +399,10 @@ export default function AIPlannerDashboard() {
                                                 </button>
                                                 <button 
                                                     onClick={(e) => handleDelete(e, trip.db_id)}
-                                                    disabled={isDeleting === trip.db_id}
-                                                    className="p-1.5 hover:bg-rose-100 rounded-full text-rose-500 transition-colors disabled:opacity-50"
+                                                    className="p-1.5 hover:bg-rose-100 rounded-full text-rose-500 transition-colors"
                                                     title="Delete Trip"
                                                 >
-                                                    {isDeleting === trip.db_id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                                                    <Trash2 size={14} />
                                                 </button>
                                             </div>
                                         </div>
@@ -435,6 +472,112 @@ export default function AIPlannerDashboard() {
             >
                 <Plus size={24} />
             </a>
+
+            {/* Custom Delete Confirmation Modal */}
+            <AnimatePresence>
+                {tripToDelete && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-md"
+                        onClick={() => setTripToDelete(null)}
+                    >
+                        {(() => {
+                            const trip = savedTrips.find(t => t.db_id === tripToDelete);
+                            return (
+                                <motion.div
+                                    initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                                    exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                                    transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
+                                    className="bg-white rounded-3xl max-w-sm w-full shadow-2xl border border-stone-200/50 overflow-hidden flex flex-col"
+                                    onClick={e => e.stopPropagation()}
+                                >
+                                    {/* Modal Header with Trip Image */}
+                                    <div className="h-32 relative overflow-hidden bg-stone-100 flex items-center justify-center">
+                                        {trip?.imageUrl ? (
+                                            <img src={trip.imageUrl} alt={trip.destinationName} className="absolute inset-0 w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="absolute inset-0" style={generateGradient(trip?.destinationName)}></div>
+                                        )}
+                                        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                                        
+                                        <motion.div 
+                                            initial={{ rotate: 0 }}
+                                            animate={{ rotate: [0, -15, 15, -15, 15, 0] }}
+                                            transition={{ delay: 0.3, duration: 0.5, ease: "easeInOut" }}
+                                            className="relative z-10 w-14 h-14 bg-rose-500/20 backdrop-blur-md rounded-full flex items-center justify-center border border-rose-500/30 shadow-[0_0_20px_rgba(244,63,94,0.3)]"
+                                        >
+                                            <Trash2 size={24} className="text-rose-200" />
+                                        </motion.div>
+                                    </div>
+                                    
+                                    {/* Modal Body */}
+                                    <div className="p-8 pt-6">
+                                        <h3 className="font-serif font-bold text-2xl text-stone-900 text-center mb-2">Delete Trip?</h3>
+                                        <p className="text-stone-500 text-center mb-8 text-[13px] leading-relaxed">
+                                            Are you sure you want to delete your planning session for <strong className="text-stone-800">{trip?.destinationName?.split(',')[0] || "this destination"}</strong>? This action is permanent.
+                                        </p>
+
+                                        {/* Actions */}
+                                        <div className="flex flex-col gap-3">
+                                            <button 
+                                                onClick={confirmDelete}
+                                                className="w-full px-5 py-3.5 rounded-2xl text-[12px] font-bold uppercase tracking-[0.1em] text-white bg-rose-500 hover:bg-rose-600 shadow-[0_8px_20px_rgba(244,63,94,0.25)] hover:shadow-[0_12px_25px_rgba(244,63,94,0.35)] transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5"
+                                            >
+                                                Yes, Delete Trip
+                                            </button>
+                                            <button 
+                                                onClick={() => setTripToDelete(null)}
+                                                className="w-full px-5 py-3.5 rounded-2xl text-[12px] font-bold uppercase tracking-[0.1em] text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            );
+                        })()}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Undo Toast */}
+            <AnimatePresence>
+                {toast && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 20, scale: 0.9 }}
+                        className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-4 bg-stone-900/90 backdrop-blur-xl border border-white/10 text-white pl-5 pr-3 py-2.5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden min-w-[300px]"
+                    >
+                        <Trash2 size={16} className="text-stone-400 shrink-0" />
+                        
+                        <p className="text-[13px] text-stone-200 flex-1 truncate">
+                            Deleted <strong className="text-white font-semibold">{toast.destinationName}</strong>
+                        </p>
+                        
+                        <div className="w-px h-4 bg-white/20 ml-2 shrink-0" />
+                        
+                        <button 
+                            onClick={handleUndo}
+                            className="px-3 py-1.5 hover:bg-white/10 rounded-lg text-[#FF6B2C] hover:text-[#FF8A4C] text-[11px] font-bold uppercase tracking-wider transition-all active:scale-95 shrink-0"
+                        >
+                            Undo
+                        </button>
+                        
+                        {/* Time remaining indicator */}
+                        <motion.div 
+                            initial={{ width: "100%" }}
+                            animate={{ width: "0%" }}
+                            transition={{ duration: 5, ease: "linear" }}
+                            className="absolute bottom-0 left-0 h-[3px] bg-[#FF6B2C]"
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
