@@ -151,7 +151,7 @@ function Header() {
                 {/* Left Side: Destinations & AI Planner (Desktop) */}
                 <motion.div style={{ gap: desktopNavGap }} className={`hidden md:flex items-center justify-start`}>
                     {['Destinations', 'AI Planner'].map((item) => {
-                        const itemPath = item === 'AI Planner' ? '/ai-planner' : item === 'Destinations' ? '/destinations' : `#${item.toLowerCase().replace(' ', '-')}`;
+                        const itemPath = item === 'AI Planner' ? '/ai-planner/new' : item === 'Destinations' ? '/destinations' : `#${item.toLowerCase().replace(' ', '-')}`;
                         const isActive = pathname === itemPath || pathname?.startsWith(`${itemPath}/`);
                         // Placeholder for actual drafts data
                         const hasActiveDrafts = item === 'AI Planner' && isSignedIn; 
@@ -227,22 +227,44 @@ function Header() {
                     
                     {/* Desktop Only Text Links */}
                     <div className="hidden md:flex items-center gap-8 lg:gap-10">
-                        {isSignedIn && (
-                            <motion.a
-                                href="/ai-planner"
-                                style={{ letterSpacing: navTracking }}
-                                className={`font-mono text-[11px] font-bold ${isLightPage ? 'text-[#1F1F1F]/80 hover:text-[#FF6B2C]' : 'text-white/60 hover:text-[#fe7717]'} relative py-2 nav-link-underline uppercase whitespace-nowrap`}
-                            >
-                                My Trips
-                            </motion.a>
-                        )}
-                        <motion.a
-                            href="/community"
-                            style={{ letterSpacing: navTracking }}
-                            className={`font-mono text-[11px] font-bold ${isLightPage ? 'text-[#1F1F1F]/80 hover:text-[#FF6B2C]' : 'text-white/60 hover:text-[#fe7717]'} relative py-2 nav-link-underline uppercase whitespace-nowrap`}
-                        >
-                            Community
-                        </motion.a>
+                        {isSignedIn && (() => {
+                            const isActive = pathname === '/ai-planner';
+                            return (
+                                <motion.a
+                                    href="/ai-planner"
+                                    style={{ letterSpacing: navTracking }}
+                                    className={`font-mono text-[11px] font-bold ${
+                                        isActive
+                                            ? 'text-[#FF6B2C]' 
+                                            : isLightPage ? 'text-[#1F1F1F]/80 hover:text-[#FF6B2C]' : 'text-white/60 hover:text-[#fe7717]'
+                                    } relative py-2 ${!isActive ? 'nav-link-underline' : ''} uppercase whitespace-nowrap flex items-center`}
+                                >
+                                    My Trips
+                                    {isActive && (
+                                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#FF6B2C] rounded-full" />
+                                    )}
+                                </motion.a>
+                            );
+                        })()}
+                        {(() => {
+                            const isActive = pathname === '/community' || pathname?.startsWith('/community/');
+                            return (
+                                <motion.a
+                                    href="/community"
+                                    style={{ letterSpacing: navTracking }}
+                                    className={`font-mono text-[11px] font-bold ${
+                                        isActive
+                                            ? 'text-[#FF6B2C]' 
+                                            : isLightPage ? 'text-[#1F1F1F]/80 hover:text-[#FF6B2C]' : 'text-white/60 hover:text-[#fe7717]'
+                                    } relative py-2 ${!isActive ? 'nav-link-underline' : ''} uppercase whitespace-nowrap flex items-center`}
+                                >
+                                    Community
+                                    {isActive && (
+                                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#FF6B2C] rounded-full" />
+                                    )}
+                                </motion.a>
+                            );
+                        })()}
                         
                         {/* Account Controls */}
                         <div className="flex items-center shrink-0">

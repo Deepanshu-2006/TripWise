@@ -58,7 +58,8 @@ function FeaturesSelection() {
                         let logoY = -40; // fallback value above header
                         if (logoEl) {
                             const logoRect = logoEl.getBoundingClientRect();
-                            logoX = (logoRect.left + logoRect.right) / 2 - stickyRect.left;
+                            // Added +25 to shift the starting position slightly to the right
+                            logoX = ((logoRect.left + logoRect.right) / 2 - stickyRect.left) + 25;
                             logoY = (logoRect.top + logoRect.bottom) / 2 - stickyRect.top;
                         }
 
