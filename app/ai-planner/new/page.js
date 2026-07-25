@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import PlannerSidebar from '../../components/PlannerSidebar';
 import Header from '../../components/Header';
 import LiveTripDashboard from '../../components/LiveTripDashboard';
-import { saveTrip } from '../../actions/trips';
+import { saveTrip, getTripById } from '../../actions/trips';
 
 // Separate component so useSearchParams is inside a Suspense boundary
 function PromptSeeder({ onPrompt }) {
@@ -19,6 +19,7 @@ function PromptSeeder({ onPrompt }) {
 
 export default function AIPlannerPage() {
   const [currentPrompt, setCurrentPrompt] = useState('');
+  const [generatingDestination, setGeneratingDestination] = useState('');
   const [itinerary, setItinerary] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
@@ -26,22 +27,43 @@ export default function AIPlannerPage() {
   const [selectedStopIdx, setSelectedStopIdx] = useState(null);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('action') === 'view') {
-        const stored = localStorage.getItem('tripwise_itinerary');
-        if (stored) {
-          try {
-            setItinerary(JSON.parse(stored));
-          } catch (e) {
-            console.error("Failed to parse itinerary from localStorage", e);
+    async function loadSharedTrip() {
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('action') === 'view') {
+          const tripId = urlParams.get('trip_id');
+          if (tripId) {
+            try {
+              const tripData = await getTripById(tripId);
+              if (tripData && tripData.itinerary_data) {
+                setItinerary(tripData.itinerary_data);
+                localStorage.setItem('tripwise_itinerary', JSON.stringify(tripData.itinerary_data));
+              }
+            } catch (e) {
+              console.error("Failed to fetch shared trip from cloud", e);
+            }
+          } else {
+            // Fallback to local storage
+            const stored = localStorage.getItem('tripwise_itinerary');
+            if (stored) {
+              try {
+                setItinerary(JSON.parse(stored));
+              } catch (e) {
+                console.error("Failed to parse itinerary from localStorage", e);
+              }
+            }
           }
         }
       }
     }
+    loadSharedTrip();
   }, []);
 
   const handleGenerate = async (selections) => {
+    const finalPrompt = selections.prompt || currentPrompt || "A dream vacation";
+    const finalDest = selections.destination || selections.prompt || currentPrompt || "";
+    setGeneratingDestination(finalDest);
+
     setIsGenerating(true);
     setSelectedDayIndex(0);
     setSelectedStopIdx(null);
@@ -50,8 +72,8 @@ export default function AIPlannerPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: selections.prompt || currentPrompt || "A dream vacation",
-          destination: selections.destination || selections.prompt || currentPrompt || "",
+          prompt: finalPrompt,
+          destination: finalDest,
           basecamp: selections.basecamp || "",
           interests: selections.interests || [],
           budget: selections.budget || 'standard',
@@ -137,7 +159,7 @@ export default function AIPlannerPage() {
           {/* Right Panel: Map View & Interactive Dashboard */}
           <div className="hidden md:flex flex-1 h-full overflow-hidden flex-col bg-[#FFFFFF]">
             <LiveTripDashboard
-              destination={itinerary?.destinationName || currentPrompt}
+              destination={itinerary?.destinationName || generatingDestination || currentPrompt}
               itinerary={itinerary}
               isGenerating={isGenerating}
               selectedDayIndex={selectedDayIndex}
