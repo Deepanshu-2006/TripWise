@@ -22,17 +22,23 @@ function Header() {
         else if (latest <= 0.5 && isScrolled) setIsScrolled(false);
     });
 
+    const pathname = usePathname();
+    const isHomePage = pathname === '/';
+    
     // Interpolated Values
     const headerTop = useTransform(progress, [0, 1], ["12px", "10px"]);
     const headerMaxWidth = useTransform(progress, [0, 1], ["1152px", "740px"]); // 1152px = max-w-6xl
     
     const headerBgLight = useTransform(progress, [0, 1], ["rgba(255,255,255,0.6)", "rgba(255,255,255,0.85)"]);
-    const headerBgDark = useTransform(progress, [0, 1], ["rgba(17,17,17,0.5)", "rgba(20,20,20,0.85)"]);
+    
+    const darkBgStart = isHomePage ? "rgba(17,17,17,0.5)" : "rgba(20,20,20,0.85)";
+    const darkBgEnd = "rgba(20,20,20,0.95)";
+    const headerBgDark = useTransform(progress, [0, 1], [darkBgStart, darkBgEnd]);
     
     const headerShadowLight = useTransform(progress, [0, 1], ["0 12px 40px rgba(0,0,0,0.06)", "0 16px 48px rgba(0,0,0,0.08)"]);
     const headerShadowDark = useTransform(progress, [0, 1], ["0 12px 40px rgba(0,0,0,0.25)", "0 16px 48px rgba(0,0,0,0.38)"]);
     
-    const headerBlur = useTransform(progress, [0, 1], ["blur(8px)", "blur(12px)"]);
+    const headerBlur = useTransform(progress, [0, 1], [isHomePage ? "blur(8px)" : "blur(12px)", "blur(12px)"]);
 
     const navGap = useTransform(progress, [0, 1], ["16px", "24px"]);
     const desktopNavGap = useTransform(progress, [0, 1], ["32px", "24px"]);
@@ -95,7 +101,7 @@ function Header() {
             window.location.href = isSignedIn ? '/ai-planner/new' : '/sign-in';
         }, 1300);
     };
-    const pathname = usePathname()
+
     const isLightPage = pathname?.startsWith('/planner') && !pathname?.startsWith('/planner-sidebar');
 
     useEffect(() => {
@@ -139,7 +145,7 @@ function Header() {
                     : "border-white/20 hover:border-white/30"
                 : isLightPage
                     ? "border-[#ECE8E2] hover:border-[#FF6B2C]/30"
-                    : "border-white/15 hover:border-white/25"
+                    : (isHomePage ? "border-white/15 hover:border-white/25" : "border-white/20 hover:border-white/30")
         }`}>
             <motion.div style={{ gap: navGap }} className={`px-4 md:px-6 flex items-center justify-between h-15`}>
                 {/* Left Side: Destinations & AI Planner (Desktop) */}
@@ -221,6 +227,15 @@ function Header() {
                     
                     {/* Desktop Only Text Links */}
                     <div className="hidden md:flex items-center gap-8 lg:gap-10">
+                        {isSignedIn && (
+                            <motion.a
+                                href="/ai-planner"
+                                style={{ letterSpacing: navTracking }}
+                                className={`font-mono text-[11px] font-bold ${isLightPage ? 'text-[#1F1F1F]/80 hover:text-[#FF6B2C]' : 'text-white/60 hover:text-[#fe7717]'} relative py-2 nav-link-underline uppercase whitespace-nowrap`}
+                            >
+                                My Trips
+                            </motion.a>
+                        )}
                         <motion.a
                             href="/community"
                             style={{ letterSpacing: navTracking }}
@@ -241,32 +256,7 @@ function Header() {
                         </div>
                     </div>
 
-                    {/* Primary CTA */}
-                    <button
-                        onClick={handleFlyTransition}
-                        className={`group relative px-5 py-3 bg-gradient-to-r from-[#FF6B2C] to-[#FF8A4C] text-white font-bold text-[11px] rounded-full transition-all duration-300 transform cursor-pointer uppercase tracking-[0.2em] whitespace-nowrap shrink-0 border border-[#FF8A4C]/50 flex items-center justify-center overflow-visible ${isFlying ? 'scale-95 shadow-[0_0_30px_rgba(255,107,44,0.6)]' : 'hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,107,44,0.4)] hover:shadow-[0_0_30px_rgba(255,107,44,0.6)]'}`}
-                    >
-                        <span className={`relative z-10 drop-shadow-sm transition-colors duration-300 ${isFlying ? 'opacity-0' : 'opacity-100'}`}>
-                            {isSignedIn ? 'Start New Trip' : 'Plan My Trip'}
-                        </span>
-                        {/* Hover glow overlay */}
-                        <div className={`absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transition-opacity duration-300 rounded-full ${isFlying ? 'opacity-0' : 'opacity-0 group-hover:opacity-100'}`} />
-
-                        {/* Plane 1 (Main, fast) */}
-                        <svg ref={plane1Ref} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-white z-50 pointer-events-none opacity-0" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M1.946 9.315c-.522-.174-.527-.455.01-.634l19.087-6.362c.529-.176.832.12.684.638l-5.454 19.086c-.15.524-.46.529-.65-.013l-3.35-9.404-9.327-3.311Zm9.638 4.27 2.656 7.457 4.148-14.52-14.52 4.839 8.358 2.966c.277.098.423.238.455.514l-2.083 6.945-1.014-8.197Z" />
-                        </svg>
-                        
-                        {/* Plane 2 (Smaller, flies wider right) */}
-                        <svg ref={plane2Ref} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 text-[#FFF8F5] z-50 pointer-events-none opacity-0" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M1.946 9.315c-.522-.174-.527-.455.01-.634l19.087-6.362c.529-.176.832.12.684.638l-5.454 19.086c-.15.524-.46.529-.65-.013l-3.35-9.404-9.327-3.311Zm9.638 4.27 2.656 7.457 4.148-14.52-14.52 4.839 8.358 2.966c.277.098.423.238.455.514l-2.083 6.945-1.014-8.197Z" />
-                        </svg>
-
-                        {/* Plane 3 (Medium, flies higher left) */}
-                        <svg ref={plane3Ref} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 text-[#FFE6DA] z-50 pointer-events-none opacity-0" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M1.946 9.315c-.522-.174-.527-.455.01-.634l19.087-6.362c.529-.176.832.12.684.638l-5.454 19.086c-.15.524-.46.529-.65-.013l-3.35-9.404-9.327-3.311Zm9.638 4.27 2.656 7.457 4.148-14.52-14.52 4.839 8.358 2.966c.277.098.423.238.455.514l-2.083 6.945-1.014-8.197Z" />
-                        </svg>
-                    </button>
+                    {/* CTA removed as per user request */}
                 </div>
             </motion.div>
 

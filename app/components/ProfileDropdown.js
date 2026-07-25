@@ -192,10 +192,6 @@ export default function ProfileDropdown({ isLightPage, isScrolled }) {
                                     }}
                                     className="py-1.5 flex flex-col gap-0.5"
                                 >
-                                    <a href="#my-trips" className="flex items-center gap-3 mx-2 px-3 py-2 rounded-xl text-sm text-white/60 hover:text-white hover:bg-white/10 transition-all">
-                                        <Map size={16} className="opacity-50" />
-                                        My Trips
-                                    </a>
                                     <a href="/profile" className="flex items-center gap-3 mx-2 px-3 py-2 rounded-xl text-sm text-white/60 hover:text-white hover:bg-white/10 transition-all">
                                         <UserIcon size={16} className="opacity-50" />
                                         My Profile
