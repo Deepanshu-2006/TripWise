@@ -3,27 +3,32 @@
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import { useUser } from '@clerk/nextjs';
-import { Compass, Plus, MapPin, Calendar, ArrowRight } from 'lucide-react';
+import { Compass, Plus, MapPin, Calendar, ArrowRight, Loader2 } from 'lucide-react';
+import { getUserTrips } from '../actions/trips';
 
 export default function AIPlannerDashboard() {
     const { isLoaded, isSignedIn, user } = useUser();
     const [savedTrips, setSavedTrips] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const stored = localStorage.getItem('tripwise_itinerary');
-            if (stored) {
+        async function fetchTrips() {
+            if (isSignedIn) {
                 try {
-                    const parsed = JSON.parse(stored);
-                    if (parsed && parsed.destinationName) {
-                        setSavedTrips([parsed]); // Mock array with one item for now
-                    }
+                    const trips = await getUserTrips();
+                    const formatted = trips.map(t => t.itinerary_data);
+                    setSavedTrips(formatted);
                 } catch (e) {
-                    console.error("Failed to parse itinerary from localStorage", e);
+                    console.error("Failed to fetch trips from cloud", e);
                 }
             }
+            setIsLoading(false);
         }
-    }, []);
+        
+        if (isLoaded) {
+            fetchTrips();
+        }
+    }, [isLoaded, isSignedIn]);
 
     return (
         <div className="w-full min-h-screen bg-[#FAF8F5] text-[#1F1F1F] flex flex-col pt-24 sm:pt-32 px-6 lg:px-12">
@@ -51,7 +56,11 @@ export default function AIPlannerDashboard() {
                 </div>
 
                 {/* Empty State / Grid */}
-                {savedTrips.length === 0 ? (
+                {isLoading ? (
+                    <div className="flex-1 flex items-center justify-center min-h-[400px]">
+                        <Loader2 className="w-8 h-8 text-[#FF6B2C] animate-spin" />
+                    </div>
+                ) : savedTrips.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center bg-white rounded-3xl border border-[#ECE8E2] border-dashed p-12 text-center min-h-[400px]">
                         <div className="w-20 h-20 bg-[#F7F5F2] rounded-full flex items-center justify-center mb-6 shadow-sm">
                             <Compass size={32} className="text-[#8CA3A8]" />

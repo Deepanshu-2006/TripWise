@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import PlannerSidebar from '../../components/PlannerSidebar';
 import Header from '../../components/Header';
 import LiveTripDashboard from '../../components/LiveTripDashboard';
+import { saveTrip } from '../../actions/trips';
 
 // Separate component so useSearchParams is inside a Suspense boundary
 function PromptSeeder({ onPrompt }) {
@@ -62,6 +63,15 @@ export default function AIPlannerPage() {
         setItinerary(data.itinerary);
         if (typeof window !== 'undefined') {
           localStorage.setItem('tripwise_itinerary', JSON.stringify(data.itinerary));
+        }
+        
+        try {
+          await saveTrip(
+            data.itinerary.destinationName || selections.destination || currentPrompt || "Draft Trip",
+            data.itinerary
+          );
+        } catch (e) {
+          console.error("Failed to save trip to cloud:", e);
         }
       } else {
         console.error("API Error:", data.error);
