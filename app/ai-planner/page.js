@@ -3,20 +3,23 @@
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import { useUser } from '@clerk/nextjs';
-import { Compass, Plus, MapPin, Calendar, ArrowRight, Loader2 } from 'lucide-react';
-import { getUserTrips } from '../actions/trips';
+import { Compass, Plus, MapPin, Calendar, ArrowRight, Loader2, Trash2, Share2, Check } from 'lucide-react';
+import { getUserTrips, deleteTrip } from '../actions/trips';
 
 export default function AIPlannerDashboard() {
     const { isLoaded, isSignedIn, user } = useUser();
     const [savedTrips, setSavedTrips] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
+    const [isDeleting, setIsDeleting] = useState(null);
+    const [copiedId, setCopiedId] = useState(null);
+
     useEffect(() => {
         async function fetchTrips() {
             if (isSignedIn) {
                 try {
                     const trips = await getUserTrips();
-                    const formatted = trips.map(t => t.itinerary_data);
+                    const formatted = trips.map(t => ({ db_id: t.id, ...t.itinerary_data }));
                     setSavedTrips(formatted);
                 } catch (e) {
                     console.error("Failed to fetch trips from cloud", e);
@@ -29,6 +32,35 @@ export default function AIPlannerDashboard() {
             fetchTrips();
         }
     }, [isLoaded, isSignedIn]);
+
+    const handleDelete = async (e, tripId) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (!confirm("Are you sure you want to delete this trip?")) return;
+
+        setIsDeleting(tripId);
+        try {
+            await deleteTrip(tripId);
+            setSavedTrips(prev => prev.filter(t => t.db_id !== tripId));
+        } catch (err) {
+            console.error("Error deleting trip:", err);
+            alert("Failed to delete trip.");
+        }
+        setIsDeleting(null);
+    };
+
+    const handleShare = (e, tripId) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const shareUrl = `${window.location.origin}/ai-planner/new?action=view&trip_id=${tripId}`;
+        
+        navigator.clipboard.writeText(shareUrl).then(() => {
+            setCopiedId(tripId);
+            setTimeout(() => setCopiedId(null), 2000);
+        });
+    };
 
     return (
         <div className="w-full min-h-screen bg-[#FAF8F5] text-[#1F1F1F] flex flex-col pt-24 sm:pt-32 px-6 lg:px-12">
@@ -81,8 +113,8 @@ export default function AIPlannerDashboard() {
                         {savedTrips.map((trip, idx) => (
                             <a 
                                 key={idx} 
-                                href="/ai-planner/new?action=view" 
-                                className="group flex flex-col bg-white rounded-3xl border border-[#ECE8E2] shadow-[0_12px_40px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_60px_rgba(0,0,0,0.08)] transition-all duration-300 overflow-hidden cursor-pointer"
+                                href={`/ai-planner/new?action=view&trip_id=${trip.db_id}`} 
+                                className="group flex flex-col bg-white rounded-3xl border border-[#ECE8E2] shadow-[0_12px_40px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_60px_rgba(0,0,0,0.08)] transition-all duration-300 overflow-hidden cursor-pointer relative"
                             >
                                 <div className="h-32 bg-[#F7F5F2] relative overflow-hidden flex items-center justify-center border-b border-[#ECE8E2]">
                                     {/* Abstract shapes or placeholder image for trip */}
@@ -92,6 +124,25 @@ export default function AIPlannerDashboard() {
                                         <span className="px-2.5 py-1 bg-white/90 backdrop-blur-sm rounded-lg text-[10px] font-bold tracking-wider text-[#1F1F1F] uppercase shadow-sm">
                                             {trip.days?.length || 0} Days
                                         </span>
+                                    </div>
+
+                                    {/* Quick Actions (Hover) */}
+                                    <div className="absolute top-3 right-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                        <button 
+                                            onClick={(e) => handleShare(e, trip.db_id)}
+                                            className="p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-full text-[#1F1F1F] shadow-sm transition-transform hover:scale-110"
+                                            title="Share Trip"
+                                        >
+                                            {copiedId === trip.db_id ? <Check size={14} className="text-green-600" /> : <Share2 size={14} />}
+                                        </button>
+                                        <button 
+                                            onClick={(e) => handleDelete(e, trip.db_id)}
+                                            disabled={isDeleting === trip.db_id}
+                                            className="p-2 bg-white/90 hover:bg-red-50 backdrop-blur-sm rounded-full text-red-600 shadow-sm transition-transform hover:scale-110 disabled:opacity-50"
+                                            title="Delete Trip"
+                                        >
+                                            {isDeleting === trip.db_id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                                        </button>
                                     </div>
                                 </div>
                                 <div className="p-5 flex flex-col flex-1">

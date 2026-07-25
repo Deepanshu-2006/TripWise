@@ -49,3 +49,39 @@ export async function getUserTrips() {
 
     return data;
 }
+
+export async function deleteTrip(tripId) {
+    const { userId } = await auth();
+
+    if (!userId) {
+        throw new Error('You must be signed in to delete a trip');
+    }
+
+    const { error } = await supabase
+        .from('trips')
+        .delete()
+        .eq('id', tripId)
+        .eq('user_id', userId); // Ensure they only delete their own trip
+
+    if (error) {
+        console.error("Supabase Error deleting trip:", error);
+        throw new Error("Failed to delete trip");
+    }
+
+    return { success: true };
+}
+
+export async function getTripById(tripId) {
+    const { data, error } = await supabase
+        .from('trips')
+        .select('*')
+        .eq('id', tripId)
+        .single();
+
+    if (error) {
+        console.error("Supabase Error fetching trip by id:", error);
+        return null;
+    }
+
+    return data;
+}
