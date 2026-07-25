@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw } from 'lucide-react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw, Check, Map, Compass } from 'lucide-react';
 import {
   getActivityThumbnail,
   getTransportBetweenStops,
@@ -15,6 +15,8 @@ import {
   formatReviewCount
 } from './itineraryHelpers';
 import { saveTrip, updateTrip } from '../actions/trips';
+import { useRouter } from 'next/navigation';
+import * as htmlToImage from 'html-to-image';
 
 // --- Icons ---
 const SpinnerIcon = () => (
@@ -176,6 +178,162 @@ export default function PlannerSidebar({
   const [internalSelectedDayIndex, setInternalSelectedDayIndex] = useState(0);
   const selectedDayIndex = propSelectedDayIndex !== undefined ? propSelectedDayIndex : internalSelectedDayIndex;
   const [isDayChanging, setIsDayChanging] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [isElevating, setIsElevating] = useState(false);
+  const [isFlippingItinerary, setIsFlippingItinerary] = useState(false);
+  const cachedScreenshot = useRef(null);
+  const prefersReducedMotion = useReducedMotion();
+  const router = useRouter();
+
+  const handlePrefetchTear = async () => {
+    if (!cachedScreenshot.current && !isFlippingItinerary) {
+      try {
+        cachedScreenshot.current = await htmlToImage.toJpeg(document.body, { 
+          quality: 1,
+          width: window.innerWidth, 
+          height: window.innerHeight,
+          pixelRatio: window.devicePixelRatio || 1,
+          backgroundColor: '#F7F5F2'
+        });
+      } catch (e) {
+        console.error('Prefetch failed', e);
+      }
+    }
+  };
+
+  const handleTearTransition = async () => {
+    if (isFlippingItinerary) return;
+    setIsFlippingItinerary(true);
+
+    if (prefersReducedMotion) {
+      const overlay = document.createElement('div');
+      overlay.style.position = 'fixed';
+      overlay.style.inset = '0';
+      overlay.style.backgroundColor = 'white';
+      overlay.style.opacity = '0';
+      overlay.style.transition = 'opacity 150ms ease';
+      overlay.style.zIndex = '999999';
+      document.body.appendChild(overlay);
+
+      // force reflow
+      void overlay.offsetWidth;
+      overlay.style.opacity = '1';
+
+      await new Promise(r => setTimeout(r, 150));
+      if (onViewItinerary) onViewItinerary();
+      else router.push('/itinerary');
+      
+      await new Promise(r => setTimeout(r, 100)); // Wait for render
+      overlay.style.opacity = '0';
+      setTimeout(() => {
+        if (document.body.contains(overlay)) document.body.removeChild(overlay);
+        setIsFlippingItinerary(false);
+      }, 150);
+      return;
+    }
+
+    try {
+      let dataUrl = cachedScreenshot.current;
+      if (!dataUrl) {
+        dataUrl = await htmlToImage.toJpeg(document.body, { 
+          quality: 1,
+          width: window.innerWidth, 
+          height: window.innerHeight,
+          pixelRatio: window.devicePixelRatio || 1,
+          backgroundColor: '#F7F5F2'
+        });
+      }
+      cachedScreenshot.current = null;
+      
+      const overlay = document.createElement('div');
+      overlay.style.position = 'fixed';
+      overlay.style.inset = '0';
+      overlay.style.perspective = '1500px';
+      overlay.style.zIndex = '999999';
+      overlay.style.pointerEvents = 'none';
+
+      const fadeOverlay = document.createElement('div');
+      fadeOverlay.style.position = 'absolute';
+      fadeOverlay.style.inset = '0';
+      fadeOverlay.style.backgroundColor = '#F7F5F2';
+      fadeOverlay.style.transition = 'opacity 2000ms ease-in-out';
+      overlay.appendChild(fadeOverlay);
+      
+      const createHalf = (isLeft) => {
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'absolute';
+        wrapper.style.inset = '0';
+        wrapper.style.filter = isLeft ? 'drop-shadow(6px 0 16px rgba(0,0,0,0.4))' : 'drop-shadow(-6px 0 16px rgba(0,0,0,0.4))';
+        wrapper.style.transition = 'transform 3000ms cubic-bezier(0.25, 1, 0.5, 1), opacity 2500ms ease-in 500ms';
+        wrapper.style.transformOrigin = isLeft ? 'left center' : 'right center';
+        wrapper.style.willChange = 'transform, opacity';
+
+        const paperEdge = document.createElement('div');
+        paperEdge.style.position = 'absolute';
+        paperEdge.style.inset = '0';
+        paperEdge.style.backgroundColor = '#fff';
+        const edgeClip = isLeft ? 
+          'polygon(0 0, 50.3% 0, 48.3% 6%, 51.3% 14%, 49.3% 22%, 52.3% 31%, 47.3% 38%, 53.3% 45%, 49.3% 53%, 51.3% 61%, 48.3% 69%, 52.3% 76%, 49.3% 85%, 50.3% 93%, 51.3% 100%, 0 100%)' :
+          'polygon(100% 0, 49.7% 0, 47.7% 6%, 50.7% 14%, 48.7% 22%, 51.7% 31%, 46.7% 38%, 52.7% 45%, 48.7% 53%, 50.7% 61%, 47.7% 69%, 51.7% 76%, 48.7% 85%, 49.7% 93%, 50.7% 100%, 100% 100%)';
+        paperEdge.style.clipPath = edgeClip;
+
+        const half = document.createElement('div');
+        half.style.position = 'absolute';
+        half.style.inset = '0';
+        half.style.backgroundImage = `url(${dataUrl})`;
+        half.style.backgroundSize = `${window.innerWidth}px ${window.innerHeight}px`;
+        half.style.backgroundPosition = 'top left';
+        half.style.backgroundRepeat = 'no-repeat';
+        if (isLeft) {
+          half.style.clipPath = 'polygon(0 0, 50% 0, 48% 6%, 51% 14%, 49% 22%, 52% 31%, 47% 38%, 53% 45%, 49% 53%, 51% 61%, 48% 69%, 52% 76%, 49% 85%, 50% 93%, 51% 100%, 0 100%)';
+        } else {
+          half.style.clipPath = 'polygon(100% 0, 50% 0, 48% 6%, 51% 14%, 49% 22%, 52% 31%, 47% 38%, 53% 45%, 49% 53%, 51% 61%, 48% 69%, 52% 76%, 49% 85%, 50% 93%, 51% 100%, 100% 100%)';
+        }
+        
+        wrapper.appendChild(paperEdge);
+        wrapper.appendChild(half);
+        return wrapper;
+      };
+
+      const leftWrapper = createHalf(true);
+      const rightWrapper = createHalf(false);
+      overlay.appendChild(leftWrapper);
+      overlay.appendChild(rightWrapper);
+      document.body.appendChild(overlay);
+
+      // Start the CSS animation immediately. By doing this before routing, 
+      // the browser's compositor thread (GPU) takes over the animation smoothly.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          leftWrapper.style.transform = 'translateX(-80px) rotateZ(-6deg) rotateY(-30deg) scale(0.95)';
+          leftWrapper.style.opacity = '0';
+          rightWrapper.style.transform = 'translateX(80px) rotateZ(6deg) rotateY(30deg) scale(0.95)';
+          rightWrapper.style.opacity = '0';
+          fadeOverlay.style.opacity = '0';
+        });
+      });
+
+      // Delay the heavy React route change slightly so it doesn't block the animation's start
+      setTimeout(() => {
+        if (onViewItinerary) onViewItinerary();
+        else router.push('/itinerary');
+      }, 50);
+
+      // Cleanup after 3.2s
+      setTimeout(() => {
+        if (document.body.contains(overlay)) {
+          document.body.removeChild(overlay);
+        }
+        setIsFlippingItinerary(false);
+      }, 1600);
+
+    } catch (e) {
+      console.error('Tear transition failed', e);
+      if (onViewItinerary) onViewItinerary();
+      else router.push('/itinerary');
+      setIsFlippingItinerary(false);
+    }
+  };
 
   const handleDaySelect = (idx) => {
     if (idx === selectedDayIndex) return;
@@ -1749,19 +1907,145 @@ export default function PlannerSidebar({
                   </AnimatePresence>
                 </div>
 
-                {/* Bottom Action bar */}
-                <div className="pt-3.5 border-t border-[#ECE8E2] flex items-center justify-between gap-2">
-                  <button
+                <motion.div 
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+                  className="pt-4 mb-6 border-t border-[#ECE8E2] flex flex-col sm:flex-row items-center justify-between gap-3"
+                >
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     type="button"
-                    onClick={onViewItinerary || (() => { if (typeof window !== 'undefined') window.location.href = '/itinerary'; })}
-                    className="group w-full h-12 px-5 rounded-2xl font-bold bg-linear-to-r from-[#FF6B2C] to-[#E65D20] text-white hover:from-[#FF7A3D] hover:to-[#FF6B2C] transition-all duration-300 ease-out text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-[0_8px_24px_rgba(255,107,44,0.3)] hover:shadow-[0_12px_32px_rgba(255,107,44,0.5)] hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                    onMouseEnter={handlePrefetchTear}
+                    onClick={handleTearTransition}
+                    className="group w-full sm:w-[48%] h-10 px-4 rounded-2xl font-bold bg-[#F7F5F2] text-[#1C1B1B] hover:bg-[#ECE8E2] transition-colors duration-300 text-xs flex items-center justify-center gap-2 cursor-pointer z-10 shadow-sm"
                   >
-                    <span>📍 View Detailed Itinerary</span>
-                    <span className="transition-transform duration-300 ease-out group-hover:translate-x-1.5 flex items-center hover:font-bold hover:translate-1">
-                      <ArrowRightIcon />
-                    </span>
-                  </button>
-                </div>
+                    <Map size={16} strokeWidth={2.5} className="text-[#5F5E5A] group-hover:text-[#1C1B1B] transition-colors" />
+                    <span>Detailed Itinerary</span>
+                  </motion.button>
+
+                  <motion.div
+                    whileHover={!isConfirming && !isElevating ? { scale: 1.03, y: -2 } : {}}
+                    whileTap={!isConfirming && !isElevating ? { scale: 0.97 } : {}}
+                    animate={{ scale: isElevating && !isConfirming ? 1.05 : 1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    onClick={async () => {
+                        if (itinerary && !isConfirming && !isElevating) {
+                            setIsElevating(true);
+                            await new Promise(r => setTimeout(r, prefersReducedMotion ? 0 : 400));
+                            
+                            setIsConfirming(true);
+                            await new Promise(r => setTimeout(r, prefersReducedMotion ? 150 : 1200));
+                            const confirmedItinerary = { ...itinerary, status: 'CONFIRMED' };
+                            if (onUpdateItinerary) await onUpdateItinerary(confirmedItinerary);
+                            if (typeof window !== 'undefined') window.location.href = '/ai-planner';
+                        }
+                    }}
+                    className="relative w-full sm:w-[48%] h-10 flex rounded-2xl cursor-pointer group shadow-[0_8px_24px_rgba(255,107,44,0.3)] hover:shadow-[0_12px_32px_rgba(255,107,44,0.5)] transition-shadow"
+                  >
+                    {/* Background Layer: Main (Expands to fill) */}
+                    <motion.div
+                      className="absolute left-0 top-0 h-full rounded-2xl z-0"
+                      initial={{ width: '100%', backgroundColor: '#FF6B2C', boxShadow: '0 8px 24px rgba(255, 107, 44, 0.3)' }}
+                      animate={{
+                        width: isConfirming ? ['50%', '100%'] : '100%',
+                        backgroundColor: isConfirming ? '#10B981' : '#FF6B2C',
+                        boxShadow: (isElevating && !isConfirming) ? '0 16px 32px rgba(255, 107, 44, 0.5)' : isConfirming ? '0 8px 24px rgba(16, 185, 129, 0.4)' : '0 8px 24px rgba(255, 107, 44, 0.3)'
+                      }}
+                      transition={{ duration: 1.0, ease: "easeOut" }}
+                    />
+
+                    {/* Background Layer: Tear Away Stub */}
+                    <AnimatePresence>
+                      {isConfirming && (
+                        <motion.div
+                          className="absolute right-0 top-0 h-full w-[50%] bg-[#FF6B2C] rounded-r-2xl z-0"
+                          initial={{ opacity: 1, rotate: 0, x: 0, y: 0, transformOrigin: 'top left' }}
+                          animate={{ opacity: 0, rotate: 12, x: 40, y: -20 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 1.2, ease: "easeOut" }}
+                        />
+                      )}
+                    </AnimatePresence>
+
+                    {/* Flash tear overlay */}
+                    <AnimatePresence>
+                      {isConfirming && !prefersReducedMotion && (
+                        <motion.div
+                          key="flash-tear-effect"
+                          className="absolute z-10 pointer-events-none top-0 bottom-0"
+                          style={{ left: '50%', marginLeft: '-4px' }}
+                          initial={{ opacity: 1 }}
+                          animate={{ opacity: 0 }}
+                          transition={{ duration: 0.2, delay: 0.05 }}
+                        >
+                          <svg height="100%" width="8" viewBox="0 0 8 48" preserveAspectRatio="none" fill="none">
+                            <path d="M0 0 L8 4 L0 8 L8 12 L0 16 L8 20 L0 24 L8 28 L0 32 L8 36 L0 40 L8 44 L0 48" stroke="white" strokeWidth="2" strokeOpacity="0.8" />
+                          </svg>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Content Overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center gap-2 z-20 text-white font-bold text-xs pointer-events-none px-4">
+                      
+                      {/* Checkmark Icon */}
+                      <motion.div layout className="relative flex items-center justify-center">
+                        {isConfirming && !prefersReducedMotion && (
+                          <motion.div
+                            className="absolute w-0 h-0 bg-white/40 rounded-full"
+                            initial={{ boxShadow: '0 0 0px 0px rgba(255,255,255,0)' }}
+                            animate={{ boxShadow: ['0 0 0px 0px rgba(255,255,255,0.6)', '0 0 20px 20px rgba(255,255,255,0)'] }}
+                            transition={{ duration: 0.6, delay: 0.3 }}
+                          />
+                        )}
+                        <motion.div
+                          className="relative z-10"
+                          animate={isConfirming && !prefersReducedMotion ? { rotate: 1080 } : { rotate: 0 }}
+                          transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                        >
+                           <div className="transition-transform duration-300 ease-out group-hover:scale-125 group-hover:rotate-12">
+                             <Check size={16} strokeWidth={3} />
+                           </div>
+                        </motion.div>
+                      </motion.div>
+
+                      {/* Exiting Initial Text */}
+                      <AnimatePresence>
+                        {!isConfirming && (
+                          <motion.div
+                            layout
+                            className="flex items-center gap-2 overflow-hidden whitespace-nowrap"
+                            exit={{ opacity: 0, rotate: 12, x: 40, y: -20, width: 0, gap: 0 }}
+                            transition={{ duration: 1.2, ease: "easeOut" }}
+                          >
+                            <span>Confirm Trip</span>
+                            <span className="transition-transform duration-300 ease-out group-hover:translate-x-1 flex items-center">
+                              <ArrowRightIcon />
+                            </span>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {/* Entering Confirmed Text */}
+                      <AnimatePresence>
+                        {isConfirming && (
+                          <motion.div
+                            layout
+                            className="overflow-hidden whitespace-nowrap"
+                            initial={{ width: 0, opacity: 0, marginLeft: 0 }}
+                            animate={{ width: 'auto', opacity: 1, marginLeft: 8 }}
+                            transition={{ duration: 0.8, delay: 0.2 }}
+                          >
+                            Trip Confirmed
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                    </div>
+                  </motion.div>
+                </motion.div>
               </div>
             ) : (
               /* progress bar & status checkmarks during generation */
