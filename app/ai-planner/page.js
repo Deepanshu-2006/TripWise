@@ -35,59 +35,12 @@ const getTotalActivities = (trip) => {
     return trip.days.reduce((total, day) => total + (day.activities ? day.activities.length : 0), 0);
 };
 
-// Process trip to add mock dates, status, and destination image
-const processTripData = (t) => {
-    const destName = t.destination_name || t.itinerary_data?.destinationName || "Draft Trip";
-    const destSearchName = destName.split(',')[0].trim().toLowerCase();
-    const destInfo = DESTINATIONS.find(d => d.name.toLowerCase() === destSearchName) || {};
-
-    const createdAt = new Date(t.created_at || Date.now());
-    const hash = hashString(t.id || destName);
-    const isDraft = !t.itinerary_data?.days || t.itinerary_data.days.length === 0;
-    
-    let status = isDraft ? 'DRAFT' : 'CONFIRMED';
-    
-    // Create realistic mock dates
-    const offsetDays = (hash % 60) - 15; // -15 to +45 days from creation
-    const startDate = new Date(createdAt);
-    startDate.setDate(startDate.getDate() + offsetDays);
-    
-    const duration = t.itinerary_data?.days?.length || 3;
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + duration);
-
-    const now = new Date();
-    if (!isDraft) {
-        if (endDate < now) {
-            status = 'COMPLETED';
-        } else {
-            status = 'CONFIRMED';
-        }
-    }
-    
+const formatDates = (startDate, endDate) => {
     const startStr = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const endStr = endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    
-    // Example: "Aug 12–15, 2026"
-    let dateRange = `${startStr}–${endDate.toLocaleDateString('en-US', { day: 'numeric', year: 'numeric' })}`;
-    if (startDate.getMonth() !== endDate.getMonth()) {
-        dateRange = `${startStr}–${endStr}`;
+    if (startDate.getMonth() === endDate.getMonth() && startDate.getFullYear() === endDate.getFullYear()) {
+        return `${startStr}–${endDate.getDate()}, ${endDate.getFullYear()}`;
     }
-
-    return {
-        ...t,
-        db_id: t.id,
-        ...t.itinerary_data,
-        destinationName: destName,
-        country: destInfo.country || destName.split(',')[1]?.trim() || '',
-        imageUrl: destInfo.imageUrl,
-        gradient: destInfo.gradient,
-        startDate,
-        endDate,
-        dateRange,
-        status,
-        progress: isDraft ? 25 + (hash % 50) : 100 // 25-75% for drafts
-    };
+    return `${startStr}–${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
 };
 
 const FILTERS = ['All', 'Drafts', 'Upcoming', 'Past'];
@@ -109,7 +62,64 @@ export default function AIPlannerDashboard() {
             if (isSignedIn) {
                 try {
                     const trips = await getUserTrips();
-                    const formatted = trips.map(processTripData);
+                    
+                    // Demo Mode: Map DB trips to diverse realistic sample data to demonstrate range
+                    const demoTrips = trips.map((t, idx) => {
+                        const now = new Date();
+                        
+                        // 1. CONFIRMED trip (Rome)
+                        if (idx % 4 === 0) {
+                            const start = new Date(now); start.setDate(start.getDate() + 10);
+                            const end = new Date(start); end.setDate(end.getDate() + 4);
+                            return {
+                                db_id: t.id, destinationName: "Rome, Italy", country: "Italy",
+                                status: "CONFIRMED", progress: 100, days: Array(4).fill({ activities: [1,2] }),
+                                startDate: start, endDate: end, created_at: new Date(now.getTime() - 2*86400000).toISOString()
+                            };
+                        }
+                        // 2. DRAFT trip (Tokyo)
+                        if (idx % 4 === 1) {
+                            const start = new Date(now); start.setDate(start.getDate() + 30);
+                            const end = new Date(start); end.setDate(end.getDate() + 6);
+                            return {
+                                db_id: t.id, destinationName: "Tokyo, Japan", country: "Japan",
+                                status: "DRAFT", progress: 65, days: [],
+                                startDate: start, endDate: end, created_at: new Date(now.getTime() - 1*86400000).toISOString()
+                            };
+                        }
+                        // 3. UPCOMING/CONFIRMED trip (Bali)
+                        if (idx % 4 === 2) {
+                            const start = new Date(now); start.setDate(start.getDate() + 45);
+                            const end = new Date(start); end.setDate(end.getDate() + 7);
+                            return {
+                                db_id: t.id, destinationName: "Bali, Indonesia", country: "Indonesia",
+                                status: "CONFIRMED", progress: 100, days: Array(6).fill({ activities: [1,2,3] }),
+                                startDate: start, endDate: end, created_at: new Date(now.getTime() - 5*86400000).toISOString()
+                            };
+                        }
+                        // 4. PAST trip (Paris)
+                        if (idx % 4 === 3) {
+                            const start = new Date(now); start.setDate(start.getDate() - 40);
+                            const end = new Date(start); end.setDate(end.getDate() + 5);
+                            return {
+                                db_id: t.id, destinationName: "Paris, France", country: "France",
+                                status: "COMPLETED", progress: 100, days: Array(5).fill({ activities: [1,2,3] }),
+                                startDate: start, endDate: end, created_at: new Date(now.getTime() - 60*86400000).toISOString()
+                            };
+                        }
+                    });
+
+                    const formatted = demoTrips.map(dt => {
+                        const destSearchName = dt.destinationName.split(',')[0].trim().toLowerCase();
+                        const destInfo = DESTINATIONS.find(d => d.name.toLowerCase() === destSearchName) || {};
+                        return {
+                            ...dt,
+                            imageUrl: destInfo.imageUrl,
+                            gradient: destInfo.gradient,
+                            dateRange: formatDates(dt.startDate, dt.endDate)
+                        };
+                    });
+                    
                     setSavedTrips(formatted);
                 } catch (e) {
                     console.error("Failed to fetch trips from cloud", e);
@@ -166,7 +176,21 @@ export default function AIPlannerDashboard() {
 
         // Apply Sort
         if (activeSort === 'Most Recent') {
-            result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            result.sort((a, b) => {
+                // Group order: Upcoming (CONFIRMED) -> Drafts (DRAFT) -> Past (COMPLETED)
+                const groupOrder = { 'CONFIRMED': 1, 'DRAFT': 2, 'COMPLETED': 3 };
+                if (groupOrder[a.status] !== groupOrder[b.status]) {
+                    return groupOrder[a.status] - groupOrder[b.status];
+                }
+                // Within group sorting
+                if (a.status === 'CONFIRMED') {
+                    return a.startDate - b.startDate; // Soonest upcoming first
+                } else if (a.status === 'DRAFT') {
+                    return new Date(b.created_at) - new Date(a.created_at); // Most recently added first
+                } else {
+                    return b.endDate - a.endDate; // Most recently completed first
+                }
+            });
         } else if (activeSort === 'Upcoming First') {
             result.sort((a, b) => a.startDate - b.startDate);
         } else if (activeSort === 'Alphabetical') {
@@ -288,7 +312,7 @@ export default function AIPlannerDashboard() {
                                 >
                                     <a 
                                         href={`/ai-planner/new?action=view&trip_id=${trip.db_id}`} 
-                                        className="block group h-full flex-col bg-white rounded-3xl border border-stone-200/70 shadow-sm hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] hover:border-[#FF6B2C]/30 transition-all duration-300 overflow-hidden cursor-pointer relative hover:-translate-y-1"
+                                        className={`block group h-full flex-col bg-white rounded-3xl border shadow-sm transition-all duration-300 overflow-hidden cursor-pointer relative hover:-translate-y-1 ${trip.status === 'COMPLETED' ? 'opacity-60 grayscale-[0.4] hover:opacity-100 hover:grayscale-0 border-stone-200/50' : 'border-stone-200/70 hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] hover:border-[#FF6B2C]/30'}`}
                                     >
                                         <div 
                                             className="h-44 relative overflow-hidden flex items-center justify-center transition-transform duration-700 bg-stone-100"
