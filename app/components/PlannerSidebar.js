@@ -14,6 +14,7 @@ import {
   getDaySummary,
   formatReviewCount
 } from './itineraryHelpers';
+import { saveTrip, updateTrip } from '../actions/trips';
 
 // --- Icons ---
 const SpinnerIcon = () => (
@@ -146,6 +147,10 @@ const STATUS_ROWS = [
 ];
 
 export default function PlannerSidebar({
+  currentStep = 'destination',
+  onStepChange = () => {},
+  tripId = null,
+  onTripIdChange = () => {},
   rawPrompt = "",
   onPromptChange,
   extracted = {
@@ -388,22 +393,47 @@ export default function PlannerSidebar({
   };
 
   // State: 'input' | 'parsing' | 'confirming' | 'progress'
-  // If a prompt was passed in (e.g. from demo controls or homepage), start at 'parsing'; otherwise start at 'input'
-  const [step, setStep] = useState(() => (rawPrompt ? 'parsing' : 'input'));
-  const [userPromptInput, setUserPromptInput] = useState(() => rawPrompt || '');
-  const [basecamp, setBasecamp] = useState('');
+  const [localStep, setLocalStep] = useState(() => {
+    if (currentStep === 'preferences') return 'confirming';
+    if (['itinerary', 'places', 'logistics', 'review'].includes(currentStep)) return 'progress';
+    return (rawPrompt || itinerary?.prompt) ? 'parsing' : 'input';
+  });
+
+  const step = localStep;
+  const setStep = (newStep) => {
+    setLocalStep(newStep);
+    if (newStep === 'input') onStepChange('destination');
+    if (newStep === 'confirming') onStepChange('preferences');
+    if (newStep === 'progress') onStepChange('itinerary');
+  };
+
+  useEffect(() => {
+    if (currentStep === 'destination' && localStep !== 'parsing' && localStep !== 'input') setLocalStep('input');
+    if (currentStep === 'preferences' && localStep !== 'confirming') setLocalStep('confirming');
+    if (['itinerary', 'places', 'logistics', 'review'].includes(currentStep) && localStep !== 'progress') setLocalStep('progress');
+  }, [currentStep, localStep]);
+
+  const [userPromptInput, setUserPromptInput] = useState(() => rawPrompt || itinerary?.prompt || '');
+  const [basecamp, setBasecamp] = useState(() => itinerary?.preferences?.basecamp || '');
   const [basecampSuggestions, setBasecampSuggestions] = useState([]);
   const [isSearchingBasecamp, setIsSearchingBasecamp] = useState(false);
   const [showBasecampDropdown, setShowBasecampDropdown] = useState(false);
   const basecampSearchTimeoutRef = useRef(null);
 
+  useEffect(() => {
+     if (itinerary?.prompt && !userPromptInput) {
+        setUserPromptInput(itinerary.prompt);
+     }
+  }, [itinerary?.prompt, userPromptInput]);
+
   // State 2 Form Selections
   const [selectedInterests, setSelectedInterests] = useState(() =>
-    extracted?.interests && Array.isArray(extracted.interests) ? extracted.interests : ['Foodie', 'Nature']
+    itinerary?.preferences?.interests || (extracted?.interests && Array.isArray(extracted.interests) ? extracted.interests : ['Foodie', 'Nature'])
   );
-  const [selectedBudget, setSelectedBudget] = useState(() => extracted?.budget || 'standard');
-  const [selectedPace, setSelectedPace] = useState(() => extracted?.travelStyle || 'balanced');
+  const [selectedBudget, setSelectedBudget] = useState(() => itinerary?.preferences?.budget || extracted?.budget || 'standard');
+  const [selectedPace, setSelectedPace] = useState(() => itinerary?.preferences?.pace || extracted?.travelStyle || 'balanced');
   const [selectedDays, setSelectedDays] = useState(() => {
+    if (itinerary?.duration) return itinerary.duration;
     if (extracted?.duration) return extracted.duration;
     if (rawPrompt) {
       const match = rawPrompt.match(/\b(\d+)\s*days?\b/i);
@@ -557,7 +587,8 @@ export default function PlannerSidebar({
     setProgressPercent(0);
     setActiveRowIndex(0);
     setShowFinalCTA(false);
-    setStep('progress');
+    setLocalStep('progress');
+    onStepChange('itinerary');
     if (onGenerate && selections) {
       onGenerate({
         ...selections,
@@ -566,7 +597,7 @@ export default function PlannerSidebar({
         destination: parsedIntent?.destination || extracted?.destination || userPromptInput || rawPrompt || "Your Destination"
       });
     }
-  }, [onGenerate, userPromptInput, rawPrompt, extracted?.destination, parsedIntent?.destination, basecamp]);
+  }, [onGenerate, userPromptInput, rawPrompt, extracted?.destination, parsedIntent?.destination, basecamp, onStepChange]);
 
   // Sync when rawPrompt is updated from external click (e.g. clicking a destination card on the right radar map)
   useEffect(() => {
@@ -623,6 +654,21 @@ export default function PlannerSidebar({
         console.error("Error parsing intent:", err);
       } finally {
         if (isMounted) {
+          // Optimistic save of step 1 (Destination)
+          const partialData = {
+              ...(itinerary || {}),
+              lastCompletedStep: 'destination',
+              prompt: userPromptInput
+          };
+          const destName = parsedIntent?.destination || userPromptInput || "Draft Trip";
+          if (tripId) {
+              updateTrip(tripId, destName, partialData).catch(e => console.error(e));
+          } else {
+              saveTrip(destName, partialData).then(res => {
+                  if (res && res.trip) onTripIdChange(res.trip.id);
+              }).catch(e => console.error(e));
+          }
+          
           // Always transition smoothly to confirming step after parsing
           setStep('confirming');
         }
@@ -749,6 +795,28 @@ export default function PlannerSidebar({
   };
 
   const handleGenerateClick = () => {
+    // Optimistically save that they finished Preferences
+    const partialData = {
+        ...(itinerary || {}),
+        lastCompletedStep: 'preferences',
+        prompt: userPromptInput,
+        preferences: {
+            interests: selectedInterests,
+            budget: selectedBudget,
+            pace: selectedPace,
+            basecamp: basecamp
+        },
+        duration: selectedDays
+    };
+    const destName = parsedIntent?.destination || userPromptInput || "Draft Trip";
+    if (tripId) {
+        updateTrip(tripId, destName, partialData).catch(e => console.error(e));
+    } else {
+        saveTrip(destName, partialData).then(res => {
+            if (res && res.trip) onTripIdChange(res.trip.id);
+        }).catch(e => console.error(e));
+    }
+
     startProgressTransition({
       interests: selectedInterests,
       budget: selectedBudget,
@@ -758,12 +826,7 @@ export default function PlannerSidebar({
   };
 
   const handleSkipClick = () => {
-    startProgressTransition({
-      interests: extracted?.interests || [],
-      budget: extracted?.budget || 'standard',
-      pace: extracted?.travelStyle || 'balanced',
-      days: extracted?.duration || parsedIntent?.days || 3,
-    });
+    handleGenerateClick();
   };
 
   // Derive destination name gracefully
