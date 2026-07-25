@@ -9,6 +9,14 @@ import { getUserTrips, deleteTrip } from '../actions/trips';
 import { DESTINATIONS } from '../../lib/destinations';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const PLANNING_STAGES = [
+    { label: 'Destination', threshold: 25 },
+    { label: 'Preferences', threshold: 50 },
+    { label: 'AI Generation', threshold: 75 },
+    { label: 'Review Draft', threshold: 90 },
+    { label: 'Confirmed', threshold: 100 }
+];
+
 const hashString = (str) => {
     let hash = 0;
     if (!str) return hash;
@@ -36,13 +44,12 @@ const getTotalActivities = (trip) => {
     return trip.days.reduce((total, day) => total + (day.activities ? day.activities.length : 0), 0);
 };
 
-export const STEP_ORDER = ['destination', 'preferences', 'itinerary', 'places', 'logistics', 'review'];
-export const STEP_PROGRESS = {
-    'destination': 15,
-    'preferences': 30,
-    'itinerary': 50,
-    'places': 80,
-    'logistics': 90,
+export const STEP_ORDER = ['destination', 'preferences', 'itinerary', 'review'];
+
+const STEP_PROGRESS = {
+    'destination': 25,
+    'preferences': 50,
+    'itinerary': 90,
     'review': 100
 };
 
@@ -61,32 +68,15 @@ const calculateTripProgress = (trip) => {
         score = STEP_PROGRESS[trip.lastCompletedStep] || 0;
     }
     
-    // 2. Dynamically calculate based on actual data richness to ensure it always moves forward
+    // 2. Ensure they get credit for picking a destination
     if (trip.destinationName) {
-        score = Math.max(score, 15);
+        score = Math.max(score, 25);
     }
     
-    // 3. If they have generated days, they are definitely past the preference stage
+    // 3. If AI has generated the itinerary days, they have bypassed manual steps
+    // and are now in the "Review Draft" stage (90%)
     if (trip.days && trip.days.length > 0) {
-        score = Math.max(score, 50); // Itinerary generated
-        
-        // Count total stops/activities added
-        const totalPlaces = trip.days.reduce((acc, day) => acc + (day.activities?.length || 0), 0);
-        
-        if (totalPlaces > 0) {
-            // At least one place added
-            score = Math.max(score, 65);
-        }
-        
-        if (totalPlaces >= 3) {
-            // A good amount of places added
-            score = Math.max(score, 80);
-        }
-        
-        if (totalPlaces >= 6) {
-            // Comprehensive itinerary
-            score = Math.max(score, 90);
-        }
+        score = Math.max(score, 90);
     }
     
     if (trip.status === 'COMPLETED' || trip.status === 'CONFIRMED') {
@@ -109,6 +99,21 @@ const formatDates = (startDate, endDate) => {
         return `${startStr}–${endDate.getDate()}, ${endDate.getFullYear()}`;
     }
     return `${startStr}–${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+};
+
+const getDaysUntil = (dateStr) => {
+    if (!dateStr) return null;
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const target = new Date(dateStr);
+    target.setHours(0,0,0,0);
+    const diffTime = target - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return 'Starts Today';
+    if (diffDays === 1) return 'In 1 day';
+    if (diffDays > 1) return `In ${diffDays} days`;
+    if (diffDays < 0) return 'Started';
+    return null;
 };
 
 const AnimatedTrashIcon = () => (
@@ -175,45 +180,45 @@ export default function AIPlannerDashboard() {
                         
                         const actualData = typeof t.itinerary_data === 'string' ? JSON.parse(t.itinerary_data) : (t.itinerary_data || {});
                         
-                        // 1. CONFIRMED trip (Rome)
+                        // 1. CONFIRMED trip (Demo logic)
                         if (idx % 4 === 0) {
                             const start = new Date(now); start.setDate(start.getDate() + 10);
                             const end = new Date(start); end.setDate(end.getDate() + 4);
                             tripObj = {
-                                db_id: t.id, destinationName: actualData.destinationName || t.destination_name || "Rome, Italy", country: "Italy",
+                                db_id: t.id, destinationName: actualData.destinationName || t.destination_name || "Rome, Italy",
                                 status: actualData.status || "DRAFT", lastCompletedStep: actualData.lastCompletedStep || 'review',
                                 days: actualData.days || Array(4).fill({ activities: [1,2] }),
                                 startDate: start, endDate: end, created_at: new Date(now.getTime() - 2*86400000).toISOString()
                             };
                         }
-                        // 2. DRAFT trip (Tokyo)
+                        // 2. DRAFT trip (Demo logic)
                         else if (idx % 4 === 1) {
                             const start = new Date(now); start.setDate(start.getDate() + 30);
                             const end = new Date(start); end.setDate(end.getDate() + 6);
                             tripObj = {
-                                db_id: t.id, destinationName: actualData.destinationName || t.destination_name || "Tokyo, Japan", country: "Japan",
+                                db_id: t.id, destinationName: actualData.destinationName || t.destination_name || "Tokyo, Japan",
                                 status: actualData.status || "DRAFT", lastCompletedStep: actualData.lastCompletedStep || 'preferences',
                                 days: actualData.days || [],
                                 startDate: start, endDate: end, created_at: new Date(now.getTime() - 1*86400000).toISOString()
                             };
                         }
-                        // 3. UPCOMING trip (Bali)
+                        // 3. UPCOMING trip (Demo logic)
                         else if (idx % 4 === 2) {
                             const start = new Date(now); start.setDate(start.getDate() + 45);
                             const end = new Date(start); end.setDate(end.getDate() + 7);
                             tripObj = {
-                                db_id: t.id, destinationName: actualData.destinationName || t.destination_name || "Bali, Indonesia", country: "Indonesia",
+                                db_id: t.id, destinationName: actualData.destinationName || t.destination_name || "Bali, Indonesia",
                                 status: actualData.status || "DRAFT", lastCompletedStep: actualData.lastCompletedStep || 'review',
                                 days: actualData.days || Array(6).fill({ activities: [1,2,3] }),
                                 startDate: start, endDate: end, created_at: new Date(now.getTime() - 5*86400000).toISOString()
                             };
                         }
-                        // 4. PAST trip (Paris)
+                        // 4. PAST trip (Demo logic)
                         else if (idx % 4 === 3) {
                             const start = new Date(now); start.setDate(start.getDate() - 40);
                             const end = new Date(start); end.setDate(end.getDate() + 5);
                             tripObj = {
-                                db_id: t.id, destinationName: actualData.destinationName || t.destination_name || "Paris, France", country: "France",
+                                db_id: t.id, destinationName: actualData.destinationName || t.destination_name || "Paris, France",
                                 status: actualData.status || "COMPLETED", lastCompletedStep: actualData.lastCompletedStep || 'review',
                                 days: actualData.days || Array(5).fill({ activities: [1,2,3] }),
                                 startDate: start, endDate: end, created_at: new Date(now.getTime() - 60*86400000).toISOString()
@@ -234,8 +239,11 @@ export default function AIPlannerDashboard() {
                     const formatted = demoTrips.map(dt => {
                         const destSearchName = dt.destinationName.split(',')[0].trim().toLowerCase();
                         const destInfo = DESTINATIONS.find(d => d.name.toLowerCase() === destSearchName) || {};
+                        const parsedCountry = dt.destinationName.split(',')[1]?.trim();
+                        
                         return {
                             ...dt,
+                            country: destInfo.country || parsedCountry || 'Destination',
                             imageUrl: destInfo.imageUrl,
                             gradient: destInfo.gradient,
                             dateRange: formatDates(dt.startDate, dt.endDate)
@@ -363,19 +371,52 @@ export default function AIPlannerDashboard() {
     // Actually, to make it always accessible, we can add it at the end if the list isn't empty.
     const needsGhostCard = filteredAndSortedTrips.length > 0 && filteredAndSortedTrips.length % 3 !== 0;
 
+    // Compute Summary Stats
+    const totalTrips = savedTrips.length;
+    const upcomingTrips = savedTrips.filter(t => t.status === 'CONFIRMED' || t.status === 'UPCOMING').length;
+    const uniqueCountries = new Set(savedTrips.map(t => t.country).filter(Boolean)).size;
+    const totalDaysTraveled = savedTrips.reduce((acc, t) => {
+        if (t.startDate && t.endDate) {
+            return acc + Math.max(0, Math.ceil((new Date(t.endDate) - new Date(t.startDate)) / (1000 * 60 * 60 * 24)));
+        }
+        return acc;
+    }, 0);
+
     return (
         <div className="min-h-screen bg-[#FAF8F5] relative">
-            {/* Background Gradient Mesh */}
-            <div className="absolute top-0 left-0 w-full h-[600px] overflow-hidden pointer-events-none z-0">
-                <div className="absolute -top-[10%] -right-[5%] w-[60%] h-[80%] rounded-full bg-[#FF6B2C]/[0.03] blur-[120px]" />
-                <div className="absolute top-[20%] -left-[10%] w-[50%] h-[60%] rounded-full bg-amber-500/[0.02] blur-[100px]" />
+            {/* Hero Background Treatment */}
+            <div className="absolute top-0 left-0 w-full h-[450px] overflow-hidden pointer-events-none z-0">
+                {/* Subtle gradient band */}
+                <div className="absolute inset-0 bg-gradient-to-b from-[#FF6B2C]/5 to-transparent" />
+                
+                {/* Dotted Flight Routes SVG */}
+                <svg className="absolute inset-0 w-full h-full opacity-[0.07]" viewBox="0 0 1440 450" fill="none" preserveAspectRatio="xMidYMin slice" xmlns="http://www.w3.org/2000/svg">
+                    {/* Primary flight path */}
+                    <path d="M-100 200 C 200 100, 450 300, 800 150 C 1100 50, 1300 200, 1600 100" stroke="#FF6B2C" strokeWidth="4" strokeDasharray="8 12" strokeLinecap="round" />
+                    
+                    {/* Secondary flight path */}
+                    <path d="M 100 400 C 350 300, 500 50, 950 250 C 1200 350, 1400 150, 1700 250" stroke="#FF6B2C" strokeWidth="2.5" strokeDasharray="6 10" strokeLinecap="round" />
+                    
+                    {/* Location Pins (Primary) */}
+                    <circle cx="210" cy="142" r="6" fill="#FF6B2C" />
+                    <circle cx="800" cy="150" r="8" fill="#FF6B2C" stroke="white" strokeWidth="3" />
+                    <circle cx="1270" cy="172" r="5" fill="#FF6B2C" />
+                    
+                    {/* Location Pins (Secondary) */}
+                    <circle cx="340" cy="305" r="5" fill="#FF6B2C" />
+                    <circle cx="950" cy="250" r="8" fill="#FF6B2C" stroke="white" strokeWidth="3" />
+                    <circle cx="1400" cy="150" r="5" fill="#FF6B2C" />
+                </svg>
+
+                {/* Soft glow */}
+                <div className="absolute -top-[10%] left-[20%] w-[60%] h-[300px] rounded-full bg-[#FF6B2C]/[0.03] blur-[120px]" />
             </div>
 
-            <div className="relative z-10">
+            <div className="relative z-50">
                 <Header />
             </div>
             
-            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
+            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-12 md:pt-36 md:pb-20">
                 
                 {/* Header Section */}
                 <div className="mb-12">
@@ -442,6 +483,29 @@ export default function AIPlannerDashboard() {
                     </div>
                 </div>
 
+                {/* Summary Stats Strip */}
+                <div className="flex items-center gap-6 md:gap-10 mb-8 relative z-20 overflow-x-auto pb-2 scrollbar-hide">
+                    <div className="flex flex-col items-start gap-1">
+                        <span className="font-mono text-[9px] uppercase tracking-widest text-stone-400 font-bold">Trips Planned</span>
+                        <span className="font-serif font-bold text-2xl text-stone-800 leading-none">{totalTrips}</span>
+                    </div>
+                    <div className="w-[1px] h-8 bg-stone-200/80 shrink-0" />
+                    <div className="flex flex-col items-start gap-1">
+                        <span className="font-mono text-[9px] uppercase tracking-widest text-stone-400 font-bold">Upcoming</span>
+                        <span className="font-serif font-bold text-2xl text-[#FF6B2C] leading-none">{upcomingTrips}</span>
+                    </div>
+                    <div className="w-[1px] h-8 bg-stone-200/80 shrink-0" />
+                    <div className="flex flex-col items-start gap-1">
+                        <span className="font-mono text-[9px] uppercase tracking-widest text-stone-400 font-bold">Countries</span>
+                        <span className="font-serif font-bold text-2xl text-stone-800 leading-none">{uniqueCountries}</span>
+                    </div>
+                    <div className="w-[1px] h-8 bg-stone-200/80 shrink-0" />
+                    <div className="flex flex-col items-start gap-1">
+                        <span className="font-mono text-[9px] uppercase tracking-widest text-stone-400 font-bold">Days Traveled</span>
+                        <span className="font-serif font-bold text-2xl text-stone-800 leading-none">{totalDaysTraveled}</span>
+                    </div>
+                </div>
+
                 {/* Empty State / Grid */}
                 {isLoading ? (
                     <div className="flex-1 flex items-center justify-center min-h-[400px]">
@@ -467,7 +531,11 @@ export default function AIPlannerDashboard() {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <AnimatePresence mode="popLayout">
-                            {filteredAndSortedTrips.map((trip, idx) => (
+                            {filteredAndSortedTrips.map((trip, idx) => {
+                                const daysUntil = trip.startDate ? getDaysUntil(trip.startDate) : null;
+                                const saturation = trip.status === 'COMPLETED' ? 0 : trip.status === 'DRAFT' ? (trip.progress < 50 ? 0.4 : 0.4 + (0.6 * ((trip.progress - 50) / 50))) : 1;
+                                
+                                return (
                                 <motion.div 
                                     key={trip.db_id}
                                     layout
@@ -477,8 +545,8 @@ export default function AIPlannerDashboard() {
                                     transition={{ duration: 0.3 }}
                                 >
                                     <Link 
-                                        href={`/ai-planner/new?action=view&trip_id=${trip.db_id}${trip.status === 'DRAFT' ? '&step=' + getNextStep(trip.lastCompletedStep) : ''}`}
-                                        className={`flex group h-full flex-col bg-white rounded-[2rem] border transition-all duration-500 overflow-hidden cursor-pointer relative hover:-translate-y-2 ${trip.status === 'COMPLETED' ? 'opacity-60 grayscale-[0.4] hover:opacity-100 hover:grayscale-0 border-stone-200/50' : 'border-stone-100 shadow-sm hover:shadow-2xl hover:shadow-[#FF6B2C]/10 hover:border-[#FF6B2C]/30'}`}
+                                        href={trip.status === 'COMPLETED' ? `/ai-planner/new?action=new&destination=${encodeURIComponent(trip.destinationName)}` : `/ai-planner/new?action=view&trip_id=${trip.db_id}${trip.status === 'DRAFT' ? '&step=' + getNextStep(trip.lastCompletedStep) : ''}`}
+                                        className={`flex group h-full flex-col bg-white rounded-[2rem] border transition-all duration-500 overflow-hidden cursor-pointer relative hover:-translate-y-2 ${trip.status === 'COMPLETED' ? 'opacity-[0.85] border-stone-200/50' : 'border-stone-100 shadow-sm hover:shadow-2xl hover:shadow-[#FF6B2C]/10 hover:border-[#FF6B2C]/30'}`}
                                     >
                                         <div 
                                             className="h-56 relative overflow-hidden flex items-center justify-center transition-transform duration-700 bg-stone-100"
@@ -486,7 +554,7 @@ export default function AIPlannerDashboard() {
                                         >
                                             {/* Photo or Gradient */}
                                             {trip.imageUrl ? (
-                                                <img src={trip.imageUrl} alt={trip.destinationName} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                                <img src={trip.imageUrl} alt={trip.destinationName} className="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-105" style={{ filter: `saturate(${saturation})` }} />
                                             ) : (
                                                 <>
                                                     <div className="absolute inset-0 opacity-[0.15] mix-blend-overlay pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
@@ -510,10 +578,15 @@ export default function AIPlannerDashboard() {
                                             </div>
 
                                             {/* Date Overlay (Top Right) */}
-                                            <div className="absolute top-5 right-5 z-10">
+                                            <div className="absolute top-5 right-5 z-10 flex flex-col items-end gap-1.5">
                                                 <span className="px-3 py-1.5 bg-black/30 backdrop-blur-xl rounded-xl text-[10px] font-bold text-white shadow-lg border border-white/20">
                                                     {trip.dateRange}
                                                 </span>
+                                                {trip.status === 'CONFIRMED' && daysUntil && (
+                                                    <span className="px-2 py-1 bg-[#FF6B2C] text-white rounded-lg text-[9px] font-bold uppercase tracking-widest shadow-md">
+                                                        {daysUntil}
+                                                    </span>
+                                                )}
                                             </div>
 
                                             {/* Floating Quick Actions (Hover) */}
@@ -552,28 +625,63 @@ export default function AIPlannerDashboard() {
                                             
                                             <div className="mt-auto pt-6 flex flex-col gap-4">
                                                 {trip.status === 'DRAFT' && (
-                                                    <div className="w-full bg-stone-50 p-4 rounded-2xl border border-stone-100">
-                                                        <div className="flex justify-between items-end mb-2.5">
+                                                    <div className="w-full bg-stone-50 p-4 rounded-2xl border border-stone-100 relative group/progress">
+                                                        <div className="flex justify-between items-end mb-2.5 relative z-10">
                                                             <div className="flex flex-col gap-1">
                                                                 <span className="text-[10px] font-bold text-stone-800 uppercase tracking-widest">Planning Progress</span>
                                                                 <span className="text-[9px] font-medium text-stone-500 uppercase tracking-widest">{getProgressLabel(trip.progress)}</span>
                                                             </div>
                                                             <span className="text-[11px] font-bold text-[#FF6B2C]">{trip.progress}%</span>
                                                         </div>
-                                                        <div className="w-full bg-stone-200/50 rounded-full h-2 overflow-hidden shadow-inner">
+                                                        <div className="relative w-full h-2">
+                                                            {/* Background track */}
+                                                            <div className="absolute inset-0 bg-stone-200/50 rounded-full shadow-inner" />
+                                                            
+                                                            {/* Fill */}
                                                             <motion.div 
-                                                                className="bg-gradient-to-r from-[#FF6B2C] to-[#FF8A4C] h-full rounded-full" 
+                                                                className="absolute top-0 left-0 h-full rounded-full bg-gradient-to-r from-[#FFB085] to-[#FF6B2C] transition-all duration-500 ease-out z-0" 
                                                                 initial={{ width: "0%" }}
                                                                 animate={{ width: `${trip.progress}%` }}
                                                                 transition={{ duration: 1.5, ease: "easeOut", delay: 0.1 * (idx || 0) }}
-                                                            />
+                                                            >
+                                                                {/* Soft leading glow edge */}
+                                                                <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/2 w-3 h-3 bg-[#FF6B2C] rounded-full blur-[4px] opacity-80" />
+                                                            </motion.div>
+
+                                                            {/* Markers */}
+                                                            {PLANNING_STAGES.map((stage, i) => (
+                                                                <div 
+                                                                    key={i}
+                                                                    className={`absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full border border-white z-10 transition-colors duration-500 ${trip.progress >= stage.threshold ? 'bg-[#FF6B2C]' : 'bg-transparent border-stone-300'}`}
+                                                                    style={{ left: `${stage.threshold}%`, transform: `translate(-50%, -50%)` }}
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                        
+                                                        {/* Tooltip */}
+                                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-48 bg-stone-900 text-white p-3 rounded-xl shadow-2xl opacity-0 invisible group-hover/progress:opacity-100 group-hover/progress:visible transition-all duration-300 z-50 translate-y-2 group-hover/progress:translate-y-0 pointer-events-none">
+                                                            <div className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-2">Stage Breakdown</div>
+                                                            <div className="flex flex-col gap-1.5">
+                                                                {PLANNING_STAGES.map((stage, i) => {
+                                                                    const isCompleted = trip.progress >= stage.threshold;
+                                                                    return (
+                                                                        <div key={i} className="flex items-center gap-2">
+                                                                            <div className={`w-3 h-3 rounded-full flex items-center justify-center shrink-0 ${isCompleted ? 'bg-[#FF6B2C]' : 'bg-stone-700'}`}>
+                                                                                {isCompleted ? <Check size={8} className="text-white" strokeWidth={4} /> : <div className="w-1 h-1 rounded-full bg-stone-500" />}
+                                                                            </div>
+                                                                            <span className={`text-[10px] font-mono tracking-wider ${isCompleted ? 'text-white' : 'text-stone-500'}`}>{stage.label}</span>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-stone-900" />
                                                         </div>
                                                     </div>
                                                 )}
                                                 
                                                 <div className="flex items-center justify-between w-full pt-4 border-t border-stone-100">
                                                     <span className="text-[11px] font-bold text-stone-900 uppercase tracking-[0.15em] group-hover:text-[#FF6B2C] transition-colors">
-                                                        {trip.status === 'DRAFT' ? 'Continue Planning' : 'View Full Itinerary'}
+                                                        {trip.status === 'DRAFT' ? 'Continue Planning' : trip.status === 'COMPLETED' ? 'Plan Similar Trip' : 'View Full Itinerary'}
                                                     </span>
                                                     <div className="w-8 h-8 rounded-full bg-stone-50 flex items-center justify-center group-hover:bg-[#FF6B2C] group-hover:text-white text-stone-400 transition-all duration-300 transform group-hover:translate-x-1">
                                                         <ArrowRight size={14} />
@@ -583,7 +691,8 @@ export default function AIPlannerDashboard() {
                                         </div>
                                     </Link>
                                 </motion.div>
-                            ))}
+                                );
+                            })}
 
                             {/* Ghost Card for uneven rows */}
                             {needsGhostCard && (

@@ -1,6 +1,7 @@
 'use server';
 
 import { auth } from '@clerk/nextjs/server';
+import { revalidatePath } from 'next/cache';
 import { supabase } from '../../lib/supabase';
 
 export async function saveTrip(destinationName, itineraryData) {
@@ -26,6 +27,7 @@ export async function saveTrip(destinationName, itineraryData) {
         throw new Error(`Failed to save trip to database: ${error.message || JSON.stringify(error)}`);
     }
 
+    revalidatePath('/ai-planner');
     return { success: true, trip: data[0] };
 }
 
@@ -51,6 +53,7 @@ export async function updateTrip(tripId, destinationName, itineraryData) {
         throw new Error(`Failed to update trip: ${error.message || JSON.stringify(error)}`);
     }
 
+    revalidatePath('/ai-planner');
     return { success: true, trip: data[0] };
 }
 
@@ -93,6 +96,7 @@ export async function deleteTrip(tripId) {
         throw new Error("Failed to delete trip");
     }
 
+    revalidatePath('/ai-planner');
     return { success: true };
 }
 
