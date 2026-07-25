@@ -165,13 +165,22 @@ export default function AIPlannerPage() {
               onHoverStop={setHoveredStopIdx}
               selectedStopIdx={selectedStopIdx}
               onSelectStop={setSelectedStopIdx}
-              onUpdateItinerary={(updated) => {
+              onUpdateItinerary={async (updated) => {
                 setItinerary(updated);
                 if (typeof window !== 'undefined') {
                   if (!updated) {
                     localStorage.removeItem('tripwise_itinerary');
                   } else {
                     localStorage.setItem('tripwise_itinerary', JSON.stringify(updated));
+                    
+                    if (tripId) {
+                      try {
+                        const nameToSave = updated.destinationName || "Draft Trip";
+                        await updateTrip(tripId, nameToSave, updated);
+                      } catch (e) {
+                        console.error("Failed to sync updated itinerary to cloud:", e);
+                      }
+                    }
                   }
                 }
               }}
