@@ -64,11 +64,43 @@ const MOCK_THREADS = [
 ];
 
 export default function LocalQA() {
+  const [threads, setThreads] = useState(MOCK_THREADS);
   const [expandedId, setExpandedId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [replyInputs, setReplyInputs] = useState({});
 
   const toggleExpand = (id) => {
     setExpandedId(prev => prev === id ? null : id);
+  };
+
+  const handleReplyChange = (threadId, text) => {
+    setReplyInputs(prev => ({ ...prev, [threadId]: text }));
+  };
+
+  const handleReplyToUser = (threadId, username) => {
+    setReplyInputs(prev => ({ ...prev, [threadId]: `@${username} ` }));
+  };
+
+  const submitReply = (threadId) => {
+    const text = replyInputs[threadId];
+    if (!text || text.trim() === '') return;
+
+    setThreads(prev => prev.map(thread => {
+      if (thread.id === threadId) {
+        return {
+          ...thread,
+          replies: [...thread.replies, {
+            id: Date.now(),
+            author: 'You',
+            isVerified: false,
+            text: text.trim()
+          }]
+        };
+      }
+      return thread;
+    }));
+    
+    setReplyInputs(prev => ({ ...prev, [threadId]: '' }));
   };
 
   return (
@@ -103,7 +135,7 @@ export default function LocalQA() {
 
       {/* Thread List */}
       <div className="flex flex-col space-y-6">
-        {MOCK_THREADS.map(thread => {
+        {threads.map(thread => {
           const isExpanded = expandedId === thread.id;
           return (
             <div key={thread.id} className="group/card relative bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(244,112,60,0.15)] hover:-translate-y-1.5 transition-all duration-500 border border-white overflow-hidden">
@@ -178,7 +210,7 @@ export default function LocalQA() {
                             </div>
                             
                             {/* Message Bubble */}
-                            <div className="flex-grow bg-white border border-stone-100 p-4 md:p-5 rounded-2xl rounded-tl-sm shadow-[0_2px_10px_rgba(0,0,0,0.02)] group-hover/reply:shadow-[0_8px_20px_rgba(0,0,0,0.06)] transition-all duration-300">
+                            <div className="flex-grow bg-white border border-stone-100 p-4 md:p-5 rounded-2xl rounded-tl-sm shadow-[0_2px_10px_rgba(0,0,0,0.02)] group-hover/reply:shadow-[0_8px_20px_rgba(0,0,0,0.06)] transition-all duration-300 relative group/bubble">
                               <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-2">
                                 <span className="font-bold text-sm text-stone-900">{reply.author}</span>
                                 {reply.isVerified && (
@@ -193,6 +225,15 @@ export default function LocalQA() {
                               <p className="text-stone-600 text-sm md:text-base leading-relaxed">
                                 {reply.text}
                               </p>
+                              
+                              {/* Reply Button on Hover */}
+                              <button 
+                                onClick={() => handleReplyToUser(thread.id, reply.author)}
+                                className="absolute top-4 right-4 text-[10px] font-bold uppercase tracking-wider text-stone-400 hover:text-[#F4703C] opacity-0 group-hover/bubble:opacity-100 transition-opacity flex items-center gap-1 bg-white px-2 py-1 rounded-md shadow-sm border border-stone-100"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 10 20 15 15 20"></polyline><path d="M4 4v7a4 4 0 0 0 4 4h12"></path></svg>
+                                Reply
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -216,10 +257,18 @@ export default function LocalQA() {
                           <div className="flex-grow relative flex items-center group/input">
                             <input 
                               type="text" 
+                              value={replyInputs[thread.id] || ''}
+                              onChange={(e) => handleReplyChange(thread.id, e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') submitReply(thread.id);
+                              }}
                               placeholder="Write a reply..." 
                               className="w-full bg-white border border-stone-200 pl-5 pr-12 py-3 text-sm text-stone-900 placeholder-stone-400 rounded-full hover:border-[#F4703C]/40 hover:shadow-sm focus:border-[#F4703C] focus:ring-1 focus:ring-[#F4703C] focus:shadow-md transition-all outline-none font-sans"
                             />
-                            <button className="absolute right-1.5 w-8 h-8 rounded-full bg-stone-100 text-stone-400 flex items-center justify-center hover:bg-[#F4703C] hover:text-white transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F4703C] focus:ring-offset-1">
+                            <button 
+                              onClick={() => submitReply(thread.id)}
+                              className={`absolute right-1.5 w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F4703C] focus:ring-offset-1 ${replyInputs[thread.id]?.trim() ? 'bg-[#F4703C] text-white hover:bg-[#E25C27]' : 'bg-stone-100 text-stone-400 hover:bg-stone-200'}`}
+                            >
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="translate-x-[1px] translate-y-[1px]">
                                 <line x1="22" y1="2" x2="11" y2="13"></line>
                                 <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
