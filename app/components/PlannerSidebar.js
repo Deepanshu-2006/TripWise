@@ -180,63 +180,44 @@ export default function PlannerSidebar({
   const [isDayChanging, setIsDayChanging] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [isElevating, setIsElevating] = useState(false);
-  const [isFlippingItinerary, setIsFlippingItinerary] = useState(false);
-  const cachedScreenshot = useRef(null);
+  const [isUnfoldingMap, setIsUnfoldingMap] = useState(false);
   const prefersReducedMotion = useReducedMotion();
   const router = useRouter();
+  const cachedScreenshot = useRef(null);
 
-  const handlePrefetchTear = async () => {
-    if (!cachedScreenshot.current && !isFlippingItinerary) {
-      try {
-        cachedScreenshot.current = await htmlToImage.toJpeg(document.body, { 
-          quality: 1,
-          width: window.innerWidth, 
-          height: window.innerHeight,
-          pixelRatio: window.devicePixelRatio || 1,
-          backgroundColor: '#F7F5F2'
-        });
-      } catch (e) {
-        console.error('Prefetch failed', e);
-      }
+  const handleDetailedItineraryClick = async () => {
+    if (isUnfoldingMap) return;
+    
+    // Start pre-fetching the screenshot immediately
+    if (!cachedScreenshot.current) {
+      htmlToImage.toJpeg(document.body, { 
+        quality: 0.9,
+        width: window.innerWidth, 
+        height: window.innerHeight,
+        pixelRatio: window.devicePixelRatio || 1,
+        backgroundColor: '#F7F5F2'
+      }).then(dataUrl => {
+        cachedScreenshot.current = dataUrl;
+      }).catch(e => console.error(e));
     }
-  };
-
-  const handleTearTransition = async () => {
-    if (isFlippingItinerary) return;
-    setIsFlippingItinerary(true);
 
     if (prefersReducedMotion) {
-      const overlay = document.createElement('div');
-      overlay.style.position = 'fixed';
-      overlay.style.inset = '0';
-      overlay.style.backgroundColor = 'white';
-      overlay.style.opacity = '0';
-      overlay.style.transition = 'opacity 150ms ease';
-      overlay.style.zIndex = '999999';
-      document.body.appendChild(overlay);
-
-      // force reflow
-      void overlay.offsetWidth;
-      overlay.style.opacity = '1';
-
-      await new Promise(r => setTimeout(r, 150));
+      setIsUnfoldingMap(true);
+      await new Promise(r => setTimeout(r, 2000));
       if (onViewItinerary) onViewItinerary();
       else router.push('/itinerary');
-      
-      await new Promise(r => setTimeout(r, 100)); // Wait for render
-      overlay.style.opacity = '0';
-      setTimeout(() => {
-        if (document.body.contains(overlay)) document.body.removeChild(overlay);
-        setIsFlippingItinerary(false);
-      }, 150);
+      setIsUnfoldingMap(false);
       return;
     }
 
+    setIsUnfoldingMap(true);
+    await new Promise(r => setTimeout(r, 2000));
+    
     try {
       let dataUrl = cachedScreenshot.current;
       if (!dataUrl) {
         dataUrl = await htmlToImage.toJpeg(document.body, { 
-          quality: 1,
+          quality: 0.9,
           width: window.innerWidth, 
           height: window.innerHeight,
           pixelRatio: window.devicePixelRatio || 1,
@@ -248,90 +229,63 @@ export default function PlannerSidebar({
       const overlay = document.createElement('div');
       overlay.style.position = 'fixed';
       overlay.style.inset = '0';
-      overlay.style.perspective = '1500px';
+      overlay.style.perspective = '2000px';
       overlay.style.zIndex = '999999';
       overlay.style.pointerEvents = 'none';
+      overlay.style.backgroundColor = '#000'; // Black background for cinematic depth
 
+      // The new page will load in the background. We need a fade layer to reveal it smoothly.
       const fadeOverlay = document.createElement('div');
       fadeOverlay.style.position = 'absolute';
       fadeOverlay.style.inset = '0';
       fadeOverlay.style.backgroundColor = '#F7F5F2';
-      fadeOverlay.style.transition = 'opacity 2000ms ease-in-out';
+      fadeOverlay.style.transition = 'opacity 1200ms ease-in-out 400ms';
       overlay.appendChild(fadeOverlay);
+
+      // Create a 3D flipping card with the screenshot
+      const card = document.createElement('div');
+      card.style.position = 'absolute';
+      card.style.inset = '0';
+      card.style.backgroundImage = `url(${dataUrl})`;
+      card.style.backgroundSize = `${window.innerWidth}px ${window.innerHeight}px`;
+      card.style.backgroundPosition = 'top left';
+      card.style.backgroundRepeat = 'no-repeat';
+      card.style.transformOrigin = 'left center';
+      card.style.transition = 'transform 1500ms cubic-bezier(0.25, 1, 0.5, 1), opacity 1500ms ease-in';
+      card.style.willChange = 'transform, opacity';
+      card.style.boxShadow = '20px 0 50px rgba(0,0,0,0.5)';
       
-      const createHalf = (isLeft) => {
-        const wrapper = document.createElement('div');
-        wrapper.style.position = 'absolute';
-        wrapper.style.inset = '0';
-        wrapper.style.filter = isLeft ? 'drop-shadow(6px 0 16px rgba(0,0,0,0.4))' : 'drop-shadow(-6px 0 16px rgba(0,0,0,0.4))';
-        wrapper.style.transition = 'transform 3000ms cubic-bezier(0.25, 1, 0.5, 1), opacity 2500ms ease-in 500ms';
-        wrapper.style.transformOrigin = isLeft ? 'left center' : 'right center';
-        wrapper.style.willChange = 'transform, opacity';
-
-        const paperEdge = document.createElement('div');
-        paperEdge.style.position = 'absolute';
-        paperEdge.style.inset = '0';
-        paperEdge.style.backgroundColor = '#fff';
-        const edgeClip = isLeft ? 
-          'polygon(0 0, 50.3% 0, 48.3% 6%, 51.3% 14%, 49.3% 22%, 52.3% 31%, 47.3% 38%, 53.3% 45%, 49.3% 53%, 51.3% 61%, 48.3% 69%, 52.3% 76%, 49.3% 85%, 50.3% 93%, 51.3% 100%, 0 100%)' :
-          'polygon(100% 0, 49.7% 0, 47.7% 6%, 50.7% 14%, 48.7% 22%, 51.7% 31%, 46.7% 38%, 52.7% 45%, 48.7% 53%, 50.7% 61%, 47.7% 69%, 51.7% 76%, 48.7% 85%, 49.7% 93%, 50.7% 100%, 100% 100%)';
-        paperEdge.style.clipPath = edgeClip;
-
-        const half = document.createElement('div');
-        half.style.position = 'absolute';
-        half.style.inset = '0';
-        half.style.backgroundImage = `url(${dataUrl})`;
-        half.style.backgroundSize = `${window.innerWidth}px ${window.innerHeight}px`;
-        half.style.backgroundPosition = 'top left';
-        half.style.backgroundRepeat = 'no-repeat';
-        if (isLeft) {
-          half.style.clipPath = 'polygon(0 0, 50% 0, 48% 6%, 51% 14%, 49% 22%, 52% 31%, 47% 38%, 53% 45%, 49% 53%, 51% 61%, 48% 69%, 52% 76%, 49% 85%, 50% 93%, 51% 100%, 0 100%)';
-        } else {
-          half.style.clipPath = 'polygon(100% 0, 50% 0, 48% 6%, 51% 14%, 49% 22%, 52% 31%, 47% 38%, 53% 45%, 49% 53%, 51% 61%, 48% 69%, 52% 76%, 49% 85%, 50% 93%, 51% 100%, 100% 100%)';
-        }
-        
-        wrapper.appendChild(paperEdge);
-        wrapper.appendChild(half);
-        return wrapper;
-      };
-
-      const leftWrapper = createHalf(true);
-      const rightWrapper = createHalf(false);
-      overlay.appendChild(leftWrapper);
-      overlay.appendChild(rightWrapper);
+      overlay.appendChild(card);
       document.body.appendChild(overlay);
 
-      // Start the CSS animation immediately. By doing this before routing, 
-      // the browser's compositor thread (GPU) takes over the animation smoothly.
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          leftWrapper.style.transform = 'translateX(-80px) rotateZ(-6deg) rotateY(-30deg) scale(0.95)';
-          leftWrapper.style.opacity = '0';
-          rightWrapper.style.transform = 'translateX(80px) rotateZ(6deg) rotateY(30deg) scale(0.95)';
-          rightWrapper.style.opacity = '0';
+          // Flip it open like a massive book cover
+          card.style.transform = 'rotateY(-110deg) scale(0.9) translateX(-100px)';
+          card.style.opacity = '0';
           fadeOverlay.style.opacity = '0';
         });
       });
 
-      // Delay the heavy React route change slightly so it doesn't block the animation's start
+      // Navigate under the overlay
       setTimeout(() => {
         if (onViewItinerary) onViewItinerary();
         else router.push('/itinerary');
       }, 50);
 
-      // Cleanup after 3.2s
+      // Cleanup
       setTimeout(() => {
         if (document.body.contains(overlay)) {
           document.body.removeChild(overlay);
         }
-        setIsFlippingItinerary(false);
-      }, 1600);
+        setIsUnfoldingMap(false);
+      }, 2000);
 
     } catch (e) {
-      console.error('Tear transition failed', e);
+      console.error('3D transition failed', e);
       if (onViewItinerary) onViewItinerary();
       else router.push('/itinerary');
-      setIsFlippingItinerary(false);
+      setIsUnfoldingMap(false);
     }
   };
 
@@ -1917,21 +1871,45 @@ export default function PlannerSidebar({
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     type="button"
-                    onMouseEnter={handlePrefetchTear}
-                    onClick={handleTearTransition}
-                    className="group w-full sm:w-[48%] h-10 px-4 rounded-2xl font-bold bg-[#F7F5F2] text-[#1C1B1B] hover:bg-[#ECE8E2] transition-colors duration-300 text-xs flex items-center justify-center gap-2 cursor-pointer z-10 shadow-sm"
+                    onClick={handleDetailedItineraryClick}
+                    className="group w-full sm:w-[48%] h-10 px-4 rounded-2xl font-bold bg-[#F7F5F2] text-[#1C1B1B] hover:bg-[#ECE8E2] transition-colors duration-300 text-xs flex items-center justify-center cursor-pointer z-10 shadow-sm"
                   >
-                    <Map size={16} strokeWidth={2.5} className="text-[#5F5E5A] group-hover:text-[#1C1B1B] transition-colors" />
-                    <span>Detailed Itinerary</span>
+                    <AnimatePresence mode="wait">
+                      {isUnfoldingMap ? (
+                        <motion.div
+                          key="loading"
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ duration: 0.2 }}
+                          className="flex items-center gap-1.5 whitespace-nowrap"
+                        >
+                          <SpinnerIcon />
+                          <span>Opening...</span>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="default"
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ duration: 0.2 }}
+                          className="flex items-center gap-2 whitespace-nowrap"
+                        >
+                          <Map size={16} strokeWidth={2.5} className="text-[#5F5E5A] group-hover:text-[#1C1B1B] transition-colors" />
+                          <span>Detailed Itinerary</span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </motion.button>
 
                   <motion.div
-                    whileHover={!isConfirming && !isElevating ? { scale: 1.03, y: -2 } : {}}
-                    whileTap={!isConfirming && !isElevating ? { scale: 0.97 } : {}}
-                    animate={{ scale: isElevating && !isConfirming ? 1.05 : 1 }}
+                    whileHover={!isConfirming && !isElevating && itinerary?.status !== 'CONFIRMED' ? { scale: 1.03, y: -2 } : {}}
+                    whileTap={!isConfirming && !isElevating && itinerary?.status !== 'CONFIRMED' ? { scale: 0.97 } : {}}
+                    animate={{ scale: isElevating && !isConfirming && itinerary?.status !== 'CONFIRMED' ? 1.05 : 1 }}
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
                     onClick={async () => {
-                        if (itinerary && !isConfirming && !isElevating) {
+                        if (itinerary && !isConfirming && !isElevating && itinerary.status !== 'CONFIRMED') {
                             setIsElevating(true);
                             await new Promise(r => setTimeout(r, prefersReducedMotion ? 0 : 400));
                             
@@ -1942,16 +1920,16 @@ export default function PlannerSidebar({
                             if (typeof window !== 'undefined') window.location.href = '/ai-planner';
                         }
                     }}
-                    className="relative w-full sm:w-[48%] h-10 flex rounded-2xl cursor-pointer group shadow-[0_8px_24px_rgba(255,107,44,0.3)] hover:shadow-[0_12px_32px_rgba(255,107,44,0.5)] transition-shadow"
+                    className={`relative w-full sm:w-[48%] h-10 flex rounded-2xl ${itinerary?.status === 'CONFIRMED' ? '' : 'cursor-pointer group hover:shadow-[0_12px_32px_rgba(255,107,44,0.5)]'} shadow-[0_8px_24px_rgba(255,107,44,0.3)] transition-shadow`}
                   >
                     {/* Background Layer: Main (Expands to fill) */}
                     <motion.div
                       className="absolute left-0 top-0 h-full rounded-2xl z-0"
-                      initial={{ width: '100%', backgroundColor: '#FF6B2C', boxShadow: '0 8px 24px rgba(255, 107, 44, 0.3)' }}
+                      initial={itinerary?.status === 'CONFIRMED' ? { width: '100%', backgroundColor: '#10B981', boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)' } : { width: '100%', backgroundColor: '#FF6B2C', boxShadow: '0 8px 24px rgba(255, 107, 44, 0.3)' }}
                       animate={{
                         width: isConfirming ? ['50%', '100%'] : '100%',
-                        backgroundColor: isConfirming ? '#10B981' : '#FF6B2C',
-                        boxShadow: (isElevating && !isConfirming) ? '0 16px 32px rgba(255, 107, 44, 0.5)' : isConfirming ? '0 8px 24px rgba(16, 185, 129, 0.4)' : '0 8px 24px rgba(255, 107, 44, 0.3)'
+                        backgroundColor: (isConfirming || itinerary?.status === 'CONFIRMED') ? '#10B981' : '#FF6B2C',
+                        boxShadow: (isElevating && !isConfirming && itinerary?.status !== 'CONFIRMED') ? '0 16px 32px rgba(255, 107, 44, 0.5)' : (isConfirming || itinerary?.status === 'CONFIRMED') ? '0 8px 24px rgba(16, 185, 129, 0.4)' : '0 8px 24px rgba(255, 107, 44, 0.3)'
                       }}
                       transition={{ duration: 1.0, ease: "easeOut" }}
                     />
@@ -2013,7 +1991,7 @@ export default function PlannerSidebar({
 
                       {/* Exiting Initial Text */}
                       <AnimatePresence>
-                        {!isConfirming && (
+                        {!isConfirming && itinerary?.status !== 'CONFIRMED' && (
                           <motion.div
                             layout
                             className="flex items-center gap-2 overflow-hidden whitespace-nowrap"
@@ -2030,11 +2008,11 @@ export default function PlannerSidebar({
 
                       {/* Entering Confirmed Text */}
                       <AnimatePresence>
-                        {isConfirming && (
+                        {(isConfirming || itinerary?.status === 'CONFIRMED') && (
                           <motion.div
                             layout
                             className="overflow-hidden whitespace-nowrap"
-                            initial={{ width: 0, opacity: 0, marginLeft: 0 }}
+                            initial={itinerary?.status === 'CONFIRMED' ? { width: 'auto', opacity: 1, marginLeft: 8 } : { width: 0, opacity: 0, marginLeft: 0 }}
                             animate={{ width: 'auto', opacity: 1, marginLeft: 8 }}
                             transition={{ duration: 0.8, delay: 0.2 }}
                           >
