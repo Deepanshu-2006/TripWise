@@ -21,6 +21,13 @@ export default function AIPlannerPage() {
   const [currentPrompt, setCurrentPrompt] = useState('');
   const [currentStep, setCurrentStep] = useState('destination');
   const [tripId, setTripId] = useState(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && tripId) {
+      localStorage.setItem('tripwise_trip_id', tripId);
+    }
+  }, [tripId]);
+
   const [generatingDestination, setGeneratingDestination] = useState('');
   const [itinerary, setItinerary] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -55,6 +62,7 @@ export default function AIPlannerPage() {
         } else if (urlParams.get('action') === 'new') {
           // Explicitly clear local state for a fresh new trip
           localStorage.removeItem('tripwise_itinerary');
+          localStorage.removeItem('tripwise_trip_id');
           setItinerary(null);
           setTripId(null);
           setCurrentStep('destination');

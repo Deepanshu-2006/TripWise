@@ -251,6 +251,14 @@ const getContextAwareTip = (act, idx, summary) => {
 export default function ItineraryPage() {
   const [itinerary, setItinerary] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeTripId, setActiveTripId] = useState(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedId = localStorage.getItem('tripwise_trip_id');
+      if (storedId) setActiveTripId(storedId);
+    }
+  }, []);
   
   // Navigation & Modal State
   const [activeDay, setActiveDay] = useState(1); // Active Day or 'epilogue'
@@ -837,7 +845,7 @@ export default function ItineraryPage() {
             </button>
 
             <a
-              href="/ai-planner"
+              href={itinerary?.id || itinerary?.db_id || activeTripId ? `/ai-planner/new?action=view&trip_id=${itinerary?.id || itinerary?.db_id || activeTripId}` : '/ai-planner'}
               className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-[#FF6B2C] bg-[#FF6B2C]/10 text-xs font-sans font-bold text-[#FF6B2C] hover:bg-[#FF6B2C] hover:text-white transition-all cursor-pointer shadow-2xs ml-1"
             >
               <Edit3 className="w-3.5 h-3.5" />

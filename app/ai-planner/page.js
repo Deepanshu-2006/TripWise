@@ -8,6 +8,7 @@ import { Compass, Plus, MapPin, Calendar, ArrowRight, Loader2, Trash2, Share2, C
 import { getUserTrips, deleteTrip } from '../actions/trips';
 import { DESTINATIONS } from '../../lib/destinations';
 import { motion, AnimatePresence } from 'framer-motion';
+import AnimatedFlightMap from '../components/AnimatedFlightMap';
 
 const PLANNING_STAGES = [
     { label: 'Destination', threshold: 25 },
@@ -16,6 +17,42 @@ const PLANNING_STAGES = [
     { label: 'Review Draft', threshold: 90 },
     { label: 'Confirmed', threshold: 100 }
 ];
+
+const AnimatedCounter = ({ value, delay = 0 }) => {
+    const [count, setCount] = useState(0);
+
+    useEffect(() => {
+        let startTime;
+        let animationFrame;
+        const duration = 800; // 800ms
+        
+        const animate = (timestamp) => {
+            if (!startTime) startTime = timestamp;
+            const progress = timestamp - startTime - delay;
+            
+            if (progress < 0) {
+                animationFrame = requestAnimationFrame(animate);
+                return;
+            }
+            
+            const t = Math.min(progress / duration, 1);
+            const easeOut = 1 - Math.pow(1 - t, 3); // Cubic ease-out
+            
+            setCount(Math.floor(easeOut * value));
+            
+            if (t < 1) {
+                animationFrame = requestAnimationFrame(animate);
+            } else {
+                setCount(value);
+            }
+        };
+        
+        animationFrame = requestAnimationFrame(animate);
+        return () => cancelAnimationFrame(animationFrame);
+    }, [value, delay]);
+
+    return <>{count}</>;
+};
 
 const hashString = (str) => {
     let hash = 0;
@@ -385,32 +422,7 @@ export default function AIPlannerDashboard() {
     return (
         <div className="min-h-screen bg-[#FAF8F5] relative">
             {/* Hero Background Treatment */}
-            <div className="absolute top-0 left-0 w-full h-[450px] overflow-hidden pointer-events-none z-0">
-                {/* Subtle gradient band */}
-                <div className="absolute inset-0 bg-gradient-to-b from-[#FF6B2C]/5 to-transparent" />
-                
-                {/* Dotted Flight Routes SVG */}
-                <svg className="absolute inset-0 w-full h-full opacity-[0.07]" viewBox="0 0 1440 450" fill="none" preserveAspectRatio="xMidYMin slice" xmlns="http://www.w3.org/2000/svg">
-                    {/* Primary flight path */}
-                    <path d="M-100 200 C 200 100, 450 300, 800 150 C 1100 50, 1300 200, 1600 100" stroke="#FF6B2C" strokeWidth="4" strokeDasharray="8 12" strokeLinecap="round" />
-                    
-                    {/* Secondary flight path */}
-                    <path d="M 100 400 C 350 300, 500 50, 950 250 C 1200 350, 1400 150, 1700 250" stroke="#FF6B2C" strokeWidth="2.5" strokeDasharray="6 10" strokeLinecap="round" />
-                    
-                    {/* Location Pins (Primary) */}
-                    <circle cx="210" cy="142" r="6" fill="#FF6B2C" />
-                    <circle cx="800" cy="150" r="8" fill="#FF6B2C" stroke="white" strokeWidth="3" />
-                    <circle cx="1270" cy="172" r="5" fill="#FF6B2C" />
-                    
-                    {/* Location Pins (Secondary) */}
-                    <circle cx="340" cy="305" r="5" fill="#FF6B2C" />
-                    <circle cx="950" cy="250" r="8" fill="#FF6B2C" stroke="white" strokeWidth="3" />
-                    <circle cx="1400" cy="150" r="5" fill="#FF6B2C" />
-                </svg>
-
-                {/* Soft glow */}
-                <div className="absolute -top-[10%] left-[20%] w-[60%] h-[300px] rounded-full bg-[#FF6B2C]/[0.03] blur-[120px]" />
-            </div>
+            <AnimatedFlightMap trips={savedTrips} />
 
             <div className="relative z-50">
                 <Header />
@@ -419,11 +431,43 @@ export default function AIPlannerDashboard() {
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-12 md:pt-36 md:pb-20">
                 
                 {/* Header Section */}
-                <div className="mb-12">
+                <div className="mb-10">
+                    <div className="mb-4">
+                        <span className="text-[10px] font-bold text-[#FF6B2C] uppercase tracking-[0.2em]">TRAVEL LOG — 2026</span>
+                    </div>
                     <h1 className="font-serif font-bold text-5xl md:text-6xl text-stone-900 mb-4 tracking-tight">Your Planning Sessions</h1>
                     <p className="text-xs md:text-sm font-mono text-stone-500 uppercase tracking-[0.2em] font-semibold">
                         Manage and review your AI trip drafts
                     </p>
+                </div>
+
+                {/* Summary Stats Grid/Row */}
+                <div className="grid grid-cols-2 md:flex md:items-center gap-y-8 md:gap-y-0 mb-10 relative z-20">
+                    <div className="flex flex-col items-start gap-1.5 md:gap-2">
+                        <span className="font-mono text-[9px] md:text-[10px] uppercase tracking-widest text-stone-400 font-bold">Trips Planned</span>
+                        <span className="font-serif font-bold text-5xl md:text-6xl text-stone-800 leading-none"><AnimatedCounter value={totalTrips} delay={0} /></span>
+                    </div>
+                    
+                    <div className="hidden md:block w-[1px] h-14 bg-stone-200/80 shrink-0 mx-8 lg:mx-12" />
+                    
+                    <div className="flex flex-col items-start gap-1.5 md:gap-2 pl-6 md:pl-0 border-l border-stone-200/80 md:border-none">
+                        <span className="font-mono text-[9px] md:text-[10px] uppercase tracking-widest text-stone-400 font-bold">Upcoming</span>
+                        <span className="font-serif font-bold text-5xl md:text-6xl text-[#FF6B2C] leading-none"><AnimatedCounter value={upcomingTrips} delay={100} /></span>
+                    </div>
+
+                    <div className="hidden md:block w-[1px] h-14 bg-stone-200/80 shrink-0 mx-8 lg:mx-12" />
+                    
+                    <div className="flex flex-col items-start gap-1.5 md:gap-2 pr-6 md:pr-0">
+                        <span className="font-mono text-[9px] md:text-[10px] uppercase tracking-widest text-stone-400 font-bold">Countries</span>
+                        <span className="font-serif font-bold text-5xl md:text-6xl text-stone-800 leading-none"><AnimatedCounter value={uniqueCountries} delay={200} /></span>
+                    </div>
+
+                    <div className="hidden md:block w-[1px] h-14 bg-stone-200/80 shrink-0 mx-8 lg:mx-12" />
+                    
+                    <div className="flex flex-col items-start gap-1.5 md:gap-2 pl-6 md:pl-0 border-l border-stone-200/80 md:border-none">
+                        <span className="font-mono text-[9px] md:text-[10px] uppercase tracking-widest text-stone-400 font-bold">Days Traveled</span>
+                        <span className="font-serif font-bold text-5xl md:text-6xl text-stone-800 leading-none"><AnimatedCounter value={totalDaysTraveled} delay={300} /></span>
+                    </div>
                 </div>
                 
                 {/* Filter and Sort Bar */}
@@ -483,28 +527,6 @@ export default function AIPlannerDashboard() {
                     </div>
                 </div>
 
-                {/* Summary Stats Strip */}
-                <div className="flex items-center gap-6 md:gap-10 mb-8 relative z-20 overflow-x-auto pb-2 scrollbar-hide">
-                    <div className="flex flex-col items-start gap-1">
-                        <span className="font-mono text-[9px] uppercase tracking-widest text-stone-400 font-bold">Trips Planned</span>
-                        <span className="font-serif font-bold text-2xl text-stone-800 leading-none">{totalTrips}</span>
-                    </div>
-                    <div className="w-[1px] h-8 bg-stone-200/80 shrink-0" />
-                    <div className="flex flex-col items-start gap-1">
-                        <span className="font-mono text-[9px] uppercase tracking-widest text-stone-400 font-bold">Upcoming</span>
-                        <span className="font-serif font-bold text-2xl text-[#FF6B2C] leading-none">{upcomingTrips}</span>
-                    </div>
-                    <div className="w-[1px] h-8 bg-stone-200/80 shrink-0" />
-                    <div className="flex flex-col items-start gap-1">
-                        <span className="font-mono text-[9px] uppercase tracking-widest text-stone-400 font-bold">Countries</span>
-                        <span className="font-serif font-bold text-2xl text-stone-800 leading-none">{uniqueCountries}</span>
-                    </div>
-                    <div className="w-[1px] h-8 bg-stone-200/80 shrink-0" />
-                    <div className="flex flex-col items-start gap-1">
-                        <span className="font-mono text-[9px] uppercase tracking-widest text-stone-400 font-bold">Days Traveled</span>
-                        <span className="font-serif font-bold text-2xl text-stone-800 leading-none">{totalDaysTraveled}</span>
-                    </div>
-                </div>
 
                 {/* Empty State / Grid */}
                 {isLoading ? (
@@ -697,16 +719,29 @@ export default function AIPlannerDashboard() {
                             {/* Ghost Card for uneven rows */}
                             {needsGhostCard && (
                                 <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full">
-                                    <Link 
-                                        href="/ai-planner/new?action=new"
-                                        className="h-full min-h-[300px] flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm rounded-[2rem] border-2 border-stone-200/60 border-dashed hover:border-[#FF6B2C]/40 hover:bg-white hover:-translate-y-2 hover:shadow-xl hover:shadow-[#FF6B2C]/5 transition-all duration-500 group cursor-pointer"
-                                    >
-                                        <div className="w-14 h-14 rounded-full bg-stone-100 flex items-center justify-center mb-5 group-hover:scale-110 group-hover:bg-[#FF6B2C] transition-all duration-500 shadow-sm group-hover:shadow-[0_8px_25px_rgba(255,107,44,0.4)]">
-                                            <Plus size={24} className="text-stone-400 group-hover:text-white transition-colors duration-300" />
-                                        </div>
-                                        <span className="font-serif font-bold text-xl text-stone-600 group-hover:text-[#FF6B2C] transition-colors duration-300">Plan Another Trip</span>
-                                        <p className="text-[11px] font-mono uppercase tracking-[0.15em] text-stone-400 mt-2 font-semibold">Start a new draft</p>
-                                    </Link>
+                                    {filteredAndSortedTrips.length >= 4 ? (
+                                        <Link 
+                                            href="/ai-planner/new?action=new"
+                                            className="h-full min-h-[300px] flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm rounded-[2rem] border-2 border-stone-200/60 border-dashed hover:border-[#FF6B2C]/40 hover:bg-white hover:-translate-y-2 hover:shadow-xl hover:shadow-[#FF6B2C]/5 transition-all duration-500 group cursor-pointer"
+                                        >
+                                            <div className="w-14 h-14 rounded-full bg-stone-100 flex items-center justify-center mb-5 group-hover:scale-110 group-hover:bg-[#FF6B2C] transition-all duration-500 shadow-sm group-hover:shadow-[0_8px_25px_rgba(255,107,44,0.4)]">
+                                                <Plus size={24} className="text-stone-400 group-hover:text-white transition-colors duration-300" />
+                                            </div>
+                                            <span className="font-serif font-bold text-xl text-stone-600 group-hover:text-[#FF6B2C] transition-colors duration-300">Plan Another Trip</span>
+                                            <p className="text-[11px] font-mono uppercase tracking-[0.15em] text-stone-400 mt-2 font-semibold">Start a new draft</p>
+                                        </Link>
+                                    ) : (
+                                        <Link 
+                                            href="/destinations"
+                                            className="h-full min-h-[300px] flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm rounded-[2rem] border-2 border-stone-200/60 border-dashed hover:border-[#FF6B2C]/40 hover:bg-white hover:-translate-y-2 hover:shadow-xl hover:shadow-[#FF6B2C]/5 transition-all duration-500 group cursor-pointer"
+                                        >
+                                            <div className="w-14 h-14 rounded-full bg-stone-100 flex items-center justify-center mb-5 group-hover:scale-110 group-hover:bg-[#FF6B2C] transition-all duration-500 shadow-sm group-hover:shadow-[0_8px_25px_rgba(255,107,44,0.4)]">
+                                                <Compass size={24} className="text-stone-400 group-hover:text-white transition-colors duration-300" />
+                                            </div>
+                                            <span className="font-serif font-bold text-xl text-stone-600 group-hover:text-[#FF6B2C] transition-colors duration-300">Browse Destinations</span>
+                                            <p className="text-[11px] font-mono uppercase tracking-[0.15em] text-stone-400 mt-2 font-semibold">Need inspiration?</p>
+                                        </Link>
+                                    )}
                                 </motion.div>
                             )}
                         </AnimatePresence>
