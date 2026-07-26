@@ -47,18 +47,6 @@ export default function CommunityPage() {
           </div>
         </div>
 
-        {/* Empty State Demo (Kept for reference as requested initially) */}
-        <section className="py-24 border-t border-stone-200 mt-24">
-          <div className="text-center mb-8">
-            <span className="bg-stone-100 text-stone-500 border border-stone-200 px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-widest">
-              Demo: Empty State View
-            </span>
-          </div>
-          <div className="max-w-4xl mx-auto">
-            <EmptyCommunityState />
-          </div>
-        </section>
-        
       </main>
 
       {/* Community Specific Footer Sections */}

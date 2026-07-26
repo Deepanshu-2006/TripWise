@@ -499,12 +499,19 @@ export default function AIPlannerDashboard() {
                     </div>
 
                     {/* Sort and New Trip */}
-                    <div className="flex items-center gap-4 w-full md:w-auto">
+                    <div className="flex items-center gap-4 w-full md:w-auto translate-y-[3px]">
                         <div className="relative w-full md:w-48 group">
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400 group-hover:text-[#FF6B2C] transition-colors duration-300">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="4" y1="6" x2="20" y2="6"></line>
+                                    <line x1="4" y1="12" x2="14" y2="12"></line>
+                                    <line x1="4" y1="18" x2="8" y2="18"></line>
+                                </svg>
+                            </div>
                             <select 
                                 value={activeSort}
                                 onChange={(e) => setActiveSort(e.target.value)}
-                                className="w-full appearance-none bg-white shadow-xs border border-stone-200/60 text-stone-700 text-[11px] font-mono font-bold uppercase rounded-full pl-5 pr-10 py-2.5 focus:outline-none focus:border-[#FF6B2C]/50 focus:ring-1 focus:ring-[#FF6B2C]/20 transition-all cursor-pointer hover:border-[#FF6B2C] hover:text-stone-900"
+                                className="w-full appearance-none bg-white/80 backdrop-blur-md shadow-sm border border-stone-200/60 hover:border-[#FF6B2C]/40 hover:shadow-md text-stone-600 hover:text-stone-900 text-[11px] font-mono font-bold uppercase rounded-full pl-10 pr-10 py-3 focus:outline-none focus:border-[#FF6B2C]/50 focus:ring-1 focus:ring-[#FF6B2C]/20 transition-all duration-300 cursor-pointer"
                             >
                                 {SORTS.map(sort => (
                                     <option key={sort} value={sort}>{sort}</option>
@@ -519,10 +526,15 @@ export default function AIPlannerDashboard() {
 
                         <a 
                             href="/ai-planner/new"
-                            className="hidden sm:flex group px-5 py-2.5 bg-[#FF6B2C] hover:bg-[#FF8A4C] text-white font-bold text-[11px] rounded-full transition-all duration-300 uppercase tracking-[0.1em] items-center justify-center gap-1.5 shadow-[0_4px_15px_rgba(255,107,44,0.25)] hover:shadow-[0_8px_20px_rgba(255,107,44,0.35)] shrink-0"
+                            className="relative overflow-hidden hidden sm:flex group px-6 py-3 bg-gradient-to-r from-[#FF8243] via-[#FF5A00] to-[#FF8243] bg-[length:200%_auto] hover:bg-[position:100%_0] text-white font-bold text-[11px] rounded-full transition-all duration-500 uppercase tracking-[0.1em] items-center justify-center gap-2 shadow-[0_8px_20px_-6px_rgba(255,107,44,0.6)] hover:shadow-[0_15px_30px_-6px_rgba(255,107,44,0.9)] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[0_4px_10px_-6px_rgba(255,107,44,0.5)] shrink-0 border border-white/30"
                         >
-                            <Plus size={14} />
-                            New Trip
+                            {/* Inner Shine sweep on hover */}
+                            <div className="absolute inset-0 w-[200%] h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" style={{ transform: 'skewX(-20deg)' }} />
+                            
+                            <div className="bg-white/20 backdrop-blur-md rounded-full p-0.5 group-hover:rotate-180 group-hover:scale-110 transition-all duration-500 shadow-[inset_0_1px_3px_rgba(255,255,255,0.4)] relative z-10">
+                                <Plus size={14} strokeWidth={3} className="text-white drop-shadow-md" />
+                            </div>
+                            <span className="relative z-10 drop-shadow-md">New Trip</span>
                         </a>
                     </div>
                 </div>
@@ -568,7 +580,7 @@ export default function AIPlannerDashboard() {
                                 >
                                     <Link 
                                         href={trip.status === 'COMPLETED' ? `/ai-planner/new?action=new&destination=${encodeURIComponent(trip.destinationName)}` : `/ai-planner/new?action=view&trip_id=${trip.db_id}${trip.status === 'DRAFT' ? '&step=' + getNextStep(trip.lastCompletedStep) : ''}`}
-                                        className={`flex group h-full flex-col bg-white rounded-[2rem] border transition-all duration-500 overflow-hidden cursor-pointer relative hover:-translate-y-2 ${trip.status === 'COMPLETED' ? 'opacity-[0.85] border-stone-200/50' : 'border-stone-100 shadow-sm hover:shadow-2xl hover:shadow-[#FF6B2C]/10 hover:border-[#FF6B2C]/30'}`}
+                                        className={`flex group h-full flex-col bg-white rounded-[2rem] border transition-all duration-500 overflow-hidden cursor-pointer relative hover:-translate-y-2 ${trip.status === 'COMPLETED' ? 'opacity-[0.85] border-stone-200/50' : 'border-stone-200/50 shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(255,107,44,0.15)] hover:border-[#FF6B2C]/40'}`}
                                     >
                                         <div 
                                             className="h-56 relative overflow-hidden flex items-center justify-center transition-transform duration-700 bg-stone-100"
@@ -588,10 +600,10 @@ export default function AIPlannerDashboard() {
                                             
                                             {/* Status Badge */}
                                             <div className="absolute top-5 left-5 z-10">
-                                                <span className={`px-3 py-1.5 rounded-xl text-[10px] font-bold tracking-widest uppercase shadow-lg border flex items-center gap-2 backdrop-blur-xl ${
-                                                    trip.status === 'DRAFT' ? 'bg-white/20 border-white/40 text-white' :
-                                                    trip.status === 'CONFIRMED' ? 'bg-emerald-500/80 border-emerald-400/50 text-white' :
-                                                    'bg-stone-900/60 border-white/20 text-stone-200'
+                                                <span className={`px-3 py-1.5 rounded-xl text-[10px] font-bold tracking-widest uppercase shadow-lg border flex items-center gap-2 backdrop-blur-md ${
+                                                    trip.status === 'DRAFT' ? 'bg-black/30 border-white/20 text-white' :
+                                                    trip.status === 'CONFIRMED' ? 'bg-emerald-500/90 border-emerald-400/30 text-white shadow-emerald-900/20' :
+                                                    'bg-stone-900/80 border-white/20 text-stone-200'
                                                 }`}>
                                                     {trip.status === 'DRAFT' && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
                                                     {trip.status === 'CONFIRMED' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-200 animate-pulse" />}
@@ -601,7 +613,7 @@ export default function AIPlannerDashboard() {
 
                                             {/* Date Overlay (Top Right) */}
                                             <div className="absolute top-5 right-5 z-10 flex flex-col items-end gap-1.5">
-                                                <span className="px-3 py-1.5 bg-black/30 backdrop-blur-xl rounded-xl text-[10px] font-bold text-white shadow-lg border border-white/20">
+                                                <span className="px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-xl text-[10px] font-bold text-white shadow-lg border border-white/20">
                                                     {trip.dateRange}
                                                 </span>
                                                 {trip.status === 'CONFIRMED' && daysUntil && (
@@ -630,16 +642,17 @@ export default function AIPlannerDashboard() {
                                             </div>
                                         </div>
 
-                                        <div className="p-6 flex flex-col flex-1 bg-white relative z-10 min-h-[160px]">
+                                        <div className="p-7 flex flex-col flex-1 bg-white relative z-10 min-h-[160px]">
                                             <div className="mb-2">
-                                                <p className="text-[10px] font-mono text-[#FF6B2C] uppercase tracking-[0.2em] mb-1.5 font-semibold">
+                                                <p className="text-[10px] font-mono text-[#FF6B2C] uppercase tracking-[0.25em] mb-1.5 font-bold">
                                                     {trip.country || 'Destination'}
                                                 </p>
-                                                <div className="flex items-start justify-between gap-4">
-                                                    <h3 className="font-serif font-bold text-2xl text-stone-900 line-clamp-2 group-hover:text-[#FF6B2C] transition-colors leading-tight">
+                                                <div className="flex items-start justify-between gap-4 mt-2">
+                                                    <h3 className="font-serif font-bold text-3xl text-stone-900 line-clamp-2 group-hover:text-[#FF6B2C] transition-colors leading-tight">
                                                         {trip.destinationName.split(',')[0]}
                                                     </h3>
-                                                    <div className="px-2.5 py-1 bg-stone-100 rounded-lg text-[10px] font-bold text-stone-500 uppercase tracking-widest shrink-0 mt-1">
+                                                    <div className="px-3 py-1.5 bg-stone-50 border border-stone-200/60 rounded-xl text-[10px] font-bold text-stone-500 uppercase tracking-widest shrink-0 mt-1 flex items-center shadow-sm">
+                                                        <MapPin size={12} className="mr-1.5 text-stone-400" />
                                                         {getTotalActivities(trip)} Places
                                                     </div>
                                                 </div>
@@ -647,7 +660,7 @@ export default function AIPlannerDashboard() {
                                             
                                             <div className="mt-auto pt-6 flex flex-col gap-4">
                                                 {trip.status === 'DRAFT' && (
-                                                    <div className="w-full bg-stone-50 p-4 rounded-2xl border border-stone-100 relative group/progress">
+                                                    <div className="w-full bg-stone-50 p-5 rounded-2xl border border-stone-200/60 relative group/progress shadow-sm">
                                                         <div className="flex justify-between items-end mb-2.5 relative z-10">
                                                             <div className="flex flex-col gap-1">
                                                                 <span className="text-[10px] font-bold text-stone-800 uppercase tracking-widest">Planning Progress</span>
@@ -701,12 +714,12 @@ export default function AIPlannerDashboard() {
                                                     </div>
                                                 )}
                                                 
-                                                <div className="flex items-center justify-between w-full pt-4 border-t border-stone-100">
-                                                    <span className="text-[11px] font-bold text-stone-900 uppercase tracking-[0.15em] group-hover:text-[#FF6B2C] transition-colors">
+                                                <div className="flex items-center justify-between w-full pt-5 border-t border-stone-100">
+                                                    <span className="text-[11px] font-bold text-stone-900 uppercase tracking-[0.15em] group-hover:text-[#FF6B2C] transition-colors flex items-center">
                                                         {trip.status === 'DRAFT' ? 'Continue Planning' : trip.status === 'COMPLETED' ? 'Plan Similar Trip' : 'View Full Itinerary'}
                                                     </span>
-                                                    <div className="w-8 h-8 rounded-full bg-stone-50 flex items-center justify-center group-hover:bg-[#FF6B2C] group-hover:text-white text-stone-400 transition-all duration-300 transform group-hover:translate-x-1">
-                                                        <ArrowRight size={14} />
+                                                    <div className="w-9 h-9 rounded-full bg-stone-100 flex items-center justify-center group-hover:bg-[#FF6B2C] group-hover:text-white text-stone-400 transition-all duration-300 transform group-hover:translate-x-1 group-hover:shadow-md">
+                                                        <ArrowRight size={16} />
                                                     </div>
                                                 </div>
                                             </div>
