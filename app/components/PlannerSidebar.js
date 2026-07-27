@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import CustomDatePicker from './CustomDatePicker';
 import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw, Check, Map, Compass } from 'lucide-react';
 import {
   getActivityThumbnail,
@@ -147,6 +148,14 @@ const STATUS_ROWS = [
   { id: 'transit', label: 'Calculating transit times and routes...', icon: <TransitIcon /> },
   { id: 'timeline', label: 'Finalizing your custom timeline...', icon: <TimelineIcon /> },
 ];
+
+const getDayDateString = (startDateStr, dayIndex) => {
+  if (!startDateStr) return null;
+  const [year, month, day] = startDateStr.split('-');
+  const date = new Date(year, month - 1, day);
+  date.setDate(date.getDate() + dayIndex);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
 
 export default function PlannerSidebar({
   currentStep = 'destination',
@@ -319,13 +328,22 @@ export default function PlannerSidebar({
   useEffect(() => {
     if (propHoveredStopIdx !== undefined) setInternalHoveredStopIdx(propHoveredStopIdx);
   }, [propHoveredStopIdx]);
-  const isUserScrollingRef = useRef(false);
-  const scrollTimeoutRef = useRef(null);
+  const isProgrammaticScrollRef = useRef(false);
+  const programmaticScrollTimeoutRef = useRef(null);
+
+  const triggerProgrammaticScroll = () => {
+    isProgrammaticScrollRef.current = true;
+    if (programmaticScrollTimeoutRef.current) clearTimeout(programmaticScrollTimeoutRef.current);
+    programmaticScrollTimeoutRef.current = setTimeout(() => {
+      isProgrammaticScrollRef.current = false;
+    }, 1200); // Wait for smooth scroll to finish
+  };
 
   const handleSelectStop = useCallback((idx, opts = {}) => {
     if (onSelectStop) onSelectStop(idx);
     setInternalSelectedStopIdx(idx);
     if (!opts.isScrollSync && typeof document !== 'undefined' && idx !== null && idx !== undefined) {
+      triggerProgrammaticScroll();
       const cardEl = document.getElementById(`itinerary-card-${selectedDayIndex}-${idx}`);
       if (cardEl) {
         cardEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -333,28 +351,12 @@ export default function PlannerSidebar({
     }
   }, [onSelectStop, selectedDayIndex]);
 
-  // Track manual user scrolling vs programmatic scrollIntoView
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const handleUserScroll = () => {
-      isUserScrollingRef.current = true;
-      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-      scrollTimeoutRef.current = setTimeout(() => {
-        isUserScrollingRef.current = false;
-      }, 400);
-    };
-    window.addEventListener('wheel', handleUserScroll, { passive: true });
-    window.addEventListener('touchmove', handleUserScroll, { passive: true });
-    return () => {
-      window.removeEventListener('wheel', handleUserScroll);
-      window.removeEventListener('touchmove', handleUserScroll);
-    };
-  }, []);
-
   // Automatically scroll card into view when selectedStopIdx changes externally (e.g. Map pin click)
   useEffect(() => {
-    if (isUserScrollingRef.current) return;
     if (selectedStopIdx !== null && selectedStopIdx !== undefined && typeof document !== 'undefined') {
+      // If the change came from outside and wasn't initiated by our own handleSelectStop
+      // we need to trigger programmatic scroll so the observer ignores it
+      triggerProgrammaticScroll();
       const cardEl = document.getElementById(`itinerary-card-${selectedDayIndex}-${selectedStopIdx}`);
       if (cardEl) {
         cardEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -362,27 +364,74 @@ export default function PlannerSidebar({
     }
   }, [selectedStopIdx, selectedDayIndex]);
 
-  // IntersectionObserver to sync map and active stop during user scroll without reconnection loops
+  // Highly robust scroll-spy to sync map and active stop during user scroll
   useEffect(() => {
     if (typeof document === 'undefined' || !itinerary?.days?.[selectedDayIndex]?.activities) return;
-    const observer = new IntersectionObserver((entries) => {
-      if (!isUserScrollingRef.current) return;
-      entries.forEach((entry) => {
-        if (entry.isIntersecting && entry.intersectionRatio >= 0.55) {
-          const stopIdxAttr = entry.target.getAttribute('data-stop-idx');
-          if (stopIdxAttr !== null) {
-            const stopNum = parseInt(stopIdxAttr, 10);
-            if (!isNaN(stopNum) && stopNum !== selectedStopIdxRef.current) {
-              handleSelectStop(stopNum, { isScrollSync: true });
+    
+    // Find the scrollable container. We search up from one of the cards to find the nearest overflow-y-auto parent
+    const firstCard = document.querySelector(`[data-day-idx="${selectedDayIndex}"]`);
+    if (!firstCard) return;
+    
+    let scrollParent = firstCard.parentElement;
+    while (scrollParent && scrollParent !== document.body) {
+      const style = window.getComputedStyle(scrollParent);
+      if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
+        break;
+      }
+      scrollParent = scrollParent.parentElement;
+    }
+    
+    // Fallback to window if no scroll parent found
+    const target = (scrollParent && scrollParent !== document.body) ? scrollParent : window;
+
+    let rafId = null;
+    
+    const handleScroll = () => {
+      if (isProgrammaticScrollRef.current) return;
+      
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const cards = document.querySelectorAll(`[data-day-idx="${selectedDayIndex}"]`);
+        if (cards.length === 0) return;
+        
+        let bestStopNum = null;
+        let minDistance = Infinity;
+        
+        // We consider the "active zone" to be around 25% down the viewport/container height
+        const targetY = target === window ? window.innerHeight * 0.25 : scrollParent.getBoundingClientRect().top + (scrollParent.clientHeight * 0.25);
+
+        cards.forEach((card) => {
+          const rect = card.getBoundingClientRect();
+          // Distance from the top of the card to our target line
+          // If the card is very tall, we might want to check if the target line is *within* the card
+          if (rect.top <= targetY && rect.bottom >= targetY) {
+            // Target line intersects this card directly, it's a perfect match
+            bestStopNum = parseInt(card.getAttribute('data-stop-idx'), 10);
+            minDistance = -1; // Guaranteed to beat anything else
+          } else if (minDistance !== -1) {
+            // Find closest card to the line
+            const distance = Math.abs(rect.top - targetY);
+            if (distance < minDistance) {
+              minDistance = distance;
+              bestStopNum = parseInt(card.getAttribute('data-stop-idx'), 10);
             }
           }
+        });
+
+        if (bestStopNum !== null && !isNaN(bestStopNum) && bestStopNum !== selectedStopIdxRef.current) {
+          handleSelectStop(bestStopNum, { isScrollSync: true });
         }
       });
-    }, { threshold: [0.55, 0.75] });
+    };
 
-    const cards = document.querySelectorAll(`[data-day-idx="${selectedDayIndex}"]`);
-    cards.forEach((c) => observer.observe(c));
-    return () => observer.disconnect();
+    target.addEventListener('scroll', handleScroll, { passive: true });
+    // Also run once initially to set correct state
+    handleScroll();
+    
+    return () => {
+      target.removeEventListener('scroll', handleScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, [selectedDayIndex, itinerary, handleSelectStop]);
 
   // Drag and Drop Stop Reordering State & Handlers
@@ -544,6 +593,10 @@ export default function PlannerSidebar({
   );
   const [selectedBudget, setSelectedBudget] = useState(() => itinerary?.preferences?.budget || extracted?.budget || 'standard');
   const [selectedPace, setSelectedPace] = useState(() => itinerary?.preferences?.pace || extracted?.travelStyle || 'balanced');
+  
+  const [startDate, setStartDate] = useState(() => itinerary?.startDate || '');
+  const [endDate, setEndDate] = useState(() => itinerary?.endDate || '');
+
   const [selectedDays, setSelectedDays] = useState(() => {
     if (itinerary?.duration) return itinerary.duration;
     if (extracted?.duration) return extracted.duration;
@@ -556,6 +609,35 @@ export default function PlannerSidebar({
     }
     return 3;
   });
+
+  const handleDateChange = (type, value) => {
+    if (type === 'start') {
+      setStartDate(value);
+      if (value && selectedDays) {
+        // Auto-calculate end date based on start date + selectedDays
+        const start = new Date(value);
+        start.setDate(start.getDate() + selectedDays - 1);
+        setEndDate(start.toISOString().split('T')[0]);
+      }
+    } else {
+      setEndDate(value);
+      if (startDate && value) {
+        // If end date is manually changed, update the duration
+        const start = new Date(startDate);
+        const end = new Date(value);
+        if (end >= start) {
+          const diffTime = Math.abs(end - start);
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+          setSelectedDays(Math.min(30, Math.max(1, diffDays)));
+        } else {
+          setStartDate(value);
+          setSelectedDays(1);
+        }
+      }
+    }
+  };
+
+
 
   // State 3 Progress
   const [progressPercent, setProgressPercent] = useState(0);
@@ -706,10 +788,12 @@ export default function PlannerSidebar({
         ...selections,
         basecamp: basecamp,
         prompt: userPromptInput || rawPrompt || "Planning a trip",
-        destination: parsedIntent?.destination || extracted?.destination || userPromptInput || rawPrompt || "Your Destination"
+        destination: parsedIntent?.destination || extracted?.destination || userPromptInput || rawPrompt || "Your Destination",
+        startDate: startDate,
+        endDate: endDate
       });
     }
-  }, [onGenerate, userPromptInput, rawPrompt, extracted?.destination, parsedIntent?.destination, basecamp, onStepChange]);
+  }, [onGenerate, userPromptInput, rawPrompt, extracted?.destination, parsedIntent?.destination, basecamp, onStepChange, startDate, endDate]);
 
   // Sync when rawPrompt is updated from external click (e.g. clicking a destination card on the right radar map)
   useEffect(() => {
@@ -885,6 +969,12 @@ export default function PlannerSidebar({
 
   const handleDaysCounterChange = (newDays) => {
     setSelectedDays(newDays);
+    if (startDate) {
+      // Auto-calculate end date based on new duration
+      const start = new Date(startDate);
+      start.setDate(start.getDate() + newDays - 1);
+      setEndDate(start.toISOString().split('T')[0]);
+    }
     
     setUserPromptInput((prev) => {
       const current = prev || "";
@@ -918,7 +1008,9 @@ export default function PlannerSidebar({
             pace: selectedPace,
             basecamp: basecamp
         },
-        duration: selectedDays
+        duration: selectedDays,
+        startDate: startDate,
+        endDate: endDate
     };
     const destName = parsedIntent?.destination || userPromptInput || "Draft Trip";
     if (tripId) {
@@ -934,6 +1026,8 @@ export default function PlannerSidebar({
       budget: selectedBudget,
       pace: selectedPace,
       days: selectedDays,
+      startDate: startDate,
+      endDate: endDate
     });
   };
 
@@ -1371,7 +1465,7 @@ export default function PlannerSidebar({
               <label className="block text-xs font-semibold uppercase tracking-wider text-secondary-text mb-2.5">
                 Trip duration (days)
               </label>
-              <div className="flex items-center justify-between p-1.5 rounded-xl bg-bg-white border border-[rgba(28,27,27,0.1)] shadow-2xs">
+              <div className="flex items-center justify-between p-1.5 rounded-xl bg-bg-white border border-[rgba(28,27,27,0.1)] shadow-2xs mb-4">
                 <button
                   type="button"
                   onClick={() => handleDaysCounterChange(Math.max(1, selectedDays - 1))}
@@ -1385,11 +1479,36 @@ export default function PlannerSidebar({
                 </div>
                 <button
                   type="button"
-                  onClick={() => handleDaysCounterChange(Math.min(14, selectedDays + 1))}
+                  onClick={() => handleDaysCounterChange(Math.min(30, selectedDays + 1))}
                   className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-stone-100 text-stone-500 font-bold transition-colors cursor-pointer"
                 >
                   +
                 </button>
+              </div>
+              
+              <div className="flex items-center justify-between mb-2.5">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-secondary-text">
+                  Travel Dates (Optional)
+                </label>
+              </div>
+              <div className="flex gap-2 relative z-50">
+                <div className="flex-1">
+                  <CustomDatePicker
+                    value={startDate}
+                    onChange={(val) => handleDateChange('start', val)}
+                    placeholder="Start date"
+                  />
+                </div>
+                <div className="flex items-center text-stone-400">
+                  <ArrowRightIcon />
+                </div>
+                <div className="flex-1">
+                  <CustomDatePicker
+                    value={endDate}
+                    onChange={(val) => handleDateChange('end', val)}
+                    placeholder="End date"
+                  />
+                </div>
               </div>
             </div>
 
@@ -1426,7 +1545,7 @@ export default function PlannerSidebar({
                     </h3>
                     <p className="text-xs font-bold text-[#FF7A1A] mt-0.5 flex items-center gap-1.5">
                       <span className="animate-pulse inline-block text-amber-500">⚡</span>
-                      <span>{itinerary.days?.[selectedDayIndex]?.dateLabel || `Day ${selectedDayIndex + 1}`} • {itinerary.days?.[selectedDayIndex]?.activities?.length || 0} Stops</span>
+                      <span>{itinerary.days?.[selectedDayIndex]?.dateLabel || getDayDateString(itinerary?.startDate || startDate, selectedDayIndex) || `Day ${selectedDayIndex + 1}`} • {itinerary.days?.[selectedDayIndex]?.activities?.length || 0} Stops</span>
                     </p>
                   </div>
                   <button
@@ -1471,7 +1590,7 @@ export default function PlannerSidebar({
                                     <span className={`relative transition-colors duration-300 ${
                                       isSelected ? 'text-white font-semibold' : 'text-[#5F5E5A] hover:text-[#1C1B1B] font-medium'
                                     }`}>
-                                      Day {idx + 1}
+                                      {getDayDateString(itinerary?.startDate || startDate, idx) || `Day ${idx + 1}`}
                                     </span>
                                   </button>
                                 );
@@ -2032,46 +2151,96 @@ export default function PlannerSidebar({
                   <span className="text-xs font-semibold uppercase tracking-wider text-secondary-text block mb-2">
                     Building your itinerary
                   </span>
-                  <div className="w-full h-1.5 rounded-full bg-[rgba(28,27,27,0.06)] border border-[rgba(28,27,27,0.04)] overflow-hidden">
+                  <div className="w-full h-1.5 rounded-full bg-[rgba(28,27,27,0.06)] border border-[rgba(28,27,27,0.04)] overflow-hidden relative">
                     <div
                       className="h-full bg-accent-orange transition-all duration-100 ease-linear"
                       style={{ width: `${progressPercent}%` }}
                     />
+                    {/* Glowing moving strip across progress bar */}
+                    {progressPercent > 0 && progressPercent < 100 && (
+                      <motion.div
+                         className="absolute top-0 bottom-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/50 to-transparent"
+                         animate={{ x: ['-100%', '400%'] }}
+                         transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
+                      />
+                    )}
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-4 mt-2">
-                  {STATUS_ROWS.map((row, index) => {
-                    const isRevealed = activeRowIndex >= index;
-                    const isDone = activeRowIndex > index;
+                  <div className="flex flex-col gap-4 mt-2">
+                    <AnimatePresence>
+                      {STATUS_ROWS.map((row, index) => {
+                        const isRevealed = activeRowIndex >= index;
+                        const isDone = activeRowIndex > index;
+                        const isActive = isRevealed && !isDone;
 
-                    if (!isRevealed) return null;
+                        if (!isRevealed) return null;
 
-                    return (
-                      <div
-                        key={row.id}
-                        className={`flex items-center gap-3 transition-opacity duration-300 ${
-                          isDone
-                            ? 'text-(--foreground) font-semibold opacity-100'
-                            : 'text-secondary-text opacity-85'
-                        }`}
-                      >
-                        <div
-                          className={`p-1.5 rounded-lg border transition-colors ${
-                            isDone
-                              ? 'bg-(--accent-orange-tint)/40 border-(--accent-orange)/60 text-accent-orange'
-                              : 'bg-bg-white border-[rgba(28,27,27,0.1)] text-secondary-text shadow-2xs'
-                          }`}
-                        >
-                          {row.icon}
-                        </div>
-                        <span className="text-xs md:text-sm leading-snug">
-                          {row.label}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
+                        return (
+                          <motion.div
+                            key={row.id}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: isDone ? 1 : 1, x: 0 }}
+                            className={`flex items-center gap-3 transition-opacity duration-300 ${
+                              isDone
+                                ? 'text-[#1F1F1F] font-semibold opacity-100'
+                                : 'text-[#6B6B6B] opacity-85'
+                            }`}
+                          >
+                            <div className="relative">
+                              {/* Glowing ring for active state */}
+                              {isActive && (
+                                <motion.div
+                                  className="absolute -inset-1.5 rounded-xl border border-[#FF6B2C]/40"
+                                  animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.8, 0.3] }}
+                                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                                />
+                              )}
+                              
+                              <div
+                                className={`relative z-10 p-1.5 rounded-lg border transition-all duration-300 overflow-hidden ${
+                                  isDone
+                                    ? 'bg-[#FFDBC8]/40 border-[#FF6B2C]/60 text-[#FF6B2C] shadow-sm'
+                                    : isActive
+                                      ? 'bg-white border-2 border-[#FF6B2C] text-[#FF6B2C] shadow-sm shadow-[#FF6B2C]/30 scale-105'
+                                      : 'bg-white border-[rgba(28,27,27,0.1)] text-[#6B6B6B] shadow-2xs'
+                                }`}
+                              >
+                                {/* Shimmering background overlay for active state */}
+                                {isActive && (
+                                  <motion.div
+                                    className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF6B2C]/10 to-transparent skew-x-[-20deg]"
+                                    style={{ width: '200%' }}
+                                    animate={{ x: ['-100%', '100%'] }}
+                                    transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
+                                  />
+                                )}
+                                <div className="relative z-10">
+                                  {row.icon}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Shimmering text for active state */}
+                            {isActive ? (
+                              <motion.span 
+                                className="text-xs md:text-sm leading-snug font-medium bg-clip-text text-transparent bg-gradient-to-r from-[#FF6B2C] via-[#FFA37C] to-[#FF6B2C]"
+                                style={{ backgroundSize: '200% 100%' }}
+                                animate={{ backgroundPosition: ['200% 0', '-200% 0'] }}
+                                transition={{ repeat: Infinity, duration: 3, ease: 'linear' }}
+                              >
+                                {row.label}
+                              </motion.span>
+                            ) : (
+                              <span className="text-xs md:text-sm leading-snug">
+                                {row.label}
+                              </span>
+                            )}
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
+                  </div>
 
                 {/* Final Button Revealed after last row visible for ~1.3s */}
                 {showFinalCTA && (

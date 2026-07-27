@@ -108,8 +108,8 @@ export default function InteractiveGlobe({
     }
   }, [dynamicCoords, targetCoordinates.lat, targetCoordinates.lng, isGenerating, isTransitioning]);
 
-  // Marker data (show marker if we have dynamic coords)
-  const markerData = dynamicCoords ? [
+  // Marker data (always show marker using finalCoords)
+  const markerData = finalCoords ? [
     {
       lat: finalCoords.lat,
       lng: finalCoords.lng,
