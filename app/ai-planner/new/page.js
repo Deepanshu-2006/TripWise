@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useUser } from '@clerk/nextjs';
+import CollaborationProvider from '../../components/CollaborationProvider';
 import PlannerSidebar from '../../components/PlannerSidebar';
 import Header from '../../components/Header';
 import LiveTripDashboard from '../../components/LiveTripDashboard';
@@ -18,6 +20,7 @@ function PromptSeeder({ onPrompt }) {
 }
 
 export default function AIPlannerPage() {
+  const { user } = useUser();
   const [currentPrompt, setCurrentPrompt] = useState('');
   const [currentStep, setCurrentStep] = useState('destination');
   const [tripId, setTripId] = useState(null);
@@ -148,6 +151,12 @@ export default function AIPlannerPage() {
         <PromptSeeder onPrompt={setCurrentPrompt} />
       </Suspense>
       
+      <CollaborationProvider 
+        tripId={tripId} 
+        initialItinerary={itinerary} 
+        currentUser={user ? { id: user.id, name: user.fullName || user.firstName, avatarUrl: user.imageUrl } : null}
+        onRemoteUpdate={(newItin) => setItinerary(newItin)}
+      >
       {/* Unified Parent Container (Wrap BOTH Itinerary Panel and Map Section inside one shared parent container) */}
       <div className="flex-1 w-full h-full overflow-hidden p-3 sm:p-4 md:p-6 pb-4 sm:pb-6 flex flex-col min-h-0">
         <div className="flex-1 flex w-full h-full min-h-0 bg-[#FFFFFF] rounded-3xl border border-[#ECE8E2] shadow-[0_20px_60px_rgba(0,0,0,0.06)] overflow-hidden relative">
@@ -231,6 +240,7 @@ export default function AIPlannerPage() {
           </div>
         </div>
       </div>
+      </CollaborationProvider>
     </div>
   );
 }

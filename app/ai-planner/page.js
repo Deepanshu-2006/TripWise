@@ -211,6 +211,7 @@ export default function AIPlannerDashboard() {
             if (isSignedIn) {
                 try {
                     const trips = await getUserTrips();
+                    console.log("FETCHED TRIPS FROM SERVER:", trips);
                     
                     // Demo Mode: Map DB trips to diverse realistic sample data to demonstrate range
                     const demoTrips = trips.map((t, idx) => {
@@ -571,22 +572,52 @@ export default function AIPlannerDashboard() {
                         <Loader2 className="w-8 h-8 text-[#FF6B2C] animate-spin" />
                     </div>
                 ) : savedTrips.length === 0 ? (
-                    /* Simple Empty State */
-                    <div className="flex flex-col items-center justify-center py-24 px-4 bg-white rounded-3xl border border-stone-200/60 shadow-xs">
-                        <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mb-6">
-                            <Compass size={32} className="text-stone-400" />
-                        </div>
-                        <h3 className="font-serif font-bold text-2xl text-stone-900 mb-2">No trips planned yet</h3>
-                        <p className="text-stone-500 max-w-md mx-auto text-center mb-8 text-sm">
-                            Your itinerary canvas is completely blank. Start a new planning session to discover your next adventure.
+                    /* Premium Empty State */
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, ease: "easeOut" }}
+                        className="relative flex flex-col items-center justify-center py-32 px-6 rounded-[2.5rem] border border-stone-200/50 shadow-sm overflow-hidden bg-white isolate"
+                    >
+                        {/* Decorative Background Gradients */}
+                        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-orange-50/40 via-white to-white"></div>
+                        <div className="absolute inset-0 -z-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03]"></div>
+                        
+                        {/* Floating Icon Container */}
+                        <motion.div 
+                            animate={{ y: [0, -10, 0] }}
+                            transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                            className="relative w-24 h-24 mb-8"
+                        >
+                            <div className="absolute inset-0 bg-orange-100/50 rounded-full blur-xl scale-150"></div>
+                            <div className="relative w-full h-full bg-gradient-to-br from-white to-orange-50 rounded-2xl shadow-xl shadow-orange-900/5 border border-white flex items-center justify-center rotate-3 hover:rotate-6 transition-transform duration-500">
+                                <Compass size={40} strokeWidth={1.5} className="text-[#FF6B2C]" />
+                            </div>
+                            
+                            {/* Decorative Sparkles */}
+                            <motion.div animate={{ opacity: [0, 1, 0], scale: [0.8, 1.2, 0.8] }} transition={{ repeat: Infinity, duration: 2, delay: 0.5 }} className="absolute -top-4 -right-4">
+                                <span className="text-xl">✨</span>
+                            </motion.div>
+                            <motion.div animate={{ opacity: [0, 1, 0], scale: [0.8, 1.2, 0.8] }} transition={{ repeat: Infinity, duration: 2, delay: 1.5 }} className="absolute -bottom-2 -left-6">
+                                <span className="text-sm">🌟</span>
+                            </motion.div>
+                        </motion.div>
+
+                        <h3 className="font-serif font-bold text-3xl md:text-4xl text-stone-900 mb-4 text-center tracking-tight">Your canvas is <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B2C] to-orange-400">waiting.</span></h3>
+                        <p className="text-stone-500 max-w-lg mx-auto text-center mb-10 text-[15px] leading-relaxed">
+                            Every great journey begins with a single idea. Spark your next unforgettable adventure with our AI-powered travel designer.
                         </p>
+                        
                         <Link 
                             href="/ai-planner/new?action=new"
-                            className="px-6 py-3 bg-[#1F1F1F] hover:bg-[#333] text-white font-bold text-[11px] rounded-full transition-all uppercase tracking-[0.15em] shadow-md hover:-translate-y-0.5"
+                            className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-[13px] text-white transition-all duration-300 bg-[#1F1F1F] rounded-full uppercase tracking-[0.2em] hover:bg-black hover:shadow-xl hover:shadow-orange-500/20 hover:-translate-y-1 overflow-hidden"
                         >
-                            Start Planning
+                            <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+                            <span className="relative flex items-center gap-2">
+                                Start Planning <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                            </span>
                         </Link>
-                    </div>
+                    </motion.div>
                 ) : viewMode === 'calendar' ? (
                     <TripsCalendarView trips={filteredAndSortedTrips} />
                 ) : (
