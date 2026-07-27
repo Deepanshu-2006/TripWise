@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import CustomDatePicker from './CustomDatePicker';
-import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw, Check, Map, Compass } from 'lucide-react';
+import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw, Check, Map, Compass, ThumbsUp, ThumbsDown } from 'lucide-react';
 import {
   getActivityThumbnail,
   getTransportBetweenStops,
@@ -15,9 +15,12 @@ import {
   getDaySummary,
   formatReviewCount
 } from './itineraryHelpers';
-import { saveTrip, updateTrip } from '../actions/trips';
+import { saveTrip, updateTrip, getTripCollaborators } from '../actions/trips';
 import { useRouter } from 'next/navigation';
 import * as htmlToImage from 'html-to-image';
+import { useCollaboration } from './CollaborationProvider';
+import CollaboratorStack from './CollaboratorStack';
+import InviteModal from './InviteModal';
 
 // --- Icons ---
 const SpinnerIcon = () => (
@@ -179,7 +182,7 @@ export default function PlannerSidebar({
   onHoverStop = null,
   selectedStopIdx: propSelectedStopIdx = null,
   onSelectStop = null,
-  onUpdateItinerary = null,
+  onUpdateItinerary: originalOnUpdateItinerary = null,
   onResetPrompt = null,
   onGenerate,
   onViewItinerary
@@ -193,6 +196,51 @@ export default function PlannerSidebar({
   const prefersReducedMotion = useReducedMotion();
   const router = useRouter();
   const cachedScreenshot = useRef(null);
+
+  const collaboration = useCollaboration();
+  const realtimeItinerary = collaboration?.itinerary || itinerary;
+  const activeUsers = collaboration?.activeUsers || [];
+  
+  const onUpdateItinerary = useCallback(async (newItin) => {
+    if (collaboration?.setItinerary) {
+      collaboration.setItinerary(newItin);
+    }
+    if (originalOnUpdateItinerary) {
+      await originalOnUpdateItinerary(newItin);
+    }
+  }, [collaboration, originalOnUpdateItinerary]);
+  
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [collaboratorsList, setCollaboratorsList] = useState([]);
+
+  const [mockVotes, setMockVotes] = useState({});
+
+  const handleVote = (stopKey, type) => {
+    setMockVotes(prev => {
+      const current = prev[stopKey] || { up: 0, down: 0, userVote: null };
+      if (current.userVote === type) {
+        return {
+          ...prev,
+          [stopKey]: { ...current, [type]: Math.max(0, current[type] - 1), userVote: null }
+        };
+      }
+      const newVotes = { ...current };
+      if (current.userVote) {
+        newVotes[current.userVote] = Math.max(0, newVotes[current.userVote] - 1);
+      }
+      newVotes[type]++;
+      newVotes.userVote = type;
+      return { ...prev, [stopKey]: newVotes };
+    });
+  };
+
+  useEffect(() => {
+    if (tripId && isInviteModalOpen) {
+      getTripCollaborators(tripId).then(list => {
+        if (list) setCollaboratorsList(list);
+      });
+    }
+  }, [tripId, isInviteModalOpen]);
 
   const handleDetailedItineraryClick = async () => {
     if (isUnfoldingMap) return;
@@ -769,6 +817,38 @@ export default function PlannerSidebar({
     setNewStopDesc('');
     setRefineExplanation(`Added custom stop "${newStopTitle.trim()}" to Day ${selectedDayIndex + 1}!`);
     setShowCopilotDrawer(true);
+  };
+
+  const handleActivityVote = (dayIdx, activityIdx, voteType) => {
+    if (!itinerary?.days?.[dayIdx]?.activities?.[activityIdx]) return;
+    const currentDays = [...itinerary.days];
+    const currentDay = { ...currentDays[dayIdx] };
+    const currentActivities = [...currentDay.activities];
+    const activity = { ...currentActivities[activityIdx] };
+
+    // Toggle logic: if clicking the same vote type, clear it (0)
+    const newVote = activity.userVote === voteType ? 0 : voteType;
+    activity.userVote = newVote;
+    
+    currentActivities[activityIdx] = activity;
+    currentDay.activities = currentActivities;
+    currentDays[dayIdx] = currentDay;
+
+    const updatedItinerary = {
+      ...itinerary,
+      days: currentDays
+    };
+
+    if (onUpdateItinerary) {
+      onUpdateItinerary(updatedItinerary);
+    } else if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('tripwise_itinerary', JSON.stringify(updatedItinerary));
+        window.dispatchEvent(new Event('storage'));
+      } catch (e) {
+        console.error('Failed to save updated itinerary:', e);
+      }
+    }
   };
 
   // Check if confirmation state is needed
@@ -1925,9 +2005,42 @@ export default function PlannerSidebar({
                                     </div>
                                   </div>
 
-                                  <h4 className="text-sm sm:text-base font-black text-[#1C1B1B] leading-snug tracking-tight">
-                                    {act.title}
-                                  </h4>
+                                  <div className="flex items-start justify-between gap-2">
+                                    <h4 className="text-sm sm:text-base font-black text-[#1C1B1B] leading-snug tracking-tight">
+                                      {act.title}
+                                    </h4>
+                                    
+                                    {/* Voting Actions */}
+                                    <div className="flex items-center gap-1.5 shrink-0 bg-[#F7F5F2] p-1 rounded-lg border border-[#ECE8E2]" onClick={(e) => e.stopPropagation()}>
+                                      {(() => {
+                                        const stopKey = `${selectedDayIndex}-${idx}`;
+                                        const voteData = mockVotes[stopKey] || { up: 0, down: 0, userVote: null };
+                                        // Mock base vote for demo if it's not interacted yet
+                                        const displayUp = voteData.up + (voteData.userVote === 'up' ? 0 : (idx === 0 ? 1 : 0));
+                                        
+                                        return (
+                                          <>
+                                            <button 
+                                              onClick={() => handleVote(stopKey, 'up')}
+                                              className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md hover:bg-[#FFF8F5] hover:text-[#FF6B2C] transition-colors ${voteData.userVote === 'up' ? 'bg-[#FFF8F5] text-[#FF6B2C]' : 'text-[#5F5E5A]'}`} 
+                                              title="Upvote"
+                                            >
+                                              <ThumbsUp size={12} strokeWidth={2.5} className={voteData.userVote === 'up' ? 'fill-[#FF6B2C]/20' : ''} />
+                                              <span className="text-[10px] font-bold">{displayUp > 0 ? displayUp : ''}</span>
+                                            </button>
+                                            <div className="w-px h-3 bg-[#ECE8E2]"></div>
+                                            <button 
+                                              onClick={() => handleVote(stopKey, 'down')}
+                                              className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md hover:bg-gray-200 transition-colors ${voteData.userVote === 'down' ? 'bg-gray-200 text-[#1C1B1B]' : 'text-[#5F5E5A]'}`} 
+                                              title="Downvote"
+                                            >
+                                              <ThumbsDown size={12} strokeWidth={2.5} className={voteData.userVote === 'down' ? 'fill-gray-400/30' : ''} />
+                                            </button>
+                                          </>
+                                        );
+                                      })()}
+                                    </div>
+                                  </div>
 
                                   {/* Rating */}
                                   <div className="flex items-center gap-1 text-[11px] font-extrabold text-[#1C1B1B]">
@@ -1984,8 +2097,25 @@ export default function PlannerSidebar({
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
-                  className="pt-4 mb-6 border-t border-[#ECE8E2] flex flex-col sm:flex-row items-center justify-between gap-3"
+                  className="pt-4 mb-2 flex flex-col gap-4 border-t border-[#ECE8E2]"
                 >
+                  {/* Collaboration Bar */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#F7F5F2] p-3 rounded-2xl border border-[#ECE8E2]">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-extrabold text-[#5F5E5A] uppercase tracking-wider">Plan With Friends</span>
+                      <CollaboratorStack collaborators={collaboratorsList} activeUsers={activeUsers} maxDisplay={3} size="sm" />
+                    </div>
+                    <button 
+                      onClick={() => setIsInviteModalOpen(true)} 
+                      className="px-3 py-1.5 text-xs font-bold text-[#FF6B2C] bg-[#FFF8F5] rounded-xl hover:bg-[#FFEAE0] transition-colors shadow-2xs border border-[#FF6B2C]/20 flex items-center gap-1"
+                    >
+                      <Plus size={14} strokeWidth={3} />
+                      Invite
+                    </button>
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -2142,9 +2272,10 @@ export default function PlannerSidebar({
 
                     </div>
                   </motion.div>
-                </motion.div>
-              </div>
-            ) : (
+                </div>
+              </motion.div>
+            </div>
+          ) : (
               /* progress bar & status checkmarks during generation */
               <>
                 <div>
@@ -2270,6 +2401,13 @@ export default function PlannerSidebar({
         <span>Powered by TripWise AI</span>
         <span>Real-Time Optimization Engine</span>
       </div>
+      
+      <InviteModal 
+        isOpen={isInviteModalOpen} 
+        onClose={() => setIsInviteModalOpen(false)} 
+        tripId={tripId} 
+        currentCollaborators={collaboratorsList} 
+      />
     </div>
   );
 }
