@@ -4,11 +4,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Header from '../components/Header';
 import { useUser } from '@clerk/nextjs';
-import { Compass, Plus, MapPin, Calendar, ArrowRight, Loader2, Trash2, Share2, Check, Map } from 'lucide-react';
+import { Compass, Plus, MapPin, Calendar, ArrowRight, Loader2, Trash2, Share2, Check, Map, LayoutGrid } from 'lucide-react';
 import { getUserTrips, deleteTrip } from '../actions/trips';
 import { DESTINATIONS } from '../../lib/destinations';
 import { motion, AnimatePresence } from 'framer-motion';
 import AnimatedFlightMap from '../components/AnimatedFlightMap';
+import TripsCalendarView from '../components/TripsCalendarView';
 
 const PLANNING_STAGES = [
     { label: 'Destination', threshold: 25 },
@@ -203,6 +204,7 @@ export default function AIPlannerDashboard() {
 
     const [activeTab, setActiveTab] = useState('All');
     const [activeSort, setActiveSort] = useState('Most Recent');
+    const [viewMode, setViewMode] = useState('grid');
 
     useEffect(() => {
         async function fetchTrips() {
@@ -217,50 +219,34 @@ export default function AIPlannerDashboard() {
                         
                         const actualData = typeof t.itinerary_data === 'string' ? JSON.parse(t.itinerary_data) : (t.itinerary_data || {});
                         
-                        // 1. CONFIRMED trip (Demo logic)
-                        if (idx % 4 === 0) {
-                            const start = new Date(now); start.setDate(start.getDate() + 10);
-                            const end = new Date(start); end.setDate(end.getDate() + 4);
-                            tripObj = {
-                                db_id: t.id, destinationName: actualData.destinationName || t.destination_name || "Rome, Italy",
-                                status: actualData.status || "DRAFT", lastCompletedStep: actualData.lastCompletedStep || 'review',
-                                days: actualData.days || Array(4).fill({ activities: [1,2] }),
-                                startDate: start, endDate: end, created_at: new Date(now.getTime() - 2*86400000).toISOString()
-                            };
+                        const hasActualDates = actualData.startDate && actualData.endDate;
+                        let start = new Date();
+                        let end = new Date();
+
+                        if (hasActualDates) {
+                            // parse safely to avoid UTC offset issues (e.g. 2026-08-01 becoming July 31)
+                            const [sYear, sMonth, sDay] = actualData.startDate.split('-');
+                            start = new Date(sYear, sMonth - 1, sDay);
+                            const [eYear, eMonth, eDay] = actualData.endDate.split('-');
+                            end = new Date(eYear, eMonth - 1, eDay);
+                        } else {
+                            // If they didn't pick dates, default to starting today for the given duration
+                            start = new Date(now);
+                            const duration = actualData.duration || actualData.days?.length || 5;
+                            end = new Date(now);
+                            end.setDate(end.getDate() + duration - 1);
                         }
-                        // 2. DRAFT trip (Demo logic)
-                        else if (idx % 4 === 1) {
-                            const start = new Date(now); start.setDate(start.getDate() + 30);
-                            const end = new Date(start); end.setDate(end.getDate() + 6);
-                            tripObj = {
-                                db_id: t.id, destinationName: actualData.destinationName || t.destination_name || "Tokyo, Japan",
-                                status: actualData.status || "DRAFT", lastCompletedStep: actualData.lastCompletedStep || 'preferences',
-                                days: actualData.days || [],
-                                startDate: start, endDate: end, created_at: new Date(now.getTime() - 1*86400000).toISOString()
-                            };
-                        }
-                        // 3. UPCOMING trip (Demo logic)
-                        else if (idx % 4 === 2) {
-                            const start = new Date(now); start.setDate(start.getDate() + 45);
-                            const end = new Date(start); end.setDate(end.getDate() + 7);
-                            tripObj = {
-                                db_id: t.id, destinationName: actualData.destinationName || t.destination_name || "Bali, Indonesia",
-                                status: actualData.status || "DRAFT", lastCompletedStep: actualData.lastCompletedStep || 'review',
-                                days: actualData.days || Array(6).fill({ activities: [1,2,3] }),
-                                startDate: start, endDate: end, created_at: new Date(now.getTime() - 5*86400000).toISOString()
-                            };
-                        }
-                        // 4. PAST trip (Demo logic)
-                        else if (idx % 4 === 3) {
-                            const start = new Date(now); start.setDate(start.getDate() - 40);
-                            const end = new Date(start); end.setDate(end.getDate() + 5);
-                            tripObj = {
-                                db_id: t.id, destinationName: actualData.destinationName || t.destination_name || "Paris, France",
-                                status: actualData.status || "COMPLETED", lastCompletedStep: actualData.lastCompletedStep || 'review',
-                                days: actualData.days || Array(5).fill({ activities: [1,2,3] }),
-                                startDate: start, endDate: end, created_at: new Date(now.getTime() - 60*86400000).toISOString()
-                            };
-                        }
+
+                        tripObj = {
+                            db_id: t.id, 
+                            destinationName: actualData.destinationName || t.destination_name || "Draft Trip",
+                            status: actualData.status || "DRAFT", 
+                            lastCompletedStep: actualData.lastCompletedStep || 'review',
+                            days: actualData.days || [],
+                            startDate: start, 
+                            endDate: end, 
+                            created_at: t.created_at || new Date(now.getTime() - 2*86400000).toISOString()
+                        };
 
                         // Calculate computed progress
                         tripObj.progress = calculateTripProgress(tripObj);
@@ -473,34 +459,73 @@ export default function AIPlannerDashboard() {
                 {/* Filter and Sort Bar */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 relative z-20">
                     
-                    {/* Status Pill Tabs */}
-                    <div className="flex p-1.5 bg-white/60 backdrop-blur-md shadow-sm rounded-full border border-white/80 w-full md:w-auto shrink-0 relative overflow-hidden">
-                        {FILTERS.map(filter => {
-                            const isActive = activeTab === filter;
-                            return (
-                                <button
-                                    key={filter}
-                                    onClick={() => setActiveTab(filter)}
-                                    className={`relative flex items-center justify-center flex-1 md:flex-none px-6 py-2.5 rounded-full text-[11px] font-mono uppercase font-bold transition-all duration-300 ${
-                                        isActive ? 'text-white' : 'text-stone-500 hover:text-stone-900 hover:bg-stone-100/50'
-                                    }`}
-                                >
-                                    {isActive && (
-                                        <motion.div
-                                            layoutId="activeFilterTab"
-                                            className="absolute inset-0 bg-gradient-to-r from-[#FF6B2C] to-[#FF8A4C] rounded-full shadow-[0_4px_15px_rgba(255,107,44,0.4)]"
-                                            transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
-                                        />
-                                    )}
-                                    <span className="relative z-10 tracking-[0.1em]">{filter}</span>
-                                </button>
-                            );
-                        })}
+                    {/* Status Pill Tabs & View Toggle Group */}
+                    <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+                        {/* Filters */}
+                        <div className="flex p-1.5 bg-white/60 backdrop-blur-md shadow-sm rounded-full border border-white/80 shrink-0 relative overflow-hidden">
+                            {FILTERS.map(filter => {
+                                const isActive = activeTab === filter;
+                                return (
+                                    <button
+                                        key={filter}
+                                        onClick={() => setActiveTab(filter)}
+                                        className={`relative flex items-center justify-center flex-1 md:flex-none px-6 py-2.5 rounded-full text-[11px] font-mono uppercase font-bold transition-all duration-300 ${
+                                            isActive ? 'text-white' : 'text-stone-500 hover:text-stone-900 hover:bg-stone-100/50'
+                                        }`}
+                                    >
+                                        {isActive && (
+                                            <motion.div
+                                                layoutId="activeFilterTab"
+                                                className="absolute inset-0 bg-gradient-to-r from-[#FF6B2C] to-[#FF8A4C] rounded-full shadow-[0_4px_15px_rgba(255,107,44,0.4)]"
+                                                transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
+                                            />
+                                        )}
+                                        <span className="relative z-10 tracking-[0.1em]">{filter}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        
+                        {/* View Toggle */}
+                        <div className="flex p-1 bg-white/60 backdrop-blur-md shadow-sm rounded-full border border-white/80 shrink-0 relative overflow-hidden self-start md:self-auto">
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                className={`relative flex items-center justify-center px-4 py-2 rounded-full text-[11px] font-mono uppercase font-bold transition-all duration-300 gap-1.5 ${
+                                    viewMode === 'grid' ? 'text-white' : 'text-stone-500 hover:text-stone-900 hover:bg-stone-100/50'
+                                }`}
+                            >
+                                {viewMode === 'grid' && (
+                                    <motion.div
+                                        layoutId="activeViewTab"
+                                        className="absolute inset-0 bg-stone-800 rounded-full shadow-sm"
+                                        transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
+                                    />
+                                )}
+                                <LayoutGrid size={14} className="relative z-10" />
+                                <span className="relative z-10 tracking-[0.1em]">Grid</span>
+                            </button>
+                            <button
+                                onClick={() => setViewMode('calendar')}
+                                className={`relative flex items-center justify-center px-4 py-2 rounded-full text-[11px] font-mono uppercase font-bold transition-all duration-300 gap-1.5 ${
+                                    viewMode === 'calendar' ? 'text-white' : 'text-stone-500 hover:text-stone-900 hover:bg-stone-100/50'
+                                }`}
+                            >
+                                {viewMode === 'calendar' && (
+                                    <motion.div
+                                        layoutId="activeViewTab"
+                                        className="absolute inset-0 bg-stone-800 rounded-full shadow-sm"
+                                        transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
+                                    />
+                                )}
+                                <Calendar size={14} className="relative z-10" />
+                                <span className="relative z-10 tracking-[0.1em]">Calendar</span>
+                            </button>
+                        </div>
                     </div>
 
                     {/* Sort and New Trip */}
                     <div className="flex items-center gap-4 w-full md:w-auto translate-y-[3px]">
-                        <div className="relative w-full md:w-48 group">
+                        <div className={`relative w-full md:w-48 group ${viewMode === 'calendar' ? 'hidden' : ''}`}>
                             <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400 group-hover:text-[#FF6B2C] transition-colors duration-300">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                     <line x1="4" y1="6" x2="20" y2="6"></line>
@@ -562,6 +587,8 @@ export default function AIPlannerDashboard() {
                             Start Planning
                         </Link>
                     </div>
+                ) : viewMode === 'calendar' ? (
+                    <TripsCalendarView trips={filteredAndSortedTrips} />
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <AnimatePresence mode="popLayout">

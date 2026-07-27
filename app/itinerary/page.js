@@ -48,6 +48,7 @@ import {
 const ItineraryMapModal = dynamic(() => import('../components/ItineraryMapModal'), { ssr: false });
 const TicketPassModal = dynamic(() => import('../components/TicketPassModal'), { ssr: false });
 import InlineDiningReservation from '../components/InlineDiningReservation';
+import SeasonalCalendar from '../components/SeasonalCalendar';
 
 const toRomanNumeral = (num) => {
   const romanMap = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V', 6: 'VI', 7: 'VII', 8: 'VIII', 9: 'IX', 10: 'X' };
@@ -231,6 +232,7 @@ const getContextAwareTip = (act, idx, summary) => {
   
   // Non-overlapping logistics advice instead of repeating crowd timing (which lives in custom insight)
   let logisticsNote = act?.location ? `Main entry via ${act.location}. Walk-ins & digital passes verified at express security check.` : `Easily reached on foot or short local transit from previous stop. Walk-ins accepted; verify ticket barcode before security scan.`;
+
   if (title.includes('colosseum') || title.includes('forum') || title.includes('vatican') || title.includes('temple') || title.includes('castle') || title.includes('museum')) {
     logisticsNote = `Main gate entry at ${act?.location || 'Central Security Checkpoint'}. Present digital barcode or mobile reservation directly at priority turnstile.`;
   }
@@ -247,11 +249,18 @@ const getContextAwareTip = (act, idx, summary) => {
   return { logisticsNote, weatherNote };
 };
 
+const getDayDateString = (startDateStr, dayIndex) => {
+  if (!startDateStr) return null;
+  const [year, month, day] = startDateStr.split('-');
+  const date = new Date(year, month - 1, day);
+  date.setDate(date.getDate() + dayIndex);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
 
 export default function ItineraryPage() {
-  const [itinerary, setItinerary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTripId, setActiveTripId] = useState(null);
+  const [itinerary, setItinerary] = useState(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -772,6 +781,11 @@ export default function ItineraryPage() {
             <div className="flex flex-col">
               <span className="text-[10px] sm:text-xs font-sans font-bold text-white/70 uppercase tracking-widest">Duration</span>
               <span className="text-2xl sm:text-3xl font-serif font-black text-white mt-1.5">{days.length} Days</span>
+              {itinerary.startDate && (
+                <span className="text-[10px] text-white/50 font-sans mt-0.5">
+                  {getDayDateString(itinerary.startDate, 0)} – {getDayDateString(itinerary.startDate, days.length - 1)}
+                </span>
+              )}
             </div>
             <div className="flex flex-col border-l border-white/10 pl-6 last:border-0">
               <span className="text-[10px] sm:text-xs font-sans font-bold text-white/70 uppercase tracking-widest">Curated Stops</span>
@@ -797,15 +811,19 @@ export default function ItineraryPage() {
             {days.map((day, dIdx) => {
               const dayNum = day.dayNumber || dIdx + 1;
               const isSelected = activeDay === dayNum;
+              const dateStr = getDayDateString(itinerary.startDate, dIdx);
               return (
                 <button
                   key={dayNum}
                   onClick={() => setActiveDay(dayNum)}
-                  className={`relative pb-3.5 pt-2 px-4 text-xs font-serif font-bold transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${
+                  className={`relative pb-3.5 pt-2 px-4 text-xs font-serif font-bold transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap flex flex-col items-center justify-center ${
                     isSelected ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
                   }`}
                 >
                   <span>Day {toRomanNumeral(dayNum)}</span>
+                  {dateStr && (
+                    <span className="text-[9px] font-sans text-stone-400 font-bold -mt-0.5 tracking-wide">{dateStr}</span>
+                  )}
                   {isSelected && (
                     <motion.div
                       layoutId="activeTabUnderline"
@@ -884,6 +902,11 @@ export default function ItineraryPage() {
       {/* DOSSIER BODY CONTENT */}
       <main className="max-w-5xl mx-auto px-6 py-12 w-full flex flex-col gap-16">
         
+        {/* SEASONAL CALENDAR */}
+        {activeDay !== 'epilogue' && (
+          <SeasonalCalendar destinationName={itinerary?.destinationName || itinerary?.name || 'Kyoto'} startDate={itinerary?.startDate} endDate={itinerary?.endDate} />
+        )}
+
         {/* THE DOSSIER INDEX (Overview List - Screen Only) */}
         {activeDay !== 'epilogue' && (
           <section className="bg-white rounded-3xl border border-[#E6DFD5] p-8 sm:p-10 shadow-sm relative overflow-hidden print:hidden">
@@ -919,7 +942,7 @@ export default function ItineraryPage() {
                           Day {toRomanNumeral(dayNum)}
                         </span>
                         <span className="text-xs font-sans text-[#7A7268] font-semibold">
-                          Chapter {dayNum}
+                          {getDayDateString(itinerary.startDate, idx) || `Chapter ${dayNum}`}
                         </span>
                       </div>
                       <h3 className="text-lg font-serif font-bold text-[#1E1C1A] leading-snug group-hover:text-[#FF6B2C] transition-colors">
@@ -1213,6 +1236,9 @@ export default function ItineraryPage() {
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <span className="text-xs font-mono uppercase tracking-widest text-[#FF6B2C] font-extrabold">
                             CHAPTER {toRomanNumeral(activeDay)}  —  DAY {activeDay}
+                            {getDayDateString(itinerary.startDate, dayIdx) && (
+                              <span className="ml-2 text-[#7A7268] font-sans font-semibold normal-case tracking-normal text-[11px]">({getDayDateString(itinerary.startDate, dayIdx)})</span>
+                            )}
                           </span>
                           
                           {/* Visual distance sparkline next to distance stats & dining rollup */}
