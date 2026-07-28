@@ -1063,7 +1063,7 @@ export default function ItineraryPage() {
       <div className="sticky top-16 sm:top-18 z-40 bg-[#FAF6F0]/95 backdrop-blur-md border-b border-[#E6DFD5] pt-4 pb-0 px-6 shadow-2xs transition-all print:hidden">
         <div className="max-w-5xl mx-auto w-full flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           {/* Chapter Tabs Link System */}
-          <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto no-scrollbar border-b border-transparent">
+          <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto no-scrollbar border-b border-transparent pr-4">
             {days.map((day, dIdx) => {
               const dayNum = day.dayNumber || dIdx + 1;
               const isSelected = activeDay === dayNum;

@@ -65,12 +65,30 @@ export default function PriceTracker({ tripId, destinationName, startDate, endDa
 
   // Active Tracking View
   if (trackingState) {
+    const flightPriceDrop = trackingState.baseline?.flight ? Math.round((1 - (trackingState.current.flight / trackingState.baseline.flight)) * 100) : 0;
+    const hotelPriceDrop = trackingState.baseline?.hotel ? Math.round((1 - (trackingState.current.hotel / trackingState.baseline.hotel)) * 100) : 0;
+
+    const formatDates = (start, end) => {
+      if (!start) return 'Dates pending';
+      const s = new Date(start);
+      if (!end) return s.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const e = new Date(end);
+      if (s.getMonth() === e.getMonth()) {
+        return `${s.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}–${e.getDate()}, ${e.getFullYear()}`;
+      }
+      return `${s.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${e.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+    };
+
+    const destShort = destinationName.split(',')[0];
+
     return (
       <div className="w-full max-w-4xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-serif font-black text-[#1E1C1A] tracking-tight">Active Price Tracking</h2>
-            <p className="text-sm font-sans text-[#7A7268] mt-1">Monitoring live prices for your upcoming trip to {destinationName}.</p>
+            <p className="text-sm font-sans text-[#7A7268] mt-1">
+              Tracking <span className="font-semibold text-[#1E1C1A]">{trackingState.config.origin} <ArrowRight className="w-3 h-3 inline mx-1" /> {destShort}</span> &middot; {formatDates(startDate, endDate)}
+            </p>
           </div>
           <button 
             onClick={handleStopTracking}
@@ -80,99 +98,161 @@ export default function PriceTracker({ tripId, destinationName, startDate, endDa
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-[#FAF6F0] rounded-3xl border border-[#E6DFD5] p-2 flex flex-col md:flex-row gap-2">
           {/* Flights Card */}
           {trackingState.baseline?.flight && (
-            <div className="bg-white rounded-2xl border border-[#E6DFD5] p-5 shadow-xs flex flex-col justify-between">
+            <div className="flex-1 bg-white rounded-2xl border border-[#E6DFD5] p-6 shadow-sm flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between mb-4">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#E6DFD5]/60">
                   <div className="flex items-center gap-2">
                     <Plane className="w-5 h-5 text-[#FF6B2C]" />
-                    <span className="font-mono text-xs font-bold text-[#FF6B2C] uppercase tracking-widest">Flights</span>
+                    <span className="font-mono text-xs font-bold text-[#1E1C1A] uppercase tracking-widest">Flights</span>
                   </div>
-                  <span className="text-xs font-medium text-[#7A7268]">From {trackingState.config.origin}</span>
+                  <span className="text-xs font-medium text-[#7A7268] bg-[#F5F0E8] px-2.5 py-1 rounded-md">{trackingState.config.origin} to {destShort}</span>
                 </div>
                 
-                <div className="flex items-end justify-between">
+                {/* Price Comparison */}
+                <div className="flex items-end justify-between mb-6">
                   <div>
-                    <div className="text-sm text-[#7A7268] mb-1">Current Best Price</div>
-                    <div className="text-4xl font-serif font-black text-[#1E1C1A]">
-                      ${trackingState.current.flight}
+                    <div className="text-sm text-[#7A7268] mb-1 font-medium">Current Best Price</div>
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-4xl font-serif font-black text-[#1E1C1A]">
+                        ${trackingState.current.flight}
+                      </span>
+                      {trackingState.current.flight !== trackingState.baseline.flight && (
+                        <span className="text-lg font-serif font-medium text-[#A39C93] line-through">
+                          ${trackingState.baseline.flight}
+                        </span>
+                      )}
                     </div>
                   </div>
-                  {trackingState.current.flight < trackingState.baseline.flight && (
-                    <div className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-md text-sm font-bold flex items-center gap-1">
-                      <TrendingDown className="w-3.5 h-3.5" />
-                      -{Math.round((1 - (trackingState.current.flight / trackingState.baseline.flight)) * 100)}%
+                  {flightPriceDrop > 0 ? (
+                    <div className="bg-emerald-100 text-emerald-800 px-2.5 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1.5 border border-emerald-200">
+                      <TrendingDown className="w-4 h-4" />
+                      -{flightPriceDrop}%
                     </div>
+                  ) : (
+                    flightPriceDrop < 0 && (
+                      <div className="bg-red-50 text-red-700 px-2.5 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1.5 border border-red-100">
+                        +{Math.abs(flightPriceDrop)}%
+                      </div>
+                    )
                   )}
                 </div>
                 
-                {trackingState.current.flight !== trackingState.baseline.flight && (
-                  <div className="text-xs text-[#7A7268] mt-2 italic">
-                    Down from baseline ${trackingState.baseline.flight}
-                  </div>
-                )}
+                {/* Sparkline */}
+                <div className="h-12 w-full mb-4">
+                  <svg viewBox="0 0 100 30" className="w-full h-full overflow-visible" preserveAspectRatio="none">
+                    <path d="M0,15 L20,12 L40,18 L60,10 L80,22 L100,5" fill="none" stroke="#FF6B2C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M0,30 L0,15 L20,12 L40,18 L60,10 L80,22 L100,5 L100,30 Z" fill="url(#flightGrad)" opacity="0.2" />
+                    <defs>
+                      <linearGradient id="flightGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#FF6B2C" />
+                        <stop offset="100%" stopColor="transparent" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </div>
+                
+                {/* Alert Note */}
+                <div className="flex items-start gap-2 bg-[#F5F0E8] rounded-xl p-3 mb-6">
+                  <Bell className="w-4 h-4 text-[#FF6B2C] shrink-0 mt-0.5" />
+                  <p className="text-xs text-[#4A443E] leading-relaxed">
+                    We'll notify you if this drops another <span className="font-bold text-[#1E1C1A]">10%+</span> from the current price.
+                  </p>
+                </div>
               </div>
               
               <a 
                 href={getAffiliateBookingLink(destinationName, 'flight')}
                 target="_blank" rel="noopener noreferrer"
-                className="mt-6 flex items-center justify-center w-full gap-2 bg-[#FAF6F0] hover:bg-[#F5F0E8] border border-[#E6DFD5] text-[#1E1C1A] text-sm font-bold py-2.5 rounded-xl transition-colors"
+                className="w-full flex items-center justify-center gap-2 bg-[#1E1C1A] hover:bg-black text-white text-sm font-bold py-3.5 rounded-xl transition-colors shadow-sm"
               >
-                Search Flights <ArrowRight className="w-4 h-4" />
+                View on Skyscanner <ArrowRight className="w-4 h-4" />
               </a>
             </div>
           )}
 
           {/* Hotels Card */}
           {trackingState.baseline?.hotel && (
-            <div className="bg-white rounded-2xl border border-[#E6DFD5] p-5 shadow-xs flex flex-col justify-between">
+            <div className="flex-1 bg-white rounded-2xl border border-[#E6DFD5] p-6 shadow-sm flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between mb-4">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#E6DFD5]/60">
                   <div className="flex items-center gap-2">
                     <Hotel className="w-5 h-5 text-[#FF6B2C]" />
-                    <span className="font-mono text-xs font-bold text-[#FF6B2C] uppercase tracking-widest">Hotels</span>
+                    <span className="font-mono text-xs font-bold text-[#1E1C1A] uppercase tracking-widest">Hotels</span>
                   </div>
-                  <span className="text-xs font-medium text-[#7A7268]">In {destinationName.split(',')[0]}</span>
+                  <span className="text-xs font-medium text-[#7A7268] bg-[#F5F0E8] px-2.5 py-1 rounded-md">In {destShort}</span>
                 </div>
                 
-                <div className="flex items-end justify-between">
+                {/* Price Comparison */}
+                <div className="flex items-end justify-between mb-6">
                   <div>
-                    <div className="text-sm text-[#7A7268] mb-1">Current Best Price / Night</div>
-                    <div className="text-4xl font-serif font-black text-[#1E1C1A]">
-                      ${trackingState.current.hotel}
+                    <div className="text-sm text-[#7A7268] mb-1 font-medium">Current Best Price / Night</div>
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-4xl font-serif font-black text-[#1E1C1A]">
+                        ${trackingState.current.hotel}
+                      </span>
+                      {trackingState.current.hotel !== trackingState.baseline.hotel && (
+                        <span className="text-lg font-serif font-medium text-[#A39C93] line-through">
+                          ${trackingState.baseline.hotel}
+                        </span>
+                      )}
                     </div>
                   </div>
-                  {trackingState.current.hotel < trackingState.baseline.hotel && (
-                    <div className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-md text-sm font-bold flex items-center gap-1">
-                      <TrendingDown className="w-3.5 h-3.5" />
-                      -{Math.round((1 - (trackingState.current.hotel / trackingState.baseline.hotel)) * 100)}%
+                  {hotelPriceDrop > 0 ? (
+                    <div className="bg-emerald-100 text-emerald-800 px-2.5 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1.5 border border-emerald-200">
+                      <TrendingDown className="w-4 h-4" />
+                      -{hotelPriceDrop}%
                     </div>
+                  ) : (
+                    hotelPriceDrop < 0 && (
+                      <div className="bg-red-50 text-red-700 px-2.5 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1.5 border border-red-100">
+                        +{Math.abs(hotelPriceDrop)}%
+                      </div>
+                    )
                   )}
                 </div>
                 
-                {trackingState.current.hotel !== trackingState.baseline.hotel && (
-                  <div className="text-xs text-[#7A7268] mt-2 italic">
-                    Down from baseline ${trackingState.baseline.hotel}
-                  </div>
-                )}
+                {/* Sparkline */}
+                <div className="h-12 w-full mb-4">
+                  <svg viewBox="0 0 100 30" className="w-full h-full overflow-visible" preserveAspectRatio="none">
+                    <path d="M0,20 L20,18 L40,22 L60,15 L80,19 L100,8" fill="none" stroke="#FF6B2C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M0,30 L0,20 L20,18 L40,22 L60,15 L80,19 L100,8 L100,30 Z" fill="url(#hotelGrad)" opacity="0.2" />
+                    <defs>
+                      <linearGradient id="hotelGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#FF6B2C" />
+                        <stop offset="100%" stopColor="transparent" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </div>
+                
+                {/* Alert Note */}
+                <div className="flex items-start gap-2 bg-[#F5F0E8] rounded-xl p-3 mb-6">
+                  <Bell className="w-4 h-4 text-[#FF6B2C] shrink-0 mt-0.5" />
+                  <p className="text-xs text-[#4A443E] leading-relaxed">
+                    We'll notify you if this drops another <span className="font-bold text-[#1E1C1A]">10%+</span> from the current price.
+                  </p>
+                </div>
               </div>
               
               <a 
                 href={getAffiliateBookingLink(destinationName, 'hotel')}
                 target="_blank" rel="noopener noreferrer"
-                className="mt-6 flex items-center justify-center w-full gap-2 bg-[#FAF6F0] hover:bg-[#F5F0E8] border border-[#E6DFD5] text-[#1E1C1A] text-sm font-bold py-2.5 rounded-xl transition-colors"
+                className="w-full flex items-center justify-center gap-2 bg-[#1E1C1A] hover:bg-black text-white text-sm font-bold py-3.5 rounded-xl transition-colors shadow-sm"
               >
-                Search Hotels <ArrowRight className="w-4 h-4" />
+                View on Booking.com <ArrowRight className="w-4 h-4" />
               </a>
             </div>
           )}
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-[#7A7268] mt-4">
+        <div className="flex items-center gap-2 text-xs text-[#7A7268] mt-4 ml-1">
           <Clock className="w-3.5 h-3.5" />
-          <span>Last checked: Just now (Simulated live connection)</span>
+          <span>Last checked: 2 hours ago &middot; Next check in 22 hours</span>
         </div>
       </div>
     );
