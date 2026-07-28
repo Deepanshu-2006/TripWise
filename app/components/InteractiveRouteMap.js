@@ -265,7 +265,7 @@ export default function InteractiveRouteMap({
       ? { title: `${destinationName} Basecamp Hotel`, coordinates: coordinates || activities?.[0]?.coordinates || { lat: 41.9028, lng: 12.4964 }, isBasecamp: true }
       : activities?.[selectedStopIdx - 1];
 
-    if (targetAct && targetAct.coordinates && typeof targetAct.coordinates.lat === 'number' && typeof targetAct.coordinates.lng === 'number') {
+    if (targetAct && targetAct.coordinates && typeof targetAct.coordinates.lat === 'number' && !isNaN(targetAct.coordinates.lat) && typeof targetAct.coordinates.lng === 'number' && !isNaN(targetAct.coordinates.lng)) {
       const latLng = window.L?.latLng(targetAct.coordinates.lat, targetAct.coordinates.lng);
       if (latLng && mapRef.current) {
         const currentZoom = mapRef.current.getZoom();
@@ -377,7 +377,7 @@ export default function InteractiveRouteMap({
 
   // Create looped Basecamp / Hotel hub (Stop 0) and full day stop list
   const validActivities = (activities || []).filter(
-    act => act?.coordinates && typeof act.coordinates.lat === 'number' && typeof act.coordinates.lng === 'number'
+    act => act?.coordinates && typeof act.coordinates.lat === 'number' && !isNaN(act.coordinates.lat) && typeof act.coordinates.lng === 'number' && !isNaN(act.coordinates.lng)
   );
 
   const firstAct = validActivities[0];
@@ -927,12 +927,15 @@ export default function InteractiveRouteMap({
       const plotSingleDayStops = (dayActivities, dayIdx, isMultiDayMode) => {
         const dayColorMeta = DAY_SIGNATURE_COLORS[dayIdx % DAY_SIGNATURE_COLORS.length];
         const validActs = (dayActivities || []).filter(
-          (act) => act?.coordinates && typeof act.coordinates.lat === 'number' && typeof act.coordinates.lng === 'number'
+          (act) => act?.coordinates && typeof act.coordinates.lat === 'number' && !isNaN(act.coordinates.lat) && typeof act.coordinates.lng === 'number' && !isNaN(act.coordinates.lng)
         );
         if (validActs.length === 0) return { latLngs: [], totalMeters: 0, stopsCount: 0, animatedPolyline: null };
 
-        const baseLat = coordinates?.lat || validActs[0].coordinates.lat;
-        const baseLng = coordinates?.lng || validActs[0].coordinates.lng;
+        let baseLat = coordinates?.lat;
+        let baseLng = coordinates?.lng;
+        if (typeof baseLat !== 'number' || isNaN(baseLat)) baseLat = validActs[0].coordinates.lat;
+        if (typeof baseLng !== 'number' || isNaN(baseLng)) baseLng = validActs[0].coordinates.lng;
+
         const basecampStop = {
           title: `${destinationName} Basecamp Hotel`,
           description: `Central hub & luxury accommodation around ${destinationName}.`,
