@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import CustomDatePicker from './CustomDatePicker';
-import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw, Check, Map, Compass, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw, Check, Map, Compass, ThumbsUp, ThumbsDown, Users, UserPlus } from 'lucide-react';
 import {
   getActivityThumbnail,
   getTransportBetweenStops,
@@ -235,7 +235,7 @@ export default function PlannerSidebar({
   };
 
   useEffect(() => {
-    if (tripId && isInviteModalOpen) {
+    if (tripId) {
       getTripCollaborators(tripId).then(list => {
         if (list) setCollaboratorsList(list);
       });
@@ -2100,17 +2100,22 @@ export default function PlannerSidebar({
                   className="pt-4 mb-2 flex flex-col gap-4 border-t border-[#ECE8E2]"
                 >
                   {/* Collaboration Bar */}
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#F7F5F2] p-3 rounded-2xl border border-[#ECE8E2]">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-extrabold text-[#5F5E5A] uppercase tracking-wider">Plan With Friends</span>
-                      <CollaboratorStack collaborators={collaboratorsList} activeUsers={activeUsers} maxDisplay={3} size="sm" />
+                  <div className="group relative overflow-hidden bg-gradient-to-r from-orange-50/80 via-white to-orange-50/80 p-3.5 sm:p-4 rounded-[1.25rem] border border-orange-200/60 shadow-sm transition-all hover:shadow-md hover:border-orange-300 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+                    <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
+                      <div className="flex flex-col items-center sm:items-start gap-1 sm:gap-1.5">
+                        <div className="flex items-center gap-1.5">
+                          <Users size={14} className="text-orange-500" />
+                          <span className="text-[10px] font-extrabold text-orange-900/80 uppercase tracking-widest">Plan With Friends</span>
+                        </div>
+                        <CollaboratorStack collaborators={collaboratorsList} activeUsers={activeUsers} maxDisplay={4} size="md" />
+                      </div>
                     </div>
                     <button 
                       onClick={() => setIsInviteModalOpen(true)} 
-                      className="px-3 py-1.5 text-xs font-bold text-[#FF6B2C] bg-[#FFF8F5] rounded-xl hover:bg-[#FFEAE0] transition-colors shadow-2xs border border-[#FF6B2C]/20 flex items-center gap-1"
+                      className="w-full sm:w-auto px-5 py-2.5 text-xs font-bold text-white bg-[#111827] rounded-xl hover:bg-black transition-all shadow-md hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2 group/btn"
                     >
-                      <Plus size={14} strokeWidth={3} />
-                      Invite
+                      <UserPlus size={14} className="group-hover/btn:scale-110 transition-transform" />
+                      Invite Friends
                     </button>
                   </div>
                   
