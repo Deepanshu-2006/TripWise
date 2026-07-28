@@ -10,6 +10,8 @@ import { DESTINATIONS } from '../../lib/destinations';
 import { motion, AnimatePresence } from 'framer-motion';
 import AnimatedFlightMap from '../components/AnimatedFlightMap';
 import TripsCalendarView from '../components/TripsCalendarView';
+import { getTrackingState, pollForPriceDrops } from '../../lib/priceTrackingApi';
+
 
 const PLANNING_STAGES = [
     { label: 'Destination', threshold: 25 },
@@ -200,6 +202,7 @@ export default function AIPlannerDashboard() {
 
     const [tripToDelete, setTripToDelete] = useState(null);
     const [toast, setToast] = useState(null);
+    const [priceDrops, setPriceDrops] = useState({});
     const [copiedId, setCopiedId] = useState(null);
 
     const [activeTab, setActiveTab] = useState('All');
@@ -275,7 +278,30 @@ export default function AIPlannerDashboard() {
                     });
                     
                     setSavedTrips(formatted);
+
+                    // Check for price drops for confirmed/upcoming trips
+                    formatted.forEach(async (trip) => {
+                        if (trip.status === 'CONFIRMED' || trip.status === 'UPCOMING') {
+                            const state = getTrackingState(trip.db_id);
+                            if (state) {
+                                const dropInfo = await pollForPriceDrops(trip.db_id);
+                                if (dropInfo && dropInfo.hasDrops && dropInfo.state.unreadDrops) {
+                                    setPriceDrops(prev => ({
+                                        ...prev,
+                                        [trip.db_id]: dropInfo.drops
+                                    }));
+                                } else if (state.unreadDrops && state.recentDrops) {
+                                    setPriceDrops(prev => ({
+                                        ...prev,
+                                        [trip.db_id]: state.recentDrops
+                                    }));
+                                }
+                            }
+                        }
+                    });
+
                 } catch (e) {
+
                     console.error("Failed to fetch trips from cloud", e);
                 }
             }
@@ -637,7 +663,7 @@ export default function AIPlannerDashboard() {
                                     transition={{ duration: 0.3 }}
                                 >
                                     <Link 
-                                        href={trip.status === 'COMPLETED' ? `/ai-planner/new?action=new&destination=${encodeURIComponent(trip.destinationName)}` : `/ai-planner/new?action=view&trip_id=${trip.db_id}${trip.status === 'DRAFT' ? '&step=' + getNextStep(trip.lastCompletedStep) : ''}`}
+                                        href={trip.status === 'COMPLETED' ? `/ai-planner/new?action=new&destination=${encodeURIComponent(trip.destinationName)}` : `/ai-planner/new?action=view&trip_id=${trip.db_id}${trip.status === 'DRAFT' ? '&step=' + getNextStep(trip.lastCompletedStep) : ''}${priceDrops[trip.db_id] ? '&tab=tracking' : ''}`}
                                         className={`flex group h-full flex-col bg-white rounded-[2rem] border transition-all duration-500 overflow-hidden cursor-pointer relative hover:-translate-y-2 ${trip.status === 'COMPLETED' ? 'opacity-[0.85] border-stone-200/50' : 'border-stone-200/50 shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(255,107,44,0.15)] hover:border-[#FF6B2C]/40'}`}
                                     >
                                         <div 
@@ -667,6 +693,13 @@ export default function AIPlannerDashboard() {
                                                     {trip.status === 'CONFIRMED' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-200 animate-pulse" />}
                                                     {trip.status}
                                                 </span>
+                                                
+                                                {/* Price Drop Badge */}
+                                                {priceDrops[trip.db_id] && (
+                                                    <span className="mt-2 px-3 py-1.5 rounded-xl text-[10px] font-bold tracking-widest uppercase shadow-lg border flex items-center gap-1.5 backdrop-blur-md bg-emerald-500/90 border-emerald-400/30 text-white shadow-emerald-900/20">
+                                                        <span>💰 Price Dropped -{priceDrops[trip.db_id].flight ? priceDrops[trip.db_id].flight.percentageSaved : priceDrops[trip.db_id].hotel.percentageSaved}%</span>
+                                                    </span>
+                                                )}
                                             </div>
 
                                             {/* Date Overlay (Top Right) */}
