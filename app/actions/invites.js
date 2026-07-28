@@ -90,6 +90,27 @@ export async function sendTripInvite(tripId, email, role = 'editor') {
     return { success: true, token };
 }
 
+export async function generateTripInviteLink(tripId, role = 'editor') {
+    const { userId } = await auth();
+    if (!userId) throw new Error('Unauthorized');
+    
+    // Generate token
+    const token = crypto.randomBytes(32).toString('hex');
+    
+    // Save invite in Supabase (email is optional/null for link-based invites)
+    const { error: dbError } = await supabase
+        .from('trip_invites')
+        .insert([{ trip_id: tripId, email: 'link-invite', role, token }]);
+        
+    if (dbError) {
+        console.error("Error creating invite:", dbError);
+        throw new Error('Failed to create invite link');
+    }
+    
+    const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/invite/${token}`;
+    return { success: true, inviteLink };
+}
+
 export async function acceptTripInvite(token) {
     const { userId } = await auth();
     if (!userId) throw new Error('Unauthorized');
