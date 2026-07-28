@@ -4,6 +4,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useSpring, useTransform, useMotionValue } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import Header from '../components/Header';
+import { generatePackingList } from '../../lib/packingListLogic';
+import { fetchVisaRequirements } from '../../lib/visaApi';
+import Link from 'next/link';
 import {
   Download,
   Share2,
@@ -30,7 +33,21 @@ import {
   Check,
   Ticket,
   ExternalLink,
-  Utensils
+  Utensils,
+  CheckSquare,
+  Square,
+  Trash2,
+  Plus,
+  RefreshCw,
+  Shirt,
+  Briefcase,
+  Smartphone,
+  Droplets,
+  CheckCircle2,
+  XCircle,
+  Book,
+  AlertTriangle,
+  FileText
 } from 'lucide-react';
 import {
   getActivityThumbnail,
@@ -270,8 +287,203 @@ export default function ItineraryPage() {
   }, []);
   
   // Navigation & Modal State
-  const [activeDay, setActiveDay] = useState(1); // Active Day or 'epilogue'
+  const [activeDay, setActiveDay] = useState(1); // Active Day, 'epilogue', or 'packing'
   const [activeModalDay, setActiveModalDay] = useState(null);
+  
+  // Packing List State
+  const [packingList, setPackingList] = useState(null);
+  const [customInputs, setCustomInputs] = useState({});
+  const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
+  const [expandedPackingCategories, setExpandedPackingCategories] = useState({
+    Clothing: true,
+    Documents: true,
+    Electronics: true,
+    Toiletries: true,
+    ActivitySpecific: true
+  });
+
+  // Visa & Docs State
+  const [visaReqs, setVisaReqs] = useState(null);
+  const [visaLoading, setVisaLoading] = useState(false);
+  const [visaError, setVisaError] = useState(false);
+  const [passportNationality, setPassportNationality] = useState(null);
+  const [visaChecklist, setVisaChecklist] = useState(null);
+  const [customVisaInput, setCustomVisaInput] = useState('');
+
+  useEffect(() => {
+    if (itinerary) {
+      const tripId = activeTripId || itinerary?.id || itinerary?.db_id || 'shared-trip';
+      const storageKey = `tw_packing_${tripId}`;
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        try {
+          setPackingList(JSON.parse(stored));
+        } catch (e) {
+          const newList = generatePackingList(itinerary);
+          setPackingList(newList);
+        }
+      } else {
+        const newList = generatePackingList(itinerary);
+        setPackingList(newList);
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(newList));
+        } catch (e) {}
+      }
+    }
+  }, [itinerary, activeTripId]);
+
+  const savePackingList = (newList) => {
+    setPackingList(newList);
+    const tripId = activeTripId || itinerary?.id || itinerary?.db_id || 'shared-trip';
+    try {
+      localStorage.setItem(`tw_packing_${tripId}`, JSON.stringify(newList));
+    } catch (e) {}
+  };
+
+  const togglePackingItem = (category, itemId) => {
+    if (!packingList) return;
+    const newList = { ...packingList };
+    newList[category] = newList[category].map(item => 
+      item.id === itemId ? { ...item, checked: !item.checked } : item
+    );
+    savePackingList(newList);
+  };
+
+  const addCustomPackingItem = (category) => {
+    const text = customInputs[category]?.trim();
+    if (!text || !packingList) return;
+    const newList = { ...packingList };
+    newList[category] = [...newList[category], {
+      id: `custom-${Date.now()}`,
+      text,
+      checked: false,
+      generated: false
+    }];
+    savePackingList(newList);
+    setCustomInputs(prev => ({ ...prev, [category]: '' }));
+  };
+
+  const removePackingItem = (category, itemId) => {
+    if (!packingList) return;
+    const newList = { ...packingList };
+    newList[category] = newList[category].filter(item => item.id !== itemId);
+    savePackingList(newList);
+  };
+
+  const handleRegeneratePackingList = () => {
+    if (!itinerary) return;
+    const generatedList = generatePackingList(itinerary);
+    const newList = { ...packingList };
+    
+    // For each category, keep custom items, replace generated items
+    Object.keys(generatedList).forEach(cat => {
+      const customItems = (newList[cat] || []).filter(i => !i.generated);
+      newList[cat] = [...generatedList[cat], ...customItems];
+    });
+    
+    savePackingList(newList);
+    setShowRegenerateConfirm(false);
+  };
+
+  const togglePackingCategory = (category) => {
+    setExpandedPackingCategories(prev => ({ ...prev, [category]: !prev[category] }));
+  };
+
+  const checkAllItems = () => {
+    if (!packingList) return;
+    const newList = { ...packingList };
+    Object.keys(newList).forEach(cat => {
+      newList[cat] = newList[cat].map(item => ({ ...item, checked: true }));
+    });
+    savePackingList(newList);
+  };
+
+  const uncheckAllItems = () => {
+    if (!packingList) return;
+    const newList = { ...packingList };
+    Object.keys(newList).forEach(cat => {
+      newList[cat] = newList[cat].map(item => ({ ...item, checked: false }));
+    });
+    savePackingList(newList);
+  };
+
+  // Visa & Docs Logic
+  useEffect(() => {
+    const nat = localStorage.getItem('tripwise_passport_nationality');
+    setPassportNationality(nat);
+  }, []);
+
+  useEffect(() => {
+    if (activeDay === 'visa' && itinerary?.destinationName && passportNationality) {
+      setVisaLoading(true);
+      setVisaError(false);
+      fetchVisaRequirements(passportNationality, itinerary.destinationName)
+        .then(res => {
+          if (res.coverage) {
+            setVisaReqs(res.data);
+          } else {
+            setVisaError(true);
+          }
+        })
+        .catch(() => setVisaError(true))
+        .finally(() => setVisaLoading(false));
+    }
+  }, [activeDay, itinerary?.destinationName, passportNationality]);
+
+  useEffect(() => {
+    if (itinerary) {
+      const tripId = activeTripId || itinerary?.id || itinerary?.db_id || 'shared-trip';
+      const storageKey = `tw_visa_${tripId}`;
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        try {
+          setVisaChecklist(JSON.parse(stored));
+        } catch (e) {}
+      } else {
+        const defaultChecklist = {
+          'v-1': { id: 'v-1', text: 'Passport valid for 6+ months', checked: false },
+          'v-2': { id: 'v-2', text: 'Visa application submitted', checked: false },
+          'v-3': { id: 'v-3', text: 'Travel insurance purchased', checked: false },
+          'v-4': { id: 'v-4', text: 'Flight & accommodation proof ready', checked: false }
+        };
+        setVisaChecklist(defaultChecklist);
+      }
+    }
+  }, [itinerary, activeTripId]);
+
+  const saveVisaChecklist = (newList) => {
+    setVisaChecklist(newList);
+    const tripId = activeTripId || itinerary?.id || itinerary?.db_id || 'shared-trip';
+    try {
+      localStorage.setItem(`tw_visa_${tripId}`, JSON.stringify(newList));
+    } catch (e) {}
+  };
+
+  const toggleVisaItem = (itemId) => {
+    if (!visaChecklist) return;
+    const newList = { ...visaChecklist };
+    if (newList[itemId]) {
+      newList[itemId].checked = !newList[itemId].checked;
+    }
+    saveVisaChecklist(newList);
+  };
+
+  const addCustomVisaItem = () => {
+    const text = customVisaInput?.trim();
+    if (!text || !visaChecklist) return;
+    const newList = { ...visaChecklist };
+    const id = `custom-v-${Date.now()}`;
+    newList[id] = { id, text, checked: false };
+    saveVisaChecklist(newList);
+    setCustomVisaInput('');
+  };
+
+  const removeVisaItem = (itemId) => {
+    if (!visaChecklist) return;
+    const newList = { ...visaChecklist };
+    delete newList[itemId];
+    saveVisaChecklist(newList);
+  };
   
   // Publish to Community State
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
@@ -479,6 +691,16 @@ export default function ItineraryPage() {
             }
           }
         }
+        
+        const tabParam = params.get('tab');
+        if (tabParam) {
+          if (!isNaN(parseInt(tabParam))) {
+            setActiveDay(parseInt(tabParam));
+          } else {
+            setActiveDay(tabParam);
+          }
+        }
+        
         setLoading(false);
       }
     }, 0);
@@ -849,6 +1071,36 @@ export default function ItineraryPage() {
                 />
               )}
             </button>
+            <button
+              onClick={() => setActiveDay('packing')}
+              className={`relative pb-3.5 pt-2 px-4 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${
+                activeDay === 'packing' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+              }`}
+            >
+              <span>Packing List</span>
+              {activeDay === 'packing' && (
+                <motion.div
+                  layoutId="activeTabUnderline"
+                  className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#FF6B2C] rounded-t-full"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveDay('visa')}
+              className={`relative pb-3.5 pt-2 px-4 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${
+                activeDay === 'visa' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+              }`}
+            >
+              <span>Visa & Docs</span>
+              {activeDay === 'visa' && (
+                <motion.div
+                  layoutId="activeTabUnderline"
+                  className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#FF6B2C] rounded-t-full"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
+            </button>
           </div>
 
           {/* Actions Set (Aligned with bottom spacing) */}
@@ -903,12 +1155,12 @@ export default function ItineraryPage() {
       <main className="max-w-5xl mx-auto px-6 py-12 w-full flex flex-col gap-16">
         
         {/* SEASONAL CALENDAR */}
-        {activeDay !== 'epilogue' && (
+        {activeDay !== 'epilogue' && activeDay !== 'packing' && activeDay !== 'visa' && (
           <SeasonalCalendar destinationName={itinerary?.destinationName || itinerary?.name || 'Kyoto'} startDate={itinerary?.startDate} endDate={itinerary?.endDate} />
         )}
 
         {/* THE DOSSIER INDEX (Overview List - Screen Only) */}
-        {activeDay !== 'epilogue' && (
+        {activeDay !== 'epilogue' && activeDay !== 'packing' && activeDay !== 'visa' && (
           <section className="bg-white rounded-3xl border border-[#E6DFD5] p-8 sm:p-10 shadow-sm relative overflow-hidden print:hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-radial from-[#FF6B2C]/5 via-transparent to-transparent pointer-events-none" />
             
@@ -969,6 +1221,54 @@ export default function ItineraryPage() {
                   </div>
                 );
               })}
+              
+              <div
+                onClick={() => setActiveDay('packing')}
+                className="flex flex-col justify-between p-6 rounded-2xl bg-[#FAF6F0] border border-[#E6DFD5]/80 hover:border-[#FF6B2C]/60 transition-all duration-300 group cursor-pointer"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="px-2.5 py-0.5 rounded-md bg-[#1E1C1A] text-[#FAF6F0] font-serif text-xs font-bold tracking-wider">
+                      Preparation
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-serif font-bold text-[#1E1C1A] leading-snug group-hover:text-[#FF6B2C] transition-colors">
+                    Packing List &amp; Gear
+                  </h3>
+                  <p className="text-xs font-sans text-[#7A7268] mt-2">
+                    Auto-generated packing list based on your curated activities and climate.
+                  </p>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-[#E6DFD5] flex items-center justify-between text-[11px] font-sans text-[#5F5E5A]">
+                  <span>{packingList ? Object.values(packingList).flat().filter(i => i.checked).length : 0} of {packingList ? Object.values(packingList).flat().length : 0} Packed</span>
+                  <span className="font-bold text-[#1E1C1A]">Interactive</span>
+                </div>
+              </div>
+              
+              <div
+                onClick={() => setActiveDay('visa')}
+                className="flex flex-col justify-between p-6 rounded-2xl bg-[#FAF6F0] border border-[#E6DFD5]/80 hover:border-[#FF6B2C]/60 transition-all duration-300 group cursor-pointer"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="px-2.5 py-0.5 rounded-md bg-[#1E1C1A] text-[#FAF6F0] font-serif text-xs font-bold tracking-wider">
+                      Preparation
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-serif font-bold text-[#1E1C1A] leading-snug group-hover:text-[#FF6B2C] transition-colors">
+                    Visa &amp; Travel Documents
+                  </h3>
+                  <p className="text-xs font-sans text-[#7A7268] mt-2">
+                    Official visa requirements and your essential document checklist.
+                  </p>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-[#E6DFD5] flex items-center justify-between text-[11px] font-sans text-[#5F5E5A]">
+                  <span>{visaChecklist ? Object.values(visaChecklist).filter(i => i.checked).length : 0} of {visaChecklist ? Object.keys(visaChecklist).length : 0} Completed</span>
+                  <span className="font-bold text-[#1E1C1A]">Interactive</span>
+                </div>
+              </div>
             </div>
           </section>
         )}
@@ -1220,7 +1520,402 @@ export default function ItineraryPage() {
                     </div>
                   </div>
                 </section>
-              ); })() : (
+              ); })() : activeDay === 'packing' ? (() => {
+                const totalItems = packingList ? Object.values(packingList).flat().length : 0;
+                const checkedItems = packingList ? Object.values(packingList).flat().filter(i => i.checked).length : 0;
+                
+                return (
+                  <section className="flex flex-col gap-10">
+                    <div className="text-center max-w-2xl mx-auto relative">
+                      <span className="text-xs font-mono uppercase tracking-widest text-[#FF6B2C] font-bold block mb-1">
+                        Preparation &amp; Gear
+                      </span>
+                      <h2 className="text-3xl sm:text-5xl font-serif font-black text-[#1E1C1A] tracking-tight leading-tight mb-4">
+                        Curated Packing List
+                      </h2>
+                      <p className="text-sm font-sans text-[#7A7268] flex items-center justify-center gap-2 flex-wrap">
+                        <span>{itinerary?.destinationName || itinerary?.name || 'Your Destination'}</span>
+                        <span className="text-[#E6DFD5]">•</span>
+                        <span>{days.length} Days</span>
+                      </p>
+                      
+                      {/* Regenerate Confirm Dialog */}
+                      <AnimatePresence>
+                        {showRegenerateConfirm && (
+                          <motion.div 
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="absolute top-full mt-4 left-1/2 -translate-x-1/2 bg-white rounded-2xl shadow-xl border border-[#FF6B2C]/30 p-6 z-50 w-full max-w-sm text-left"
+                          >
+                            <h4 className="font-serif font-bold text-lg text-[#1E1C1A] mb-2 flex items-center gap-2">
+                              <AlertCircle className="w-5 h-5 text-[#FF6B2C]" />
+                              Regenerate List?
+                            </h4>
+                            <p className="text-xs font-sans text-[#5F5E5A] mb-5 leading-relaxed">
+                              This will re-evaluate your itinerary activities. Your custom added items and current progress will be preserved, but generated quantities or items may change.
+                            </p>
+                            <div className="flex gap-3 justify-end">
+                              <button onClick={() => setShowRegenerateConfirm(false)} className="px-4 py-2 rounded-xl text-xs font-bold text-[#7A7268] hover:bg-[#FAF6F0] transition-colors">
+                                Cancel
+                              </button>
+                              <button onClick={handleRegeneratePackingList} className="px-4 py-2 rounded-xl bg-[#1E1C1A] text-white text-xs font-bold hover:bg-[#FF6B2C] transition-colors">
+                                Confirm Regenerate
+                              </button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-[#E6DFD5] shadow-xs sticky top-32 z-30">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-14 h-14 rounded-full border flex items-center justify-center shrink-0 transition-colors duration-500 ${checkedItems === totalItems && totalItems > 0 ? 'bg-green-50 border-green-200' : 'bg-[#FAF6F0] border-[#E6DFD5]'}`}>
+                          {checkedItems === totalItems && totalItems > 0 ? (
+                            <CheckCircle2 className="w-6 h-6 text-green-500" />
+                          ) : (
+                            <svg className="w-6 h-6 text-[#FF6B2C]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                            </svg>
+                          )}
+                        </div>
+                        <div>
+                          <div className="text-xs font-mono uppercase tracking-widest text-[#7A7268] mb-1">Packing Progress</div>
+                          <div className="font-serif font-bold text-xl text-[#1E1C1A]">
+                            {checkedItems} / {totalItems} Packed
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <button
+                          onClick={checkAllItems}
+                          className="flex-1 sm:flex-none inline-flex justify-center items-center gap-1.5 px-3 py-2 rounded-xl border border-[#E6DFD5] bg-white text-[11px] font-sans font-bold text-[#1E1C1A] hover:bg-[#FAF6F0] hover:border-[#7A7268] transition-all shadow-2xs"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Select All</span>
+                        </button>
+                        <button
+                          onClick={uncheckAllItems}
+                          className="flex-1 sm:flex-none inline-flex justify-center items-center gap-1.5 px-3 py-2 rounded-xl border border-[#E6DFD5] bg-white text-[11px] font-sans font-bold text-[#1E1C1A] hover:bg-[#FAF6F0] hover:border-[#7A7268] transition-all shadow-2xs"
+                        >
+                          <XCircle className="w-3.5 h-3.5" />
+                          <span>Clear All</span>
+                        </button>
+                        <button
+                          onClick={() => setShowRegenerateConfirm(true)}
+                          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#FF6B2C]/30 bg-[#FAF6F0] text-[11px] font-sans font-bold text-[#1E1C1A] hover:bg-white hover:border-[#FF6B2C] transition-all shadow-2xs"
+                          title="Regenerate"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5 text-[#FF6B2C]" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-6">
+                      {!packingList ? (
+                        <div className="text-center py-10 text-sm font-sans text-[#7A7268]">Set your trip details to generate a packing list.</div>
+                      ) : (
+                        (() => {
+                          const categoryIcons = {
+                            Clothing: <Shirt className="w-5 h-5 text-[#FF6B2C]" />,
+                            Documents: <Briefcase className="w-5 h-5 text-[#FF6B2C]" />,
+                            Electronics: <Smartphone className="w-5 h-5 text-[#FF6B2C]" />,
+                            Toiletries: <Droplets className="w-5 h-5 text-[#FF6B2C]" />,
+                            ActivitySpecific: <Compass className="w-5 h-5 text-[#FF6B2C]" />
+                          };
+
+                          return Object.keys(packingList).map((category, catIdx) => {
+                            const items = packingList[category];
+                            const isExpanded = expandedPackingCategories[category];
+                            const catCheckedCount = items.filter(i => i.checked).length;
+                            const isAllChecked = catCheckedCount === items.length && items.length > 0;
+                            
+                            return (
+                              <div key={category} className={`bg-white rounded-3xl border transition-colors duration-500 overflow-hidden shadow-xs ${isAllChecked ? 'border-green-200 bg-green-50/30' : 'border-[#E6DFD5]'}`}>
+                                <button
+                                  onClick={() => togglePackingCategory(category)}
+                                  className="w-full flex items-center justify-between p-6 hover:bg-[#FAF6F0]/50 transition-colors cursor-pointer"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-[#FAF6F0] border ${isAllChecked ? 'border-green-200 bg-green-50' : 'border-[#E6DFD5]'}`}>
+                                      {isAllChecked ? <CheckCircle2 className="w-5 h-5 text-green-500" /> : (categoryIcons[category] || <CheckSquare className="w-5 h-5 text-[#FF6B2C]" />)}
+                                    </div>
+                                    <h3 className="font-mono text-sm uppercase tracking-widest font-bold text-[#1E1C1A]">
+                                      {category.replace(/([A-Z])/g, ' $1').trim()}
+                                    </h3>
+                                    <span className={`px-2 py-0.5 rounded-full border text-[10px] font-bold ${isAllChecked ? 'bg-green-100 text-green-700 border-green-200' : 'bg-[#FAF6F0] text-[#7A7268] border-[#E6DFD5]'}`}>
+                                      {catCheckedCount}/{items.length}
+                                    </span>
+                                  </div>
+                                  {isExpanded ? <ChevronUp className="w-5 h-5 text-[#7A7268]" /> : <ChevronDown className="w-5 h-5 text-[#7A7268]" />}
+                                </button>
+                                
+                                <AnimatePresence>
+                                  {isExpanded && (
+                                    <motion.div
+                                      initial={{ height: 0, opacity: 0 }}
+                                      animate={{ height: "auto", opacity: 1 }}
+                                      exit={{ height: 0, opacity: 0 }}
+                                      className="overflow-hidden"
+                                    >
+                                      <div className="p-6 pt-0 border-t border-[#FAF6F0]">
+                                        <motion.div 
+                                          className="flex flex-col gap-2 mt-4"
+                                          initial="hidden"
+                                          animate="visible"
+                                          variants={{
+                                            visible: { transition: { staggerChildren: 0.05 } },
+                                            hidden: {}
+                                          }}
+                                        >
+                                          {items.map(item => {
+                                            const match = item.text.match(/^(\d+x)\s+(.*)$/i);
+                                            const badgeText = match ? match[1] : null;
+                                            const mainText = match ? match[2] : item.text;
+
+                                            return (
+                                              <motion.div 
+                                                key={item.id} 
+                                                className="flex items-center justify-between group"
+                                                variants={{
+                                                  hidden: { opacity: 0, y: 10 },
+                                                  visible: { opacity: 1, y: 0 }
+                                                }}
+                                              >
+                                                <button
+                                                  onClick={() => togglePackingItem(category, item.id)}
+                                                  className="flex items-center gap-3 flex-1 text-left py-2 hover:bg-[#FAF6F0] px-3 rounded-xl transition-colors"
+                                                >
+                                              <div className={`shrink-0 transition-transform ${item.checked ? 'scale-110' : ''}`}>
+                                                {item.checked ? (
+                                                  <CheckSquare className="w-5 h-5 text-[#FF6B2C]" />
+                                                ) : (
+                                                  <Square className="w-5 h-5 text-[#E6DFD5] group-hover:text-[#FF6B2C]/50" />
+                                                )}
+                                              </div>
+                                                  <span className={`font-sans text-sm transition-all duration-300 ${item.checked ? 'text-[#7A7268] line-through opacity-60' : 'text-[#1E1C1A]'}`}>
+                                                    {mainText}
+                                                  </span>
+                                                  {badgeText && (
+                                                    <span className={`ml-auto px-2 py-0.5 rounded-md text-[10px] font-bold transition-all duration-300 ${item.checked ? 'bg-[#FAF6F0] text-[#7A7268] opacity-60' : 'bg-[#FF6B2C]/10 text-[#FF6B2C]'}`}>
+                                                      {badgeText}
+                                                    </span>
+                                                  )}
+                                                </button>
+                                            
+                                            <button
+                                              onClick={() => removePackingItem(category, item.id)}
+                                              className="p-2 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 text-red-300 hover:text-red-500 rounded-lg"
+                                              title="Remove item"
+                                            >
+                                              <Trash2 className="w-4 h-4" />
+                                            </button>
+                                            </motion.div>
+                                          );
+                                        })}
+                                      </motion.div>
+                                      
+                                      <div className="mt-4 flex items-center gap-2 px-3">
+                                        <input
+                                          type="text"
+                                          placeholder={`Add custom ${category.toLowerCase()} item...`}
+                                          value={customInputs[category] || ''}
+                                          onChange={(e) => setCustomInputs(prev => ({ ...prev, [category]: e.target.value }))}
+                                          onKeyDown={(e) => e.key === 'Enter' && addCustomPackingItem(category)}
+                                          className="flex-1 bg-transparent border-b border-[#E6DFD5] py-2 text-sm font-sans focus:outline-hidden focus:border-[#FF6B2C] placeholder:text-[#7A7268]/50"
+                                        />
+                                        <button
+                                          onClick={() => addCustomPackingItem(category)}
+                                          disabled={!customInputs[category]?.trim()}
+                                          className="p-2 rounded-xl bg-[#FAF6F0] text-[#1E1C1A] hover:bg-[#FF6B2C] hover:text-white disabled:opacity-50 disabled:hover:bg-[#FAF6F0] disabled:hover:text-[#1E1C1A] transition-colors"
+                                        >
+                                          <Plus className="w-4 h-4" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          );
+                        })
+                      })()
+                      )}
+                    </div>
+                  </section>
+                );
+              })() : activeDay === 'visa' ? (() => {
+                return (
+                  <section className="font-sans">
+                    <div className="bg-[#FAF6F0] border-l-4 border-[#FF6B2C] p-4 rounded-r-xl mb-8 flex items-start gap-3">
+                      <AlertTriangle className="w-5 h-5 text-[#FF6B2C] shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-bold text-[#1E1C1A] mb-1">Important Visa Disclaimer</p>
+                        <p className="text-xs text-[#7A7268] leading-relaxed">
+                          This is general guidance only. Always confirm requirements with the official embassy, consulate, or a licensed visa service before booking travel.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="border-b-2 border-[#1E1C1A] pb-6 mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                      <div>
+                        <span className="text-xs font-mono uppercase tracking-widest text-[#FF6B2C] font-bold block mb-1">
+                          Preparation
+                        </span>
+                        <h2 className="text-3xl font-serif font-black text-[#1E1C1A] tracking-tight">
+                          Visa &amp; Travel Documents
+                        </h2>
+                      </div>
+                    </div>
+
+                    {!passportNationality ? (
+                      <div className="bg-white border border-[#E6DFD5] rounded-3xl p-10 text-center flex flex-col items-center gap-4">
+                        <div className="w-16 h-16 rounded-full bg-[#FAF6F0] flex items-center justify-center">
+                          <Book className="w-8 h-8 text-[#FF6B2C]" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-serif font-bold text-[#1E1C1A]">Passport Nationality Missing</h3>
+                          <p className="text-sm text-[#7A7268] mt-2 max-w-md mx-auto">
+                            Please set your Passport Nationality in Settings to view accurate visa requirements for this destination.
+                          </p>
+                        </div>
+                        <Link 
+                          href="/settings"
+                          className="mt-4 px-6 py-2.5 bg-[#1E1C1A] text-[#FAF6F0] text-sm font-bold rounded-xl hover:bg-[#FF6B2C] transition-colors"
+                        >
+                          Go to Settings
+                        </Link>
+                      </div>
+                    ) : visaLoading ? (
+                      <div className="py-20 flex justify-center">
+                        <div className="w-6 h-6 border-2 border-[#E6DFD5] border-t-[#FF6B2C] rounded-full animate-spin"></div>
+                      </div>
+                    ) : visaError || !visaReqs ? (
+                      <div className="bg-white border border-[#E6DFD5] rounded-3xl p-10 text-center flex flex-col items-center gap-4">
+                        <div className="w-16 h-16 rounded-full bg-[#FAF6F0] flex items-center justify-center">
+                          <AlertTriangle className="w-8 h-8 text-[#FF6B2C]" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-serif font-bold text-[#1E1C1A]">Information Unavailable</h3>
+                          <p className="text-sm text-[#7A7268] mt-2 max-w-md mx-auto">
+                            We're unable to retrieve visa requirements for this route. Please check directly with the relevant embassy or consulate.
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-8">
+                        <div className="bg-white border border-[#E6DFD5] rounded-3xl p-6 md:p-8">
+                          <h3 className="text-sm font-mono uppercase tracking-widest text-[#5F5E5A] font-bold mb-6">
+                            Entry Requirements for {itinerary?.destinationName}
+                          </h3>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                            <div>
+                              <div className="text-xs text-[#7A7268] mb-1">Visa Status</div>
+                              <div className="font-bold text-[#1E1C1A]">{visaReqs.required}</div>
+                              {visaReqs.details && <div className="text-xs text-[#7A7268] mt-1">{visaReqs.details}</div>}
+                            </div>
+                            
+                            {visaReqs.processingTime && (
+                              <div>
+                                <div className="text-xs text-[#7A7268] mb-1">Processing Time</div>
+                                <div className="font-bold text-[#1E1C1A]">{visaReqs.processingTime}</div>
+                              </div>
+                            )}
+                            
+                            {visaReqs.passportValidity && (
+                              <div>
+                                <div className="text-xs text-[#7A7268] mb-1">Passport Validity</div>
+                                <div className="font-bold text-[#1E1C1A]">{visaReqs.passportValidity}</div>
+                              </div>
+                            )}
+
+                            {visaReqs.minimumFunds && (
+                              <div>
+                                <div className="text-xs text-[#7A7268] mb-1">Minimum Funds</div>
+                                <div className="font-bold text-[#1E1C1A]">{visaReqs.minimumFunds}</div>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {visaReqs.embassyLink && (
+                            <div className="mt-8 pt-6 border-t border-[#E6DFD5]">
+                              <a 
+                                href={visaReqs.embassyLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 text-[#FF6B2C] hover:text-[#E05A20] text-sm font-bold transition-colors"
+                              >
+                                Official Embassy Website
+                                <ExternalLink className="w-4 h-4" />
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div>
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-serif font-bold text-[#1E1C1A]">Document Checklist</h3>
+                            <span className="text-xs text-[#7A7268]">
+                              {visaChecklist ? Object.values(visaChecklist).filter(i => i.checked).length : 0} of {visaChecklist ? Object.keys(visaChecklist).length : 0} Completed
+                            </span>
+                          </div>
+                          <div className="bg-white border border-[#E6DFD5] rounded-3xl overflow-hidden">
+                            {visaChecklist && Object.values(visaChecklist).map((item) => (
+                              <div key={item.id} className="flex items-center justify-between group p-1 border-b border-[#FAF6F0] last:border-0">
+                                <button
+                                  onClick={() => toggleVisaItem(item.id)}
+                                  className="flex items-center gap-3 flex-1 text-left py-3 px-4 hover:bg-[#FAF6F0] rounded-xl transition-colors"
+                                >
+                                  <div className={`shrink-0 transition-transform ${item.checked ? 'scale-110' : ''}`}>
+                                    {item.checked ? (
+                                      <CheckCircle2 className="w-5 h-5 text-[#1E1C1A]" />
+                                    ) : (
+                                      <div className="w-5 h-5 rounded-full border-2 border-[#E6DFD5] group-hover:border-[#1E1C1A] transition-colors" />
+                                    )}
+                                  </div>
+                                  <span className={`text-sm font-sans transition-all duration-300 ${
+                                    item.checked ? 'text-[#7A7268] line-through decoration-[#7A7268]/50' : 'text-[#1E1C1A] font-medium'
+                                  }`}>
+                                    {item.text}
+                                  </span>
+                                </button>
+                                <button
+                                  onClick={() => removeVisaItem(item.id)}
+                                  className="p-3 text-[#7A7268] hover:text-[#FF6B2C] hover:bg-[#FF6B2C]/10 rounded-xl transition-colors shrink-0 opacity-0 group-hover:opacity-100"
+                                  title="Remove item"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))}
+                            <div className="p-4 bg-[#FAF6F0]/50 border-t border-[#E6DFD5]">
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="Add a custom document or to-do..."
+                                  value={customVisaInput}
+                                  onChange={(e) => setCustomVisaInput(e.target.value)}
+                                  onKeyDown={(e) => e.key === 'Enter' && addCustomVisaItem()}
+                                  className="flex-1 bg-white border border-[#E6DFD5] py-2 px-4 rounded-xl text-sm font-sans focus:outline-hidden focus:border-[#FF6B2C] placeholder:text-[#7A7268]/50"
+                                />
+                                <button
+                                  onClick={addCustomVisaItem}
+                                  disabled={!customVisaInput?.trim()}
+                                  className="p-2.5 rounded-xl bg-[#1E1C1A] text-[#FAF6F0] hover:bg-[#FF6B2C] disabled:opacity-50 transition-colors"
+                                >
+                                  <Plus className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </section>
+                );
+              })() : (
                 /* ACTIVE CHAPTER VIEW */
                 (() => {
                   const dayIdx = activeDay - 1;
@@ -2216,7 +2911,7 @@ export default function ItineraryPage() {
         onClose={() => setActivePassModal(null)}
         activity={activePassModal?.activity}
         destinationName={itinerary?.destinationName || 'Destination'}
-        dayNumber={activePassModal?.dayNum || (activeDay === 'epilogue' ? 1 : activeDay)}
+        dayNumber={activePassModal?.dayNum || (typeof activeDay === 'number' ? activeDay : 1)}
         stopNumber={activePassModal?.stopNum || 1}
         onStatusChange={handleDiningBookingsChange}
       />
