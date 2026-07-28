@@ -1,18 +1,34 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mail, Send, UserPlus, CheckCircle2, AlertCircle } from 'lucide-react';
-import { sendTripInvite } from '../actions/invites';
+import { X, Mail, Send, UserPlus, CheckCircle2, AlertCircle, Link as LinkIcon, Copy, Smartphone, MessageSquare } from 'lucide-react';
+import { sendTripInvite, generateTripInviteLink } from '../actions/invites';
+import QRCode from 'react-qr-code';
 
 const InviteModal = ({ isOpen, onClose, tripId, currentCollaborators = [] }) => {
+  const [activeTab, setActiveTab] = useState('email'); // 'email' or 'link'
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('editor');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inviteStatus, setInviteStatus] = useState(null); // 'success', 'error', null
   const [errorMessage, setErrorMessage] = useState('');
-  const [inviteToken, setInviteToken] = useState(null);
+  
+  // Link sharing state
+  const [shareLink, setShareLink] = useState('');
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const handleInvite = async (e) => {
+  // Reset state when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      setShareLink('');
+      setInviteStatus(null);
+      setErrorMessage('');
+      setActiveTab('email');
+    }
+  }, [isOpen]);
+
+  const handleEmailInvite = async (e) => {
     e.preventDefault();
     
     if (!tripId) {
@@ -33,12 +49,10 @@ const InviteModal = ({ isOpen, onClose, tripId, currentCollaborators = [] }) => 
       if (result.success) {
           setInviteStatus('success');
           setEmail('');
-          setInviteToken(result.token);
           
           setTimeout(() => {
             onClose();
             setInviteStatus(null);
-            setInviteToken(null);
           }, 3000);
       } else {
           throw new Error('Failed to send invite');
@@ -50,6 +64,34 @@ const InviteModal = ({ isOpen, onClose, tripId, currentCollaborators = [] }) => 
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleGenerateLink = async () => {
+    if (!tripId) {
+      setErrorMessage('Please save your trip first.');
+      return;
+    }
+
+    setIsGeneratingLink(true);
+    setErrorMessage('');
+
+    try {
+      const result = await generateTripInviteLink(tripId, role);
+      if (result.success) {
+        setShareLink(result.inviteLink);
+      }
+    } catch (error) {
+      console.error("Error generating link:", error);
+      setErrorMessage(error.message || 'Failed to generate link.');
+    } finally {
+      setIsGeneratingLink(false);
+    }
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(shareLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -69,18 +111,18 @@ const InviteModal = ({ isOpen, onClose, tripId, currentCollaborators = [] }) => 
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", bounce: 0.3, duration: 0.6 }}
-            className="relative bg-white/95 backdrop-blur-xl rounded-[2rem] w-full max-w-md shadow-[0_30px_60px_rgba(0,0,0,0.15)] border border-white/50 overflow-hidden"
+            className="relative bg-white/95 backdrop-blur-xl rounded-[2rem] w-full max-w-md shadow-[0_30px_60px_rgba(0,0,0,0.15)] border border-white/50 overflow-hidden flex flex-col max-h-[90vh]"
           >
             {/* Top decorative gradient */}
             <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-orange-400 via-[#FF6B2C] to-orange-500"></div>
 
             {/* Header */}
-            <div className="px-8 pt-8 pb-4 flex items-center justify-between">
+            <div className="px-8 pt-8 pb-4 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
                   <UserPlus className="w-5 h-5 text-[#FF6B2C]" />
                 </div>
-                <h2 className="text-xl font-serif font-bold text-gray-900 tracking-tight">Invite to Trip</h2>
+                <h2 className="text-xl font-serif font-bold text-gray-900 tracking-tight">Invite Friends</h2>
               </div>
               <button 
                 onClick={onClose}
@@ -90,65 +132,210 @@ const InviteModal = ({ isOpen, onClose, tripId, currentCollaborators = [] }) => 
               </button>
             </div>
 
-            {/* Body */}
-            <div className="px-8 pb-8 space-y-6">
-              
-              {/* Invite Form */}
-              <form onSubmit={handleInvite} className="space-y-5">
-                <div>
-                  <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
-                  <div className="flex gap-2 relative group">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#FF6B2C] transition-colors">
-                      <Mail className="w-4 h-4" />
-                    </div>
-                    <input 
-                      type="email" 
-                      id="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="friend@example.com"
-                      className="flex-1 pl-10 pr-4 py-3 bg-white/50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#FF6B2C]/20 focus:border-[#FF6B2C] transition-all text-sm shadow-sm"
-                      required
-                    />
-                    <select 
-                      value={role}
-                      onChange={(e) => setRole(e.target.value)}
-                      className="px-4 py-3 bg-white/50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#FF6B2C]/20 focus:border-[#FF6B2C] transition-all text-sm shadow-sm cursor-pointer font-medium text-gray-700 appearance-none min-w-[100px]"
-                      style={{ backgroundImage: "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e\")", backgroundPosition: "right 0.5rem center", backgroundRepeat: "no-repeat", backgroundSize: "1.5em 1.5em", paddingRight: "2.5rem" }}
-                    >
-                      <option value="editor">Editor</option>
-                      <option value="viewer">Viewer</option>
-                    </select>
-                  </div>
-                </div>
-                <button 
-                  type="submit" 
-                  disabled={isSubmitting || !email}
-                  className="group relative w-full bg-[#1F1F1F] hover:bg-black text-white font-bold py-3.5 rounded-2xl transition-all disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none shadow-md hover:shadow-xl hover:shadow-gray-900/10 hover:-translate-y-0.5 overflow-hidden flex items-center justify-center gap-2 text-sm tracking-wider uppercase"
+            {/* Tabs */}
+            <div className="px-8 shrink-0">
+              <div className="flex p-1 bg-gray-100/80 rounded-xl">
+                <button
+                  onClick={() => setActiveTab('email')}
+                  className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2 ${
+                    activeTab === 'email' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                  }`}
                 >
-                  <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-                  {isSubmitting ? (
-                    <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full" />
-                  ) : (
-                    <>
-                      Send Invite <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                    </>
-                  )}
+                  <Mail className="w-4 h-4" /> Email
                 </button>
-                
-                <AnimatePresence mode="wait">
-                  {inviteStatus === 'success' && (
-                    <motion.div initial={{ opacity: 0, height: 0, y: -10 }} animate={{ opacity: 1, height: 'auto', y: 0 }} exit={{ opacity: 0, height: 0 }} className="flex items-center justify-center gap-2 text-sm text-emerald-600 bg-emerald-50 py-2.5 rounded-xl font-medium border border-emerald-100">
-                      <CheckCircle2 className="w-4 h-4" /> Invite sent successfully!
-                    </motion.div>
-                  )}
-                  {inviteStatus === 'error' && (
-                    <motion.div initial={{ opacity: 0, height: 0, y: -10 }} animate={{ opacity: 1, height: 'auto', y: 0 }} exit={{ opacity: 0, height: 0 }} className="flex items-center justify-center gap-2 text-sm text-red-600 bg-red-50 py-2.5 rounded-xl font-medium border border-red-100">
-                      <AlertCircle className="w-4 h-4 shrink-0" /> <span className="truncate">{errorMessage || 'Failed to send invite.'}</span>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </form>
+                <button
+                  onClick={() => setActiveTab('link')}
+                  className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2 ${
+                    activeTab === 'link' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <LinkIcon className="w-4 h-4" /> Share Link
+                </button>
+              </div>
+            </div>
+
+            {/* Scrollable Body */}
+            <div className="px-8 py-6 overflow-y-auto min-h-[300px]">
+              
+              <AnimatePresence mode="wait">
+                {activeTab === 'email' ? (
+                  <motion.form 
+                    key="email-tab"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 10 }}
+                    onSubmit={handleEmailInvite} 
+                    className="space-y-5"
+                  >
+                    <div>
+                      <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                      <div className="flex gap-2 relative group">
+                        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                          <Mail className="h-5 w-5 text-gray-400 group-focus-within:text-[#FF6B2C] transition-colors" />
+                        </div>
+                        <input
+                          type="email"
+                          id="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="friend@example.com"
+                          className="flex-1 block w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF6B2C]/20 focus:border-[#FF6B2C] focus:bg-white transition-all text-sm"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Role</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <label className={`
+                          relative flex flex-col p-3 rounded-xl border cursor-pointer transition-all
+                          ${role === 'editor' ? 'bg-orange-50 border-orange-200 ring-1 ring-orange-500' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'}
+                        `}>
+                          <input type="radio" name="role" value="editor" checked={role === 'editor'} onChange={(e) => setRole(e.target.value)} className="sr-only" />
+                          <span className={`text-sm font-semibold ${role === 'editor' ? 'text-orange-700' : 'text-gray-900'}`}>Editor</span>
+                          <span className={`text-xs mt-1 ${role === 'editor' ? 'text-orange-600/80' : 'text-gray-500'}`}>Can edit itinerary</span>
+                        </label>
+                        <label className={`
+                          relative flex flex-col p-3 rounded-xl border cursor-pointer transition-all
+                          ${role === 'viewer' ? 'bg-orange-50 border-orange-200 ring-1 ring-orange-500' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'}
+                        `}>
+                          <input type="radio" name="role" value="viewer" checked={role === 'viewer'} onChange={(e) => setRole(e.target.value)} className="sr-only" />
+                          <span className={`text-sm font-semibold ${role === 'viewer' ? 'text-orange-700' : 'text-gray-900'}`}>Viewer</span>
+                          <span className={`text-xs mt-1 ${role === 'viewer' ? 'text-orange-600/80' : 'text-gray-500'}`}>Read-only access</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isSubmitting || !email}
+                      className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-[#111827] text-white rounded-xl text-sm font-bold shadow-lg shadow-gray-900/20 hover:bg-black hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none mt-2 group"
+                    >
+                      {isSubmitting ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                          Sending...
+                        </div>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" /> 
+                          Send Email Invite
+                        </>
+                      )}
+                    </button>
+                  </motion.form>
+                ) : (
+                  <motion.div
+                    key="link-tab"
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    className="space-y-5"
+                  >
+                    {!shareLink ? (
+                      <div className="text-center py-8">
+                        <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <LinkIcon className="w-8 h-8" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Create Shareable Link</h3>
+                        <p className="text-sm text-gray-500 mb-6 px-4">Generate a unique link that anyone can use to join your trip.</p>
+                        
+                        <button
+                          onClick={handleGenerateLink}
+                          disabled={isGeneratingLink}
+                          className="flex items-center justify-center gap-2 py-3 px-6 bg-[#111827] text-white rounded-xl text-sm font-bold shadow-lg mx-auto hover:bg-black transition-all disabled:opacity-70"
+                        >
+                          {isGeneratingLink ? 'Generating...' : 'Generate Invite Link'}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        {/* Link Box */}
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">Share this link</label>
+                          <div className="flex gap-2">
+                            <input 
+                              type="text" 
+                              readOnly 
+                              value={shareLink} 
+                              className="flex-1 block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-600 text-sm focus:outline-none"
+                            />
+                            <button
+                              onClick={handleCopyLink}
+                              className={`flex items-center justify-center p-3 rounded-xl transition-all ${
+                                copied ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                              }`}
+                            >
+                              {copied ? <CheckCircle2 className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Quick Share Buttons */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <a 
+                            href={`https://wa.me/?text=Join%20my%20trip%20on%20TripWise:%20${encodeURIComponent(shareLink)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-2 py-3 bg-[#25D366] text-white rounded-xl text-sm font-bold hover:bg-[#1EBE5A] hover:shadow-lg hover:shadow-[#25D366]/30 hover:-translate-y-0.5 transition-all"
+                          >
+                            <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
+                              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                            </svg>
+                            WhatsApp
+                          </a>
+                          <a 
+                            href={`sms:?&body=Join%20my%20trip%20on%20TripWise:%20${encodeURIComponent(shareLink)}`}
+                            className="flex items-center justify-center gap-2 py-3 bg-[#0A7CFF] text-white rounded-xl text-sm font-bold hover:bg-[#0066D6] hover:shadow-lg hover:shadow-[#0A7CFF]/30 hover:-translate-y-0.5 transition-all"
+                          >
+                            <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            SMS
+                          </a>
+                        </div>
+
+                        {/* QR Code */}
+                        <div className="border-t border-gray-100 pt-6 mt-2 flex flex-col items-center">
+                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                            <span className="w-8 h-px bg-gray-200"></span>
+                            Or scan with camera
+                            <span className="w-8 h-px bg-gray-200"></span>
+                          </p>
+                          <div className="p-3 bg-white border border-gray-200 rounded-3xl shadow-sm hover:shadow-md transition-shadow">
+                            <div className="bg-white p-3 rounded-2xl ring-1 ring-gray-900/5">
+                              <QRCode value={shareLink} size={140} fgColor="#111827" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Status Messages */}
+              <AnimatePresence mode="wait">
+                {inviteStatus === 'success' && (
+                  <motion.div initial={{ opacity: 0, height: 0, y: -10 }} animate={{ opacity: 1, height: 'auto', y: 0 }} exit={{ opacity: 0, height: 0 }} className="mt-6 p-4 bg-green-50/80 backdrop-blur-sm border border-green-200 rounded-xl flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-sm font-semibold text-green-800">Invite Sent Successfully!</h4>
+                      <p className="text-xs text-green-600 mt-1">They will receive an email shortly.</p>
+                    </div>
+                  </motion.div>
+                )}
+                {inviteStatus === 'error' && (
+                  <motion.div initial={{ opacity: 0, height: 0, y: -10 }} animate={{ opacity: 1, height: 'auto', y: 0 }} exit={{ opacity: 0, height: 0 }} className="mt-6 p-4 bg-red-50/80 backdrop-blur-sm border border-red-200 rounded-xl flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-sm font-semibold text-red-800">Couldn't Send Invite</h4>
+                      <p className="text-xs text-red-600 mt-1">{errorMessage}</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Current Collaborators List */}
               {currentCollaborators.length > 0 && (
