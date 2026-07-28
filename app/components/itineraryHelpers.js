@@ -383,7 +383,8 @@ export function getDaySummary(day, idx = 0, allDays = []) {
     { title: '🏰 Castles & Sunset Terraces', emoji: '🏰', temp: '31°C', weather: '☀️', dist: '6.0 km', hours: '8 Hours', cost: '€55' }
   ];
 
-  const theme = day?.title ? { ...themes[idx % themes.length], title: day.title } : themes[idx % themes.length];
+  const safeIdx = (typeof idx === 'number' && !isNaN(idx) && idx >= 0) ? idx : 0;
+  const theme = day?.title ? { ...themes[safeIdx % themes.length], title: day.title } : themes[safeIdx % themes.length];
 
   return {
     dayNum,
