@@ -1,6 +1,6 @@
 'use server';
 
-import { auth } from '@clerk/nextjs/server';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 import { revalidatePath } from 'next/cache';
 import { supabase } from '../../lib/supabase';
 
@@ -209,6 +209,33 @@ export async function getTripCollaborators(tripId) {
         console.error("Supabase Error fetching trip collaborators:", error);
         return [];
     }
+    
+    if (!data || data.length === 0) return [];
 
-    return data || [];
+    try {
+        const userIds = data.map(c => c.user_id);
+        const client = await clerkClient();
+        const usersResponse = await client.users.getUserList({ userId: userIds });
+        const users = usersResponse.data;
+
+        return data.map(collab => {
+            const clerkUser = users.find(u => u.id === collab.user_id);
+            if (clerkUser) {
+                return {
+                    ...collab,
+                    userId: collab.user_id,
+                    name: clerkUser.firstName ? `${clerkUser.firstName} ${clerkUser.lastName || ''}`.trim() : (clerkUser.username || null),
+                    email: clerkUser.emailAddresses[0]?.emailAddress || null,
+                    photoURL: clerkUser.imageUrl || null
+                };
+            }
+            return {
+                ...collab,
+                userId: collab.user_id
+            };
+        });
+    } catch (e) {
+        console.error("Error fetching Clerk users for collaborators:", e);
+        return data; // Fallback to raw DB data if Clerk fails
+    }
 }
