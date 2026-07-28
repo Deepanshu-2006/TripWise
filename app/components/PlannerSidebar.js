@@ -16,6 +16,7 @@ import {
   formatReviewCount
 } from './itineraryHelpers';
 import { saveTrip, updateTrip, getTripCollaborators } from '../actions/trips';
+import { activateTracking } from '../../lib/priceTrackingApi';
 import { useRouter } from 'next/navigation';
 import * as htmlToImage from 'html-to-image';
 import { useCollaboration } from './CollaborationProvider';
@@ -645,6 +646,10 @@ export default function PlannerSidebar({
   const [startDate, setStartDate] = useState(() => itinerary?.startDate || '');
   const [endDate, setEndDate] = useState(() => itinerary?.endDate || '');
 
+  // Price Tracking State
+  const [trackPrices, setTrackPrices] = useState(false);
+  const [trackOrigin, setTrackOrigin] = useState('JFK');
+
   const [selectedDays, setSelectedDays] = useState(() => {
     if (itinerary?.duration) return itinerary.duration;
     if (extracted?.duration) return extracted.duration;
@@ -1093,12 +1098,27 @@ export default function PlannerSidebar({
         endDate: endDate
     };
     const destName = parsedIntent?.destination || userPromptInput || "Draft Trip";
+    let activeTripId = tripId;
+
     if (tripId) {
         updateTrip(tripId, destName, partialData).catch(e => console.error(e));
     } else {
         saveTrip(destName, partialData).then(res => {
-            if (res && res.trip) onTripIdChange(res.trip.id);
+            if (res && res.trip) {
+                activeTripId = res.trip.id;
+                onTripIdChange(res.trip.id);
+            }
         }).catch(e => console.error(e));
+    }
+
+    if (trackPrices) {
+        // Activate price tracking baseline in background
+        activateTracking(activeTripId || 'shared-trip', destName, {
+            startDate,
+            trackFlights: true,
+            trackHotels: true,
+            origin: trackOrigin
+        }).catch(e => console.error("Tracking setup error", e));
     }
 
     startProgressTransition({
@@ -1589,6 +1609,41 @@ export default function PlannerSidebar({
                     placeholder="End date"
                   />
                 </div>
+              </div>
+
+              {/* Price Tracking Opt-In */}
+              <div className="mt-4 p-4 rounded-xl bg-[#FAF6F0] border border-[#E6DFD5]">
+                <label className="flex items-start justify-between cursor-pointer group">
+                  <div className="flex flex-col gap-0.5 max-w-[200px]">
+                    <span className="text-sm font-bold text-[#1E1C1A] group-hover:text-[#FF6B2C] transition-colors">Track Prices</span>
+                    <span className="text-xs text-[#7A7268]">Monitor flight & hotel prices for drops</span>
+                  </div>
+                  <div className={`mt-1 w-10 h-6 rounded-full transition-colors relative shrink-0 ${trackPrices ? 'bg-[#FF6B2C]' : 'bg-[#E6DFD5]'}`}>
+                    <input type="checkbox" className="sr-only" checked={trackPrices} onChange={() => setTrackPrices(!trackPrices)} />
+                    <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${trackPrices ? 'translate-x-4' : 'translate-x-0'}`} />
+                  </div>
+                </label>
+                
+                <AnimatePresence>
+                  {trackPrices && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                      animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
+                      exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <label className="block text-[10px] font-bold text-[#7A7268] uppercase tracking-wider mb-1">Origin Airport</label>
+                      <input 
+                        type="text" 
+                        value={trackOrigin}
+                        onChange={(e) => setTrackOrigin(e.target.value.toUpperCase())}
+                        maxLength={3}
+                        className="w-full bg-white border border-[#E6DFD5] py-2 px-3 rounded-lg text-sm font-mono font-bold focus:outline-none focus:border-[#FF6B2C] transition-colors"
+                        placeholder="JFK"
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
 
