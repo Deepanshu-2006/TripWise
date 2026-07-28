@@ -10,6 +10,7 @@ import Link from 'next/link';
 import {
   Download,
   Share2,
+  Bell,
   Edit3,
   MapPin,
   Clock,
@@ -66,6 +67,7 @@ const ItineraryMapModal = dynamic(() => import('../components/ItineraryMapModal'
 const TicketPassModal = dynamic(() => import('../components/TicketPassModal'), { ssr: false });
 import InlineDiningReservation from '../components/InlineDiningReservation';
 import SeasonalCalendar from '../components/SeasonalCalendar';
+import PriceTracker from '../components/PriceTracker';
 
 const toRomanNumeral = (num) => {
   const romanMap = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V', 6: 'VI', 7: 'VII', 8: 'VIII', 9: 'IX', 10: 'X' };
@@ -524,6 +526,14 @@ export default function ItineraryPage() {
 
   // Print Mode Full-Mount State (Priority 1: Ensures 100% of DOM is rendered & mounted before window.print())
   const [isPrinting, setIsPrinting] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
+
+  const showToast = (message, type = 'success', icon = 'Bell') => {
+    setToastMessage({ message, type, icon });
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 5000);
+  };
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const handleBeforePrint = () => setIsPrinting(true);
@@ -898,6 +908,30 @@ export default function ItineraryPage() {
         className="fixed top-0 left-0 right-0 h-0.75 bg-[#FF6B2C] origin-left z-60 pointer-events-none print:hidden"
       />
 
+      {/* Global-ish Toast Notification */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: -20, x: '-50%' }}
+            className="fixed top-4 left-1/2 z-70 pointer-events-auto"
+          >
+            <div className={`flex items-center gap-2 px-4 py-3 rounded-2xl shadow-xl border ${
+              toastMessage.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
+              toastMessage.type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
+              'bg-white border-[#E6DFD5] text-[#1E1C1A]'
+            }`}>
+              {toastMessage.icon === 'Bell' && <Bell className="w-4 h-4" />}
+              <span className="text-sm font-semibold">{toastMessage.message}</span>
+              <button onClick={() => setToastMessage(null)} className="ml-2 hover:opacity-70">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="print:hidden">
         <motion.div 
             style={{ opacity: maskOpacity }} 
@@ -1101,6 +1135,21 @@ export default function ItineraryPage() {
                 />
               )}
             </button>
+            <button
+              onClick={() => setActiveDay('tracking')}
+              className={`relative pb-3.5 pt-2 px-4 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${
+                activeDay === 'tracking' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+              }`}
+            >
+              <span>Price Tracking</span>
+              {activeDay === 'tracking' && (
+                <motion.div
+                  layoutId="activeTabUnderline"
+                  className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#FF6B2C] rounded-t-full"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
+            </button>
           </div>
 
           {/* Actions Set (Aligned with bottom spacing) */}
@@ -1155,12 +1204,12 @@ export default function ItineraryPage() {
       <main className="max-w-5xl mx-auto px-6 py-12 w-full flex flex-col gap-16">
         
         {/* SEASONAL CALENDAR */}
-        {activeDay !== 'epilogue' && activeDay !== 'packing' && activeDay !== 'visa' && (
+        {activeDay !== 'epilogue' && activeDay !== 'packing' && activeDay !== 'visa' && activeDay !== 'tracking' && (
           <SeasonalCalendar destinationName={itinerary?.destinationName || itinerary?.name || 'Kyoto'} startDate={itinerary?.startDate} endDate={itinerary?.endDate} />
         )}
 
         {/* THE DOSSIER INDEX (Overview List - Screen Only) */}
-        {activeDay !== 'epilogue' && activeDay !== 'packing' && activeDay !== 'visa' && (
+        {activeDay !== 'epilogue' && activeDay !== 'packing' && activeDay !== 'visa' && activeDay !== 'tracking' && (
           <section className="bg-white rounded-3xl border border-[#E6DFD5] p-8 sm:p-10 shadow-sm relative overflow-hidden print:hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-radial from-[#FF6B2C]/5 via-transparent to-transparent pointer-events-none" />
             
@@ -1745,7 +1794,17 @@ export default function ItineraryPage() {
                     </div>
                   </section>
                 );
-              })() : activeDay === 'visa' ? (() => {
+              })() : activeDay === 'tracking' ? (
+                <section className="font-sans mb-12">
+                  <PriceTracker 
+                    tripId={itinerary?.id || itinerary?.db_id || activeTripId || 'shared-trip'} 
+                    destinationName={itinerary?.destinationName} 
+                    startDate={itinerary?.startDate} 
+                    endDate={itinerary?.endDate} 
+                    onToast={showToast} 
+                  />
+                </section>
+              ) : activeDay === 'visa' ? (() => {
                 return (
                   <section className="font-sans">
                     <div className="bg-[#FAF6F0] border-l-4 border-[#FF6B2C] p-4 rounded-r-xl mb-8 flex items-start gap-3">
