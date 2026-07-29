@@ -108,8 +108,13 @@ export default function InteractiveGlobe({
     }
   }, [dynamicCoords, targetCoordinates.lat, targetCoordinates.lng, isGenerating, isTransitioning]);
 
-  // Marker data (always show marker using finalCoords)
-  const markerData = finalCoords ? [
+  // Only show pin marker when an explicit destination is typed/geocoded
+  const hasTargetDestination = Boolean(
+    dynamicCoords || 
+    (destinationName && destinationName !== 'Your Destination' && destinationName !== 'Global View' && destinationName.trim() !== '')
+  );
+
+  const markerData = (hasTargetDestination && finalCoords) ? [
     {
       lat: finalCoords.lat,
       lng: finalCoords.lng,

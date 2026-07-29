@@ -66,7 +66,6 @@ import {
 const ItineraryMapModal = dynamic(() => import('../components/ItineraryMapModal'), { ssr: false });
 const TicketPassModal = dynamic(() => import('../components/TicketPassModal'), { ssr: false });
 import InlineDiningReservation from '../components/InlineDiningReservation';
-import SeasonalCalendar from '../components/SeasonalCalendar';
 import PriceTracker from '../components/PriceTracker';
 
 const toRomanNumeral = (num) => {
@@ -1015,7 +1014,7 @@ export default function ItineraryPage() {
             ) : (
               <button 
                 onClick={() => setActiveDay('tracking')}
-                className="px-2.5 py-1 rounded bg-amber-500/25 border border-amber-400/50 hover:bg-amber-500/40 text-amber-100 font-mono text-[9px] font-extrabold tracking-wider uppercase backdrop-blur-xs shadow-xs flex items-center gap-1 transition-colors cursor-pointer"
+                className="px-2.5 py-1 rounded bg-[#FF6B2C]/20 border border-[#FF6B2C]/40 hover:bg-[#FF6B2C]/30 text-[#FFDCD0] font-mono text-[9px] font-extrabold tracking-wider uppercase backdrop-blur-xs shadow-xs flex items-center gap-1 transition-colors cursor-pointer"
               >
                 📍 Basecamp: Not yet selected (Click to choose & route) &rarr;
               </button>
@@ -1215,11 +1214,6 @@ export default function ItineraryPage() {
 
       {/* DOSSIER BODY CONTENT */}
       <main className="max-w-5xl mx-auto px-6 py-12 w-full flex flex-col gap-16">
-        
-        {/* SEASONAL CALENDAR */}
-        {activeDay !== 'epilogue' && activeDay !== 'packing' && activeDay !== 'visa' && activeDay !== 'tracking' && (
-          <SeasonalCalendar destinationName={itinerary?.destinationName || itinerary?.name || 'Kyoto'} startDate={itinerary?.startDate} endDate={itinerary?.endDate} />
-        )}
 
         {/* THE DOSSIER INDEX (Overview List - Screen Only) */}
         {activeDay !== 'epilogue' && activeDay !== 'packing' && activeDay !== 'visa' && activeDay !== 'tracking' && (

@@ -1294,46 +1294,80 @@ export default function PlannerSidebar({
                 className="w-full h-36 p-4 md:p-5 rounded-2xl bg-white border border-stone-300 focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 text-sm md:text-base text-stone-900 placeholder:text-stone-400 focus:outline-none shadow-sm transition-all duration-150 resize-none font-medium"
               />
 
-              {/* Basecamp Input */}
+              {/* Basecamp Input (Secondary, Mode-Branching Detail) */}
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  {isSearchingBasecamp ? (
-                    <div className="w-4 h-4 border-2 border-[#FF6B35] border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <MapPin className="w-4 h-4 text-stone-400" />
-                  )}
+                <div className="relative flex items-center">
+                  <div className="absolute left-3 flex items-center justify-center pointer-events-none z-10">
+                    {isSearchingBasecamp ? (
+                      <div className="w-3.5 h-3.5 border-2 border-[#FF6B2C] border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <MapPin className="w-3.5 h-3.5 text-stone-400" />
+                    )}
+                  </div>
+                  <input
+                    type="text"
+                    value={basecamp}
+                    onChange={handleBasecampChange}
+                    onFocus={() => { if (basecampSuggestions.length > 0) setShowBasecampDropdown(true); }}
+                    onBlur={() => setTimeout(() => setShowBasecampDropdown(false), 200)}
+                    placeholder="Where are you staying? (Optional basecamp hotel)"
+                    className="w-full py-2.5 pl-9 pr-3 rounded-xl bg-stone-50/70 hover:bg-white focus:bg-white border border-stone-200/80 focus:border-[#FF6B2C] focus:ring-2 focus:ring-[#FF6B2C]/15 text-xs sm:text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none shadow-2xs transition-all duration-150 font-medium"
+                  />
                 </div>
-                <input
-                  type="text"
-                  value={basecamp}
-                  onChange={handleBasecampChange}
-                  onFocus={() => { if (basecampSuggestions.length > 0) setShowBasecampDropdown(true); }}
-                  onBlur={() => setTimeout(() => setShowBasecampDropdown(false), 200)}
-                  placeholder="Where are you staying? (e.g. Hotel Artemide, Rome)"
-                  className="w-full py-3.5 pl-11 pr-4 rounded-xl bg-white border border-stone-300 focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 text-sm md:text-base text-stone-900 placeholder:text-stone-400 focus:outline-none shadow-sm transition-all duration-150 font-medium"
-                />
                 
                 {/* Autocomplete Dropdown */}
                 {showBasecampDropdown && (
-                  <div className="absolute z-50 w-full mt-2 bg-white border border-stone-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-stone-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
                     {basecampSuggestions.map((place) => (
                       <div
                         key={place.place_id}
-                        className="px-4 py-3 hover:bg-stone-50 cursor-pointer border-b border-stone-100 last:border-0 transition-colors"
+                        className="px-4 py-2.5 hover:bg-stone-50 cursor-pointer border-b border-stone-100 last:border-0 transition-colors"
                         onClick={() => {
                           setBasecamp(place.name || place.display_name.split(',')[0]);
                           setShowBasecampDropdown(false);
                         }}
                       >
-                        <div className="font-semibold text-stone-800 text-sm">{place.name || place.display_name.split(',')[0]}</div>
-                        <div className="text-xs text-stone-500 truncate mt-0.5">{place.display_name}</div>
+                        <div className="font-semibold text-stone-800 text-xs sm:text-sm">{place.name || place.display_name.split(',')[0]}</div>
+                        <div className="text-[11px] text-stone-500 truncate mt-0.5">{place.display_name}</div>
                       </div>
                     ))}
                   </div>
                 )}
-                <p className="text-xs text-stone-500 mt-1.5 leading-relaxed font-sans">
-                  Already booked a place to stay? Tell us and we'll route your itinerary around it. Not sure yet? Leave this blank — we'll help you pick one later.
-                </p>
+
+                {/* Structured Micro-Format Helper & Live Mode Indicator */}
+                <AnimatePresence mode="wait">
+                  {basecamp && basecamp.trim() ? (
+                    <motion.div
+                      key="active-basecamp-mode"
+                      initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                      transition={{ duration: 0.15 }}
+                      className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-[11px] font-bold shadow-2xs"
+                    >
+                      <span className="w-3.5 h-3.5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[9px] font-black shrink-0">✓</span>
+                      <span>Basecamp mode: We'll optimize your itinerary around <strong className="font-extrabold text-emerald-950">{basecamp.trim()}</strong></span>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="undecided-mode-helper"
+                      initial={{ opacity: 0, y: -2 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -2 }}
+                      transition={{ duration: 0.15 }}
+                      className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[11px] font-sans text-stone-500"
+                    >
+                      <span className="inline-flex items-center gap-1">
+                        <span>🏨</span>
+                        <span className="font-semibold text-stone-700">Have a hotel?</span> We'll route around it.
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <span>🎲</span>
+                        <span className="font-semibold text-stone-600">Not sure yet?</span> We'll help you pick one later.
+                      </span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Vibe Enhancers */}
@@ -1344,7 +1378,7 @@ export default function PlannerSidebar({
                   </span>
                   <span className="text-[11px] text-stone-500 font-normal">Click to toggle</span>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {[
                     "➕ Hidden Local Gems",
                     "➕ Michelin & Street Food",
@@ -1360,10 +1394,10 @@ export default function PlannerSidebar({
                         key={idx}
                         type="button"
                         onClick={() => toggleVibeEnhancer(tag)}
-                        className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all duration-150 cursor-pointer active:scale-95 flex items-center gap-1.5 ${
+                        className={`px-3 py-1 rounded-full text-xs font-bold border transition-all duration-150 cursor-pointer active:scale-95 flex items-center gap-1 ${
                           active
-                            ? 'bg-[#FF6B2C] text-white border-[#FF6B2C] shadow-sm ring-2 ring-[#FF6B2C]/30 scale-102 font-extrabold'
-                            : 'bg-white hover:bg-[#FF6B2C]/10 hover:text-[#FF6B2C] text-stone-700 border-stone-200/60 shadow-2xs'
+                            ? 'bg-[#FF6B2C] text-white border-[#FF6B2C] shadow-xs ring-2 ring-[#FF6B2C]/30 scale-102 font-extrabold'
+                            : 'bg-white hover:bg-[#FF6B2C]/10 hover:text-[#FF6B2C] text-stone-700 border-stone-200/80 shadow-2xs'
                         }`}
                       >
                         {label}
