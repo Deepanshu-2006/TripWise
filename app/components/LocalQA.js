@@ -122,7 +122,7 @@ export default function LocalQA() {
           onClick={() => setIsModalOpen(true)}
           className="group relative px-7 py-3.5 bg-white text-[#F4703C] hover:text-white font-extrabold text-xs font-mono uppercase tracking-[0.15em] rounded-full shadow-[0_4px_10px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_20px_rgba(244,112,60,0.3)] transition-all duration-500 overflow-hidden border border-[#F4703C]/30 hover:border-transparent hover:-translate-y-0.5"
         >
-          <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-[#F4703C] to-[#E25C27] translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out" />
+          <span className="absolute inset-0 w-full h-full bg-linear-to-r from-[#F4703C] to-[#E25C27] translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out" />
           <span className="relative z-10 flex items-center gap-2">
             Ask a Question
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-0.5 transition-transform">
@@ -138,17 +138,17 @@ export default function LocalQA() {
         {threads.map(thread => {
           const isExpanded = expandedId === thread.id;
           return (
-            <div key={thread.id} className="group/card relative bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(244,112,60,0.15)] hover:-translate-y-1.5 transition-all duration-500 border border-white overflow-hidden">
+            <div key={thread.id} className="group/card relative bg-white/80 backdrop-blur-xl rounded-4xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(244,112,60,0.15)] hover:-translate-y-1.5 transition-all duration-500 border border-white overflow-hidden">
               
               {/* Subtle hover gradient behind card */}
-              <div className="absolute inset-0 bg-gradient-to-br from-[#F4703C]/0 via-transparent to-[#F4703C]/0 group-hover/card:from-[#F4703C]/5 group-hover/card:to-transparent transition-colors duration-500 pointer-events-none" />
+              <div className="absolute inset-0 bg-linear-to-br from-[#F4703C]/0 via-transparent to-[#F4703C]/0 group-hover/card:from-[#F4703C]/5 group-hover/card:to-transparent transition-colors duration-500 pointer-events-none" />
               
               {/* Question Row */}
               <div 
                 onClick={() => toggleExpand(thread.id)}
                 className="relative z-10 p-6 md:p-8 cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-6"
               >
-                <div className="flex-grow pr-4">
+                <div className="grow pr-4">
                   <div className="flex items-center gap-3 mb-4">
                     {/* Glowing Destination Pill */}
                     <div className="inline-flex items-center gap-1.5 bg-white shadow-sm border border-stone-100 text-stone-600 px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-widest group-hover/card:border-[#F4703C]/30 transition-colors">
@@ -194,27 +194,27 @@ export default function LocalQA() {
                         <div key={reply.id} className="relative group/reply">
                           {/* Top connector for the very first reply to connect to the question */}
                           {index === 0 && (
-                            <div className="absolute left-[-28px] md:left-[-32px] top-[-24px] md:top-[-32px] h-[40px] md:h-[48px] w-px bg-stone-200" />
+                            <div className="absolute -left-7 md:-left-8 -top-6 md:-top-8 h-10 md:h-12 w-px bg-stone-200" />
                           )}
 
                           {/* Thread connector line going down */}
-                          <div className={`absolute left-[-28px] md:left-[-32px] top-8 w-px ${index === thread.replies.length - 1 ? 'bottom-[-24px] bg-stone-200' : 'bottom-[-40px] bg-stone-200'}`} />
+                          <div className={`absolute -left-7 md:-left-8 top-8 w-px ${index === thread.replies.length - 1 ? '-bottom-6 bg-stone-200' : '-bottom-10 bg-stone-200'}`} />
                           
                           {/* Avatar connector curve */}
-                          <div className="absolute left-[-28px] md:left-[-32px] top-4 w-6 md:w-8 h-4 border-l border-b border-stone-200 rounded-bl-xl" />
+                          <div className="absolute -left-7 md:-left-8 top-4 w-6 md:w-8 h-4 border-l border-b border-stone-200 rounded-bl-xl" />
                           
                           <div className="flex items-start gap-3 md:gap-4">
                             {/* Author Avatar */}
-                            <div className="relative shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-stone-200 to-stone-300 flex items-center justify-center text-stone-600 font-bold font-serif text-sm border-2 border-white shadow-sm z-10 group-hover/reply:shadow-md transition-shadow">
+                            <div className="relative shrink-0 w-8 h-8 rounded-full bg-linear-to-br from-stone-200 to-stone-300 flex items-center justify-center text-stone-600 font-bold font-serif text-sm border-2 border-white shadow-sm z-10 group-hover/reply:shadow-md transition-shadow">
                               {reply.author.charAt(0)}
                             </div>
                             
                             {/* Message Bubble */}
-                            <div className="flex-grow bg-white border border-stone-100 p-4 md:p-5 rounded-2xl rounded-tl-sm shadow-[0_2px_10px_rgba(0,0,0,0.02)] group-hover/reply:shadow-[0_8px_20px_rgba(0,0,0,0.06)] transition-all duration-300 relative group/bubble">
+                            <div className="grow bg-white border border-stone-100 p-4 md:p-5 rounded-2xl rounded-tl-sm shadow-[0_2px_10px_rgba(0,0,0,0.02)] group-hover/reply:shadow-[0_8px_20px_rgba(0,0,0,0.06)] transition-all duration-300 relative group/bubble">
                               <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-2">
                                 <span className="font-bold text-sm text-stone-900">{reply.author}</span>
                                 {reply.isVerified && (
-                                  <span className="bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 border border-emerald-200/60 px-2 py-0.5 rounded-full flex items-center gap-1.5 text-[9px] font-mono font-bold uppercase tracking-widest shadow-sm">
+                                  <span className="bg-linear-to-r from-emerald-50 to-teal-50 text-emerald-700 border border-emerald-200/60 px-2 py-0.5 rounded-full flex items-center gap-1.5 text-[9px] font-mono font-bold uppercase tracking-widest shadow-sm">
                                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500">
                                       <polyline points="20 6 9 17 4 12"></polyline>
                                     </svg>
@@ -241,8 +241,8 @@ export default function LocalQA() {
                       
                       <div className="relative pt-2">
                         {/* Connector to reply input */}
-                        <div className="absolute left-[-28px] md:left-[-32px] top-0 h-1/2 w-px bg-stone-200" />
-                        <div className="absolute left-[-28px] md:left-[-32px] top-1/2 w-6 md:w-8 h-px border-b border-stone-200" />
+                        <div className="absolute -left-7 md:-left-8 top-0 h-1/2 w-px bg-stone-200" />
+                        <div className="absolute -left-7 md:-left-8 top-1/2 w-6 md:w-8 h-px border-b border-stone-200" />
                         
                         <div className="flex items-center gap-3 md:gap-4">
                           {/* User Avatar Placeholder */}
@@ -254,7 +254,7 @@ export default function LocalQA() {
                           </div>
                           
                           {/* Real Input Field */}
-                          <div className="flex-grow relative flex items-center group/input">
+                          <div className="grow relative flex items-center group/input">
                             <input 
                               type="text" 
                               value={replyInputs[thread.id] || ''}
@@ -269,7 +269,7 @@ export default function LocalQA() {
                               onClick={() => submitReply(thread.id)}
                               className={`absolute right-1.5 w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F4703C] focus:ring-offset-1 ${replyInputs[thread.id]?.trim() ? 'bg-[#F4703C] text-white hover:bg-[#E25C27]' : 'bg-stone-100 text-stone-400 hover:bg-stone-200'}`}
                             >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="translate-x-[1px] translate-y-[1px]">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="translate-x-px translate-y-px">
                                 <line x1="22" y1="2" x2="11" y2="13"></line>
                                 <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                               </svg>

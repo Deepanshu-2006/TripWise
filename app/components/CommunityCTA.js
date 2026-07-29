@@ -70,7 +70,7 @@ export default function CommunityCTA() {
       <div className="bg-[#FAF6F0] py-24 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto">
           {/* Dark Container */}
-          <div className="relative rounded-[2rem] overflow-hidden bg-[#1E1C1A] px-8 py-16 md:px-16 md:py-24 shadow-2xl border border-stone-800">
+          <div className="relative rounded-4xl overflow-hidden bg-[#1E1C1A] px-8 py-16 md:px-16 md:py-24 shadow-2xl border border-stone-800">
             
             {/* Background Soft Collage (Real Trips) */}
             <div className="absolute inset-0 pointer-events-none opacity-30 overflow-hidden hidden md:block">
@@ -79,8 +79,8 @@ export default function CommunityCTA() {
               <img src="https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&q=80&w=600" className="absolute top-20 right-80 w-64 h-80 object-cover rounded-3xl rotate-[-10deg] blur-sm" alt="Travel 3" />
               
               {/* Gradient Overlays for smooth blending */}
-              <div className="absolute inset-0 bg-gradient-to-r from-[#1E1C1A] via-[#1E1C1A]/95 to-transparent"></div>
-              <div className="absolute inset-0 bg-gradient-to-b from-[#1E1C1A]/50 via-transparent to-[#1E1C1A]/50"></div>
+              <div className="absolute inset-0 bg-linear-to-r from-[#1E1C1A] via-[#1E1C1A]/95 to-transparent"></div>
+              <div className="absolute inset-0 bg-linear-to-b from-[#1E1C1A]/50 via-transparent to-[#1E1C1A]/50"></div>
             </div>
 
             <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-8 items-center">
@@ -213,9 +213,9 @@ export default function CommunityCTA() {
                                   : 'bg-stone-50/80 hover:bg-stone-100 hover:scale-[1.01]'
                               }`}
                             >
-                              <div className="relative w-[5.5rem] h-16 rounded-[0.8rem] overflow-hidden shrink-0 shadow-sm">
+                              <div className="relative w-22 h-16 rounded-[0.8rem] overflow-hidden shrink-0 shadow-sm">
                                 <img src={trip.imageUrl || 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&q=80&w=300&h=300'} alt={trip.destinationName} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                                <div className="absolute inset-0 bg-linear-to-t from-black/30 to-transparent"></div>
                               </div>
                               <div className="flex-1 min-w-0">
                                 <h4 className={`font-sans font-extrabold text-lg truncate transition-colors duration-400 ${isSelected ? 'text-white' : 'text-[#1E1C1A]'}`}>
@@ -293,7 +293,7 @@ export default function CommunityCTA() {
                       </div>
                     </div>
                     <h4 className="text-3xl font-serif text-[#1E1C1A] mb-3">It's Out There!</h4>
-                    <p className="text-stone-500 font-sans text-[15px] max-w-[280px] mx-auto leading-relaxed">
+                    <p className="text-stone-500 font-sans text-[15px] max-w-70 mx-auto leading-relaxed">
                       Your amazing itinerary is now live. Travelers around the world can view and be inspired by your trip.
                     </p>
                   </motion.div>

@@ -163,9 +163,9 @@ const getDayDateString = (startDateStr, dayIndex) => {
 
 export default function PlannerSidebar({
   currentStep = 'destination',
-  onStepChange = () => {},
+  onStepChange = () => { },
   tripId = null,
-  onTripIdChange = () => {},
+  onTripIdChange = () => { },
   rawPrompt = "",
   onPromptChange,
   extracted = {
@@ -201,7 +201,7 @@ export default function PlannerSidebar({
   const collaboration = useCollaboration();
   const realtimeItinerary = collaboration?.itinerary || itinerary;
   const activeUsers = collaboration?.activeUsers || [];
-  
+
   const onUpdateItinerary = useCallback(async (newItin) => {
     if (collaboration?.setItinerary) {
       collaboration.setItinerary(newItin);
@@ -210,7 +210,7 @@ export default function PlannerSidebar({
       await originalOnUpdateItinerary(newItin);
     }
   }, [collaboration, originalOnUpdateItinerary]);
-  
+
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [collaboratorsList, setCollaboratorsList] = useState([]);
 
@@ -245,12 +245,12 @@ export default function PlannerSidebar({
 
   const handleDetailedItineraryClick = async () => {
     if (isUnfoldingMap) return;
-    
+
     // Start pre-fetching the screenshot immediately
     if (!cachedScreenshot.current) {
-      htmlToImage.toJpeg(document.body, { 
+      htmlToImage.toJpeg(document.body, {
         quality: 0.9,
-        width: window.innerWidth, 
+        width: window.innerWidth,
         height: window.innerHeight,
         pixelRatio: window.devicePixelRatio || 1,
         backgroundColor: '#F7F5F2'
@@ -270,20 +270,20 @@ export default function PlannerSidebar({
 
     setIsUnfoldingMap(true);
     await new Promise(r => setTimeout(r, 2000));
-    
+
     try {
       let dataUrl = cachedScreenshot.current;
       if (!dataUrl) {
-        dataUrl = await htmlToImage.toJpeg(document.body, { 
+        dataUrl = await htmlToImage.toJpeg(document.body, {
           quality: 0.9,
-          width: window.innerWidth, 
+          width: window.innerWidth,
           height: window.innerHeight,
           pixelRatio: window.devicePixelRatio || 1,
           backgroundColor: '#F7F5F2'
         });
       }
       cachedScreenshot.current = null;
-      
+
       const overlay = document.createElement('div');
       overlay.style.position = 'fixed';
       overlay.style.inset = '0';
@@ -312,7 +312,7 @@ export default function PlannerSidebar({
       card.style.transition = 'transform 1500ms cubic-bezier(0.25, 1, 0.5, 1), opacity 1500ms ease-in';
       card.style.willChange = 'transform, opacity';
       card.style.boxShadow = '20px 0 50px rgba(0,0,0,0.5)';
-      
+
       overlay.appendChild(card);
       document.body.appendChild(overlay);
 
@@ -416,11 +416,11 @@ export default function PlannerSidebar({
   // Highly robust scroll-spy to sync map and active stop during user scroll
   useEffect(() => {
     if (typeof document === 'undefined' || !itinerary?.days?.[selectedDayIndex]?.activities) return;
-    
+
     // Find the scrollable container. We search up from one of the cards to find the nearest overflow-y-auto parent
     const firstCard = document.querySelector(`[data-day-idx="${selectedDayIndex}"]`);
     if (!firstCard) return;
-    
+
     let scrollParent = firstCard.parentElement;
     while (scrollParent && scrollParent !== document.body) {
       const style = window.getComputedStyle(scrollParent);
@@ -429,23 +429,23 @@ export default function PlannerSidebar({
       }
       scrollParent = scrollParent.parentElement;
     }
-    
+
     // Fallback to window if no scroll parent found
     const target = (scrollParent && scrollParent !== document.body) ? scrollParent : window;
 
     let rafId = null;
-    
+
     const handleScroll = () => {
       if (isProgrammaticScrollRef.current) return;
-      
+
       if (rafId) cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => {
         const cards = document.querySelectorAll(`[data-day-idx="${selectedDayIndex}"]`);
         if (cards.length === 0) return;
-        
+
         let bestStopNum = null;
         let minDistance = Infinity;
-        
+
         // We consider the "active zone" to be around 25% down the viewport/container height
         const targetY = target === window ? window.innerHeight * 0.25 : scrollParent.getBoundingClientRect().top + (scrollParent.clientHeight * 0.25);
 
@@ -476,7 +476,7 @@ export default function PlannerSidebar({
     target.addEventListener('scroll', handleScroll, { passive: true });
     // Also run once initially to set correct state
     handleScroll();
-    
+
     return () => {
       target.removeEventListener('scroll', handleScroll);
       if (rafId) cancelAnimationFrame(rafId);
@@ -631,9 +631,9 @@ export default function PlannerSidebar({
   const basecampSearchTimeoutRef = useRef(null);
 
   useEffect(() => {
-     if (itinerary?.prompt && !userPromptInput) {
-        setUserPromptInput(itinerary.prompt);
-     }
+    if (itinerary?.prompt && !userPromptInput) {
+      setUserPromptInput(itinerary.prompt);
+    }
   }, [itinerary?.prompt, userPromptInput]);
 
   // State 2 Form Selections
@@ -642,7 +642,7 @@ export default function PlannerSidebar({
   );
   const [selectedBudget, setSelectedBudget] = useState(() => itinerary?.preferences?.budget || extracted?.budget || 'standard');
   const [selectedPace, setSelectedPace] = useState(() => itinerary?.preferences?.pace || extracted?.travelStyle || 'balanced');
-  
+
   const [startDate, setStartDate] = useState(() => itinerary?.startDate || '');
   const [endDate, setEndDate] = useState(() => itinerary?.endDate || '');
 
@@ -749,13 +749,13 @@ export default function PlannerSidebar({
       const searchUrl = `https://nominatim.openstreetmap.org/search?q=hotel+${encodeURIComponent(query)}&format=json&limit=8`;
       const res = await fetch(searchUrl);
       const data = await res.json();
-      
+
       // Filter strictly for accommodations to ensure it only shows hotels
-      const hotels = data.filter(d => 
-        ['hotel', 'guest_house', 'hostel', 'motel', 'apartment'].includes(d.type) || 
+      const hotels = data.filter(d =>
+        ['hotel', 'guest_house', 'hostel', 'motel', 'apartment'].includes(d.type) ||
         d.class === 'tourism'
       );
-      
+
       const finalSuggestions = hotels.length > 0 ? hotels : data;
       setBasecampSuggestions(finalSuggestions);
       setShowBasecampDropdown(finalSuggestions.length > 0);
@@ -784,7 +784,7 @@ export default function PlannerSidebar({
     const currentDays = [...itinerary.days];
     const currentDay = { ...currentDays[selectedDayIndex] };
     const currentActivities = [...(currentDay.activities || [])];
-    
+
     const newStop = {
       time: newStopTime || '06:00 PM',
       title: newStopTitle.trim(),
@@ -834,7 +834,7 @@ export default function PlannerSidebar({
     // Toggle logic: if clicking the same vote type, clear it (0)
     const newVote = activity.userVote === voteType ? 0 : voteType;
     activity.userVote = newVote;
-    
+
     currentActivities[activityIdx] = activity;
     currentDay.activities = currentActivities;
     currentDays[dayIdx] = currentDay;
@@ -857,9 +857,9 @@ export default function PlannerSidebar({
   };
 
   // Check if confirmation state is needed
-  const isMissingRequiredFields = 
-    extracted?.duration == null || 
-    extracted?.budget == null || 
+  const isMissingRequiredFields =
+    extracted?.duration == null ||
+    extracted?.budget == null ||
     extracted?.travelStyle == null;
 
   const startProgressTransition = useCallback((selections) => {
@@ -940,19 +940,19 @@ export default function PlannerSidebar({
         if (isMounted) {
           // Optimistic save of step 1 (Destination)
           const partialData = {
-              ...(itinerary || {}),
-              lastCompletedStep: 'destination',
-              prompt: userPromptInput
+            ...(itinerary || {}),
+            lastCompletedStep: 'destination',
+            prompt: userPromptInput
           };
           const destName = parsedIntent?.destination || userPromptInput || "Draft Trip";
           if (tripId) {
-              updateTrip(tripId, destName, partialData).catch(e => console.error(e));
+            updateTrip(tripId, destName, partialData).catch(e => console.error(e));
           } else {
-              saveTrip(destName, partialData).then(res => {
-                  if (res && res.trip) onTripIdChange(res.trip.id);
-              }).catch(e => console.error(e));
+            saveTrip(destName, partialData).then(res => {
+              if (res && res.trip) onTripIdChange(res.trip.id);
+            }).catch(e => console.error(e));
           }
-          
+
           // Always transition smoothly to confirming step after parsing
           setStep('confirming');
         }
@@ -1044,7 +1044,7 @@ export default function PlannerSidebar({
   const handlePromptTextChange = (e) => {
     const newVal = e.target.value;
     setUserPromptInput(newVal);
-    
+
     // Look for X days in the prompt
     const match = newVal.match(/\b(\d+)\s*days?\b/i);
     if (match && match[1]) {
@@ -1063,7 +1063,7 @@ export default function PlannerSidebar({
       start.setDate(start.getDate() + newDays - 1);
       setEndDate(start.toISOString().split('T')[0]);
     }
-    
+
     setUserPromptInput((prev) => {
       const current = prev || "";
       const match = current.match(/\b(\d+)\s*days?\b/i);
@@ -1087,41 +1087,41 @@ export default function PlannerSidebar({
   const handleGenerateClick = () => {
     // Optimistically save that they finished Preferences
     const partialData = {
-        ...(itinerary || {}),
-        lastCompletedStep: 'preferences',
-        prompt: userPromptInput,
-        preferences: {
-            interests: selectedInterests,
-            budget: selectedBudget,
-            pace: selectedPace,
-            basecamp: basecamp
-        },
-        duration: selectedDays,
-        startDate: startDate,
-        endDate: endDate
+      ...(itinerary || {}),
+      lastCompletedStep: 'preferences',
+      prompt: userPromptInput,
+      preferences: {
+        interests: selectedInterests,
+        budget: selectedBudget,
+        pace: selectedPace,
+        basecamp: basecamp
+      },
+      duration: selectedDays,
+      startDate: startDate,
+      endDate: endDate
     };
     const destName = parsedIntent?.destination || userPromptInput || "Draft Trip";
     let activeTripId = tripId;
 
     if (tripId) {
-        updateTrip(tripId, destName, partialData).catch(e => console.error(e));
+      updateTrip(tripId, destName, partialData).catch(e => console.error(e));
     } else {
-        saveTrip(destName, partialData).then(res => {
-            if (res && res.trip) {
-                activeTripId = res.trip.id;
-                onTripIdChange(res.trip.id);
-            }
-        }).catch(e => console.error(e));
+      saveTrip(destName, partialData).then(res => {
+        if (res && res.trip) {
+          activeTripId = res.trip.id;
+          onTripIdChange(res.trip.id);
+        }
+      }).catch(e => console.error(e));
     }
 
     if (trackPrices) {
-        // Activate price tracking baseline in background
-        activateTracking(activeTripId || 'shared-trip', destName, {
-            startDate,
-            trackFlights: true,
-            trackHotels: true,
-            origin: trackOrigin
-        }).catch(e => console.error("Tracking setup error", e));
+      // Activate price tracking baseline in background
+      activateTracking(activeTripId || 'shared-trip', destName, {
+        startDate,
+        trackFlights: true,
+        trackHotels: true,
+        origin: trackOrigin
+      }).catch(e => console.error("Tracking setup error", e));
     }
 
     startProgressTransition({
@@ -1150,7 +1150,7 @@ export default function PlannerSidebar({
     if (lower.includes("rome")) return "Rome, Italy";
     if (lower.includes("paris")) return "Paris, France";
     if (lower.includes("swiss") || lower.includes("alps")) return "Swiss Alps, Switzerland";
-    
+
     const clean = userPromptInput.trim().replace(/^(?:generate\s+)?(?:a\s+)?(?:trip\s+to\s+|trip\s+for\s+|visit\s+|for\s+)/i, "").trim();
     if (clean.length > 2 && clean.split(/\s+/).length <= 4) {
       return clean.charAt(0).toUpperCase() + clean.slice(1);
@@ -1170,7 +1170,7 @@ export default function PlannerSidebar({
   const toggleVibeEnhancer = (tag) => {
     const cleanTag = tag.replace('➕ ', '').replace('✓ ', '').trim();
     const searchPattern = new RegExp(`[,.\\s]*include\\s+${cleanTag.toLowerCase()}[,.\\s]*`, 'gi');
-    
+
     if (isTagActive(tag)) {
       setUserPromptInput((prev) => {
         let updated = prev.replace(searchPattern, ' ').trim();
@@ -1241,34 +1241,31 @@ export default function PlannerSidebar({
             const currentIdx = stepOrder.indexOf(step);
             const isCompleted = currentIdx > idx;
             const isActive = currentIdx === idx;
-            
+
             return (
               <React.Fragment key={s.id}>
                 <div className="flex flex-col items-center gap-1.5 shrink-0">
-                  <div className={`w-6.5 h-6.5 rounded-full flex items-center justify-center text-[10px] font-black transition-all duration-300 ${
-                    isCompleted 
-                      ? 'bg-[#2FA66A] text-white shadow-xs' 
-                      : isActive 
-                      ? 'bg-[#FF6B2C] text-white ring-4 ring-[#FF6B2C]/20 scale-105 shadow-xs' 
-                      : 'bg-stone-200 text-stone-400 border border-stone-300'
-                  }`}>
+                  <div className={`w-6.5 h-6.5 rounded-full flex items-center justify-center text-[10px] font-black transition-all duration-300 ${isCompleted
+                      ? 'bg-[#2FA66A] text-white shadow-xs'
+                      : isActive
+                        ? 'bg-[#FF6B2C] text-white ring-4 ring-[#FF6B2C]/20 scale-105 shadow-xs'
+                        : 'bg-stone-200 text-stone-400 border border-stone-300'
+                    }`}>
                     {isCompleted ? '✓' : idx + 1}
                   </div>
-                  <span className={`text-[9px] font-extrabold uppercase tracking-wider ${
-                    isActive ? 'text-[#FF6B2C]' : isCompleted ? 'text-[#2FA66A]' : 'text-stone-400'
-                  }`}>
+                  <span className={`text-[9px] font-extrabold uppercase tracking-wider ${isActive ? 'text-[#FF6B2C]' : isCompleted ? 'text-[#2FA66A]' : 'text-stone-400'
+                    }`}>
                     {s.label}
                   </span>
                 </div>
                 {idx < 3 && (
                   <div className="flex-1 h-0.5 mx-2 bg-stone-200 -mt-4 relative overflow-hidden rounded-full shrink-0">
-                    <div className={`h-full bg-[#2FA66A] ${
-                      isCompleted 
-                        ? 'w-full' 
-                        : isActive 
-                        ? 'w-1/2 animate-pulse' 
-                        : 'w-0'
-                    } transition-all duration-500`} />
+                    <div className={`h-full bg-[#2FA66A] ${isCompleted
+                        ? 'w-full'
+                        : isActive
+                          ? 'w-1/2 animate-pulse'
+                          : 'w-0'
+                      } transition-all duration-500`} />
                   </div>
                 )}
               </React.Fragment>
@@ -1314,7 +1311,7 @@ export default function PlannerSidebar({
                     className="w-full py-2.5 pl-9 pr-3 rounded-xl bg-stone-50/70 hover:bg-white focus:bg-white border border-stone-200/80 focus:border-[#FF6B2C] focus:ring-2 focus:ring-[#FF6B2C]/15 text-xs sm:text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none shadow-2xs transition-all duration-150 font-medium"
                   />
                 </div>
-                
+
                 {/* Autocomplete Dropdown */}
                 {showBasecampDropdown && (
                   <div className="absolute z-50 w-full mt-1 bg-white border border-stone-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
@@ -1394,11 +1391,10 @@ export default function PlannerSidebar({
                         key={idx}
                         type="button"
                         onClick={() => toggleVibeEnhancer(tag)}
-                        className={`px-3 py-1 rounded-full text-xs font-bold border transition-all duration-150 cursor-pointer active:scale-95 flex items-center gap-1 ${
-                          active
+                        className={`px-3 py-1 rounded-full text-xs font-bold border transition-all duration-150 cursor-pointer active:scale-95 flex items-center gap-1 ${active
                             ? 'bg-[#FF6B2C] text-white border-[#FF6B2C] shadow-xs ring-2 ring-[#FF6B2C]/30 scale-102 font-extrabold'
                             : 'bg-white hover:bg-[#FF6B2C]/10 hover:text-[#FF6B2C] text-stone-700 border-stone-200/80 shadow-2xs'
-                        }`}
+                          }`}
                       >
                         {label}
                       </button>
@@ -1407,11 +1403,11 @@ export default function PlannerSidebar({
                 </div>
               </div>
 
-            {/* Example Prompts styled as links list */}
-            <div className="space-y-2.5 pt-4 border-t border-stone-200/60">
-              <span className="text-xs font-bold uppercase tracking-wider text-stone-500 block">
-                💡 Quick Start Ideas (Text Templates):
-              </span>
+              {/* Example Prompts styled as links list */}
+              <div className="space-y-2.5 pt-4 border-t border-stone-200/60">
+                <span className="text-xs font-bold uppercase tracking-wider text-stone-500 block">
+                  💡 Quick Start Ideas (Text Templates):
+                </span>
                 <div className="flex flex-col gap-2">
                   {[
                     { text: "5 days in Kyoto: temples, gardens & street food", emoji: "🌸" },
@@ -1455,17 +1451,16 @@ export default function PlannerSidebar({
                     setStep('parsing');
                   }
                 }}
-                className={`group relative w-full py-4 px-6 rounded-2xl font-extrabold text-base transition-all duration-300 flex items-center justify-center gap-2.5 overflow-hidden ${
-                  userPromptInput.trim()
+                className={`group relative w-full py-4 px-6 rounded-2xl font-extrabold text-base transition-all duration-300 flex items-center justify-center gap-2.5 overflow-hidden ${userPromptInput.trim()
                     ? 'bg-linear-to-r from-[#FF6B2C] to-[#E55A20] text-white shadow-[0_8px_20px_rgba(255,107,44,0.4)] hover:shadow-[0_12px_30px_rgba(255,107,44,0.6)] hover:-translate-y-1 active:scale-[0.98] active:translate-y-0 cursor-pointer border border-[#FF854F]/30'
                     : 'bg-stone-200 text-stone-400 cursor-not-allowed opacity-60 border border-stone-300/40'
-                }`}
+                  }`}
               >
                 {/* Hover Shine Effect */}
                 {userPromptInput.trim() && (
                   <div className="absolute inset-0 w-full h-full bg-linear-to-r from-transparent via-white/30 to-transparent -skew-x-12 translate-x-[-150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out" />
                 )}
-                
+
                 <span className="relative z-10 tracking-wide drop-shadow-sm text-lg">Plan My Trip</span>
                 <div className="relative z-10 transition-transform duration-300 group-hover:translate-x-2">
                   <ArrowRightIcon />
@@ -1528,11 +1523,10 @@ export default function PlannerSidebar({
                       key={item.id}
                       type="button"
                       onClick={() => toggleInterest(item.id)}
-                      className={`flex items-center gap-2 px-3.5 py-2 rounded-full text-xs md:text-sm font-semibold transition-all duration-150 cursor-pointer shadow-2xs hover:scale-[1.01] active:scale-98 ${
-                        isActive
+                      className={`flex items-center gap-2 px-3.5 py-2 rounded-full text-xs md:text-sm font-semibold transition-all duration-150 cursor-pointer shadow-2xs hover:scale-[1.01] active:scale-98 ${isActive
                           ? 'bg-[#FF6B2C]/10 border-2 border-[#FF6B2C] text-stone-900 font-extrabold shadow-sm'
                           : 'bg-white border border-stone-200 text-stone-650 hover:border-stone-400 font-medium'
-                      }`}
+                        }`}
                     >
                       <span className={isActive ? 'text-[#FF6B2C]' : 'text-stone-400'}>
                         {item.icon}
@@ -1556,11 +1550,10 @@ export default function PlannerSidebar({
                     <div
                       key={item.id}
                       onClick={() => setSelectedBudget(item.id)}
-                      className={`w-full p-3.5 rounded-xl cursor-pointer transition-all duration-150 text-left flex flex-col shadow-2xs ${
-                        isSelected
+                      className={`w-full p-3.5 rounded-xl cursor-pointer transition-all duration-150 text-left flex flex-col shadow-2xs ${isSelected
                           ? 'bg-(--accent-orange-tint)/30 border-2 border-accent-orange'
                           : 'bg-bg-white border border-[rgba(28,27,27,0.1)] hover:bg-[#FFFDFB]'
-                      }`}
+                        }`}
                     >
                       <span className="text-sm md:text-base font-semibold text-(--foreground)">
                         {item.title}
@@ -1587,11 +1580,10 @@ export default function PlannerSidebar({
                       key={item.id}
                       type="button"
                       onClick={() => setSelectedPace(item.id)}
-                      className={`py-2 px-2 rounded-lg text-xs md:text-sm transition-all duration-150 cursor-pointer text-center ${
-                        isActive
+                      className={`py-2 px-2 rounded-lg text-xs md:text-sm transition-all duration-150 cursor-pointer text-center ${isActive
                           ? 'bg-accent-orange-tint text-text-primary font-semibold shadow-2xs'
                           : 'bg-transparent text-secondary-text hover:text-(--foreground) font-medium'
-                      }`}
+                        }`}
                     >
                       {item.label}
                     </button>
@@ -1625,7 +1617,7 @@ export default function PlannerSidebar({
                   +
                 </button>
               </div>
-              
+
               <div className="flex items-center justify-between mb-2.5">
                 <label className="block text-xs font-semibold uppercase tracking-wider text-secondary-text">
                   Travel Dates (Optional)
@@ -1654,7 +1646,7 @@ export default function PlannerSidebar({
               {/* Price Tracking Opt-In */}
               <div className="mt-4 p-4 rounded-xl bg-[#FAF6F0] border border-[#E6DFD5]">
                 <label className="flex items-start justify-between cursor-pointer group">
-                  <div className="flex flex-col gap-0.5 max-w-[200px]">
+                  <div className="flex flex-col gap-0.5 max-w-50">
                     <span className="text-sm font-bold text-[#1E1C1A] group-hover:text-[#FF6B2C] transition-colors">Track Prices</span>
                     <span className="text-xs text-[#7A7268]">Monitor flight & hotel prices for drops</span>
                   </div>
@@ -1663,7 +1655,7 @@ export default function PlannerSidebar({
                     <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${trackPrices ? 'translate-x-4' : 'translate-x-0'}`} />
                   </div>
                 </label>
-                
+
                 <AnimatePresence>
                   {trackPrices && (
                     <motion.div
@@ -1673,8 +1665,8 @@ export default function PlannerSidebar({
                       className="overflow-hidden"
                     >
                       <label className="block text-[10px] font-bold text-[#7A7268] uppercase tracking-wider mb-1">Origin Airport</label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         value={trackOrigin}
                         onChange={(e) => setTrackOrigin(e.target.value.toUpperCase())}
                         maxLength={3}
@@ -1762,9 +1754,8 @@ export default function PlannerSidebar({
                                         }}
                                       />
                                     )}
-                                    <span className={`relative transition-colors duration-300 ${
-                                      isSelected ? 'text-white font-semibold' : 'text-[#5F5E5A] hover:text-[#1C1B1B] font-medium'
-                                    }`}>
+                                    <span className={`relative transition-colors duration-300 ${isSelected ? 'text-white font-semibold' : 'text-[#5F5E5A] hover:text-[#1C1B1B] font-medium'
+                                      }`}>
                                       {getDayDateString(itinerary?.startDate || startDate, idx) || `Day ${idx + 1}`}
                                     </span>
                                   </button>
@@ -1830,11 +1821,10 @@ export default function PlannerSidebar({
                   })()}
 
                   {/* Unified Floating Modify / Copilot Drawer with Smooth Pop Animation */}
-                  <div className={`w-full transition-all duration-500 ease-in-out overflow-hidden ${
-                    showCopilotDrawer || isRefiningDay || refineExplanation
+                  <div className={`w-full transition-all duration-500 ease-in-out overflow-hidden ${showCopilotDrawer || isRefiningDay || refineExplanation
                       ? 'max-h-115 opacity-100 mt-0.5 mb-1'
                       : 'max-h-0 opacity-0 mt-0 mb-0 pointer-events-none'
-                  }`}>
+                    }`}>
                     <div className="w-full bg-linear-to-r from-[#1C1B1B] via-[#2A2626] to-[#1C1B1B] p-3 rounded-2xl shadow-lg border border-[rgba(255,255,255,0.12)] flex flex-col gap-2.5 relative">
                       {/* Header & Mode Tabs */}
                       <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-2.5">
@@ -1842,11 +1832,10 @@ export default function PlannerSidebar({
                           <button
                             type="button"
                             onClick={() => setActiveDrawerTab('ai')}
-                            className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer flex items-center gap-1 ${
-                              activeDrawerTab === 'ai'
+                            className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer flex items-center gap-1 ${activeDrawerTab === 'ai'
                                 ? 'bg-[#EC6735] text-white shadow-xs'
                                 : 'text-stone-300 hover:text-white'
-                            }`}
+                              }`}
                           >
                             <span>✨</span>
                             <span>AI Copilot</span>
@@ -1854,11 +1843,10 @@ export default function PlannerSidebar({
                           <button
                             type="button"
                             onClick={() => setActiveDrawerTab('manual')}
-                            className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer flex items-center gap-1 ${
-                              activeDrawerTab === 'manual'
+                            className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer flex items-center gap-1 ${activeDrawerTab === 'manual'
                                 ? 'bg-[#EC6735] text-white shadow-xs'
                                 : 'text-stone-300 hover:text-white'
-                            }`}
+                              }`}
                           >
                             <span>➕</span>
                             <span>Add Stop</span>
@@ -1890,11 +1878,10 @@ export default function PlannerSidebar({
                               type="button"
                               onClick={() => triggerRefineDay()}
                               disabled={isRefiningDay || !refinePromptInput.trim()}
-                              className={`h-8 px-4 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${
-                                isRefiningDay || !refinePromptInput.trim()
+                              className={`h-8 px-4 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${isRefiningDay || !refinePromptInput.trim()
                                   ? 'bg-white/10 text-stone-400 cursor-not-allowed'
                                   : 'bg-[#EC6735] text-white hover:bg-[#D95524] shadow-md shadow-[#EC6735]/30 active:scale-95'
-                              }`}
+                                }`}
                             >
                               {isRefiningDay ? (
                                 <>
@@ -1962,11 +1949,10 @@ export default function PlannerSidebar({
                               type="button"
                               onClick={handleAddCustomStop}
                               disabled={!newStopTitle.trim()}
-                              className={`h-8 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 cursor-pointer ${
-                                !newStopTitle.trim()
+                              className={`h-8 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 cursor-pointer ${!newStopTitle.trim()
                                   ? 'bg-white/10 text-stone-400 cursor-not-allowed'
                                   : 'bg-[#EC6735] text-white hover:bg-[#D95524] shadow-md shadow-[#EC6735]/30 active:scale-95'
-                              }`}
+                                }`}
                             >
                               <Plus className="w-3.5 h-3.5" />
                               <span>Insert Stop into Timeline</span>
@@ -2054,26 +2040,24 @@ export default function PlannerSidebar({
                                 handleSelectStop(isSelected ? null : stopNum);
                                 handleHoverStop(stopNum);
                               }}
-                              className={`scroll-mt-40 w-full box-border p-4 rounded-2xl border transition-all duration-300 ease-out flex flex-col gap-3 cursor-pointer select-none relative z-10 ${
-                                dragOverStopIdx === idx
+                              className={`scroll-mt-40 w-full box-border p-4 rounded-2xl border transition-all duration-300 ease-out flex flex-col gap-3 cursor-pointer select-none relative z-10 ${dragOverStopIdx === idx
                                   ? 'border-[#FF6B2C] border-2 bg-[#FFF8F5] scale-[1.02] ring-4 ring-[#FF6B2C]/30 shadow-2xl z-30'
                                   : draggedStopIdx === idx
-                                  ? 'opacity-40 border-dashed border-[#FF6B2C] scale-95'
-                                  : isSelected
-                                  ? 'border-[#EC6735] border-2 bg-[#FFF8F5] shadow-[0_12px_36px_rgba(236,103,53,0.18)] scale-[1.01] z-20'
-                                  : isHovered || hoveredStopIdx === stopNum
-                                  ? 'border-[#FF6B2C] bg-white shadow-[0_12px_28px_rgba(255,107,44,0.16)] -translate-y-1 z-20'
-                                  : 'border-[#ECE8E2] bg-white shadow-2xs hover:border-[#FF6B2C]/60 hover:shadow-md hover:-translate-y-0.5'
-                              }`}
+                                    ? 'opacity-40 border-dashed border-[#FF6B2C] scale-95'
+                                    : isSelected
+                                      ? 'border-[#EC6735] border-2 bg-[#FFF8F5] shadow-[0_12px_36px_rgba(236,103,53,0.18)] scale-[1.01] z-20'
+                                      : isHovered || hoveredStopIdx === stopNum
+                                        ? 'border-[#FF6B2C] bg-white shadow-[0_12px_28px_rgba(255,107,44,0.16)] -translate-y-1 z-20'
+                                        : 'border-[#ECE8E2] bg-white shadow-2xs hover:border-[#FF6B2C]/60 hover:shadow-md hover:-translate-y-0.5'
+                                }`}
                             >
                               <div className="flex items-start gap-3.5">
                                 {/* Stop Number Circle / Timeline Node */}
                                 <div className="flex flex-col items-center shrink-0 pt-0.5">
-                                  <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-black transition-all ${
-                                    isSelected || isHovered
+                                  <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-black transition-all ${isSelected || isHovered
                                       ? 'bg-[#EC6735] text-white border-[#EC6735] shadow-md scale-110'
                                       : 'bg-[#FFF2EA] text-[#FF6B2C] border-[#FF6B2C]/30'
-                                  }`}>
+                                    }`}>
                                     {stopNum}
                                   </div>
                                 </div>
@@ -2104,7 +2088,7 @@ export default function PlannerSidebar({
                                     <h4 className="text-sm sm:text-base font-black text-[#1C1B1B] leading-snug tracking-tight">
                                       {act.title}
                                     </h4>
-                                    
+
                                     {/* Voting Actions */}
                                     <div className="flex items-center gap-1.5 shrink-0 bg-[#F7F5F2] p-1 rounded-lg border border-[#ECE8E2]" onClick={(e) => e.stopPropagation()}>
                                       {(() => {
@@ -2112,21 +2096,21 @@ export default function PlannerSidebar({
                                         const voteData = mockVotes[stopKey] || { up: 0, down: 0, userVote: null };
                                         // Mock base vote for demo if it's not interacted yet
                                         const displayUp = voteData.up + (voteData.userVote === 'up' ? 0 : (idx === 0 ? 1 : 0));
-                                        
+
                                         return (
                                           <>
-                                            <button 
+                                            <button
                                               onClick={() => handleVote(stopKey, 'up')}
-                                              className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md hover:bg-[#FFF8F5] hover:text-[#FF6B2C] transition-colors ${voteData.userVote === 'up' ? 'bg-[#FFF8F5] text-[#FF6B2C]' : 'text-[#5F5E5A]'}`} 
+                                              className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md hover:bg-[#FFF8F5] hover:text-[#FF6B2C] transition-colors ${voteData.userVote === 'up' ? 'bg-[#FFF8F5] text-[#FF6B2C]' : 'text-[#5F5E5A]'}`}
                                               title="Upvote"
                                             >
                                               <ThumbsUp size={12} strokeWidth={2.5} className={voteData.userVote === 'up' ? 'fill-[#FF6B2C]/20' : ''} />
                                               <span className="text-[10px] font-bold">{displayUp > 0 ? displayUp : ''}</span>
                                             </button>
                                             <div className="w-px h-3 bg-[#ECE8E2]"></div>
-                                            <button 
+                                            <button
                                               onClick={() => handleVote(stopKey, 'down')}
-                                              className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md hover:bg-gray-200 transition-colors ${voteData.userVote === 'down' ? 'bg-gray-200 text-[#1C1B1B]' : 'text-[#5F5E5A]'}`} 
+                                              className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md hover:bg-gray-200 transition-colors ${voteData.userVote === 'down' ? 'bg-gray-200 text-[#1C1B1B]' : 'text-[#5F5E5A]'}`}
                                               title="Downvote"
                                             >
                                               <ThumbsDown size={12} strokeWidth={2.5} className={voteData.userVote === 'down' ? 'fill-gray-400/30' : ''} />
@@ -2188,14 +2172,14 @@ export default function PlannerSidebar({
                   </AnimatePresence>
                 </div>
 
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
                   className="pt-4 mb-2 flex flex-col gap-4 border-t border-[#ECE8E2]"
                 >
                   {/* Collaboration Bar */}
-                  <div className="group relative overflow-hidden bg-gradient-to-r from-orange-50/80 via-white to-orange-50/80 p-3.5 sm:p-4 rounded-[1.25rem] border border-orange-200/60 shadow-sm transition-all hover:shadow-md hover:border-orange-300 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+                  <div className="group relative overflow-hidden bg-linear-to-r from-orange-50/80 via-white to-orange-50/80 p-3.5 sm:p-4 rounded-[1.25rem] border border-orange-200/60 shadow-sm transition-all hover:shadow-md hover:border-orange-300 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
                     <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
                       <div className="flex flex-col items-center sm:items-start gap-1 sm:gap-1.5">
                         <div className="flex items-center gap-1.5">
@@ -2205,177 +2189,177 @@ export default function PlannerSidebar({
                         <CollaboratorStack collaborators={collaboratorsList} activeUsers={activeUsers} maxDisplay={4} size="md" />
                       </div>
                     </div>
-                    <button 
-                      onClick={() => setIsInviteModalOpen(true)} 
+                    <button
+                      onClick={() => setIsInviteModalOpen(true)}
                       className="w-full sm:w-auto px-5 py-2.5 text-xs font-bold text-white bg-[#111827] rounded-xl hover:bg-black transition-all shadow-md hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2 group/btn"
                     >
                       <UserPlus size={14} className="group-hover/btn:scale-110 transition-transform" />
                       Invite Friends
                     </button>
                   </div>
-                  
+
                   {/* Action Buttons */}
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    type="button"
-                    onClick={handleDetailedItineraryClick}
-                    className="group w-full sm:w-[48%] h-10 px-4 rounded-2xl font-bold bg-[#F7F5F2] text-[#1C1B1B] hover:bg-[#ECE8E2] transition-colors duration-300 text-xs flex items-center justify-center cursor-pointer z-10 shadow-sm"
-                  >
-                    <AnimatePresence mode="wait">
-                      {isUnfoldingMap ? (
-                        <motion.div
-                          key="loading"
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                          transition={{ duration: 0.2 }}
-                          className="flex items-center gap-1.5 whitespace-nowrap"
-                        >
-                          <SpinnerIcon />
-                          <span>Opening...</span>
-                        </motion.div>
-                      ) : (
-                        <motion.div
-                          key="default"
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                          transition={{ duration: 0.2 }}
-                          className="flex items-center gap-2 whitespace-nowrap"
-                        >
-                          <Map size={16} strokeWidth={2.5} className="text-[#5F5E5A] group-hover:text-[#1C1B1B] transition-colors" />
-                          <span>Detailed Itinerary</span>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.button>
-
-                  <motion.div
-                    whileHover={!isConfirming && !isElevating && itinerary?.status !== 'CONFIRMED' ? { scale: 1.03, y: -2 } : {}}
-                    whileTap={!isConfirming && !isElevating && itinerary?.status !== 'CONFIRMED' ? { scale: 0.97 } : {}}
-                    animate={{ scale: isElevating && !isConfirming && itinerary?.status !== 'CONFIRMED' ? 1.05 : 1 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                    onClick={async () => {
-                        if (itinerary && !isConfirming && !isElevating && itinerary.status !== 'CONFIRMED') {
-                            setIsElevating(true);
-                            await new Promise(r => setTimeout(r, prefersReducedMotion ? 0 : 400));
-                            
-                            setIsConfirming(true);
-                            await new Promise(r => setTimeout(r, prefersReducedMotion ? 150 : 1200));
-                            const confirmedItinerary = { ...itinerary, status: 'CONFIRMED' };
-                            if (onUpdateItinerary) await onUpdateItinerary(confirmedItinerary);
-                            if (typeof window !== 'undefined') window.location.href = '/ai-planner';
-                        }
-                    }}
-                    className={`relative w-full sm:w-[48%] h-10 flex rounded-2xl ${itinerary?.status === 'CONFIRMED' ? '' : 'cursor-pointer group hover:shadow-[0_12px_32px_rgba(255,107,44,0.5)]'} shadow-[0_8px_24px_rgba(255,107,44,0.3)] transition-shadow`}
-                  >
-                    {/* Background Layer: Main (Expands to fill) */}
-                    <motion.div
-                      className="absolute left-0 top-0 h-full rounded-2xl z-0"
-                      initial={itinerary?.status === 'CONFIRMED' ? { width: '100%', backgroundColor: '#10B981', boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)' } : { width: '100%', backgroundColor: '#FF6B2C', boxShadow: '0 8px 24px rgba(255, 107, 44, 0.3)' }}
-                      animate={{
-                        width: isConfirming ? ['50%', '100%'] : '100%',
-                        backgroundColor: (isConfirming || itinerary?.status === 'CONFIRMED') ? '#10B981' : '#FF6B2C',
-                        boxShadow: (isElevating && !isConfirming && itinerary?.status !== 'CONFIRMED') ? '0 16px 32px rgba(255, 107, 44, 0.5)' : (isConfirming || itinerary?.status === 'CONFIRMED') ? '0 8px 24px rgba(16, 185, 129, 0.4)' : '0 8px 24px rgba(255, 107, 44, 0.3)'
-                      }}
-                      transition={{ duration: 1.0, ease: "easeOut" }}
-                    />
-
-                    {/* Background Layer: Tear Away Stub */}
-                    <AnimatePresence>
-                      {isConfirming && (
-                        <motion.div
-                          className="absolute right-0 top-0 h-full w-[50%] bg-[#FF6B2C] rounded-r-2xl z-0"
-                          initial={{ opacity: 1, rotate: 0, x: 0, y: 0, transformOrigin: 'top left' }}
-                          animate={{ opacity: 0, rotate: 12, x: 40, y: -20 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 1.2, ease: "easeOut" }}
-                        />
-                      )}
-                    </AnimatePresence>
-
-                    {/* Flash tear overlay */}
-                    <AnimatePresence>
-                      {isConfirming && !prefersReducedMotion && (
-                        <motion.div
-                          key="flash-tear-effect"
-                          className="absolute z-10 pointer-events-none top-0 bottom-0"
-                          style={{ left: '50%', marginLeft: '-4px' }}
-                          initial={{ opacity: 1 }}
-                          animate={{ opacity: 0 }}
-                          transition={{ duration: 0.2, delay: 0.05 }}
-                        >
-                          <svg height="100%" width="8" viewBox="0 0 8 48" preserveAspectRatio="none" fill="none">
-                            <path d="M0 0 L8 4 L0 8 L8 12 L0 16 L8 20 L0 24 L8 28 L0 32 L8 36 L0 40 L8 44 L0 48" stroke="white" strokeWidth="2" strokeOpacity="0.8" />
-                          </svg>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    {/* Content Overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center gap-2 z-20 text-white font-bold text-xs pointer-events-none px-4">
-                      
-                      {/* Checkmark Icon */}
-                      <motion.div layout className="relative flex items-center justify-center">
-                        {isConfirming && !prefersReducedMotion && (
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      type="button"
+                      onClick={handleDetailedItineraryClick}
+                      className="group w-full sm:w-[48%] h-10 px-4 rounded-2xl font-bold bg-[#F7F5F2] text-[#1C1B1B] hover:bg-[#ECE8E2] transition-colors duration-300 text-xs flex items-center justify-center cursor-pointer z-10 shadow-sm"
+                    >
+                      <AnimatePresence mode="wait">
+                        {isUnfoldingMap ? (
                           <motion.div
-                            className="absolute w-0 h-0 bg-white/40 rounded-full"
-                            initial={{ boxShadow: '0 0 0px 0px rgba(255,255,255,0)' }}
-                            animate={{ boxShadow: ['0 0 0px 0px rgba(255,255,255,0.6)', '0 0 20px 20px rgba(255,255,255,0)'] }}
-                            transition={{ duration: 0.6, delay: 0.3 }}
+                            key="loading"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.2 }}
+                            className="flex items-center gap-1.5 whitespace-nowrap"
+                          >
+                            <SpinnerIcon />
+                            <span>Opening...</span>
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            key="default"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.2 }}
+                            className="flex items-center gap-2 whitespace-nowrap"
+                          >
+                            <Map size={16} strokeWidth={2.5} className="text-[#5F5E5A] group-hover:text-[#1C1B1B] transition-colors" />
+                            <span>Detailed Itinerary</span>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.button>
+
+                    <motion.div
+                      whileHover={!isConfirming && !isElevating && itinerary?.status !== 'CONFIRMED' ? { scale: 1.03, y: -2 } : {}}
+                      whileTap={!isConfirming && !isElevating && itinerary?.status !== 'CONFIRMED' ? { scale: 0.97 } : {}}
+                      animate={{ scale: isElevating && !isConfirming && itinerary?.status !== 'CONFIRMED' ? 1.05 : 1 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                      onClick={async () => {
+                        if (itinerary && !isConfirming && !isElevating && itinerary.status !== 'CONFIRMED') {
+                          setIsElevating(true);
+                          await new Promise(r => setTimeout(r, prefersReducedMotion ? 0 : 400));
+
+                          setIsConfirming(true);
+                          await new Promise(r => setTimeout(r, prefersReducedMotion ? 150 : 1200));
+                          const confirmedItinerary = { ...itinerary, status: 'CONFIRMED' };
+                          if (onUpdateItinerary) await onUpdateItinerary(confirmedItinerary);
+                          if (typeof window !== 'undefined') window.location.href = '/ai-planner';
+                        }
+                      }}
+                      className={`relative w-full sm:w-[48%] h-10 flex rounded-2xl ${itinerary?.status === 'CONFIRMED' ? '' : 'cursor-pointer group hover:shadow-[0_12px_32px_rgba(255,107,44,0.5)]'} shadow-[0_8px_24px_rgba(255,107,44,0.3)] transition-shadow`}
+                    >
+                      {/* Background Layer: Main (Expands to fill) */}
+                      <motion.div
+                        className="absolute left-0 top-0 h-full rounded-2xl z-0"
+                        initial={itinerary?.status === 'CONFIRMED' ? { width: '100%', backgroundColor: '#10B981', boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)' } : { width: '100%', backgroundColor: '#FF6B2C', boxShadow: '0 8px 24px rgba(255, 107, 44, 0.3)' }}
+                        animate={{
+                          width: isConfirming ? ['50%', '100%'] : '100%',
+                          backgroundColor: (isConfirming || itinerary?.status === 'CONFIRMED') ? '#10B981' : '#FF6B2C',
+                          boxShadow: (isElevating && !isConfirming && itinerary?.status !== 'CONFIRMED') ? '0 16px 32px rgba(255, 107, 44, 0.5)' : (isConfirming || itinerary?.status === 'CONFIRMED') ? '0 8px 24px rgba(16, 185, 129, 0.4)' : '0 8px 24px rgba(255, 107, 44, 0.3)'
+                        }}
+                        transition={{ duration: 1.0, ease: "easeOut" }}
+                      />
+
+                      {/* Background Layer: Tear Away Stub */}
+                      <AnimatePresence>
+                        {isConfirming && (
+                          <motion.div
+                            className="absolute right-0 top-0 h-full w-[50%] bg-[#FF6B2C] rounded-r-2xl z-0"
+                            initial={{ opacity: 1, rotate: 0, x: 0, y: 0, transformOrigin: 'top left' }}
+                            animate={{ opacity: 0, rotate: 12, x: 40, y: -20 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 1.2, ease: "easeOut" }}
                           />
                         )}
-                        <motion.div
-                          className="relative z-10"
-                          animate={isConfirming && !prefersReducedMotion ? { rotate: 1080 } : { rotate: 0 }}
-                          transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                        >
-                           <div className="transition-transform duration-300 ease-out group-hover:scale-125 group-hover:rotate-12">
-                             <Check size={16} strokeWidth={3} />
-                           </div>
+                      </AnimatePresence>
+
+                      {/* Flash tear overlay */}
+                      <AnimatePresence>
+                        {isConfirming && !prefersReducedMotion && (
+                          <motion.div
+                            key="flash-tear-effect"
+                            className="absolute z-10 pointer-events-none top-0 bottom-0"
+                            style={{ left: '50%', marginLeft: '-4px' }}
+                            initial={{ opacity: 1 }}
+                            animate={{ opacity: 0 }}
+                            transition={{ duration: 0.2, delay: 0.05 }}
+                          >
+                            <svg height="100%" width="8" viewBox="0 0 8 48" preserveAspectRatio="none" fill="none">
+                              <path d="M0 0 L8 4 L0 8 L8 12 L0 16 L8 20 L0 24 L8 28 L0 32 L8 36 L0 40 L8 44 L0 48" stroke="white" strokeWidth="2" strokeOpacity="0.8" />
+                            </svg>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {/* Content Overlay */}
+                      <div className="absolute inset-0 flex items-center justify-center gap-2 z-20 text-white font-bold text-xs pointer-events-none px-4">
+
+                        {/* Checkmark Icon */}
+                        <motion.div layout className="relative flex items-center justify-center">
+                          {isConfirming && !prefersReducedMotion && (
+                            <motion.div
+                              className="absolute w-0 h-0 bg-white/40 rounded-full"
+                              initial={{ boxShadow: '0 0 0px 0px rgba(255,255,255,0)' }}
+                              animate={{ boxShadow: ['0 0 0px 0px rgba(255,255,255,0.6)', '0 0 20px 20px rgba(255,255,255,0)'] }}
+                              transition={{ duration: 0.6, delay: 0.3 }}
+                            />
+                          )}
+                          <motion.div
+                            className="relative z-10"
+                            animate={isConfirming && !prefersReducedMotion ? { rotate: 1080 } : { rotate: 0 }}
+                            transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                          >
+                            <div className="transition-transform duration-300 ease-out group-hover:scale-125 group-hover:rotate-12">
+                              <Check size={16} strokeWidth={3} />
+                            </div>
+                          </motion.div>
                         </motion.div>
-                      </motion.div>
 
-                      {/* Exiting Initial Text */}
-                      <AnimatePresence>
-                        {!isConfirming && itinerary?.status !== 'CONFIRMED' && (
-                          <motion.div
-                            layout
-                            className="flex items-center gap-2 overflow-hidden whitespace-nowrap"
-                            exit={{ opacity: 0, rotate: 12, x: 40, y: -20, width: 0, gap: 0 }}
-                            transition={{ duration: 1.2, ease: "easeOut" }}
-                          >
-                            <span>Confirm Trip</span>
-                            <span className="transition-transform duration-300 ease-out group-hover:translate-x-1 flex items-center">
-                              <ArrowRightIcon />
-                            </span>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                        {/* Exiting Initial Text */}
+                        <AnimatePresence>
+                          {!isConfirming && itinerary?.status !== 'CONFIRMED' && (
+                            <motion.div
+                              layout
+                              className="flex items-center gap-2 overflow-hidden whitespace-nowrap"
+                              exit={{ opacity: 0, rotate: 12, x: 40, y: -20, width: 0, gap: 0 }}
+                              transition={{ duration: 1.2, ease: "easeOut" }}
+                            >
+                              <span>Confirm Trip</span>
+                              <span className="transition-transform duration-300 ease-out group-hover:translate-x-1 flex items-center">
+                                <ArrowRightIcon />
+                              </span>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
 
-                      {/* Entering Confirmed Text */}
-                      <AnimatePresence>
-                        {(isConfirming || itinerary?.status === 'CONFIRMED') && (
-                          <motion.div
-                            layout
-                            className="overflow-hidden whitespace-nowrap"
-                            initial={itinerary?.status === 'CONFIRMED' ? { width: 'auto', opacity: 1, marginLeft: 8 } : { width: 0, opacity: 0, marginLeft: 0 }}
-                            animate={{ width: 'auto', opacity: 1, marginLeft: 8 }}
-                            transition={{ duration: 0.8, delay: 0.2 }}
-                          >
-                            Trip Confirmed
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                        {/* Entering Confirmed Text */}
+                        <AnimatePresence>
+                          {(isConfirming || itinerary?.status === 'CONFIRMED') && (
+                            <motion.div
+                              layout
+                              className="overflow-hidden whitespace-nowrap"
+                              initial={itinerary?.status === 'CONFIRMED' ? { width: 'auto', opacity: 1, marginLeft: 8 } : { width: 0, opacity: 0, marginLeft: 0 }}
+                              animate={{ width: 'auto', opacity: 1, marginLeft: 8 }}
+                              transition={{ duration: 0.8, delay: 0.2 }}
+                            >
+                              Trip Confirmed
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
 
-                    </div>
-                  </motion.div>
-                </div>
-              </motion.div>
-            </div>
-          ) : (
+                      </div>
+                    </motion.div>
+                  </div>
+                </motion.div>
+              </div>
+            ) : (
               /* progress bar & status checkmarks during generation */
               <>
                 <div>
@@ -2390,88 +2374,86 @@ export default function PlannerSidebar({
                     {/* Glowing moving strip across progress bar */}
                     {progressPercent > 0 && progressPercent < 100 && (
                       <motion.div
-                         className="absolute top-0 bottom-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/50 to-transparent"
-                         animate={{ x: ['-100%', '400%'] }}
-                         transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
+                        className="absolute top-0 bottom-0 left-0 w-1/3 bg-linear-to-r from-transparent via-white/50 to-transparent"
+                        animate={{ x: ['-100%', '400%'] }}
+                        transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
                       />
                     )}
                   </div>
                 </div>
 
-                  <div className="flex flex-col gap-4 mt-2">
-                    <AnimatePresence>
-                      {STATUS_ROWS.map((row, index) => {
-                        const isRevealed = activeRowIndex >= index;
-                        const isDone = activeRowIndex > index;
-                        const isActive = isRevealed && !isDone;
+                <div className="flex flex-col gap-4 mt-2">
+                  <AnimatePresence>
+                    {STATUS_ROWS.map((row, index) => {
+                      const isRevealed = activeRowIndex >= index;
+                      const isDone = activeRowIndex > index;
+                      const isActive = isRevealed && !isDone;
 
-                        if (!isRevealed) return null;
+                      if (!isRevealed) return null;
 
-                        return (
-                          <motion.div
-                            key={row.id}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: isDone ? 1 : 1, x: 0 }}
-                            className={`flex items-center gap-3 transition-opacity duration-300 ${
-                              isDone
-                                ? 'text-[#1F1F1F] font-semibold opacity-100'
-                                : 'text-[#6B6B6B] opacity-85'
+                      return (
+                        <motion.div
+                          key={row.id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: isDone ? 1 : 1, x: 0 }}
+                          className={`flex items-center gap-3 transition-opacity duration-300 ${isDone
+                              ? 'text-[#1F1F1F] font-semibold opacity-100'
+                              : 'text-[#6B6B6B] opacity-85'
                             }`}
-                          >
-                            <div className="relative">
-                              {/* Glowing ring for active state */}
+                        >
+                          <div className="relative">
+                            {/* Glowing ring for active state */}
+                            {isActive && (
+                              <motion.div
+                                className="absolute -inset-1.5 rounded-xl border border-[#FF6B2C]/40"
+                                animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.8, 0.3] }}
+                                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                              />
+                            )}
+
+                            <div
+                              className={`relative z-10 p-1.5 rounded-lg border transition-all duration-300 overflow-hidden ${isDone
+                                  ? 'bg-[#FFDBC8]/40 border-[#FF6B2C]/60 text-[#FF6B2C] shadow-sm'
+                                  : isActive
+                                    ? 'bg-white border-2 border-[#FF6B2C] text-[#FF6B2C] shadow-sm shadow-[#FF6B2C]/30 scale-105'
+                                    : 'bg-white border-[rgba(28,27,27,0.1)] text-[#6B6B6B] shadow-2xs'
+                                }`}
+                            >
+                              {/* Shimmering background overlay for active state */}
                               {isActive && (
                                 <motion.div
-                                  className="absolute -inset-1.5 rounded-xl border border-[#FF6B2C]/40"
-                                  animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.8, 0.3] }}
-                                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                                  className="absolute inset-0 bg-linear-to-r from-transparent via-[#FF6B2C]/10 to-transparent skew-x-[-20deg]"
+                                  style={{ width: '200%' }}
+                                  animate={{ x: ['-100%', '100%'] }}
+                                  transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
                                 />
                               )}
-                              
-                              <div
-                                className={`relative z-10 p-1.5 rounded-lg border transition-all duration-300 overflow-hidden ${
-                                  isDone
-                                    ? 'bg-[#FFDBC8]/40 border-[#FF6B2C]/60 text-[#FF6B2C] shadow-sm'
-                                    : isActive
-                                      ? 'bg-white border-2 border-[#FF6B2C] text-[#FF6B2C] shadow-sm shadow-[#FF6B2C]/30 scale-105'
-                                      : 'bg-white border-[rgba(28,27,27,0.1)] text-[#6B6B6B] shadow-2xs'
-                                }`}
-                              >
-                                {/* Shimmering background overlay for active state */}
-                                {isActive && (
-                                  <motion.div
-                                    className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF6B2C]/10 to-transparent skew-x-[-20deg]"
-                                    style={{ width: '200%' }}
-                                    animate={{ x: ['-100%', '100%'] }}
-                                    transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
-                                  />
-                                )}
-                                <div className="relative z-10">
-                                  {row.icon}
-                                </div>
+                              <div className="relative z-10">
+                                {row.icon}
                               </div>
                             </div>
-                            
-                            {/* Shimmering text for active state */}
-                            {isActive ? (
-                              <motion.span 
-                                className="text-xs md:text-sm leading-snug font-medium bg-clip-text text-transparent bg-gradient-to-r from-[#FF6B2C] via-[#FFA37C] to-[#FF6B2C]"
-                                style={{ backgroundSize: '200% 100%' }}
-                                animate={{ backgroundPosition: ['200% 0', '-200% 0'] }}
-                                transition={{ repeat: Infinity, duration: 3, ease: 'linear' }}
-                              >
-                                {row.label}
-                              </motion.span>
-                            ) : (
-                              <span className="text-xs md:text-sm leading-snug">
-                                {row.label}
-                              </span>
-                            )}
-                          </motion.div>
-                        );
-                      })}
-                    </AnimatePresence>
-                  </div>
+                          </div>
+
+                          {/* Shimmering text for active state */}
+                          {isActive ? (
+                            <motion.span
+                              className="text-xs md:text-sm leading-snug font-medium bg-clip-text text-transparent bg-linear-to-r from-[#FF6B2C] via-[#FFA37C] to-[#FF6B2C]"
+                              style={{ backgroundSize: '200% 100%' }}
+                              animate={{ backgroundPosition: ['200% 0', '-200% 0'] }}
+                              transition={{ repeat: Infinity, duration: 3, ease: 'linear' }}
+                            >
+                              {row.label}
+                            </motion.span>
+                          ) : (
+                            <span className="text-xs md:text-sm leading-snug">
+                              {row.label}
+                            </span>
+                          )}
+                        </motion.div>
+                      );
+                    })}
+                  </AnimatePresence>
+                </div>
 
                 {/* Final Button Revealed after last row visible for ~1.3s */}
                 {showFinalCTA && (
@@ -2501,12 +2483,12 @@ export default function PlannerSidebar({
         <span>Powered by TripWise AI</span>
         <span>Real-Time Optimization Engine</span>
       </div>
-      
-      <InviteModal 
-        isOpen={isInviteModalOpen} 
-        onClose={() => setIsInviteModalOpen(false)} 
-        tripId={tripId} 
-        currentCollaborators={collaboratorsList} 
+
+      <InviteModal
+        isOpen={isInviteModalOpen}
+        onClose={() => setIsInviteModalOpen(false)}
+        tripId={tripId}
+        currentCollaborators={collaboratorsList}
       />
     </div>
   );

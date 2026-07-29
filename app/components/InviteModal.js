@@ -111,10 +111,10 @@ const InviteModal = ({ isOpen, onClose, tripId, currentCollaborators = [] }) => 
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", bounce: 0.3, duration: 0.6 }}
-            className="relative bg-white/95 backdrop-blur-xl rounded-[2rem] w-full max-w-md shadow-[0_30px_60px_rgba(0,0,0,0.15)] border border-white/50 overflow-hidden flex flex-col max-h-[90vh]"
+            className="relative bg-white/95 backdrop-blur-xl rounded-4xl w-full max-w-md shadow-[0_30px_60px_rgba(0,0,0,0.15)] border border-white/50 overflow-hidden flex flex-col max-h-[90vh]"
           >
             {/* Top decorative gradient */}
-            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-orange-400 via-[#FF6B2C] to-orange-500"></div>
+            <div className="absolute top-0 inset-x-0 h-1.5 bg-linear-to-r from-orange-400 via-[#FF6B2C] to-orange-500"></div>
 
             {/* Header */}
             <div className="px-8 pt-8 pb-4 flex items-center justify-between shrink-0">
@@ -155,7 +155,7 @@ const InviteModal = ({ isOpen, onClose, tripId, currentCollaborators = [] }) => 
             </div>
 
             {/* Scrollable Body */}
-            <div className="px-8 py-6 overflow-y-auto min-h-[300px]">
+            <div className="px-8 py-6 overflow-y-auto min-h-75">
               
               <AnimatePresence mode="wait">
                 {activeTab === 'email' ? (
@@ -341,7 +341,7 @@ const InviteModal = ({ isOpen, onClose, tripId, currentCollaborators = [] }) => 
               {currentCollaborators.length > 0 && (
                 <div className="pt-6 mt-6 border-t border-gray-100/80">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4">Current Collaborators</h3>
-                  <div className="space-y-2 max-h-[160px] overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="space-y-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
                     {currentCollaborators.map((collab, i) => (
                       <motion.div 
                         initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
@@ -349,7 +349,7 @@ const InviteModal = ({ isOpen, onClose, tripId, currentCollaborators = [] }) => 
                         className="flex items-center justify-between p-2.5 rounded-xl hover:bg-gray-50/80 border border-transparent hover:border-gray-100 transition-all group"
                       >
                         <div className="flex items-center gap-3">
-                          <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shadow-sm ${collab.role === 'owner' ? 'bg-gradient-to-br from-orange-100 to-orange-200 text-orange-700' : 'bg-gradient-to-br from-gray-50 to-gray-200 text-gray-700'}`}>
+                          <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shadow-sm ${collab.role === 'owner' ? 'bg-linear-to-br from-orange-100 to-orange-200 text-orange-700' : 'bg-linear-to-br from-gray-50 to-gray-200 text-gray-700'}`}>
                             {collab.name ? collab.name.charAt(0).toUpperCase() : (collab.email ? collab.email.charAt(0).toUpperCase() : 'U')}
                           </div>
                           <div>

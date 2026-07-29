@@ -78,14 +78,14 @@ const parseTimeToMinutes = (timeStr) => {
   const cleaned = timeStr.trim().toLowerCase();
   const match = cleaned.match(/(\d+):(\d+)\s*(am|pm)?/);
   if (!match) return 600;
-  
+
   let hours = parseInt(match[1], 10);
   const minutes = parseInt(match[2], 10);
   const ampm = match[3];
-  
+
   if (ampm === 'pm' && hours < 12) hours += 12;
   if (ampm === 'am' && hours === 12) hours = 0;
-  
+
   return hours * 60 + minutes;
 };
 
@@ -236,18 +236,18 @@ const getAlternativeSuggestions = (act, idx = 0) => {
 
 const Sparkline = () => (
   <svg className="w-14 h-4 text-[#FF6B2C] inline-block mr-1.5 align-middle" viewBox="0 0 50 15" fill="none">
-    <path 
-      d="M0 10 C10 15, 12 2, 20 8 C28 14, 35 1, 50 6" 
-      stroke="currentColor" 
-      strokeWidth="1.8" 
-      strokeLinecap="round" 
+    <path
+      d="M0 10 C10 15, 12 2, 20 8 C28 14, 35 1, 50 6"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
     />
   </svg>
 );
 
 const getContextAwareTip = (act, idx, summary) => {
   const title = (act?.title || '').toLowerCase();
-  
+
   // Non-overlapping logistics advice instead of repeating crowd timing (which lives in custom insight)
   let logisticsNote = act?.location ? `Main entry via ${act.location}. Walk-ins & digital passes verified at express security check.` : `Easily reached on foot or short local transit from previous stop. Walk-ins accepted; verify ticket barcode before security scan.`;
 
@@ -286,11 +286,11 @@ export default function ItineraryPage() {
       if (storedId) setActiveTripId(storedId);
     }
   }, []);
-  
+
   // Navigation & Modal State
   const [activeDay, setActiveDay] = useState(1); // Active Day, 'epilogue', or 'packing'
   const [activeModalDay, setActiveModalDay] = useState(null);
-  
+
   // Packing List State
   const [packingList, setPackingList] = useState(null);
   const [customInputs, setCustomInputs] = useState({});
@@ -328,7 +328,7 @@ export default function ItineraryPage() {
         setPackingList(newList);
         try {
           localStorage.setItem(storageKey, JSON.stringify(newList));
-        } catch (e) {}
+        } catch (e) { }
       }
     }
   }, [itinerary, activeTripId]);
@@ -338,13 +338,13 @@ export default function ItineraryPage() {
     const tripId = activeTripId || itinerary?.id || itinerary?.db_id || 'shared-trip';
     try {
       localStorage.setItem(`tw_packing_${tripId}`, JSON.stringify(newList));
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const togglePackingItem = (category, itemId) => {
     if (!packingList) return;
     const newList = { ...packingList };
-    newList[category] = newList[category].map(item => 
+    newList[category] = newList[category].map(item =>
       item.id === itemId ? { ...item, checked: !item.checked } : item
     );
     savePackingList(newList);
@@ -375,13 +375,13 @@ export default function ItineraryPage() {
     if (!itinerary) return;
     const generatedList = generatePackingList(itinerary);
     const newList = { ...packingList };
-    
+
     // For each category, keep custom items, replace generated items
     Object.keys(generatedList).forEach(cat => {
       const customItems = (newList[cat] || []).filter(i => !i.generated);
       newList[cat] = [...generatedList[cat], ...customItems];
     });
-    
+
     savePackingList(newList);
     setShowRegenerateConfirm(false);
   };
@@ -439,7 +439,7 @@ export default function ItineraryPage() {
       if (stored) {
         try {
           setVisaChecklist(JSON.parse(stored));
-        } catch (e) {}
+        } catch (e) { }
       } else {
         const defaultChecklist = {
           'v-1': { id: 'v-1', text: 'Passport valid for 6+ months', checked: false },
@@ -457,7 +457,7 @@ export default function ItineraryPage() {
     const tripId = activeTripId || itinerary?.id || itinerary?.db_id || 'shared-trip';
     try {
       localStorage.setItem(`tw_visa_${tripId}`, JSON.stringify(newList));
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const toggleVisaItem = (itemId) => {
@@ -485,7 +485,7 @@ export default function ItineraryPage() {
     delete newList[itemId];
     saveVisaChecklist(newList);
   };
-  
+
   // Publish to Community State
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [publishForm, setPublishForm] = useState({ title: '', tags: '', coverPhoto: '' });
@@ -594,7 +594,7 @@ export default function ItineraryPage() {
                 isConf = true;
               }
             }
-          } catch (e) {}
+          } catch (e) { }
 
           if (isConf) {
             confirmed++;
@@ -676,7 +676,7 @@ export default function ItineraryPage() {
             if (rawJsonStr.startsWith('%') || rawJsonStr.includes('%22') || rawJsonStr.includes('%7B')) {
               try {
                 rawJsonStr = decodeURIComponent(rawJsonStr);
-              } catch (e) {}
+              } catch (e) { }
             }
             const parsed = JSON.parse(rawJsonStr);
             if (parsed && parsed.days) {
@@ -700,7 +700,7 @@ export default function ItineraryPage() {
             }
           }
         }
-        
+
         const tabParam = params.get('tab');
         if (tabParam) {
           if (!isNaN(parseInt(tabParam))) {
@@ -709,7 +709,7 @@ export default function ItineraryPage() {
             setActiveDay(tabParam);
           }
         }
-        
+
         setLoading(false);
       }
     }, 0);
@@ -812,7 +812,7 @@ export default function ItineraryPage() {
 
   const days = itinerary.days || [];
   const totalStopsCount = days.reduce((acc, d) => acc + (d.activities?.length || 0), 0);
-  
+
   const totalDistanceEst = days.reduce((acc, d, i) => {
     const summary = getDaySummary(d, i, days);
     const num = parseFloat(summary?.stats?.distance || '3');
@@ -844,7 +844,7 @@ export default function ItineraryPage() {
               }
             }
           }
-        } catch (e) {}
+        } catch (e) { }
 
         acc.push({
           item: `${a.title || 'Restaurant'} (Day ${dNum})`,
@@ -862,7 +862,7 @@ export default function ItineraryPage() {
           if (typeof window !== 'undefined') {
             ticketNote = localStorage.getItem(ticketKey) || '';
           }
-        } catch (e) {}
+        } catch (e) { }
 
         if (ticketNote.trim()) {
           acc.push({
@@ -902,8 +902,8 @@ export default function ItineraryPage() {
   return (
     <div className="min-h-screen bg-[#FAF6F0] text-[#1E1C1A] flex flex-col font-sans selection:bg-[#FF6B2C]/15">
       {/* Scroll Progress Bar at the top of the page */}
-      <motion.div 
-        style={{ scaleX }} 
+      <motion.div
+        style={{ scaleX }}
         className="fixed top-0 left-0 right-0 h-0.75 bg-[#FF6B2C] origin-left z-60 pointer-events-none print:hidden"
       />
 
@@ -916,11 +916,10 @@ export default function ItineraryPage() {
             exit={{ opacity: 0, y: -20, x: '-50%' }}
             className="fixed top-4 left-1/2 z-70 pointer-events-auto"
           >
-            <div className={`flex items-center gap-2 px-4 py-3 rounded-2xl shadow-xl border ${
-              toastMessage.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
-              toastMessage.type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
-              'bg-white border-[#E6DFD5] text-[#1E1C1A]'
-            }`}>
+            <div className={`flex items-center gap-2 px-4 py-3 rounded-2xl shadow-xl border ${toastMessage.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
+                toastMessage.type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
+                  'bg-white border-[#E6DFD5] text-[#1E1C1A]'
+              }`}>
               {toastMessage.icon === 'Bell' && <Bell className="w-4 h-4" />}
               <span className="text-sm font-semibold">{toastMessage.message}</span>
               <button onClick={() => setToastMessage(null)} className="ml-2 hover:opacity-70">
@@ -932,23 +931,23 @@ export default function ItineraryPage() {
       </AnimatePresence>
 
       <div className="print:hidden">
-        <motion.div 
-            style={{ opacity: maskOpacity }} 
-            className="fixed top-0 left-0 right-0 h-[72px] sm:h-[88px] bg-[#FAF6F0] z-30 pointer-events-none" 
+        <motion.div
+          style={{ opacity: maskOpacity }}
+          className="fixed top-0 left-0 right-0 h-18 sm:h-22 bg-[#FAF6F0] z-30 pointer-events-none"
         />
         <Header />
       </div>
 
       {/* HERO SECTION: Scroll-Driven Layered Parallax with Interactive Hover Zoom & Text Float (Accesses Requirement 1) */}
-      <section 
+      <section
         onMouseEnter={() => setIsHeroHovered(true)}
         onMouseLeave={() => setIsHeroHovered(false)}
         className="relative w-full min-h-135 md:min-h-145 pt-32 pb-8 px-6 flex flex-col justify-end overflow-hidden border-b border-[#E6DFD5] print:hidden cursor-default select-none"
       >
         {/* Layer 1: Parallax Background (Image Layer with slow zoom-in on mount and saturation lift on hover) */}
-        <motion.div 
-          style={{ 
-            translateY: reduceMotion ? "0%" : bgY, 
+        <motion.div
+          style={{
+            translateY: reduceMotion ? "0%" : bgY,
             opacity: reduceMotion ? 1 : heroOpacity
           }}
           className="absolute inset-0 z-0 origin-center"
@@ -956,10 +955,10 @@ export default function ItineraryPage() {
           <motion.img
             initial={reduceMotion ? { scale: 1.1 } : { scale: 1.1 }}
             animate={
-              reduceMotion 
-                ? { scale: 1.1 } 
-                : isHeroHovered 
-                  ? { scale: 1.3, filter: "saturate(1.18) brightness(1.04)" } 
+              reduceMotion
+                ? { scale: 1.1 }
+                : isHeroHovered
+                  ? { scale: 1.3, filter: "saturate(1.18) brightness(1.04)" }
                   : { scale: 1.25, filter: "saturate(1) brightness(1)" }
             }
             transition={{ duration: 1.5, ease: "easeOut" }}
@@ -979,17 +978,17 @@ export default function ItineraryPage() {
         <div className="absolute bottom-0 left-0 right-0 h-28 bg-linear-to-t from-[#FAF6F0] via-[#FAF6F0]/40 to-transparent z-15 pointer-events-none" />
 
         {/* Layer 3: Foreground content (High-contrast light typography on dark directional wash with vertical hover float lift) */}
-        <motion.div 
-          style={{ 
-            translateY: reduceMotion ? "0%" : foreY, 
-            scale: reduceMotion ? 1 : foreScale, 
-            opacity: reduceMotion ? 1 : heroOpacity 
+        <motion.div
+          style={{
+            translateY: reduceMotion ? "0%" : foreY,
+            scale: reduceMotion ? 1 : foreScale,
+            opacity: reduceMotion ? 1 : heroOpacity
           }}
           animate={isHeroHovered ? { y: -6 } : { y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="max-w-5xl mx-auto w-full relative z-20 flex flex-col gap-5 pt-16"
         >
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
@@ -1012,7 +1011,7 @@ export default function ItineraryPage() {
                 📍 Basecamp: {itinerary?.basecampHotel || itinerary?.preferences?.basecamp}
               </span>
             ) : (
-              <button 
+              <button
                 onClick={() => setActiveDay('tracking')}
                 className="px-2.5 py-1 rounded bg-[#FF6B2C]/20 border border-[#FF6B2C]/40 hover:bg-[#FF6B2C]/30 text-[#FFDCD0] font-mono text-[9px] font-extrabold tracking-wider uppercase backdrop-blur-xs shadow-xs flex items-center gap-1 transition-colors cursor-pointer"
               >
@@ -1021,7 +1020,7 @@ export default function ItineraryPage() {
             )}
           </motion.div>
 
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, y: 25 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.215, 0.61, 0.355, 1], delay: 0.35 }}
@@ -1030,7 +1029,7 @@ export default function ItineraryPage() {
             {destinationNameClean}
           </motion.h1>
 
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut", delay: 0.5 }}
@@ -1040,7 +1039,7 @@ export default function ItineraryPage() {
           </motion.p>
 
           {/* Structured stat metadata cards block blended directly on top of gradient overlay */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut", delay: 0.65 }}
@@ -1084,9 +1083,8 @@ export default function ItineraryPage() {
                 <button
                   key={dayNum}
                   onClick={() => setActiveDay(dayNum)}
-                  className={`relative pb-3.5 pt-2 px-4 text-xs font-serif font-bold transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap flex flex-col items-center justify-center ${
-                    isSelected ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
-                  }`}
+                  className={`relative pb-3.5 pt-2 px-4 text-xs font-serif font-bold transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap flex flex-col items-center justify-center ${isSelected ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+                    }`}
                 >
                   <span>Day {toRomanNumeral(dayNum)}</span>
                   {dateStr && (
@@ -1104,9 +1102,8 @@ export default function ItineraryPage() {
             })}
             <button
               onClick={() => setActiveDay('epilogue')}
-              className={`relative pb-3.5 pt-2 px-4 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${
-                activeDay === 'epilogue' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
-              }`}
+              className={`relative pb-3.5 pt-2 px-4 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'epilogue' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+                }`}
             >
               <span>Epilogue</span>
               {activeDay === 'epilogue' && (
@@ -1119,9 +1116,8 @@ export default function ItineraryPage() {
             </button>
             <button
               onClick={() => setActiveDay('packing')}
-              className={`relative pb-3.5 pt-2 px-4 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${
-                activeDay === 'packing' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
-              }`}
+              className={`relative pb-3.5 pt-2 px-4 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'packing' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+                }`}
             >
               <span>Packing List</span>
               {activeDay === 'packing' && (
@@ -1134,9 +1130,8 @@ export default function ItineraryPage() {
             </button>
             <button
               onClick={() => setActiveDay('visa')}
-              className={`relative pb-3.5 pt-2 px-4 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${
-                activeDay === 'visa' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
-              }`}
+              className={`relative pb-3.5 pt-2 px-4 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'visa' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+                }`}
             >
               <span>Visa & Docs</span>
               {activeDay === 'visa' && (
@@ -1149,9 +1144,8 @@ export default function ItineraryPage() {
             </button>
             <button
               onClick={() => setActiveDay('tracking')}
-              className={`relative pb-3.5 pt-2 px-4 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${
-                activeDay === 'tracking' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
-              }`}
+              className={`relative pb-3.5 pt-2 px-4 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'tracking' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+                }`}
             >
               <span>Price Tracking</span>
               {activeDay === 'tracking' && (
@@ -1219,7 +1213,7 @@ export default function ItineraryPage() {
         {activeDay !== 'epilogue' && activeDay !== 'packing' && activeDay !== 'visa' && activeDay !== 'tracking' && (
           <section className="bg-white rounded-3xl border border-[#E6DFD5] p-8 sm:p-10 shadow-sm relative overflow-hidden print:hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-radial from-[#FF6B2C]/5 via-transparent to-transparent pointer-events-none" />
-            
+
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#E6DFD5]">
               <div>
                 <span className="text-xs font-mono uppercase tracking-widest text-[#FF6B2C] font-bold block mb-1">
@@ -1300,7 +1294,7 @@ export default function ItineraryPage() {
                   </div>
                 );
               })}
-              
+
               <div
                 onClick={() => setActiveDay('packing')}
                 className="flex flex-col justify-between p-6 rounded-2xl bg-[#FAF6F0] border border-[#E6DFD5]/80 hover:border-[#FF6B2C]/60 transition-all duration-300 group cursor-pointer"
@@ -1324,7 +1318,7 @@ export default function ItineraryPage() {
                   <span className="font-bold text-[#1E1C1A]">Interactive</span>
                 </div>
               </div>
-              
+
               <div
                 onClick={() => setActiveDay('visa')}
                 className="flex flex-col justify-between p-6 rounded-2xl bg-[#FAF6F0] border border-[#E6DFD5]/80 hover:border-[#FF6B2C]/60 transition-all duration-300 group cursor-pointer"
@@ -1426,13 +1420,13 @@ export default function ItineraryPage() {
                         <span className="text-[10px] tracking-widest font-bold">Approved</span>
                         <span className="text-lg font-black tracking-tight my-0.5">TripWise</span>
                         <span className="text-[8px] tracking-[0.2em] font-extrabold text-[#7A7268]">Concierge</span>
-                        
+
                         {/* Innermost ink circle stamp details */}
                         <div className="absolute inset-1 border border-solid border-[#FF6B2C]/25 rounded-full pointer-events-none" />
                         <div className="absolute bottom-2 text-[6px] text-[#7A7268] tracking-widest font-sans font-bold uppercase">Private Guide</div>
                       </motion.div>
 
-                      <motion.div 
+                      <motion.div
                         initial={{ scale: 0.8, opacity: 0 }}
                         whileInView={{ scale: 1, opacity: 1 }}
                         viewport={{ once: true }}
@@ -1498,111 +1492,111 @@ export default function ItineraryPage() {
 
                     {/* Reminders grids */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="bg-white p-6 rounded-2xl border border-[#E6DFD5] shadow-2xs">
-                      <h3 className="text-sm font-sans font-bold uppercase tracking-widest text-[#FF6B2C] border-b border-[#E6DFD5] pb-2.5 mb-3.5 flex items-center gap-2">
-                        <Calendar className="w-4 h-4" />
-                        <span>Concierge Packing &amp; Prep Reminders</span>
-                      </h3>
-                      <ul className="text-xs font-serif text-[#4A443E] leading-relaxed flex flex-col gap-2.5 list-disc pl-4">
-                        <li>
-                          <strong>Comfortable Footwear:</strong> Your route covers approximately {totalDistanceEst} km. Wear robust walking shoes suited for old city cobblestones.
-                        </li>
-                        <li>
-                          <strong>Church/Cultural Sites:</strong> Several scheduled historical landmarks require covered shoulders and knees to enter.
-                        </li>
-                        <li>
-                          <strong>Reusable Flasks:</strong> Rome features free historic drinking fountains (Nasoni) across streets—highly recommended for daylight walking segments.
-                        </li>
-                      </ul>
-                    </div>
+                      <div className="bg-white p-6 rounded-2xl border border-[#E6DFD5] shadow-2xs">
+                        <h3 className="text-sm font-sans font-bold uppercase tracking-widest text-[#FF6B2C] border-b border-[#E6DFD5] pb-2.5 mb-3.5 flex items-center gap-2">
+                          <Calendar className="w-4 h-4" />
+                          <span>Concierge Packing &amp; Prep Reminders</span>
+                        </h3>
+                        <ul className="text-xs font-serif text-[#4A443E] leading-relaxed flex flex-col gap-2.5 list-disc pl-4">
+                          <li>
+                            <strong>Comfortable Footwear:</strong> Your route covers approximately {totalDistanceEst} km. Wear robust walking shoes suited for old city cobblestones.
+                          </li>
+                          <li>
+                            <strong>Church/Cultural Sites:</strong> Several scheduled historical landmarks require covered shoulders and knees to enter.
+                          </li>
+                          <li>
+                            <strong>Reusable Flasks:</strong> Rome features free historic drinking fountains (Nasoni) across streets—highly recommended for daylight walking segments.
+                          </li>
+                        </ul>
+                      </div>
 
-                    <div className="bg-white p-6 rounded-2xl border border-[#E6DFD5] shadow-2xs">
-                      <h3 className="text-sm font-sans font-bold uppercase tracking-widest text-[#FF6B2C] border-b border-[#E6DFD5] pb-2.5 mb-3.5 flex items-center gap-2">
-                        <Layers className="w-4 h-4" />
-                        <span>Booking &amp; Tickets Status Overview</span>
-                      </h3>
-                      <div className="flex flex-col gap-3">
-                        {preBookedItems.map((item, keyIdx) => (
-                          <div key={keyIdx} className="flex items-center justify-between text-xs border-b border-[#FAF6F0] pb-2.5 last:border-b-0 last:pb-0 gap-4">
-                            <div className="min-w-0 flex-1 pr-2">
-                              <strong className="block text-[#1E1C1A] font-serif">{item.item}</strong>
-                              <span className="text-[10px] text-[#7A7268] font-sans">{item.code || 'Instant access link available'}</span>
+                      <div className="bg-white p-6 rounded-2xl border border-[#E6DFD5] shadow-2xs">
+                        <h3 className="text-sm font-sans font-bold uppercase tracking-widest text-[#FF6B2C] border-b border-[#E6DFD5] pb-2.5 mb-3.5 flex items-center gap-2">
+                          <Layers className="w-4 h-4" />
+                          <span>Booking &amp; Tickets Status Overview</span>
+                        </h3>
+                        <div className="flex flex-col gap-3">
+                          {preBookedItems.map((item, keyIdx) => (
+                            <div key={keyIdx} className="flex items-center justify-between text-xs border-b border-[#FAF6F0] pb-2.5 last:border-b-0 last:pb-0 gap-4">
+                              <div className="min-w-0 flex-1 pr-2">
+                                <strong className="block text-[#1E1C1A] font-serif">{item.item}</strong>
+                                <span className="text-[10px] text-[#7A7268] font-sans">{item.code || 'Instant access link available'}</span>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap shrink-0 ${item.status === 'Pre-booked' ? 'bg-emerald-500/10 text-emerald-700' :
+                                    item.status === 'Open Access' ? 'bg-blue-500/10 text-blue-700' : 'bg-[#FF6B2C]/10 text-[#FF6B2C]'
+                                  }`}>
+                                  {item.status}
+                                </span>
+                                {item.status === 'Action Needed' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => scrollToStopCard(item.dayNum, item.stopNum)}
+                                    className="px-2.5 py-1 rounded-lg bg-[#1E1C1A] text-white hover:bg-[#FF6B2C] font-sans text-[10px] font-bold transition-all cursor-pointer shadow-2xs shrink-0 flex items-center gap-1"
+                                    title="Jump to this stop card to review booking options"
+                                  >
+                                    <span>View Stop →</span>
+                                  </button>
+                                )}
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap shrink-0 ${
-                                item.status === 'Pre-booked' ? 'bg-emerald-500/10 text-emerald-700' :
-                                item.status === 'Open Access' ? 'bg-blue-500/10 text-blue-700' : 'bg-[#FF6B2C]/10 text-[#FF6B2C]'
-                              }`}>
-                                {item.status}
-                              </span>
-                              {item.status === 'Action Needed' && (
-                                <button
-                                  type="button"
-                                  onClick={() => scrollToStopCard(item.dayNum, item.stopNum)}
-                                  className="px-2.5 py-1 rounded-lg bg-[#1E1C1A] text-white hover:bg-[#FF6B2C] font-sans text-[10px] font-bold transition-all cursor-pointer shadow-2xs shrink-0 flex items-center gap-1"
-                                  title="Jump to this stop card to review booking options"
-                                >
-                                  <span>View Stop →</span>
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Closing signature and bottom page-turns */}
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-8 border-t border-[#E6DFD5]">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 shrink-0 flex items-center justify-center">
-                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 object-contain">
-                          <path
-                            d="M24 170 C 70 135, 105 105, 168 42"
-                            fill="none"
-                            stroke="#8CA3A8"
-                            strokeWidth="5"
-                            strokeDasharray="3 12"
-                            strokeLinecap="round"
-                          />
-                          <circle cx="24" cy="170" r="11" fill="#0D9488" />
-                          <g transform="translate(136,28) rotate(45) scale(0.95)">
+                    {/* Closing signature and bottom page-turns */}
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-8 border-t border-[#E6DFD5]">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 shrink-0 flex items-center justify-center">
+                          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 object-contain">
                             <path
-                              d="M0 34 L8 0 L16 34 L34 44 L34 52 L16 46 L13 64 L21 70 L21 76 L8 70 L-5 76 L-5 70 L3 64 L0 46 L-18 52 L-18 44 Z"
-                              fill="#FF6B2C"
+                              d="M24 170 C 70 135, 105 105, 168 42"
+                              fill="none"
+                              stroke="#8CA3A8"
+                              strokeWidth="5"
+                              strokeDasharray="3 12"
+                              strokeLinecap="round"
                             />
-                          </g>
-                        </svg>
+                            <circle cx="24" cy="170" r="11" fill="#0D9488" />
+                            <g transform="translate(136,28) rotate(45) scale(0.95)">
+                              <path
+                                d="M0 34 L8 0 L16 34 L34 44 L34 52 L16 46 L13 64 L21 70 L21 76 L8 70 L-5 76 L-5 70 L3 64 L0 46 L-18 52 L-18 44 Z"
+                                fill="#FF6B2C"
+                              />
+                            </g>
+                          </svg>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-serif font-bold text-[#1E1C1A]">TripWise Travel Concierge</h4>
+                          <p className="text-xs font-sans text-[#7A7268]">Curated Private Travel Dossier Guide</p>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="text-sm font-serif font-bold text-[#1E1C1A]">TripWise Travel Concierge</h4>
-                        <p className="text-xs font-sans text-[#7A7268]">Curated Private Travel Dossier Guide</p>
+
+                      <div className="flex items-center gap-3 flex-wrap justify-center">
+                        <button
+                          onClick={() => setActiveDay(1)}
+                          className="px-5 py-2.5 rounded-full border border-[#E6DFD5] bg-white text-xs font-sans font-bold uppercase tracking-wider text-[#1E1C1A] hover:bg-[#FAF6F0] transition-colors cursor-pointer"
+                        >
+                          ← Start Over (Day I)
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handlePrintOrDownload}
+                          className="px-6 py-3 rounded-full border border-[#1E1C1A] bg-[#1E1C1A] text-[#FAF6F0] hover:bg-[#FF6B2C] hover:border-[#FF6B2C] text-xs font-sans font-bold uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer flex items-center gap-2"
+                        >
+                          <Printer className="w-4 h-4" />
+                          <span>Print Dossier Booklet</span>
+                        </button>
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-3 flex-wrap justify-center">
-                      <button
-                        onClick={() => setActiveDay(1)}
-                        className="px-5 py-2.5 rounded-full border border-[#E6DFD5] bg-white text-xs font-sans font-bold uppercase tracking-wider text-[#1E1C1A] hover:bg-[#FAF6F0] transition-colors cursor-pointer"
-                      >
-                        ← Start Over (Day I)
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={handlePrintOrDownload}
-                        className="px-6 py-3 rounded-full border border-[#1E1C1A] bg-[#1E1C1A] text-[#FAF6F0] hover:bg-[#FF6B2C] hover:border-[#FF6B2C] text-xs font-sans font-bold uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer flex items-center gap-2"
-                      >
-                        <Printer className="w-4 h-4" />
-                        <span>Print Dossier Booklet</span>
-                      </button>
-                    </div>
-                  </div>
-                </section>
-              ); })() : activeDay === 'packing' ? (() => {
+                  </section>
+                );
+              })() : activeDay === 'packing' ? (() => {
                 const totalItems = packingList ? Object.values(packingList).flat().length : 0;
                 const checkedItems = packingList ? Object.values(packingList).flat().filter(i => i.checked).length : 0;
-                
+
                 return (
                   <section className="flex flex-col gap-10">
                     <div className="text-center max-w-2xl mx-auto relative">
@@ -1617,11 +1611,11 @@ export default function ItineraryPage() {
                         <span className="text-[#E6DFD5]">•</span>
                         <span>{days.length} Days</span>
                       </p>
-                      
+
                       {/* Regenerate Confirm Dialog */}
                       <AnimatePresence>
                         {showRegenerateConfirm && (
-                          <motion.div 
+                          <motion.div
                             initial={{ opacity: 0, y: 10, scale: 0.95 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
@@ -1665,7 +1659,7 @@ export default function ItineraryPage() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-2 w-full sm:w-auto">
                         <button
                           onClick={checkAllItems}
@@ -1709,7 +1703,7 @@ export default function ItineraryPage() {
                             const isExpanded = expandedPackingCategories[category];
                             const catCheckedCount = items.filter(i => i.checked).length;
                             const isAllChecked = catCheckedCount === items.length && items.length > 0;
-                            
+
                             return (
                               <div key={category} className={`bg-white rounded-3xl border transition-colors duration-500 overflow-hidden shadow-xs ${isAllChecked ? 'border-green-200 bg-green-50/30' : 'border-[#E6DFD5]'}`}>
                                 <button
@@ -1729,7 +1723,7 @@ export default function ItineraryPage() {
                                   </div>
                                   {isExpanded ? <ChevronUp className="w-5 h-5 text-[#7A7268]" /> : <ChevronDown className="w-5 h-5 text-[#7A7268]" />}
                                 </button>
-                                
+
                                 <AnimatePresence>
                                   {isExpanded && (
                                     <motion.div
@@ -1739,7 +1733,7 @@ export default function ItineraryPage() {
                                       className="overflow-hidden"
                                     >
                                       <div className="p-6 pt-0 border-t border-[#FAF6F0]">
-                                        <motion.div 
+                                        <motion.div
                                           className="flex flex-col gap-2 mt-4"
                                           initial="hidden"
                                           animate="visible"
@@ -1754,8 +1748,8 @@ export default function ItineraryPage() {
                                             const mainText = match ? match[2] : item.text;
 
                                             return (
-                                              <motion.div 
-                                                key={item.id} 
+                                              <motion.div
+                                                key={item.id}
                                                 className="flex items-center justify-between group"
                                                 variants={{
                                                   hidden: { opacity: 0, y: 10 },
@@ -1766,13 +1760,13 @@ export default function ItineraryPage() {
                                                   onClick={() => togglePackingItem(category, item.id)}
                                                   className="flex items-center gap-3 flex-1 text-left py-2 hover:bg-[#FAF6F0] px-3 rounded-xl transition-colors"
                                                 >
-                                              <div className={`shrink-0 transition-transform ${item.checked ? 'scale-110' : ''}`}>
-                                                {item.checked ? (
-                                                  <CheckSquare className="w-5 h-5 text-[#FF6B2C]" />
-                                                ) : (
-                                                  <Square className="w-5 h-5 text-[#E6DFD5] group-hover:text-[#FF6B2C]/50" />
-                                                )}
-                                              </div>
+                                                  <div className={`shrink-0 transition-transform ${item.checked ? 'scale-110' : ''}`}>
+                                                    {item.checked ? (
+                                                      <CheckSquare className="w-5 h-5 text-[#FF6B2C]" />
+                                                    ) : (
+                                                      <Square className="w-5 h-5 text-[#E6DFD5] group-hover:text-[#FF6B2C]/50" />
+                                                    )}
+                                                  </div>
                                                   <span className={`font-sans text-sm transition-all duration-300 ${item.checked ? 'text-[#7A7268] line-through opacity-60' : 'text-[#1E1C1A]'}`}>
                                                     {mainText}
                                                   </span>
@@ -1782,55 +1776,55 @@ export default function ItineraryPage() {
                                                     </span>
                                                   )}
                                                 </button>
-                                            
-                                            <button
-                                              onClick={() => removePackingItem(category, item.id)}
-                                              className="p-2 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 text-red-300 hover:text-red-500 rounded-lg"
-                                              title="Remove item"
-                                            >
-                                              <Trash2 className="w-4 h-4" />
-                                            </button>
-                                            </motion.div>
-                                          );
-                                        })}
-                                      </motion.div>
-                                      
-                                      <div className="mt-4 flex items-center gap-2 px-3">
-                                        <input
-                                          type="text"
-                                          placeholder={`Add custom ${category.toLowerCase()} item...`}
-                                          value={customInputs[category] || ''}
-                                          onChange={(e) => setCustomInputs(prev => ({ ...prev, [category]: e.target.value }))}
-                                          onKeyDown={(e) => e.key === 'Enter' && addCustomPackingItem(category)}
-                                          className="flex-1 bg-transparent border-b border-[#E6DFD5] py-2 text-sm font-sans focus:outline-hidden focus:border-[#FF6B2C] placeholder:text-[#7A7268]/50"
-                                        />
-                                        <button
-                                          onClick={() => addCustomPackingItem(category)}
-                                          disabled={!customInputs[category]?.trim()}
-                                          className="p-2 rounded-xl bg-[#FAF6F0] text-[#1E1C1A] hover:bg-[#FF6B2C] hover:text-white disabled:opacity-50 disabled:hover:bg-[#FAF6F0] disabled:hover:text-[#1E1C1A] transition-colors"
-                                        >
-                                          <Plus className="w-4 h-4" />
-                                        </button>
+
+                                                <button
+                                                  onClick={() => removePackingItem(category, item.id)}
+                                                  className="p-2 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 text-red-300 hover:text-red-500 rounded-lg"
+                                                  title="Remove item"
+                                                >
+                                                  <Trash2 className="w-4 h-4" />
+                                                </button>
+                                              </motion.div>
+                                            );
+                                          })}
+                                        </motion.div>
+
+                                        <div className="mt-4 flex items-center gap-2 px-3">
+                                          <input
+                                            type="text"
+                                            placeholder={`Add custom ${category.toLowerCase()} item...`}
+                                            value={customInputs[category] || ''}
+                                            onChange={(e) => setCustomInputs(prev => ({ ...prev, [category]: e.target.value }))}
+                                            onKeyDown={(e) => e.key === 'Enter' && addCustomPackingItem(category)}
+                                            className="flex-1 bg-transparent border-b border-[#E6DFD5] py-2 text-sm font-sans focus:outline-hidden focus:border-[#FF6B2C] placeholder:text-[#7A7268]/50"
+                                          />
+                                          <button
+                                            onClick={() => addCustomPackingItem(category)}
+                                            disabled={!customInputs[category]?.trim()}
+                                            className="p-2 rounded-xl bg-[#FAF6F0] text-[#1E1C1A] hover:bg-[#FF6B2C] hover:text-white disabled:opacity-50 disabled:hover:bg-[#FAF6F0] disabled:hover:text-[#1E1C1A] transition-colors"
+                                          >
+                                            <Plus className="w-4 h-4" />
+                                          </button>
+                                        </div>
                                       </div>
-                                    </div>
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
-                            </div>
-                          );
-                        })
-                      })()
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </div>
+                            );
+                          })
+                        })()
                       )}
                     </div>
                   </section>
                 );
               })() : activeDay === 'tracking' ? (
                 <section className="font-sans mb-12">
-                  <PriceTracker 
-                    tripId={itinerary?.id || itinerary?.db_id || activeTripId || 'shared-trip'} 
-                    destinationName={itinerary?.destinationName} 
-                    startDate={itinerary?.startDate} 
-                    endDate={itinerary?.endDate} 
+                  <PriceTracker
+                    tripId={itinerary?.id || itinerary?.db_id || activeTripId || 'shared-trip'}
+                    destinationName={itinerary?.destinationName}
+                    startDate={itinerary?.startDate}
+                    endDate={itinerary?.endDate}
                     hotelMode={itinerary?.hotelMode || (itinerary?.basecampHotel || itinerary?.preferences?.basecamp ? 'basecamp' : 'undecided')}
                     basecampHotel={itinerary?.basecampHotel || itinerary?.preferences?.basecamp || null}
                     onReoptimize={async (newHotelName) => {
@@ -1867,7 +1861,7 @@ export default function ItineraryPage() {
                         showToast('Failed to re-optimize itinerary. Please try again.', 'error');
                       }
                     }}
-                    onToast={showToast} 
+                    onToast={showToast}
                   />
                 </section>
               ) : activeDay === 'visa' ? (() => {
@@ -1905,7 +1899,7 @@ export default function ItineraryPage() {
                             Please set your Passport Nationality in Settings to view accurate visa requirements for this destination.
                           </p>
                         </div>
-                        <Link 
+                        <Link
                           href="/settings"
                           className="mt-4 px-6 py-2.5 bg-[#1E1C1A] text-[#FAF6F0] text-sm font-bold rounded-xl hover:bg-[#FF6B2C] transition-colors"
                         >
@@ -1934,21 +1928,21 @@ export default function ItineraryPage() {
                           <h3 className="text-sm font-mono uppercase tracking-widest text-[#5F5E5A] font-bold mb-6">
                             Entry Requirements for {itinerary?.destinationName}
                           </h3>
-                          
+
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                             <div>
                               <div className="text-xs text-[#7A7268] mb-1">Visa Status</div>
                               <div className="font-bold text-[#1E1C1A]">{visaReqs.required}</div>
                               {visaReqs.details && <div className="text-xs text-[#7A7268] mt-1">{visaReqs.details}</div>}
                             </div>
-                            
+
                             {visaReqs.processingTime && (
                               <div>
                                 <div className="text-xs text-[#7A7268] mb-1">Processing Time</div>
                                 <div className="font-bold text-[#1E1C1A]">{visaReqs.processingTime}</div>
                               </div>
                             )}
-                            
+
                             {visaReqs.passportValidity && (
                               <div>
                                 <div className="text-xs text-[#7A7268] mb-1">Passport Validity</div>
@@ -1963,10 +1957,10 @@ export default function ItineraryPage() {
                               </div>
                             )}
                           </div>
-                          
+
                           {visaReqs.embassyLink && (
                             <div className="mt-8 pt-6 border-t border-[#E6DFD5]">
-                              <a 
+                              <a
                                 href={visaReqs.embassyLink}
                                 target="_blank"
                                 rel="noopener noreferrer"
@@ -1978,7 +1972,7 @@ export default function ItineraryPage() {
                             </div>
                           )}
                         </div>
-                        
+
                         <div>
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-serif font-bold text-[#1E1C1A]">Document Checklist</h3>
@@ -2000,9 +1994,8 @@ export default function ItineraryPage() {
                                       <div className="w-5 h-5 rounded-full border-2 border-[#E6DFD5] group-hover:border-[#1E1C1A] transition-colors" />
                                     )}
                                   </div>
-                                  <span className={`text-sm font-sans transition-all duration-300 ${
-                                    item.checked ? 'text-[#7A7268] line-through decoration-[#7A7268]/50' : 'text-[#1E1C1A] font-medium'
-                                  }`}>
+                                  <span className={`text-sm font-sans transition-all duration-300 ${item.checked ? 'text-[#7A7268] line-through decoration-[#7A7268]/50' : 'text-[#1E1C1A] font-medium'
+                                    }`}>
                                     {item.text}
                                   </span>
                                 </button>
@@ -2060,7 +2053,7 @@ export default function ItineraryPage() {
                               <span className="ml-2 text-[#7A7268] font-sans font-semibold normal-case tracking-normal text-[11px]">({getDayDateString(itinerary.startDate, dayIdx)})</span>
                             )}
                           </span>
-                          
+
                           {/* Visual distance sparkline next to distance stats & dining rollup */}
                           <div className="flex items-center gap-3 text-xs font-sans font-semibold text-[#5F5E5A] tracking-wide flex-wrap">
                             <span>{activities.length} Stops</span>
@@ -2106,7 +2099,7 @@ export default function ItineraryPage() {
                             <span className="flex items-center gap-1">Afternoon (2 PM)</span>
                             <span className="flex items-center gap-1"><Sunset className="w-3 h-3 text-indigo-700" /> Evening (10 PM)</span>
                           </div>
-                          
+
                           {/* Sunrise-to-sunset gradient track */}
                           <div className="relative w-full h-3 rounded-full bg-linear-to-r from-amber-100 via-orange-200 to-indigo-950 border border-[#E6DFD5]/40 shadow-inner">
                             {activities.map((act, idx) => {
@@ -2122,7 +2115,7 @@ export default function ItineraryPage() {
                                   <div className="w-5 h-5 rounded-full border border-white bg-[#FF6B2C] shadow-xs flex items-center justify-center text-[9px] font-bold text-white transition-all group-hover/marker:scale-125 group-hover/marker:bg-[#1E1C1A]">
                                     {idx + 1}
                                   </div>
-                                  
+
                                   {/* Floating tooltip */}
                                   <div className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden group-hover/marker:flex flex-col items-center bg-[#1E1C1A] text-white text-[10px] font-sans px-2.5 py-1.5 rounded-lg whitespace-nowrap shadow-md z-30">
                                     <span className="font-bold text-[#F5F0E8]">{act.time}</span>
@@ -2155,13 +2148,13 @@ export default function ItineraryPage() {
                           const costInfo = formatCost(act);
                           const aiInsightText = getAiInsight(act, idx);
                           const transport = getTransportBetweenStops(activities[idx - 1], act, idx);
-                          
+
                           const stopKey = `${activeDay}-${stopNum}`;
                           const isExpanded = !!expandedStops[stopKey];
                           const isSaved = !!savedStops[stopKey];
                           const showsAlts = !!showAlternatives[stopKey];
                           const alternatives = getAlternativeSuggestions(act, idx);
-                          
+
                           const { logisticsNote, weatherNote } = getContextAwareTip(act, idx, summary);
                           const categoryStyle = getCategoryStyling(act);
 
@@ -2176,10 +2169,10 @@ export default function ItineraryPage() {
                           const ribbonEstLabel = isDining ? 'Est. Spend Range:' : (isNature ? 'Admission Status:' : 'Est. Rate:');
                           const ribbonEstValue = isNature && (costInfo.title.includes('Check') || costInfo.title === 'Free' || costInfo.title === '$0') ? 'Free Public Entry' : costInfo.title;
                           const ribbonSubtext = isDining ? 'Table reservations & menu recommendations' : (isNature ? 'Best visiting times & walking directions' : 'Skip-the-line options & box office access');
-                          
+
                           const ribbonBtnText = isDining ? 'Compare Table Gateways' : (isNature ? 'Visitor Access Gateways' : 'Curated Booking Gateways');
                           const ribbonActionLabel = isDining ? 'Reserve Table Online' : (isNature ? 'Google Maps View' : 'Check Viator Passes');
-                          
+
                           // Clean venue/restaurant name extraction for accurate inline search queries
                           let cleanName = (act.title || '').trim();
                           const atMatch = cleanName.match(/\s(?:at|@|inside)\s+(.+)$/i);
@@ -2203,9 +2196,9 @@ export default function ItineraryPage() {
 
                           const ribbonActionUrl = isDining
                             ? `https://www.google.com/search?q=${encodeURIComponent(`${cleanSearchQuery} reserve table`)}`
-                            : (isNature 
-                                ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cleanSearchQuery)}`
-                                : `https://www.viator.com/searchResults/all?text=${encodeURIComponent(cleanSearchQuery)}`);
+                            : (isNature
+                              ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cleanSearchQuery)}`
+                              : `https://www.viator.com/searchResults/all?text=${encodeURIComponent(cleanSearchQuery)}`);
 
 
                           // Check for intentional pacing gaps (greater than 1 hour / 60 minutes)
@@ -2215,7 +2208,7 @@ export default function ItineraryPage() {
                             const prevEnd = getStopEndTimeMinutes(prevStop.time, prevStop.duration);
                             const currentStart = parseTimeToMinutes(act.time);
                             const diffMins = currentStart - prevEnd;
-                            
+
                             if (diffMins > 60) {
                               const gapHours = (diffMins / 60).toFixed(1);
                               gapElement = (
@@ -2248,7 +2241,7 @@ export default function ItineraryPage() {
                               )}
 
                               {/* Large Editorial Spread Stops (Alternating Left/Right) */}
-                              <motion.div 
+                              <motion.div
                                 id={`stop-card-${activeDay}-${stopNum}`}
                                 data-dining={`dining-stop-${activeDay}-${stopNum}`}
                                 className={`py-12 sm:py-16 flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} items-center gap-8 lg:gap-12 relative z-10 border-b border-[#E6DFD5]/50 last:border-b-0`}
@@ -2272,7 +2265,7 @@ export default function ItineraryPage() {
                                       whileHover={{ scale: 1.04 }}
                                       transition={{ duration: 0.6, ease: 'easeOut' }}
                                     />
-                                    
+
                                     {/* Daylight time tag with Planned vs Booked check (Requirement 4) */}
                                     <div className="absolute top-4 left-4 px-3.5 py-1.5 rounded-full bg-[#1E1C1A]/85 backdrop-blur-sm text-white font-mono text-xs font-bold tracking-wider shadow-sm">
                                       {(() => {
@@ -2285,7 +2278,7 @@ export default function ItineraryPage() {
                                                 return `Planned ${act.time || '10:00 AM'}`;
                                               }
                                             }
-                                          } catch (e) {}
+                                          } catch (e) { }
                                         }
                                         return act.time || '10:00 AM';
                                       })()}
@@ -2300,7 +2293,7 @@ export default function ItineraryPage() {
                                         if (storedNote && storedNote.trim()) {
                                           hasTicketNote = true;
                                         }
-                                      } catch (e) {}
+                                      } catch (e) { }
                                       if (hasTicketNote) {
                                         return (
                                           <div className="absolute top-4 right-4 px-3.5 py-1.5 rounded-full bg-emerald-600/95 backdrop-blur-sm text-white font-mono text-xs font-bold tracking-wider shadow-md border border-emerald-400/40 flex items-center gap-1.5 animate-in fade-in zoom-in duration-300 z-10">
@@ -2343,7 +2336,7 @@ export default function ItineraryPage() {
                                     <div className="flex items-center gap-2 text-xs font-sans tracking-widest uppercase text-[#7A7268] font-bold">
                                       <span>{act.time || '10:00 AM'}</span>
                                       <span className="text-[#FF6B2C] font-serif">•</span>
-                                      
+
                                       {/* Micro-loop 3D hover rotating icon (Accesses Requirement 5) */}
                                       <motion.span
                                         whileHover={{ rotateY: 180, scale: 1.15 }}
@@ -2352,18 +2345,17 @@ export default function ItineraryPage() {
                                       >
                                         {categoryStyle.icon}
                                       </motion.span>
-                                      
+
                                       <span>{categoryStyle.name}</span>
                                     </div>
 
                                     <button
                                       type="button"
                                       onClick={() => toggleSaveStop(stopKey)}
-                                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-sans font-bold transition-all cursor-pointer ${
-                                        isSaved
+                                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-sans font-bold transition-all cursor-pointer ${isSaved
                                           ? 'border-[#FF6B2C] bg-[#FF6B2C]/10 text-[#FF6B2C]'
                                           : 'border-[#E6DFD5] bg-white text-[#7A7268] hover:border-[#1E1C1A]'
-                                      }`}
+                                        }`}
                                     >
                                       <Bookmark className={`w-3.5 h-3.5 ${isSaved ? 'fill-[#FF6B2C]' : ''}`} />
                                       <span>{isSaved ? 'Saved' : 'Bookmark'}</span>
@@ -2413,7 +2405,7 @@ export default function ItineraryPage() {
                                     <div className="w-full rounded-2xl border border-[#E6DFD5] bg-[#FAF6F0]/80 p-4 sm:p-5 mb-5 shadow-2xs hover:border-[#FF6B2C]/40 transition-all duration-300 relative overflow-hidden group">
                                       {/* Decorative subtle terracotta glow */}
                                       <div className="absolute -right-12 -top-12 w-36 h-36 bg-[#FF6B2C]/10 rounded-full blur-2xl pointer-events-none group-hover:bg-[#FF6B2C]/15 transition-all duration-500" />
-                                      
+
                                       {/* Top Row: Icon + Title + Est Rate */}
                                       <div className="flex items-start justify-between gap-3 relative z-10 mb-3.5 pb-3.5 border-b border-[#E6DFD5]/70">
                                         <div className="flex items-center gap-3">
@@ -2433,7 +2425,7 @@ export default function ItineraryPage() {
                                                   if (storedNote && storedNote.trim()) {
                                                     hasTicketNote = true;
                                                   }
-                                                } catch (e) {}
+                                                } catch (e) { }
                                                 if (hasTicketNote) {
                                                   return (
                                                     <span className="px-2.5 py-0.5 rounded-full bg-emerald-600/15 border border-emerald-600/30 text-emerald-700 font-mono text-[10px] font-bold tracking-wider uppercase flex items-center gap-1">
@@ -2475,7 +2467,7 @@ export default function ItineraryPage() {
                                                 if (storedNote && storedNote.trim()) {
                                                   hasTicketNote = true;
                                                 }
-                                              } catch (e) {}
+                                              } catch (e) { }
                                               return hasTicketNote ? 'View Saved Reference ✓' : ribbonBtnText;
                                             })()}
                                           </span>
@@ -2527,7 +2519,7 @@ export default function ItineraryPage() {
                                         className="overflow-hidden w-full mt-4"
                                       >
                                         <div className="pt-3 pb-4 border-t border-[#E6DFD5] flex flex-col gap-4 text-sm text-[#4A443E]">
-                                          
+
                                           <p className="font-serif leading-relaxed text-base">
                                             {act.description || 'Detailed historical context and neighborhood guide maps.'}
                                           </p>
@@ -2540,7 +2532,7 @@ export default function ItineraryPage() {
                                                 <p className="text-xs font-serif italic text-[#5F5E5A] mt-0.5 leading-relaxed">{logisticsNote}</p>
                                               </div>
                                             </div>
-                                            
+
                                             <div className="flex items-start gap-2.5">
                                               <Sun className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                                               <div>
@@ -2628,7 +2620,7 @@ export default function ItineraryPage() {
                             </button>
                           )}
                         </div>
-                        
+
                         <button
                           onClick={() => {
                             if (activeDay < days.length) {
@@ -3044,18 +3036,18 @@ export default function ItineraryPage() {
       {/* Publish to Community Modal */}
       <AnimatePresence>
         {isPublishModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }} 
+          <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               onClick={() => setIsPublishModalOpen(false)}
               className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"
             />
-            
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }} 
-              animate={{ opacity: 1, scale: 1, y: 0 }} 
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="relative w-full max-w-lg bg-white rounded-3xl p-8 shadow-2xl z-10 overflow-hidden border border-stone-200"
             >
@@ -3075,22 +3067,22 @@ export default function ItineraryPage() {
                   {/* Title */}
                   <div>
                     <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-stone-500 mb-2">Trip Title</label>
-                    <input 
+                    <input
                       type="text"
                       value={publishForm.title}
-                      onChange={(e) => setPublishForm({...publishForm, title: e.target.value})}
+                      onChange={(e) => setPublishForm({ ...publishForm, title: e.target.value })}
                       placeholder="e.g. 3 Days of Coffee & Culture in Tokyo"
                       className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-900 focus:outline-none focus:border-[#F4703C] focus:ring-1 focus:ring-[#F4703C] transition-all"
                     />
                   </div>
-                  
+
                   {/* Tags */}
                   <div>
                     <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-stone-500 mb-2">Tags (comma separated)</label>
-                    <input 
+                    <input
                       type="text"
                       value={publishForm.tags}
-                      onChange={(e) => setPublishForm({...publishForm, tags: e.target.value})}
+                      onChange={(e) => setPublishForm({ ...publishForm, tags: e.target.value })}
                       placeholder="e.g. Budget, Solo, Foodie"
                       className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-900 focus:outline-none focus:border-[#F4703C] focus:ring-1 focus:ring-[#F4703C] transition-all"
                     />
@@ -3100,7 +3092,7 @@ export default function ItineraryPage() {
                   <div>
                     <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-stone-500 mb-2">Cover Photo</label>
                     <div className="relative">
-                      <input 
+                      <input
                         type="file"
                         accept="image/*"
                         onChange={handlePublishPhotoUpload}
@@ -3109,10 +3101,10 @@ export default function ItineraryPage() {
                       <div className="w-full bg-stone-50 border border-stone-200 border-dashed rounded-xl px-4 py-4 flex flex-col items-center justify-center text-stone-500 hover:border-[#F4703C] hover:text-[#F4703C] transition-colors group">
                         {publishForm.coverPhoto ? (
                           <div className="relative w-full h-32 rounded-lg overflow-hidden">
-                             <img src={publishForm.coverPhoto} alt="Cover Preview" className="w-full h-full object-cover" />
-                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white font-bold text-sm">
-                               Change Photo
-                             </div>
+                            <img src={publishForm.coverPhoto} alt="Cover Preview" className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white font-bold text-sm">
+                              Change Photo
+                            </div>
                           </div>
                         ) : (
                           <>
@@ -3127,16 +3119,16 @@ export default function ItineraryPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Actions */}
                   <div className="pt-4 flex items-center justify-end gap-3">
-                    <button 
+                    <button
                       onClick={() => setIsPublishModalOpen(false)}
                       className="px-5 py-2.5 rounded-full text-sm font-bold text-stone-500 hover:text-stone-900 hover:bg-stone-100 transition-colors"
                     >
                       Cancel
                     </button>
-                    <button 
+                    <button
                       onClick={handlePublishSubmit}
                       disabled={!publishForm.title}
                       className="px-6 py-2.5 rounded-full text-sm font-bold bg-[#F4703C] text-white hover:bg-[#E25C27] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg shadow-[#F4703C]/30"

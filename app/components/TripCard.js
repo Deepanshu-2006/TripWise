@@ -24,7 +24,7 @@ export default function TripCard({
       animate={{ opacity: 1, x: 0, y: 0, rotate: 0, scale: 1 }}
       exit={{ opacity: 0, x: 60, y: 40, rotate: 8, scale: 0.8 }}
       transition={{ duration: 0.5, type: 'spring', bounce: 0.4 }}
-      className="relative group flex flex-col bg-stone-900 rounded-[2rem] overflow-hidden shadow-xl shadow-stone-200/50 hover:shadow-2xl hover:shadow-[#F4703C]/20 hover:-translate-y-1 transition-all duration-300 border border-stone-800"
+      className="relative group flex flex-col bg-stone-900 rounded-4xl overflow-hidden shadow-xl shadow-stone-200/50 hover:shadow-2xl hover:shadow-[#F4703C]/20 hover:-translate-y-1 transition-all duration-300 border border-stone-800"
     >
       {/* Full-Bleed Cover Image */}
       <div className="absolute inset-0 w-full h-full bg-stone-800">
@@ -36,16 +36,16 @@ export default function TripCard({
             className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s] ease-out"
           />
         ) : (
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-stone-200 to-stone-300 flex items-center justify-center">
+          <div className="absolute inset-0 w-full h-full bg-linear-to-br from-stone-200 to-stone-300 flex items-center justify-center">
             <span className="text-stone-500 font-mono text-xs uppercase tracking-widest">{destination}</span>
           </div>
         )}
         {/* Seamless gradient overlay blending into the card body */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/10 opacity-90 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/40 to-black/10 opacity-90 group-hover:opacity-100 transition-opacity duration-500" />
       </div>
 
       {/* Card Content Overlay */}
-      <div className="px-7 pb-8 pt-12 flex flex-col flex-grow relative z-10 h-full min-h-[440px] justify-end">
+      <div className="px-7 pb-8 pt-12 flex flex-col grow relative z-10 h-full min-h-110 justify-end">
         
         {/* Top/Floating elements could go here, but we focus on bottom weight for cinematic feel */}
         
@@ -58,7 +58,7 @@ export default function TripCard({
                 alt={authorName}
                 className="w-10 h-10 rounded-full border-2 border-white/20 object-cover relative z-10 shadow-lg group-hover/avatar:scale-105 transition-transform duration-300"
               />
-              <div className="absolute inset-0 rounded-full bg-white opacity-0 group-hover/avatar:opacity-100 blur-[4px] transition-opacity duration-300 z-0" />
+              <div className="absolute inset-0 rounded-full bg-white opacity-0 group-hover/avatar:opacity-100 blur-xs transition-opacity duration-300 z-0" />
             </div>
             <span className="text-stone-200 text-[11px] font-mono font-bold uppercase tracking-[0.2em] group-hover:text-white transition-colors drop-shadow-md">
               {authorName}
@@ -66,7 +66,7 @@ export default function TripCard({
           </div>
 
           {/* Title (Destination + Duration) */}
-          <h3 className="text-3xl font-serif font-extrabold text-white mb-4 leading-tight transition-all duration-500 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-stone-300 drop-shadow-lg">
+          <h3 className="text-3xl font-serif font-extrabold text-white mb-4 leading-tight transition-all duration-500 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-white group-hover:to-stone-300 drop-shadow-lg">
             {destination} &middot; {duration}
           </h3>
 

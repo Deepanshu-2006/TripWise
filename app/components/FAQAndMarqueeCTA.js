@@ -417,7 +417,7 @@ export default function FAQAndMarqueeCTA() {
       {/* Cinematic Circle Wipe Transition Overlay */}
       <div 
           ref={wipeOverlayRef} 
-          className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[20px] h-[20px] bg-[#0A0A0A] rounded-full z-[99999] pointer-events-none opacity-0 origin-center" 
+          className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-[#0A0A0A] rounded-full z-99999 pointer-events-none opacity-0 origin-center" 
       />
     </div>
   );

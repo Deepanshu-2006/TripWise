@@ -139,7 +139,7 @@ export default function CommunityFeed() {
               <select 
                 value={activeDestination}
                 onChange={(e) => setActiveDestination(e.target.value)}
-                className="w-full appearance-none bg-white shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-stone-200/60 text-stone-700 text-xs font-mono font-bold uppercase rounded-full pl-6 pr-12 h-[46px] focus:outline-none focus:border-[#F4703C]/50 focus:ring-1 focus:ring-[#F4703C]/20 transition-all cursor-pointer hover:border-[#F4703C] hover:text-stone-900"
+                className="w-full appearance-none bg-white shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-stone-200/60 text-stone-700 text-xs font-mono font-bold uppercase rounded-full pl-6 pr-12 h-11.5 focus:outline-none focus:border-[#F4703C]/50 focus:ring-1 focus:ring-[#F4703C]/20 transition-all cursor-pointer hover:border-[#F4703C] hover:text-stone-900"
               >
                 {DESTINATIONS.map(dest => (
                   <option key={dest} value={dest} className="bg-white text-stone-700">{dest}</option>

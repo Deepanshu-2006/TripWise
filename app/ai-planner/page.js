@@ -461,21 +461,21 @@ export default function AIPlannerDashboard() {
                         <span className="font-serif font-bold text-5xl md:text-6xl text-stone-800 leading-none"><AnimatedCounter value={totalTrips} delay={0} /></span>
                     </div>
                     
-                    <div className="hidden md:block w-[1px] h-14 bg-stone-200/80 shrink-0 mx-8 lg:mx-12" />
+                    <div className="hidden md:block w-px h-14 bg-stone-200/80 shrink-0 mx-8 lg:mx-12" />
                     
                     <div className="flex flex-col items-start gap-1.5 md:gap-2 pl-6 md:pl-0 border-l border-stone-200/80 md:border-none">
                         <span className="font-mono text-[9px] md:text-[10px] uppercase tracking-widest text-stone-400 font-bold">Upcoming</span>
                         <span className="font-serif font-bold text-5xl md:text-6xl text-[#FF6B2C] leading-none"><AnimatedCounter value={upcomingTrips} delay={100} /></span>
                     </div>
 
-                    <div className="hidden md:block w-[1px] h-14 bg-stone-200/80 shrink-0 mx-8 lg:mx-12" />
+                    <div className="hidden md:block w-px h-14 bg-stone-200/80 shrink-0 mx-8 lg:mx-12" />
                     
                     <div className="flex flex-col items-start gap-1.5 md:gap-2 pr-6 md:pr-0">
                         <span className="font-mono text-[9px] md:text-[10px] uppercase tracking-widest text-stone-400 font-bold">Countries</span>
                         <span className="font-serif font-bold text-5xl md:text-6xl text-stone-800 leading-none"><AnimatedCounter value={uniqueCountries} delay={200} /></span>
                     </div>
 
-                    <div className="hidden md:block w-[1px] h-14 bg-stone-200/80 shrink-0 mx-8 lg:mx-12" />
+                    <div className="hidden md:block w-px h-14 bg-stone-200/80 shrink-0 mx-8 lg:mx-12" />
                     
                     <div className="flex flex-col items-start gap-1.5 md:gap-2 pl-6 md:pl-0 border-l border-stone-200/80 md:border-none">
                         <span className="font-mono text-[9px] md:text-[10px] uppercase tracking-widest text-stone-400 font-bold">Days Traveled</span>
@@ -503,11 +503,11 @@ export default function AIPlannerDashboard() {
                                         {isActive && (
                                             <motion.div
                                                 layoutId="activeFilterTab"
-                                                className="absolute inset-0 bg-gradient-to-r from-[#FF6B2C] to-[#FF8A4C] rounded-full shadow-[0_4px_15px_rgba(255,107,44,0.4)]"
+                                                className="absolute inset-0 bg-linear-to-r from-[#FF6B2C] to-[#FF8A4C] rounded-full shadow-[0_4px_15px_rgba(255,107,44,0.4)]"
                                                 transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
                                             />
                                         )}
-                                        <span className="relative z-10 tracking-[0.1em]">{filter}</span>
+                                        <span className="relative z-10 tracking-widest">{filter}</span>
                                     </button>
                                 );
                             })}
@@ -529,7 +529,7 @@ export default function AIPlannerDashboard() {
                                     />
                                 )}
                                 <LayoutGrid size={14} className="relative z-10" />
-                                <span className="relative z-10 tracking-[0.1em]">Grid</span>
+                                <span className="relative z-10 tracking-widest">Grid</span>
                             </button>
                             <button
                                 onClick={() => setViewMode('calendar')}
@@ -545,13 +545,13 @@ export default function AIPlannerDashboard() {
                                     />
                                 )}
                                 <Calendar size={14} className="relative z-10" />
-                                <span className="relative z-10 tracking-[0.1em]">Calendar</span>
+                                <span className="relative z-10 tracking-widest">Calendar</span>
                             </button>
                         </div>
                     </div>
 
                     {/* Sort and New Trip */}
-                    <div className="flex items-center gap-4 w-full md:w-auto translate-y-[3px]">
+                    <div className="flex items-center gap-4 w-full md:w-auto translate-y-0.75">
                         <div className={`relative w-full md:w-48 group ${viewMode === 'calendar' ? 'hidden' : ''}`}>
                             <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400 group-hover:text-[#FF6B2C] transition-colors duration-300">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -578,10 +578,10 @@ export default function AIPlannerDashboard() {
 
                         <a 
                             href="/ai-planner/new"
-                            className="relative overflow-hidden hidden sm:flex group px-6 py-3 bg-gradient-to-r from-[#FF8243] via-[#FF5A00] to-[#FF8243] bg-[length:200%_auto] hover:bg-[position:100%_0] text-white font-bold text-[11px] rounded-full transition-all duration-500 uppercase tracking-[0.1em] items-center justify-center gap-2 shadow-[0_8px_20px_-6px_rgba(255,107,44,0.6)] hover:shadow-[0_15px_30px_-6px_rgba(255,107,44,0.9)] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[0_4px_10px_-6px_rgba(255,107,44,0.5)] shrink-0 border border-white/30"
+                            className="relative overflow-hidden hidden sm:flex group px-6 py-3 bg-linear-to-r from-[#FF8243] via-[#FF5A00] to-[#FF8243] bg-size-[200%_auto] hover:bg-position-[100%_0] text-white font-bold text-[11px] rounded-full transition-all duration-500 uppercase tracking-widest items-center justify-center gap-2 shadow-[0_8px_20px_-6px_rgba(255,107,44,0.6)] hover:shadow-[0_15px_30px_-6px_rgba(255,107,44,0.9)] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[0_4px_10px_-6px_rgba(255,107,44,0.5)] shrink-0 border border-white/30"
                         >
                             {/* Inner Shine sweep on hover */}
-                            <div className="absolute inset-0 w-[200%] h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" style={{ transform: 'skewX(-20deg)' }} />
+                            <div className="absolute inset-0 w-[200%] h-full bg-linear-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" style={{ transform: 'skewX(-20deg)' }} />
                             
                             <div className="bg-white/20 backdrop-blur-md rounded-full p-0.5 group-hover:rotate-180 group-hover:scale-110 transition-all duration-500 shadow-[inset_0_1px_3px_rgba(255,255,255,0.4)] relative z-10">
                                 <Plus size={14} strokeWidth={3} className="text-white drop-shadow-md" />
@@ -594,7 +594,7 @@ export default function AIPlannerDashboard() {
 
                 {/* Empty State / Grid */}
                 {isLoading ? (
-                    <div className="flex-1 flex items-center justify-center min-h-[400px]">
+                    <div className="flex-1 flex items-center justify-center min-h-100">
                         <Loader2 className="w-8 h-8 text-[#FF6B2C] animate-spin" />
                     </div>
                 ) : savedTrips.length === 0 ? (
@@ -606,7 +606,7 @@ export default function AIPlannerDashboard() {
                         className="relative flex flex-col items-center justify-center py-32 px-6 rounded-[2.5rem] border border-stone-200/50 shadow-sm overflow-hidden bg-white isolate"
                     >
                         {/* Decorative Background Gradients */}
-                        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-orange-50/40 via-white to-white"></div>
+                        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-orange-50/40 via-white to-white"></div>
                         <div className="absolute inset-0 -z-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03]"></div>
                         
                         {/* Floating Icon Container */}
@@ -616,7 +616,7 @@ export default function AIPlannerDashboard() {
                             className="relative w-24 h-24 mb-8"
                         >
                             <div className="absolute inset-0 bg-orange-100/50 rounded-full blur-xl scale-150"></div>
-                            <div className="relative w-full h-full bg-gradient-to-br from-white to-orange-50 rounded-2xl shadow-xl shadow-orange-900/5 border border-white flex items-center justify-center rotate-3 hover:rotate-6 transition-transform duration-500">
+                            <div className="relative w-full h-full bg-linear-to-br from-white to-orange-50 rounded-2xl shadow-xl shadow-orange-900/5 border border-white flex items-center justify-center rotate-3 hover:rotate-6 transition-transform duration-500">
                                 <Compass size={40} strokeWidth={1.5} className="text-[#FF6B2C]" />
                             </div>
                             
@@ -629,7 +629,7 @@ export default function AIPlannerDashboard() {
                             </motion.div>
                         </motion.div>
 
-                        <h3 className="font-serif font-bold text-3xl md:text-4xl text-stone-900 mb-4 text-center tracking-tight">Your canvas is <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B2C] to-orange-400">waiting.</span></h3>
+                        <h3 className="font-serif font-bold text-3xl md:text-4xl text-stone-900 mb-4 text-center tracking-tight">Your canvas is <span className="text-transparent bg-clip-text bg-linear-to-r from-[#FF6B2C] to-orange-400">waiting.</span></h3>
                         <p className="text-stone-500 max-w-lg mx-auto text-center mb-10 text-[15px] leading-relaxed">
                             Every great journey begins with a single idea. Spark your next unforgettable adventure with our AI-powered travel designer.
                         </p>
@@ -638,7 +638,7 @@ export default function AIPlannerDashboard() {
                             href="/ai-planner/new?action=new"
                             className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-[13px] text-white transition-all duration-300 bg-[#1F1F1F] rounded-full uppercase tracking-[0.2em] hover:bg-black hover:shadow-xl hover:shadow-orange-500/20 hover:-translate-y-1 overflow-hidden"
                         >
-                            <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+                            <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-linear-to-r from-transparent via-white/10 to-transparent"></div>
                             <span className="relative flex items-center gap-2">
                                 Start Planning <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                             </span>
@@ -664,7 +664,7 @@ export default function AIPlannerDashboard() {
                                 >
                                     <Link 
                                         href={trip.status === 'COMPLETED' ? `/ai-planner/new?action=new&destination=${encodeURIComponent(trip.destinationName)}` : `/ai-planner/new?action=view&trip_id=${trip.db_id}${trip.status === 'DRAFT' ? '&step=' + getNextStep(trip.lastCompletedStep) : ''}${priceDrops[trip.db_id] ? '&tab=tracking' : ''}`}
-                                        className={`flex group h-full flex-col bg-white rounded-[2rem] border transition-all duration-500 overflow-hidden cursor-pointer relative hover:-translate-y-2 ${trip.status === 'COMPLETED' ? 'opacity-[0.85] border-stone-200/50' : 'border-stone-200/50 shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(255,107,44,0.15)] hover:border-[#FF6B2C]/40'}`}
+                                        className={`flex group h-full flex-col bg-white rounded-4xl border transition-all duration-500 overflow-hidden cursor-pointer relative hover:-translate-y-2 ${trip.status === 'COMPLETED' ? 'opacity-[0.85] border-stone-200/50' : 'border-stone-200/50 shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(255,107,44,0.15)] hover:border-[#FF6B2C]/40'}`}
                                     >
                                         <div 
                                             className="h-56 relative overflow-hidden flex items-center justify-center transition-transform duration-700 bg-stone-100"
@@ -680,7 +680,7 @@ export default function AIPlannerDashboard() {
                                                 </>
                                             )}
 
-                                            <div className={`absolute inset-0 bg-gradient-to-t ${trip.imageUrl ? 'from-black/80 via-black/20' : 'from-black/40 via-transparent'} to-transparent z-0`} />
+                                            <div className={`absolute inset-0 bg-linear-to-t ${trip.imageUrl ? 'from-black/80 via-black/20' : 'from-black/40 via-transparent'} to-transparent z-0`} />
                                             
                                             {/* Status Badge */}
                                             <div className="absolute top-5 left-5 z-10">
@@ -733,7 +733,7 @@ export default function AIPlannerDashboard() {
                                             </div>
                                         </div>
 
-                                        <div className="p-7 flex flex-col flex-1 bg-white relative z-10 min-h-[160px]">
+                                        <div className="p-7 flex flex-col flex-1 bg-white relative z-10 min-h-40">
                                             <div className="mb-2">
                                                 <p className="text-[10px] font-mono text-[#FF6B2C] uppercase tracking-[0.25em] mb-1.5 font-bold">
                                                     {trip.country || 'Destination'}
@@ -765,13 +765,13 @@ export default function AIPlannerDashboard() {
                                                             
                                                             {/* Fill */}
                                                             <motion.div 
-                                                                className="absolute top-0 left-0 h-full rounded-full bg-gradient-to-r from-[#FFB085] to-[#FF6B2C] transition-all duration-500 ease-out z-0" 
+                                                                className="absolute top-0 left-0 h-full rounded-full bg-linear-to-r from-[#FFB085] to-[#FF6B2C] transition-all duration-500 ease-out z-0" 
                                                                 initial={{ width: "0%" }}
                                                                 animate={{ width: `${trip.progress}%` }}
                                                                 transition={{ duration: 1.5, ease: "easeOut", delay: 0.1 * (idx || 0) }}
                                                             >
                                                                 {/* Soft leading glow edge */}
-                                                                <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/2 w-3 h-3 bg-[#FF6B2C] rounded-full blur-[4px] opacity-80" />
+                                                                <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/2 w-3 h-3 bg-[#FF6B2C] rounded-full blur-xs opacity-80" />
                                                             </motion.div>
 
                                                             {/* Markers */}
@@ -826,7 +826,7 @@ export default function AIPlannerDashboard() {
                                     {filteredAndSortedTrips.length >= 4 ? (
                                         <Link 
                                             href="/ai-planner/new?action=new"
-                                            className="h-full min-h-[300px] flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm rounded-[2rem] border-2 border-stone-200/60 border-dashed hover:border-[#FF6B2C]/40 hover:bg-white hover:-translate-y-2 hover:shadow-xl hover:shadow-[#FF6B2C]/5 transition-all duration-500 group cursor-pointer"
+                                            className="h-full min-h-75 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm rounded-4xl border-2 border-stone-200/60 border-dashed hover:border-[#FF6B2C]/40 hover:bg-white hover:-translate-y-2 hover:shadow-xl hover:shadow-[#FF6B2C]/5 transition-all duration-500 group cursor-pointer"
                                         >
                                             <div className="w-14 h-14 rounded-full bg-stone-100 flex items-center justify-center mb-5 group-hover:scale-110 group-hover:bg-[#FF6B2C] transition-all duration-500 shadow-sm group-hover:shadow-[0_8px_25px_rgba(255,107,44,0.4)]">
                                                 <Plus size={24} className="text-stone-400 group-hover:text-white transition-colors duration-300" />
@@ -837,7 +837,7 @@ export default function AIPlannerDashboard() {
                                     ) : (
                                         <Link 
                                             href="/destinations"
-                                            className="h-full min-h-[300px] flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm rounded-[2rem] border-2 border-stone-200/60 border-dashed hover:border-[#FF6B2C]/40 hover:bg-white hover:-translate-y-2 hover:shadow-xl hover:shadow-[#FF6B2C]/5 transition-all duration-500 group cursor-pointer"
+                                            className="h-full min-h-75 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm rounded-4xl border-2 border-stone-200/60 border-dashed hover:border-[#FF6B2C]/40 hover:bg-white hover:-translate-y-2 hover:shadow-xl hover:shadow-[#FF6B2C]/5 transition-all duration-500 group cursor-pointer"
                                         >
                                             <div className="w-14 h-14 rounded-full bg-stone-100 flex items-center justify-center mb-5 group-hover:scale-110 group-hover:bg-[#FF6B2C] transition-all duration-500 shadow-sm group-hover:shadow-[0_8px_25px_rgba(255,107,44,0.4)]">
                                                 <Compass size={24} className="text-stone-400 group-hover:text-white transition-colors duration-300" />
@@ -879,7 +879,7 @@ export default function AIPlannerDashboard() {
                                     animate={{ scale: 1, opacity: 1, y: 0 }}
                                     exit={{ scale: 0.95, opacity: 0, y: 20 }}
                                     transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
-                                    className="bg-white rounded-[2rem] max-w-sm w-full shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-stone-200/50 flex flex-col relative overflow-hidden"
+                                    className="bg-white rounded-4xl max-w-sm w-full shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-stone-200/50 flex flex-col relative overflow-hidden"
                                     onClick={e => e.stopPropagation()}
                                 >
                                     {/* Modal Header with Trip Image */}
@@ -890,7 +890,7 @@ export default function AIPlannerDashboard() {
                                             <div className="absolute inset-0" style={generateGradient(trip?.destinationName)}></div>
                                         )}
                                         {/* Soft fade to white at the bottom */}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-black/20" />
+                                        <div className="absolute inset-0 bg-linear-to-t from-white via-transparent to-black/20" />
                                     </div>
                                     
                                     {/* Overlapping Icon */}
@@ -910,7 +910,7 @@ export default function AIPlannerDashboard() {
                                     {/* Modal Body */}
                                     <div className="p-8 pt-5 flex flex-col items-center text-center">
                                         <h3 className="font-serif font-bold text-3xl text-stone-900 mb-2">Delete {trip?.destinationName?.split(',')[0]}?</h3>
-                                        <p className="text-stone-500 text-[13px] leading-relaxed mb-8 max-w-[260px]">
+                                        <p className="text-stone-500 text-[13px] leading-relaxed mb-8 max-w-65">
                                             You are about to permanently delete this planning session. This cannot be undone.
                                         </p>
                                         
@@ -918,13 +918,13 @@ export default function AIPlannerDashboard() {
                                         <div className="flex w-full gap-3 mt-2">
                                             <button 
                                                 onClick={() => setTripToDelete(null)}
-                                                className="flex-1 px-4 py-3.5 rounded-2xl text-[12px] font-bold uppercase tracking-[0.1em] text-stone-600 bg-white border border-stone-200 shadow-sm hover:bg-stone-50 hover:border-stone-300 transition-all active:scale-[0.98]"
+                                                className="flex-1 px-4 py-3.5 rounded-2xl text-[12px] font-bold uppercase tracking-widest text-stone-600 bg-white border border-stone-200 shadow-sm hover:bg-stone-50 hover:border-stone-300 transition-all active:scale-[0.98]"
                                             >
                                                 Cancel
                                             </button>
                                             <button 
                                                 onClick={confirmDelete}
-                                                className="flex-1 px-4 py-3.5 rounded-2xl text-[12px] font-bold uppercase tracking-[0.1em] text-white bg-gradient-to-b from-rose-500 to-rose-600 border border-rose-600 shadow-[0_8px_20px_rgba(225,29,72,0.25)] hover:shadow-[0_12px_25px_rgba(225,29,72,0.4)] transition-all hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0"
+                                                className="flex-1 px-4 py-3.5 rounded-2xl text-[12px] font-bold uppercase tracking-widest text-white bg-linear-to-b from-rose-500 to-rose-600 border border-rose-600 shadow-[0_8px_20px_rgba(225,29,72,0.25)] hover:shadow-[0_12px_25px_rgba(225,29,72,0.4)] transition-all hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0"
                                             >
                                                 Delete
                                             </button>
@@ -945,7 +945,7 @@ export default function AIPlannerDashboard() {
                         animate={{ x: "-50%", opacity: 1, y: 0, scale: 1, rotateX: 0 }}
                         exit={{ x: "-50%", opacity: 0, y: 40, scale: 0.8, rotateX: 60 }}
                         transition={{ type: "spring", bounce: 0.35, duration: 0.7 }}
-                        className="fixed bottom-10 left-1/2 z-[100] flex items-center gap-4 bg-stone-900/90 backdrop-blur-xl border border-white/10 text-white pl-5 pr-3 py-2.5 rounded-2xl shadow-[0_30px_60px_rgba(0,0,0,0.6)] overflow-hidden min-w-[300px] origin-bottom"
+                        className="fixed bottom-10 left-1/2 z-100 flex items-center gap-4 bg-stone-900/90 backdrop-blur-xl border border-white/10 text-white pl-5 pr-3 py-2.5 rounded-2xl shadow-[0_30px_60px_rgba(0,0,0,0.6)] overflow-hidden min-w-75 origin-bottom"
                     >
                         <AnimatedTrashIcon />
                         
@@ -967,7 +967,7 @@ export default function AIPlannerDashboard() {
                             initial={{ width: "100%" }}
                             animate={{ width: "0%" }}
                             transition={{ duration: 5, ease: "linear" }}
-                            className="absolute bottom-0 left-0 h-[3px] bg-[#FF6B2C]"
+                            className="absolute bottom-0 left-0 h-0.75 bg-[#FF6B2C]"
                         />
                     </motion.div>
                 )}

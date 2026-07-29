@@ -223,7 +223,7 @@ export default function BentoShowcase({ destinations, onCardClick }) {
           
           {/* ─── ROTATING MEGA CARD (Top Right) ─── */}
           <div
-            className="relative w-full h-[400px] rounded-3xl bg-stone-900 shadow-[0_12px_40px_rgba(0,0,0,0.12)] border border-[#ECE8E2]/60 pointer-events-auto"
+            className="relative w-full h-100 rounded-3xl bg-stone-900 shadow-[0_12px_40px_rgba(0,0,0,0.12)] border border-[#ECE8E2]/60 pointer-events-auto"
             style={{ perspective: 1200 }}
           >
             {/* Preload images to prevent black flashes during 3D rotation */}

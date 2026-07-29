@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { SignUp } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
@@ -57,7 +57,7 @@ export default function SignUpPage() {
   // Sound Effect Synthesis (Highly Realistic Mechanical Switch)
   const playClickSound = () => {
     try {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      const AudioContext = window.AudioContext || window.AudioContext;
       const ctx = new AudioContext();
       
       // 1. The "Thud" (Low frequency physical impact)
@@ -108,7 +108,7 @@ export default function SignUpPage() {
     }
   };
 
-  const handleDragEnd = (e, info) => {
+  const handleDragEnd = (_e, info) => {
     // 1. Check if pulled hard enough to toggle light
     if (info.offset.y > 50) {
       if (!isLightOn) {
@@ -161,11 +161,11 @@ export default function SignUpPage() {
       <div className="relative z-10 w-full max-w-5xl flex items-center justify-between px-10 gap-20">
         
         {/* Left Side: Floor Lamp */}
-        <div className="relative w-full max-w-[400px] h-[600px] flex flex-col items-center justify-end">
+        <div className="relative w-full max-w-100 h-150 flex flex-col items-center justify-end">
           
           {/* The Light Beam Container */}
           <motion.div 
-            className="absolute top-[28px] w-[800px] h-[650px] pointer-events-none origin-top mix-blend-screen"
+            className="absolute top-7 w-200 h-162.5 pointer-events-none origin-top mix-blend-screen"
             style={{ 
               opacity: isLightOn ? 1 : dragOpacity
             }}
@@ -174,12 +174,12 @@ export default function SignUpPage() {
           >
             {/* Core intense beam */}
             <div 
-              className="absolute inset-0 bg-gradient-to-b from-[#FFF2B2]/60 to-transparent blur-[4px] z-10"
+              className="absolute inset-0 bg-linear-to-b from-[#FFF2B2]/60 to-transparent blur-xs z-10"
               style={{ clipPath: 'polygon(46% 0, 54% 0, 80% 100%, 20% 100%)' }} 
             />
             {/* Soft, wide volumetric scatter */}
             <div 
-              className="absolute inset-0 bg-gradient-to-b from-[#FFD875]/20 to-transparent blur-3xl z-0"
+              className="absolute inset-0 bg-linear-to-b from-[#FFD875]/20 to-transparent blur-3xl z-0"
               style={{ clipPath: 'polygon(40% 0, 60% 0, 100% 100%, 0% 100%)' }} 
             />
             
@@ -191,28 +191,28 @@ export default function SignUpPage() {
           <div className="relative flex flex-col items-center w-full h-full z-20">
             
             {/* Lamp Head (Ultra-thin disc with metallic rim and highlight) */}
-            <div className="w-72 h-3.5 bg-gradient-to-b from-[#222222] to-[#050505] rounded-[100%] absolute top-[15px] z-30 shadow-[0_10px_30px_rgba(0,0,0,0.9)] border-t border-white/[0.08]" />
+            <div className="w-72 h-3.5 bg-linear-to-b from-[#222222] to-[#050505] rounded-[100%] absolute top-3.75 z-30 shadow-[0_10px_30px_rgba(0,0,0,0.9)] border-t border-white/8" />
             
             {/* Inner Bulb Housing (Physical structure under the head) */}
-            <div className="w-32 h-2.5 bg-gradient-to-b from-[#111111] to-[#0A0A0A] rounded-b-[100%] absolute top-[18px] z-20" />
+            <div className="w-32 h-2.5 bg-linear-to-b from-[#111111] to-[#0A0A0A] rounded-b-[100%] absolute top-4.5 z-20" />
             
             {/* Glowing Bulb (Radiates light) */}
             <motion.div 
-              className="w-32 h-5 bg-[#FFF5C2] rounded-full absolute top-[18px] blur-[10px] z-20"
+              className="w-32 h-5 bg-[#FFF5C2] rounded-full absolute top-4.5 blur-[10px] z-20"
               style={{ opacity: isLightOn ? 1 : dragOpacity }}
               animate={isLightOn ? { opacity: [0, 1, 0.5, 1] } : undefined}
               transition={{ duration: 0.4 }}
             />
             
             {/* Lamp Pole (Tubular metallic gradient) */}
-            <div className="w-2 h-[560px] bg-gradient-to-r from-[#050505] via-[#2A2A2A] to-[#050505] absolute top-[20px] z-30 border-l border-white/[0.03]" />
+            <div className="w-2 h-140 bg-linear-to-r from-[#050505] via-[#2A2A2A] to-[#050505] absolute top-5 z-30 border-l border-white/3" />
             
             {/* Lamp Base (Heavy multi-layered beveled base) */}
             <div className="absolute bottom-0 z-30 flex flex-col items-center">
               {/* Sloped upper base */}
-              <div className="w-32 h-3 bg-gradient-to-b from-[#222222] to-[#111111] rounded-t-[100%] border-t border-white/[0.05]" />
+              <div className="w-32 h-3 bg-linear-to-b from-[#222222] to-[#111111] rounded-t-[100%] border-t border-white/5" />
               {/* Heavy block base */}
-              <div className="w-48 h-4 bg-[#0A0A0A] rounded-t-sm shadow-[0_10px_30px_rgba(0,0,0,1)] border-t border-white/[0.08]" />
+              <div className="w-48 h-4 bg-[#0A0A0A] rounded-t-sm shadow-[0_10px_30px_rgba(0,0,0,1)] border-t border-white/8" />
             </div>
 
             {/* The Pull String (with Pendulum Physics) */}
@@ -222,7 +222,7 @@ export default function SignUpPage() {
                 rotate: stringRotate, 
                 x: 110 // Shifted slightly further out for the wider 72px head
               }}
-              className={`absolute top-[22px] z-40 flex flex-col items-center ${isLightOn ? 'cursor-default pointer-events-none' : 'cursor-grab active:cursor-grabbing'}`}
+              className={`absolute top-5.5 z-40 flex flex-col items-center ${isLightOn ? 'cursor-default pointer-events-none' : 'cursor-grab active:cursor-grabbing'}`}
             >
               <motion.div
                 drag="y"
@@ -230,10 +230,10 @@ export default function SignUpPage() {
                 dragElastic={0.1}
                 style={{ y: dragY }}
                 onDragEnd={handleDragEnd}
-                className="w-[2px] h-40 bg-gradient-to-r from-[#111] via-[#444] to-[#111] shadow-xl flex flex-col items-center justify-end"
+                className="w-0.5 h-40 bg-linear-to-r from-[#111] via-[#444] to-[#111] shadow-xl flex flex-col items-center justify-end"
               >
                 {/* Handle (Metallic brass finish) */}
-                <div className="w-4 h-7 bg-gradient-to-br from-[#FFD275] via-[#C9902E] to-[#664610] rounded-full shadow-[0_4px_10px_rgba(0,0,0,0.5)] absolute -bottom-3 border border-[#FFD275]/40" />
+                <div className="w-4 h-7 bg-linear-to-br from-[#FFD275] via-[#C9902E] to-[#664610] rounded-full shadow-[0_4px_10px_rgba(0,0,0,0.5)] absolute -bottom-3 border border-[#FFD275]/40" />
               </motion.div>
             </motion.div>
           </div>
@@ -241,7 +241,7 @@ export default function SignUpPage() {
 
         {/* Right Side: Ultra-Premium Login Form */}
         <motion.div 
-          className="relative z-30 w-[420px] shrink-0 p-10 rounded-[2rem] bg-[#111111]/80 border border-white/[0.04] backdrop-blur-2xl"
+          className="relative z-30 w-105 shrink-0 p-10 rounded-4xl bg-[#111111]/80 border border-white/4 backdrop-blur-2xl"
           style={{ 
             opacity: isLightOn ? 1 : dragOpacity,
             y: isLightOn ? 0 : formY,

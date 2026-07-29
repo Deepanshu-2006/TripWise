@@ -106,9 +106,9 @@ export default function AnimatedFlightMap({ trips = [] }) {
     const shouldAnimate = !reducedMotion && isVisible && points.length >= 2;
 
     return (
-        <div className="absolute inset-0 w-full h-[450px] overflow-hidden pointer-events-none z-0">
+        <div className="absolute inset-0 w-full h-112.5 overflow-hidden pointer-events-none z-0">
             {/* Subtle gradient band */}
-            <div className="absolute inset-0 bg-gradient-to-b from-[#FF6B2C]/5 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-b from-[#FF6B2C]/5 to-transparent" />
             
             {/* World Map Silhouette (Real geographic line art) */}
             <svg className="absolute inset-0 w-full h-full opacity-[0.16]" viewBox="0 0 1440 450" fill="none" preserveAspectRatio="xMidYMin slice">
@@ -216,7 +216,7 @@ export default function AnimatedFlightMap({ trips = [] }) {
             </svg>
 
             {/* Soft glow */}
-            <div className="absolute -top-[10%] left-[20%] w-[60%] h-[300px] rounded-full bg-[#FF6B2C]/[0.03] blur-[120px]" />
+            <div className="absolute top-[-10%] left-[20%] w-[60%] h-75 rounded-full bg-[#FF6B2C]/3 blur-[120px]" />
         </div>
     );
 }

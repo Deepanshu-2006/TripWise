@@ -638,7 +638,7 @@ export default function ItineraryPage() {
       <div className="print:hidden">
         <motion.div 
             style={{ opacity: maskOpacity }} 
-            className="fixed top-0 left-0 right-0 h-[72px] sm:h-[88px] bg-[#FAF6F0] z-30 pointer-events-none" 
+            className="fixed top-0 left-0 right-0 h-18 sm:h-22 bg-[#FAF6F0] z-30 pointer-events-none" 
         />
         <Header />
       </div>

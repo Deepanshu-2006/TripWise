@@ -53,10 +53,10 @@ export default function CommunityFAQ() {
             return (
               <div 
                 key={index}
-                className="group relative bg-white/80 backdrop-blur-xl border border-white rounded-[2rem] overflow-hidden shadow-[0_4px_15px_rgba(0,0,0,0.02)] hover:shadow-[0_15px_35px_rgba(244,112,60,0.12)] hover:-translate-y-1 transition-all duration-500"
+                className="group relative bg-white/80 backdrop-blur-xl border border-white rounded-4xl overflow-hidden shadow-[0_4px_15px_rgba(0,0,0,0.02)] hover:shadow-[0_15px_35px_rgba(244,112,60,0.12)] hover:-translate-y-1 transition-all duration-500"
               >
                 {/* Subtle hover gradient behind card */}
-                <div className={`absolute inset-0 bg-gradient-to-br from-[#F4703C]/0 via-transparent to-[#F4703C]/0 group-hover:from-[#F4703C]/5 group-hover:to-transparent transition-colors duration-500 pointer-events-none ${isOpen ? 'from-[#F4703C]/5 to-transparent' : ''}`} />
+                <div className={`absolute inset-0 bg-linear-to-br from-[#F4703C]/0 via-transparent to-[#F4703C]/0 group-hover:from-[#F4703C]/5 group-hover:to-transparent transition-colors duration-500 pointer-events-none ${isOpen ? 'from-[#F4703C]/5 to-transparent' : ''}`} />
                 
                 <button
                   onClick={() => toggleFaq(index)}
@@ -69,7 +69,7 @@ export default function CommunityFAQ() {
                   {/* Premium Chevron Bubble */}
                   <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm ${
                     isOpen 
-                      ? 'bg-gradient-to-r from-[#F4703C] to-[#E25C27] text-white shadow-[0_4px_12px_rgba(244,112,60,0.4)]' 
+                      ? 'bg-linear-to-r from-[#F4703C] to-[#E25C27] text-white shadow-[0_4px_12px_rgba(244,112,60,0.4)]' 
                       : 'bg-stone-50 border border-stone-200/60 text-stone-400 group-hover:bg-[#F4703C]/10 group-hover:text-[#F4703C] group-hover:border-transparent'
                   }`}>
                     <motion.svg 

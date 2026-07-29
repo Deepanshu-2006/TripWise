@@ -121,7 +121,7 @@ export default function SeasonalCalendar({ destinationName = '', startDate, endD
       </div>
 
       {/* AI Insight */}
-      <div className="mb-8 rounded-xl p-4 bg-[#FF6B2C]/[0.05] border border-[#FF6B2C]/15 flex items-start gap-3">
+      <div className="mb-8 rounded-xl p-4 bg-[#FF6B2C]/5 border border-[#FF6B2C]/15 flex items-start gap-3">
         <div className="shrink-0 w-6 h-6 rounded-full bg-white border border-[#FF6B2C]/20 flex items-center justify-center shadow-xs mt-0.5">
           <span className="text-[11px]">🌤️</span>
         </div>
@@ -174,7 +174,7 @@ export default function SeasonalCalendar({ destinationName = '', startDate, endD
                 {/* Tooltip */}
                 <AnimatePresence>
                   {hoveredMonth === idx && (
-                    <div className="absolute bottom-[4.5rem] left-1/2 -translate-x-1/2 w-48 bg-[#1E1C1A] text-white p-3 rounded-xl shadow-xl z-50 pointer-events-none origin-bottom animate-in fade-in zoom-in-95 duration-200">
+                    <div className="absolute bottom-18 left-1/2 -translate-x-1/2 w-48 bg-[#1E1C1A] text-white p-3 rounded-xl shadow-xl z-50 pointer-events-none origin-bottom animate-in fade-in zoom-in-95 duration-200">
                       <div className="flex justify-between items-center mb-2 pb-2 border-b border-white/10">
                         <span className="font-bold text-sm font-sans">{m.month}</span>
                         <span className={`text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-md ${

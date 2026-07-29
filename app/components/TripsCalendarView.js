@@ -162,7 +162,7 @@ export default function TripsCalendarView({ trips }) {
         return (
             <div 
                 key={`${trip.db_id}-${rowIdx}`}
-                className={`absolute h-[28px] flex items-center z-10 transition-transform ${prefersReducedMotion ? '' : 'hover:scale-[1.01]'} hover:brightness-105 hover:z-20 origin-left`}
+                className={`absolute h-7 flex items-center z-10 transition-transform ${prefersReducedMotion ? '' : 'hover:scale-[1.01]'} hover:brightness-105 hover:z-20 origin-left`}
                 style={{ 
                     top: `${rowIdx * 34 + 36}px`, // 36px offset for day number + padding
                     width: `calc(100% - 6px)`,
@@ -185,7 +185,7 @@ export default function TripsCalendarView({ trips }) {
                         )}
                         <span className="truncate tracking-wide">{isStart ? destName : '→ ' + destName}</span>
                         {isNearest && daysUntil !== null && (
-                            <span className="ml-2 px-2 py-[2px] bg-white/90 text-[#FF6B2C] rounded-md text-[9px] font-bold uppercase tracking-widest shadow-sm shrink-0">
+                            <span className="ml-2 px-2 py-0.5 bg-white/90 text-[#FF6B2C] rounded-md text-[9px] font-bold uppercase tracking-widest shadow-sm shrink-0">
                                 In {daysUntil} days
                             </span>
                         )}
@@ -354,7 +354,7 @@ export default function TripsCalendarView({ trips }) {
                             aria-label={`Jump to ${mName} ${year}`}
                             tabIndex={0}
                         >
-                            <span className={`text-[10px] font-bold uppercase tracking-widest transition-colors ${isCurrent ? 'text-stone-900 border-b-2 border-[#FF6B2C] pb-0.5' : 'text-stone-400 group-hover:text-stone-600 pb-[4px]'}`}>
+                            <span className={`text-[10px] font-bold uppercase tracking-widest transition-colors ${isCurrent ? 'text-stone-900 border-b-2 border-[#FF6B2C] pb-0.5' : 'text-stone-400 group-hover:text-stone-600 pb-1'}`}>
                                 {mName.substring(0, 3)}
                             </span>
                             <div className="h-1.5 flex items-center justify-center">
@@ -426,7 +426,7 @@ export default function TripsCalendarView({ trips }) {
                                         {week.map((d, dIdx) => {
                                             const isTodayCell = isToday(d);
                                             return (
-                                                <div key={dIdx} className={`border-r border-stone-100 last:border-none p-2 relative ${!d ? 'bg-stone-50/50' : (dIdx === 0 || dIdx === 6 ? 'bg-stone-900/[0.02]' : '')} ${isTodayCell ? 'bg-[#FF6B2C]/[0.03]' : ''}`}>
+                                                <div key={dIdx} className={`border-r border-stone-100 last:border-none p-2 relative ${!d ? 'bg-stone-50/50' : (dIdx === 0 || dIdx === 6 ? 'bg-stone-900/2' : '')} ${isTodayCell ? 'bg-[#FF6B2C]/3' : ''}`}>
                                                     {d && (
                                                         <div className={`w-7 h-7 flex items-center justify-center rounded-full text-sm font-medium mx-auto sm:mx-0 ${isTodayCell ? 'bg-[#FF6B2C] text-white shadow-md shadow-[#FF6B2C]/30 font-bold' : 'text-stone-600'}`}>
                                                             {d}
@@ -442,7 +442,7 @@ export default function TripsCalendarView({ trips }) {
                                             return events.map((ev, evIdx) => (
                                                 <div key={evIdx} className="absolute" style={{ left: `${(ev.startCol / 7) * 100}%`, width: `${(ev.span / 7) * 100}%` }}>
                                                     {ev.isGap ? (
-                                                        <div className="absolute h-[28px] flex items-center justify-center text-[10px] uppercase tracking-widest text-stone-400 font-bold w-full" style={{ top: `${rIdx * 34 + 36}px` }}>
+                                                        <div className="absolute h-7 flex items-center justify-center text-[10px] uppercase tracking-widest text-stone-400 font-bold w-full" style={{ top: `${rIdx * 34 + 36}px` }}>
                                                             {ev.text}
                                                         </div>
                                                     ) : (
@@ -567,7 +567,7 @@ export default function TripsCalendarView({ trips }) {
                                 </div>
                             )}
                             {/* Gradient Overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                            <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/30 to-transparent" />
                             
                             {/* Close button top right */}
                             <button 
@@ -608,7 +608,7 @@ export default function TripsCalendarView({ trips }) {
                                     ? `/ai-planner/new?action=new&destination=${encodeURIComponent(selectedTripPopover.trip.destinationName)}`
                                     : `/ai-planner/new?action=view&trip_id=${selectedTripPopover.trip.db_id}${selectedTripPopover.trip.status?.toUpperCase() === 'DRAFT' ? '&step=' + getNextStep(selectedTripPopover.trip.lastCompletedStep) : ''}`
                                 }
-                                className="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-[11px] font-bold uppercase tracking-[0.1em] transition-all hover:shadow-md flex items-center justify-center gap-2 mt-1"
+                                className="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all hover:shadow-md flex items-center justify-center gap-2 mt-1"
                             >
                                 View Itinerary
                                 <ArrowRight size={14} />

@@ -59,7 +59,7 @@ export default function ProfileDropdown({ isLightPage, isScrolled }) {
                 {/* Avatar Bubble Container with Glow */}
                 <div className="relative">
                     {/* Subtle glow ring on hover */}
-                    <div className="absolute inset-[-3px] rounded-full bg-[#FF6B2C] opacity-0 group-hover:opacity-40 blur-[3px] transition-opacity duration-300 pointer-events-none" />
+                    <div className="absolute -inset-0.75 rounded-full bg-[#FF6B2C] opacity-0 group-hover:opacity-40 blur-[3px] transition-opacity duration-300 pointer-events-none" />
                     
                     {/* Avatar Bubble */}
                     <div className={`relative z-10 w-8 h-8 rounded-full overflow-hidden bg-[#FF6B2C] flex items-center justify-center shadow-sm transition-all duration-300 group-hover:scale-[1.02] border border-transparent group-hover:border-white/20`}>
@@ -118,7 +118,7 @@ export default function ProfileDropdown({ isLightPage, isScrolled }) {
                                     animate={{ opacity: 0, z: startZ - 20 }}
                                     exit={{ opacity: 0, transition: { duration: 0 } }}
                                     transition={{ duration: 0.3, ease: "easeOut", delay: i * 0.03 }}
-                                    className="absolute top-[calc(100%+12px)] right-0 w-64 h-[255px] bg-[#0a0a0a]/98 ring-1 ring-white/10 rounded-2xl z-[99] pointer-events-none will-change-transform"
+                                    className="absolute top-[calc(100%+12px)] right-0 w-64 h-63.75 bg-[#0a0a0a]/98 ring-1 ring-white/10 rounded-2xl z-99 pointer-events-none will-change-transform"
                                 />
                             );
                         })}
@@ -157,7 +157,7 @@ export default function ProfileDropdown({ isLightPage, isScrolled }) {
                                 }
                             }}
                             style={{ transformOrigin: "top right" }}
-                            className="absolute top-[calc(100%+12px)] right-0 w-64 bg-[#0a0a0a]/98 ring-1 ring-white/10 rounded-2xl py-1.5 z-[100] overflow-hidden backdrop-blur-3xl will-change-transform shadow-[0_30px_80px_rgba(0,0,0,0.8)]"
+                            className="absolute top-[calc(100%+12px)] right-0 w-64 bg-[#0a0a0a]/98 ring-1 ring-white/10 rounded-2xl py-1.5 z-100 overflow-hidden backdrop-blur-3xl will-change-transform shadow-[0_30px_80px_rgba(0,0,0,0.8)]"
                         >
                             
                             {/* Staggered Inner Content Wrapper */}
@@ -177,7 +177,7 @@ export default function ProfileDropdown({ isLightPage, isScrolled }) {
                                         hidden: { opacity: 0, y: prefersReducedMotion ? 0 : 5 },
                                         visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } }
                                     }}
-                                    className="px-5 py-4 mb-1 border-b border-white/5 bg-gradient-to-b from-white/[0.04] to-transparent"
+                                    className="px-5 py-4 mb-1 border-b border-white/5 bg-linear-to-b from-white/4 to-transparent"
                                 >
                                 <p className="text-[9px] text-white/30 font-mono tracking-[0.2em] uppercase mb-1.5">Signed in as</p>
                                 <p className="text-[15px] font-medium text-white truncate">{fullName}</p>

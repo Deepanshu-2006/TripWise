@@ -169,7 +169,7 @@ function Header() {
                             >
                                 {item}
                                 {hasActiveDrafts && (
-                                    <span className="absolute -top-0 -right-2.5 w-1.5 h-1.5 bg-[#FF6B2C] rounded-full shadow-[0_0_8px_rgba(255,107,44,0.6)]" />
+                                    <span className="absolute top-0 -right-2.5 w-1.5 h-1.5 bg-[#FF6B2C] rounded-full shadow-[0_0_8px_rgba(255,107,44,0.6)]" />
                                 )}
                                 {isActive && (
                                     <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#FF6B2C] rounded-full" />
@@ -285,7 +285,7 @@ function Header() {
             {/* Cinematic Circle Wipe Transition Overlay */}
             <div 
                 ref={wipeOverlayRef} 
-                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[20px] h-[20px] bg-[#0A0A0A] rounded-full z-[99999] pointer-events-none opacity-0 origin-center" 
+                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-[#0A0A0A] rounded-full z-99999 pointer-events-none opacity-0 origin-center" 
             />
         </motion.header>
     )
