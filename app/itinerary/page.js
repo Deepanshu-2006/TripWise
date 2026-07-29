@@ -1007,6 +1007,19 @@ export default function ItineraryPage() {
             <span className="text-[10px] font-serif italic text-white/70 ml-2 self-center">
               Refined by TripWise Private Concierge
             </span>
+            {/* Basecamp Badge Indicator */}
+            {itinerary?.hotelMode === 'basecamp' || (itinerary?.basecampHotel || itinerary?.preferences?.basecamp) ? (
+              <span className="px-2.5 py-1 rounded bg-emerald-500/25 border border-emerald-400/50 text-emerald-100 font-mono text-[9px] font-extrabold tracking-wider uppercase backdrop-blur-xs shadow-xs flex items-center gap-1">
+                📍 Basecamp: {itinerary?.basecampHotel || itinerary?.preferences?.basecamp}
+              </span>
+            ) : (
+              <button 
+                onClick={() => setActiveDay('tracking')}
+                className="px-2.5 py-1 rounded bg-amber-500/25 border border-amber-400/50 hover:bg-amber-500/40 text-amber-100 font-mono text-[9px] font-extrabold tracking-wider uppercase backdrop-blur-xs shadow-xs flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                📍 Basecamp: Not yet selected (Click to choose & route) &rarr;
+              </button>
+            )}
           </motion.div>
 
           <motion.h1 
@@ -1226,6 +1239,29 @@ export default function ItineraryPage() {
                 Chronologically mapped daily schedules. Select a card below or use the jump links to page-turn chapters in 3D.
               </p>
             </div>
+
+            {/* Approximate Activity Routing Notice for Undecided Hotel Mode */}
+            {(itinerary?.hotelMode === 'undecided' || (!itinerary?.basecampHotel && !itinerary?.preferences?.basecamp)) && (
+              <div className="bg-[#FFF9F5] border-l-4 border-[#FF6B2C] p-4 rounded-r-2xl mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-[#FF6B2C]/10 flex items-center justify-center text-base shrink-0 font-bold">
+                    📍
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-[#1E1C1A]">Approximate Activity Routing</p>
+                    <p className="text-xs text-[#7A7268] mt-0.5">
+                      Your itinerary is currently routed around a central city anchor. Select a hotel in Price Tracking to optimize walking & transit routes around your stay!
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setActiveDay('tracking')}
+                  className="bg-[#1E1C1A] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-black transition-colors shrink-0 cursor-pointer shadow-xs whitespace-nowrap"
+                >
+                  Select Hotel & Route &rarr;
+                </button>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8">
               {days.map((day, idx) => {
@@ -1801,6 +1837,42 @@ export default function ItineraryPage() {
                     destinationName={itinerary?.destinationName} 
                     startDate={itinerary?.startDate} 
                     endDate={itinerary?.endDate} 
+                    hotelMode={itinerary?.hotelMode || (itinerary?.basecampHotel || itinerary?.preferences?.basecamp ? 'basecamp' : 'undecided')}
+                    basecampHotel={itinerary?.basecampHotel || itinerary?.preferences?.basecamp || null}
+                    onReoptimize={async (newHotelName) => {
+                      try {
+                        showToast(`Re-optimizing itinerary around ${newHotelName}...`, 'info');
+                        const response = await fetch('/api/generate-trip', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            prompt: itinerary?.prompt || `Trip to ${itinerary?.destinationName}`,
+                            destination: itinerary?.destinationName || 'Destination',
+                            basecamp: newHotelName,
+                            interests: itinerary?.interests || [],
+                            budget: itinerary?.budget || 'standard',
+                            pace: itinerary?.pace || 'balanced'
+                          })
+                        });
+                        const data = await response.json();
+                        if (data.success && data.itinerary) {
+                          const updated = {
+                            ...itinerary,
+                            ...data.itinerary,
+                            hotelMode: 'basecamp',
+                            basecampHotel: newHotelName
+                          };
+                          setItinerary(updated);
+                          if (typeof window !== 'undefined') {
+                            localStorage.setItem('tripwise_itinerary', JSON.stringify(updated));
+                          }
+                          showToast(`Itinerary re-optimized around ${newHotelName}!`, 'success');
+                        }
+                      } catch (err) {
+                        console.error('Failed to re-optimize itinerary:', err);
+                        showToast('Failed to re-optimize itinerary. Please try again.', 'error');
+                      }
+                    }}
                     onToast={showToast} 
                   />
                 </section>

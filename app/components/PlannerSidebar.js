@@ -869,9 +869,12 @@ export default function PlannerSidebar({
     setLocalStep('progress');
     onStepChange('itinerary');
     if (onGenerate && selections) {
+      const cleanBasecamp = basecamp?.trim() || '';
       onGenerate({
         ...selections,
-        basecamp: basecamp,
+        basecamp: cleanBasecamp,
+        hotelMode: cleanBasecamp ? 'basecamp' : 'undecided',
+        basecampHotel: cleanBasecamp || null,
         prompt: userPromptInput || rawPrompt || "Planning a trip",
         destination: parsedIntent?.destination || extracted?.destination || userPromptInput || rawPrompt || "Your Destination",
         startDate: startDate,
@@ -1328,6 +1331,9 @@ export default function PlannerSidebar({
                     ))}
                   </div>
                 )}
+                <p className="text-xs text-stone-500 mt-1.5 leading-relaxed font-sans">
+                  Already booked a place to stay? Tell us and we'll route your itinerary around it. Not sure yet? Leave this blank — we'll help you pick one later.
+                </p>
               </div>
 
               {/* Vibe Enhancers */}

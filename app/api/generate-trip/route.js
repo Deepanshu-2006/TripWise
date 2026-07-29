@@ -213,12 +213,16 @@ export async function POST(req) {
 
     const ai = new GoogleGenAI({ apiKey });
 
-    const basecampInstruction = basecamp 
-      ? `\nCRITICAL GEOGRAPHY RULE: The user is staying at "${basecamp}". This is their "Basecamp". 
+    const isBasecampProvided = Boolean(basecamp && basecamp.trim());
+    const hotelMode = isBasecampProvided ? 'basecamp' : 'undecided';
+    const basecampHotel = isBasecampProvided ? basecamp.trim() : null;
+
+    const basecampInstruction = isBasecampProvided 
+      ? `\nCRITICAL GEOGRAPHY RULE: The user is staying at "${basecampHotel}". This is their "Basecamp". 
 1. Morning coffee and breakfast MUST be within a 10-15 minute walk from this location.
 2. Route the rest of the day logically starting from and ending near this location.
 3. Provide realistic travel times and distances from this basecamp.`
-      : '';
+      : `\nNOTE ON GEOGRAPHY: The user has not chosen a specific hotel yet (hotelMode: "undecided"). Route activities around a popular central area of the city (e.g. City Center / Central Plaza) as a placeholder anchor.`;
 
     const systemPrompt = `You are TripWise AI, an elite travel routing engine.
 Create a high-impact, beautifully tailored travel itinerary based on the user's prompt.
@@ -263,16 +267,29 @@ CRITICAL RULES FOR SPEED & QUALITY:
 
     if (!response || !response.text) {
       console.warn('All Gemini models failed (likely quota/rate limit). Returning dynamic mock itinerary.', lastError);
-      return NextResponse.json({ success: true, itinerary: mockPayload, isFallback: true });
+      return NextResponse.json({ 
+        success: true, 
+        itinerary: { ...mockPayload, hotelMode, basecampHotel }, 
+        isFallback: true 
+      });
     }
 
     const itinerary = JSON.parse(response.text);
-    return NextResponse.json({ success: true, itinerary });
+    return NextResponse.json({ 
+      success: true, 
+      itinerary: { ...itinerary, hotelMode, basecampHotel } 
+    });
   } catch (error) {
     console.error('Gemini API Error:', error);
     let body = {};
     try { body = await req.json(); } catch (e) {}
     const mockPayload = getDynamicMockItinerary(body.prompt, body.destination);
-    return NextResponse.json({ success: true, itinerary: mockPayload, isFallback: true });
+    const fallbackHotelMode = body.basecamp && body.basecamp.trim() ? 'basecamp' : 'undecided';
+    const fallbackBasecampHotel = body.basecamp && body.basecamp.trim() ? body.basecamp.trim() : null;
+    return NextResponse.json({ 
+      success: true, 
+      itinerary: { ...mockPayload, hotelMode: fallbackHotelMode, basecampHotel: fallbackBasecampHotel }, 
+      isFallback: true 
+    });
   }
 }
