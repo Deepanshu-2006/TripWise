@@ -67,6 +67,7 @@ const ItineraryMapModal = dynamic(() => import('../components/ItineraryMapModal'
 const TicketPassModal = dynamic(() => import('../components/TicketPassModal'), { ssr: false });
 import InlineDiningReservation from '../components/InlineDiningReservation';
 import PriceTracker from '../components/PriceTracker';
+import { getTrackingState, saveTrackingState } from '../../lib/priceTrackingApi';
 
 const toRomanNumeral = (num) => {
   const romanMap = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V', 6: 'VI', 7: 'VII', 8: 'VIII', 9: 'IX', 10: 'X' };
@@ -265,6 +266,32 @@ const getContextAwareTip = (act, idx, summary) => {
   }
 
   return { logisticsNote, weatherNote };
+};
+
+const getDistanceAndProximity = (p1, p2, basecampName = 'Basecamp') => {
+  if (!p1 || !p2 || !p1.lat || !p2.lat) {
+    return { label: `10 min walk from ${basecampName}`, distKm: '0.8' };
+  }
+  const R = 6371; // km
+  const dLat = (p2.lat - p1.lat) * (Math.PI / 180);
+  const dLng = (p2.lng - p1.lng) * (Math.PI / 180);
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(p1.lat * (Math.PI / 180)) * Math.cos(p2.lat * (Math.PI / 180)) *
+            Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distKm = (R * c).toFixed(1);
+  const distMeters = R * c * 1000;
+
+  if (distMeters < 1200) {
+    const mins = Math.max(3, Math.round(distMeters / 80));
+    return { label: `${mins} min walk from ${basecampName}`, distKm };
+  }
+  if (distMeters < 8000) {
+    const mins = Math.max(6, Math.round(distMeters / 350 + 2));
+    return { label: `${mins} min taxi from ${basecampName}`, distKm };
+  }
+  const mins = Math.max(15, Math.round(distMeters / 600 + 5));
+  return { label: `${mins} min transit from ${basecampName}`, distKm };
 };
 
 const getDayDateString = (startDateStr, dayIndex) => {
@@ -1074,7 +1101,7 @@ export default function ItineraryPage() {
       <div className="sticky top-16 sm:top-18 z-40 bg-[#FAF6F0]/95 backdrop-blur-md border-b border-[#E6DFD5] pt-4 pb-0 px-6 shadow-2xs transition-all print:hidden">
         <div className="max-w-5xl mx-auto w-full flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           {/* Chapter Tabs Link System */}
-          <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto no-scrollbar border-b border-transparent pr-4">
+          <div className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto flex-1 min-w-0 no-scrollbar pr-6 pb-0">
             {days.map((day, dIdx) => {
               const dayNum = day.dayNumber || dIdx + 1;
               const isSelected = activeDay === dayNum;
@@ -1083,7 +1110,7 @@ export default function ItineraryPage() {
                 <button
                   key={dayNum}
                   onClick={() => setActiveDay(dayNum)}
-                  className={`relative pb-3.5 pt-2 px-4 text-xs font-serif font-bold transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap flex flex-col items-center justify-center ${isSelected ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+                  className={`relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif font-bold transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap flex flex-col items-center justify-center ${isSelected ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
                     }`}
                 >
                   <span>Day {toRomanNumeral(dayNum)}</span>
@@ -1102,7 +1129,7 @@ export default function ItineraryPage() {
             })}
             <button
               onClick={() => setActiveDay('epilogue')}
-              className={`relative pb-3.5 pt-2 px-4 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'epilogue' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+              className={`relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'epilogue' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
                 }`}
             >
               <span>Epilogue</span>
@@ -1116,7 +1143,7 @@ export default function ItineraryPage() {
             </button>
             <button
               onClick={() => setActiveDay('packing')}
-              className={`relative pb-3.5 pt-2 px-4 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'packing' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+              className={`relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'packing' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
                 }`}
             >
               <span>Packing List</span>
@@ -1130,10 +1157,10 @@ export default function ItineraryPage() {
             </button>
             <button
               onClick={() => setActiveDay('visa')}
-              className={`relative pb-3.5 pt-2 px-4 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'visa' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+              className={`relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'visa' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
                 }`}
             >
-              <span>Visa & Docs</span>
+              <span>Visa &amp; Docs</span>
               {activeDay === 'visa' && (
                 <motion.div
                   layoutId="activeTabUnderline"
@@ -1144,7 +1171,7 @@ export default function ItineraryPage() {
             </button>
             <button
               onClick={() => setActiveDay('tracking')}
-              className={`relative pb-3.5 pt-2 px-4 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'tracking' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+              className={`relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'tracking' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
                 }`}
             >
               <span>Price Tracking</span>
@@ -1827,16 +1854,18 @@ export default function ItineraryPage() {
                     endDate={itinerary?.endDate}
                     hotelMode={itinerary?.hotelMode || (itinerary?.basecampHotel || itinerary?.preferences?.basecamp ? 'basecamp' : 'undecided')}
                     basecampHotel={itinerary?.basecampHotel || itinerary?.preferences?.basecamp || null}
-                    onReoptimize={async (newHotelName) => {
+                    itinerary={itinerary}
+                    onReoptimize={async (newHotelName, hotelObj) => {
                       try {
-                        showToast(`Re-optimizing itinerary around ${newHotelName}...`, 'info');
+                        const hotelTitle = typeof newHotelName === 'string' ? newHotelName : (newHotelName?.name || 'The Rome Palace');
+                        showToast(`Re-optimizing itinerary around ${hotelTitle}...`, 'info');
                         const response = await fetch('/api/generate-trip', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
                             prompt: itinerary?.prompt || `Trip to ${itinerary?.destinationName}`,
                             destination: itinerary?.destinationName || 'Destination',
-                            basecamp: newHotelName,
+                            basecamp: hotelTitle,
                             interests: itinerary?.interests || [],
                             budget: itinerary?.budget || 'standard',
                             pace: itinerary?.pace || 'balanced'
@@ -1844,17 +1873,37 @@ export default function ItineraryPage() {
                         });
                         const data = await response.json();
                         if (data.success && data.itinerary) {
+                          const basecampCoords = hotelObj?.coordinates || hotelObj?.latLng || {
+                            lat: (itinerary?.coordinates?.lat || 41.9028) + ((hotelObj?.mapPos?.y || 45) - 50) * 0.0003,
+                            lng: (itinerary?.coordinates?.lng || 12.4964) + ((hotelObj?.mapPos?.x || 45) - 50) * 0.0003
+                          };
+                          const basecampAddress = hotelObj?.address || `${hotelTitle}, ${itinerary?.destinationName || 'Rome, Italy'}`;
+                          const basecampHotelRecord = {
+                            name: hotelTitle,
+                            address: basecampAddress,
+                            coordinates: basecampCoords
+                          };
+
                           const updated = {
                             ...itinerary,
-                            ...data.itinerary,
+                            ...(data.itinerary || {}),
                             hotelMode: 'basecamp',
-                            basecampHotel: newHotelName
+                            basecampHotel: hotelTitle,
+                            basecampHotelDetails: basecampHotelRecord
                           };
                           setItinerary(updated);
                           if (typeof window !== 'undefined') {
                             localStorage.setItem('tripwise_itinerary', JSON.stringify(updated));
+                            const tripId = itinerary?.id || itinerary?.db_id || activeTripId || 'shared-trip';
+                            const trackingState = getTrackingState(tripId);
+                            if (trackingState) {
+                              trackingState.hotelMode = 'basecamp';
+                              trackingState.basecampHotel = hotelTitle;
+                              trackingState.basecampHotelDetails = basecampHotelRecord;
+                              saveTrackingState(tripId, trackingState);
+                            }
                           }
-                          showToast(`Itinerary re-optimized around ${newHotelName}!`, 'success');
+                          showToast(`Your itinerary has been updated around ${hotelTitle}`, 'success');
                         }
                       } catch (err) {
                         console.error('Failed to re-optimize itinerary:', err);
@@ -2312,22 +2361,34 @@ export default function ItineraryPage() {
                                   </div>
 
                                   {/* Secondary detail card underneath image on wide viewports to balance column heights (`hidden lg:flex`) */}
-                                  <div className="hidden lg:flex items-start gap-3.5 p-4 rounded-2xl border border-[#E6DFD5] bg-[#FAF6F0]/70 text-xs font-sans text-[#5F5E5A] shadow-2xs">
-                                    <div className="w-9 h-9 rounded-xl bg-white border border-[#E6DFD5] flex items-center justify-center text-[#FF6B2C] shrink-0 mt-0.5 shadow-2xs">
-                                      <MapPin className="w-4 h-4 stroke-[2.2]" />
-                                    </div>
-                                    <div className="flex-1">
-                                      <div className="flex items-center justify-between gap-2 border-b border-[#E6DFD5]/60 pb-1.5 mb-1.5">
-                                        <strong className="font-serif font-bold text-[#1E1C1A] text-sm tracking-tight">Getting There &amp; Local Note</strong>
-                                        <span className="text-[10px] font-mono uppercase tracking-wider text-[#7A7268] bg-white px-2 py-0.5 rounded-md border border-[#E6DFD5]">
-                                          Stop #{stopNum} Pin
-                                        </span>
+                                  {(() => {
+                                    const isBasecampConfirmed = itinerary?.hotelMode === 'basecamp' || itinerary?.basecampHotel;
+                                    const basecampName = typeof itinerary?.basecampHotel === 'string' ? itinerary?.basecampHotel : (itinerary?.basecampHotel?.name || 'Basecamp');
+                                    const bCoords = itinerary?.basecampHotelDetails?.coordinates || itinerary?.coordinates || { lat: 41.9028, lng: 12.4964 };
+                                    const actCoords = act.coordinates || { lat: 41.9028, lng: 12.4964 };
+                                    const prox = getDistanceAndProximity(bCoords, actCoords, basecampName);
+
+                                    return (
+                                      <div className="hidden lg:flex items-start gap-3.5 p-4 rounded-2xl border border-[#E6DFD5] bg-[#FAF6F0]/70 text-xs font-sans text-[#5F5E5A] shadow-2xs">
+                                        <div className="w-9 h-9 rounded-xl bg-white border border-[#E6DFD5] flex items-center justify-center text-[#FF6B2C] shrink-0 mt-0.5 shadow-2xs">
+                                          <MapPin className="w-4 h-4 stroke-[2.2]" />
+                                        </div>
+                                        <div className="flex-1">
+                                          <div className="flex items-center justify-between gap-2 border-b border-[#E6DFD5]/60 pb-1.5 mb-1.5">
+                                            <strong className="font-serif font-bold text-[#1E1C1A] text-sm tracking-tight">Getting There &amp; Proximity</strong>
+                                            <span className={`text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md border font-bold ${
+                                              isBasecampConfirmed ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-white text-[#7A7268] border-[#E6DFD5]'
+                                            }`}>
+                                              {isBasecampConfirmed ? `📍 ${prox.label}` : '📍 Central Anchor'}
+                                            </span>
+                                          </div>
+                                          <p className="font-serif text-xs text-[#4A443E] leading-relaxed">
+                                            {act.location || `${cleanName}, ${cleanDest}`} — {isBasecampConfirmed ? `approx. ${prox.distKm} km from your basecamp stay at ${basecampName}.` : 'easily reached on foot or short local transit.'}
+                                          </p>
+                                        </div>
                                       </div>
-                                      <p className="font-serif text-xs text-[#4A443E] leading-relaxed">
-                                        {act.location || `${cleanName}, ${cleanDest}`} — easily reached on foot or short local transit from the previous itinerary chapter stop.
-                                      </p>
-                                    </div>
-                                  </div>
+                                    );
+                                  })()}
                                 </div>
 
                                 {/* Editorial details side spread */}
@@ -3006,6 +3067,7 @@ export default function ItineraryPage() {
                     activities={days.find(d => (d.dayNumber || 1) === activeModalDay)?.activities || days[activeModalDay - 1]?.activities || []}
                     coordinates={itinerary.coordinates || { lat: 41.9028, lng: 12.4964 }}
                     destinationName={itinerary.destinationName || 'Destination'}
+                    basecampHotel={itinerary.basecampHotelDetails || itinerary.basecampHotel}
                   />
                 )}
                 {!mapMounted && (

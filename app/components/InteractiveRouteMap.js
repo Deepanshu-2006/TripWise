@@ -189,6 +189,7 @@ export default function InteractiveRouteMap({
   selectedDayIndex = 0,
   destinationName = 'Your Destination',
   coordinates = null,
+  basecampHotel = null,
   hoveredStopIdx: propHoveredIdx = null,
   onHoverStop = () => {},
   selectedStopIdx: propSelectedStopIdx = null,
@@ -208,6 +209,10 @@ export default function InteractiveRouteMap({
   const [showLayerMenu, setShowLayerMenu] = useState(false);
   const [internalSelectedStopIdx, setInternalSelectedStopIdx] = useState(null);
   const [activeDestination, setActiveDestination] = useState(null);
+
+  const derivedBasecampTitle = typeof basecampHotel === 'string'
+    ? basecampHotel
+    : (basecampHotel?.name || `${destinationName && destinationName !== 'Your Destination' ? destinationName.split(',')[0] + ' ' : ''}Basecamp Hotel`);
   const [isDestinationSaved, setIsDestinationSaved] = useState(false);
   const [heroImageLoaded, setHeroImageLoaded] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -262,7 +267,7 @@ export default function InteractiveRouteMap({
     lastFlewStopRef.current = selectedStopIdx;
     const isBasecamp = selectedStopIdx === 0;
     const targetAct = isBasecamp
-      ? { title: `${destinationName} Basecamp Hotel`, coordinates: coordinates || activities?.[0]?.coordinates || { lat: 41.9028, lng: 12.4964 }, isBasecamp: true }
+      ? { title: derivedBasecampTitle, coordinates: basecampHotel?.coordinates || coordinates || activities?.[0]?.coordinates || { lat: 41.9028, lng: 12.4964 }, isBasecamp: true }
       : activities?.[selectedStopIdx - 1];
 
     if (targetAct && targetAct.coordinates && typeof targetAct.coordinates.lat === 'number' && !isNaN(targetAct.coordinates.lat) && typeof targetAct.coordinates.lng === 'number' && !isNaN(targetAct.coordinates.lng)) {
@@ -477,8 +482,8 @@ export default function InteractiveRouteMap({
 
   const basecampStop = {
     isBasecamp: true,
-    title: `${destinationName && destinationName !== 'Your Destination' ? destinationName.split(',')[0] + ' ' : ''}Basecamp Hotel`,
-    description: 'Your central hotel & lodging hub. Start your morning itinerary here and complete the loop to return refreshed in the evening.',
+    title: derivedBasecampTitle,
+    description: `Your central lodging hub at ${derivedBasecampTitle}. Start your morning itinerary here and complete the loop to return refreshed in the evening.`,
     badge: 'Basecamp Hotel',
     category: 'hotel',
     time: 'Departure & Return Hub',
@@ -937,8 +942,8 @@ export default function InteractiveRouteMap({
         if (typeof baseLng !== 'number' || isNaN(baseLng)) baseLng = validActs[0].coordinates.lng;
 
         const basecampStop = {
-          title: `${destinationName} Basecamp Hotel`,
-          description: `Central hub & luxury accommodation around ${destinationName}.`,
+          title: derivedBasecampTitle,
+          description: `Central hub & accommodation at ${derivedBasecampTitle}.`,
           coordinates: { lat: baseLat, lng: baseLng },
           isBasecamp: true
         };
@@ -2002,7 +2007,7 @@ export default function InteractiveRouteMap({
               {/* 2. Destination Title overlay at bottom of hero image */}
               <div className="absolute bottom-2.5 left-4 right-24 z-10">
                 <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight leading-tight line-clamp-2 drop-shadow-sm">
-                  {act.title || (isBasecamp ? `${destinationName} Basecamp Hotel` : `Waypoint ${stopIndex}`)}
+                  {act.title || (isBasecamp ? derivedBasecampTitle : `Waypoint ${stopIndex}`)}
                 </h3>
                 <p className="text-xs font-medium text-white/80 mt-0.5 truncate">
                   {act.location || `${destinationName} • ${meta.label}`}

@@ -232,6 +232,7 @@ export default function LiveTripDashboard({
                 selectedDayIndex={selectedDayIndex || 0}
                 destinationName={displayDest}
                 coordinates={itinerary?.coordinates || { lat: 41.9028, lng: 12.4964 }}
+                basecampHotel={itinerary?.basecampHotelDetails || itinerary?.basecampHotel || itinerary?.preferences?.basecamp}
                 hoveredStopIdx={hoveredStopIdx}
                 onHoverStop={setHoveredStopIdx}
                 selectedStopIdx={selectedStopIdx}

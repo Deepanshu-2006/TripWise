@@ -113,7 +113,7 @@ const getHeroImage = (act, destName, isBasecamp) => {
   return getActivityThumbnail(act, 0);
 };
 
-export default function ItineraryMapModal({ activities = [], coordinates = null, destinationName = 'Destination' }) {
+export default function ItineraryMapModal({ activities = [], coordinates = null, destinationName = 'Destination', basecampHotel = null }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const tileLayerRef = useRef(null);
@@ -207,11 +207,15 @@ export default function ItineraryMapModal({ activities = [], coordinates = null,
     const validActs = activities.filter(a => a?.coordinates?.lat && a?.coordinates?.lng);
     if (!validActs.length) { map.setView(center, 13); return; }
 
-    // Build looped stop list: basecamp → stops → basecamp
+    // Build basecamp stop details
+    const basecampName = typeof basecampHotel === 'string' ? basecampHotel : (basecampHotel?.name || `${destinationName.split(',')[0]} Basecamp`);
+    const basecampCoords = basecampHotel?.coordinates || (coordinates ? { lat: coordinates.lat, lng: coordinates.lng } : { lat: center[0], lng: center[1] });
+
     const basecampStop = {
       isBasecamp: true,
-      title: `${destinationName.split(',')[0]} Basecamp`,
-      coordinates: { lat: center[0], lng: center[1] }
+      title: basecampName.startsWith('🏨') ? basecampName : `🏨 Basecamp: ${basecampName}`,
+      coordinates: basecampCoords,
+      address: basecampHotel?.address || `${basecampName}, ${destinationName}`
     };
     const loopedStops = [basecampStop, ...validActs, { ...basecampStop, isReturn: true }];
 
@@ -307,22 +311,21 @@ export default function ItineraryMapModal({ activities = [], coordinates = null,
       const meta = getCategoryMeta(stop);
       const latlng = L.latLng(stop.coordinates.lat, stop.coordinates.lng);
 
-      // Teardrop pin — same shape/gradient as InteractiveRouteMap
-      // Always use real hex bg — never Tailwind class strings
-      const pinBg = isBasecamp ? '#1E293B' : (meta.bg.startsWith('#') ? meta.bg : '#BA5536');
+      // Teardrop pin — distinct #FF6B2C gradient for Basecamp
+      const pinBg = isBasecamp ? '#FF6B2C' : (meta.bg.startsWith('#') ? meta.bg : '#BA5536');
       const pinGrad = isBasecamp
-        ? 'linear-gradient(135deg,#334155,#0F172A)'
+        ? 'linear-gradient(135deg,#FF6B2C,#C2410C)'
         : `linear-gradient(135deg,${pinBg},#1E293B)`;
 
-      const pinSize = isBasecamp ? 44 : 36;
-      const bodySize = isBasecamp ? 40 : 32;
+      const pinSize = isBasecamp ? 46 : 36;
+      const bodySize = isBasecamp ? 42 : 32;
       const animDelay = `${idx * 0.045}s`;
       const html = [
         `<div style="position:relative;width:${pinSize}px;height:${pinSize + 12}px;display:flex;align-items:flex-start;justify-content:center;cursor:pointer;animation:imap-appear 0.38s cubic-bezier(0.34,1.56,0.64,1) ${animDelay} both">`,
-          `<div style="width:${bodySize}px;height:${bodySize}px;background:${pinGrad};border:2.5px solid #FAF6F0;border-radius:50% 50% 50% 2px;transform:rotate(-45deg);box-shadow:0 6px 20px rgba(0,0,0,0.35),0 2px 6px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center">`,
-            `<div style="transform:rotate(45deg);color:#fff;font-size:${isBasecamp ? 16 : 12}px;font-weight:800;font-family:Georgia,serif;line-height:1;user-select:none">${isBasecamp ? meta.icon : idx}</div>`,
+          `<div style="width:${bodySize}px;height:${bodySize}px;background:${pinGrad};border:3px solid #FAF6F0;border-radius:50% 50% 50% 2px;transform:rotate(-45deg);box-shadow:0 8px 24px rgba(255,107,44,0.45),0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center">`,
+            `<div style="transform:rotate(45deg);color:#fff;font-size:${isBasecamp ? 18 : 12}px;font-weight:800;font-family:Georgia,serif;line-height:1;user-select:none">${isBasecamp ? '🏨' : idx}</div>`,
           `</div>`,
-          `<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:6px;height:6px;background:rgba(0,0,0,0.18);border-radius:50%;filter:blur(2px)"></div>`,
+          `<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:8px;height:8px;background:rgba(0,0,0,0.22);border-radius:50%;filter:blur(2px)"></div>`,
         `</div>`
       ].join('');
 
