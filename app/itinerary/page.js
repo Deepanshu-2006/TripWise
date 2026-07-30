@@ -50,7 +50,8 @@ import {
   AlertTriangle,
   FileText,
   ShieldAlert,
-  Plane
+  Plane,
+  Luggage
 } from 'lucide-react';
 import {
   getActivityThumbnail,
@@ -125,6 +126,217 @@ const getStopEndTimeMinutes = (timeStr, durationStr) => {
     durationMins = h * 60 + m;
   }
   return startMins + durationMins;
+};
+
+const getPackingItemEmoji = (text = '', category = '') => {
+  const lower = text.toLowerCase();
+  if (lower.includes('shirt') || lower.includes('top') || lower.includes('t-shirt')) return '👔';
+  if (lower.includes('sock')) return '🧦';
+  if (lower.includes('pant') || lower.includes('short') || lower.includes('jean') || lower.includes('trouser')) return '👖';
+  if (lower.includes('jacket') || lower.includes('coat') || lower.includes('layer') || lower.includes('sweater')) return '🧥';
+  if (lower.includes('shoe') || lower.includes('boot') || lower.includes('sneaker') || lower.includes('footwear')) return '👟';
+  if (lower.includes('passport') || lower.includes('visa') || lower.includes('document') || lower.includes('id')) return '🛂';
+  if (lower.includes('charger') || lower.includes('phone') || lower.includes('cable') || lower.includes('adapter')) return '🔌';
+  if (lower.includes('toiletr') || lower.includes('soap') || lower.includes('shampoo') || lower.includes('brush') || lower.includes('cream')) return '🧴';
+  if (lower.includes('under') || lower.includes('brief')) return '🩲';
+  if (lower.includes('hat') || lower.includes('cap') || lower.includes('sunglasses')) return '🕶️';
+  if (category.toLowerCase().includes('document')) return '📄';
+  if (category.toLowerCase().includes('electronic')) return '💻';
+  return '📦';
+};
+
+const AnimatedSuitcaseIcon = ({ isAnimated, actionType, checkedItems, totalItems, size = 'large', flyingEmoji }) => {
+  const isLarge = size === 'large';
+  const isComplete = checkedItems === totalItems && totalItems > 0;
+
+  return (
+    <div className={`relative flex items-center justify-center ${isLarge ? 'w-14 h-14' : 'w-7 h-7'}`}>
+      {/* 1. Celebratory Confetti Burst when 100% Packed */}
+      <AnimatePresence>
+        {isComplete && (
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            className="absolute inset-0 pointer-events-none z-30"
+          >
+            {[
+              { x: -32, y: -32, icon: '🎉', delay: 0 },
+              { x: 0, y: -40, icon: '⭐', delay: 0.04 },
+              { x: 32, y: -32, icon: '✨', delay: 0.08 },
+              { x: 38, y: 0, icon: '💚', delay: 0.02 },
+              { x: 30, y: 30, icon: '🏆', delay: 0.06 },
+              { x: 0, y: 38, icon: '🎉', delay: 0.03 },
+              { x: -30, y: 30, icon: '✨', delay: 0.07 },
+              { x: -38, y: 0, icon: '⭐', delay: 0.01 }
+            ].map((sparkle, idx) => (
+              <motion.span
+                key={`complete-confetti-${idx}`}
+                initial={{ x: 0, y: 0, scale: 0, opacity: 1 }}
+                animate={{
+                  x: sparkle.x,
+                  y: sparkle.y,
+                  scale: [0, 1.4, 0],
+                  opacity: [1, 1, 0]
+                }}
+                transition={{ duration: 0.85, delay: sparkle.delay, ease: [0.22, 1, 0.36, 1] }}
+                className="absolute inset-0 flex items-center justify-center pointer-events-none text-sm select-none"
+              >
+                {sparkle.icon}
+              </motion.span>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Dynamic Circular Progress Ring Arc */}
+      {isLarge && (
+        <svg className="absolute inset-0 w-full h-full pointer-events-none -rotate-90 overflow-visible" viewBox="0 0 44 44">
+          <circle
+            cx="22"
+            cy="22"
+            r="19"
+            className="stroke-[#E6DFD5]/40 fill-none"
+            strokeWidth="2"
+          />
+          <motion.circle
+            cx="22"
+            cy="22"
+            r="19"
+            className={isComplete ? "stroke-emerald-500 fill-none" : "stroke-[#FF6B2C] fill-none"}
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            initial={{ strokeDasharray: "119.38", strokeDashoffset: "119.38" }}
+            animate={{
+              strokeDashoffset: totalItems > 0 ? 119.38 - (119.38 * (checkedItems / totalItems)) : 119.38
+            }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          />
+        </svg>
+      )}
+
+      {/* 1. Context-Aware Mini Item Particle Flying into Suitcase */}
+      <AnimatePresence>
+        {isAnimated && actionType === 'add' && (
+          <motion.div
+            key="flying-parcel"
+            initial={{
+              y: -32,
+              x: -20,
+              scale: 1.6,
+              opacity: 0,
+              rotate: -25
+            }}
+            animate={{
+              y: [-32, -14, 4],
+              x: [-20, -5, 0],
+              scale: [1.6, 1.2, 0.2, 0],
+              opacity: [0, 1, 1, 0],
+              rotate: [-25, 12, 0]
+            }}
+            transition={{ duration: 0.55, ease: [0.34, 1.56, 0.64, 1] }}
+            className="absolute z-30 pointer-events-none flex items-center justify-center -top-2"
+          >
+            <div className="w-5 h-5 rounded-xl bg-gradient-to-tr from-[#FF6B2C] to-[#E55A1C] text-white flex items-center justify-center text-xs shadow-lg shadow-[#FF6B2C]/50 font-bold border border-white/80">
+              {flyingEmoji || '📦'}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 2. Dual Radial Shockwave Aura Rings */}
+      <AnimatePresence>
+        {isAnimated && (
+          <>
+            <motion.span
+              key="absorb-ring-1"
+              initial={{ scale: 0.4, opacity: 1 }}
+              animate={{ scale: isLarge ? 2.4 : 1.8, opacity: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className={`absolute inset-0 rounded-full pointer-events-none ${
+                actionType === 'add' ? 'bg-gradient-to-r from-[#FF6B2C]/60 via-amber-400/40 to-transparent' : 'bg-gray-400/30'
+              }`}
+            />
+            <motion.span
+              key="absorb-ring-2"
+              initial={{ scale: 0.3, opacity: 0.8 }}
+              animate={{ scale: isLarge ? 1.8 : 1.4, opacity: 0 }}
+              transition={{ duration: 0.45, delay: 0.1, ease: "easeOut" }}
+              className="absolute inset-0 rounded-full pointer-events-none bg-amber-400/30"
+            />
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* 3. Vector Suitcase with Opening Top Flap & Physics Bounce */}
+      <motion.div
+        animate={isAnimated || isComplete ? {
+          scaleY: isComplete ? [1, 1.35, 0.85, 1.15, 1] : [1, 1.42, 0.74, 1.22, 0.9, 1.04, 1],
+          scaleX: isComplete ? [1, 0.85, 1.15, 0.95, 1] : [1, 0.74, 1.26, 0.88, 1.08, 0.96, 1],
+          rotate: isComplete ? [0, -10, 10, 0] : [0, -14, 14, -7, 4, -2, 0],
+          y: [0, -6, 5, -3, 1, 0]
+        } : {}}
+        transition={{ duration: 0.7, ease: [0.175, 0.885, 0.32, 1.275] }}
+        className="relative flex items-center justify-center"
+      >
+        <div className="relative flex items-center justify-center">
+          <svg
+            className={`${isLarge ? 'w-7 h-7 text-[#FF6B2C]' : 'w-4 h-4 text-current'} ${isComplete ? 'text-emerald-600' : ''} stroke-[2.2] fill-none stroke-current transition-colors duration-500`}
+            viewBox="0 0 24 24"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            {/* Suitcase Handle */}
+            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+
+            {/* Glowing Open Interior Core Light */}
+            {isAnimated && actionType === 'add' && (
+              <motion.circle
+                cx="12"
+                cy="11"
+                r="5"
+                fill="#FFD700"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: [0, 1, 0], scale: [0, 1.7, 0] }}
+                transition={{ duration: 0.48 }}
+                stroke="none"
+              />
+            )}
+
+            {/* Suitcase Main Body Box */}
+            <rect x="3" y="6" width="18" height="15" rx="3" />
+
+            {/* Front Straps */}
+            <path d="M8 6v15M16 6v15" strokeOpacity="0.4" />
+
+            {/* Animated Top Lid Flap */}
+            <motion.path
+              d="M3 6h18"
+              animate={isAnimated && actionType === 'add' ? {
+                d: [
+                  "M3 6h18",
+                  "M3 6l9-6 9 6",
+                  "M3 6h18"
+                ]
+              } : {}}
+              transition={{ duration: 0.52, ease: "easeInOut" }}
+              strokeWidth="2.8"
+              stroke={isComplete ? "#059669" : "currentColor"}
+            />
+          </svg>
+          {isComplete && (
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.4, ease: "backOut" }}
+              className="absolute -top-1 -right-1 bg-white rounded-full p-0.5 shadow-md z-20"
+            >
+              <CheckCircle2 className="w-4 h-4 text-emerald-500 fill-emerald-500 text-white" />
+            </motion.div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
 };
 
 const getDayNarrativeTitle = (dayNum, destinationName) => {
@@ -327,6 +539,9 @@ export default function ItineraryPage() {
   const [packingList, setPackingList] = useState(null);
   const [customInputs, setCustomInputs] = useState({});
   const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
+  const [isPackingIconAnimated, setIsPackingIconAnimated] = useState(false);
+  const [packingActionType, setPackingActionType] = useState('add');
+  const [flyingItemEmoji, setFlyingItemEmoji] = useState('📦');
   const [expandedPackingCategories, setExpandedPackingCategories] = useState({
     Clothing: true,
     Documents: true,
@@ -334,6 +549,12 @@ export default function ItineraryPage() {
     Toiletries: true,
     ActivitySpecific: true
   });
+
+  const triggerPackingAnimation = (actionType = 'add') => {
+    setPackingActionType(actionType);
+    setIsPackingIconAnimated(true);
+    setTimeout(() => setIsPackingIconAnimated(false), 650);
+  };
 
   // Visa & Docs State
   const [visaReqs, setVisaReqs] = useState(null);
@@ -375,11 +596,18 @@ export default function ItineraryPage() {
 
   const togglePackingItem = (category, itemId) => {
     if (!packingList) return;
+    const target = packingList[category]?.find(i => i.id === itemId);
+    const isAdding = target ? !target.checked : true;
+    if (target) {
+      setFlyingItemEmoji(getPackingItemEmoji(target.text, category));
+    }
+
     const newList = { ...packingList };
     newList[category] = newList[category].map(item =>
       item.id === itemId ? { ...item, checked: !item.checked } : item
     );
     savePackingList(newList);
+    triggerPackingAnimation(isAdding ? 'add' : 'remove');
   };
 
   const addCustomPackingItem = (category) => {
@@ -429,6 +657,7 @@ export default function ItineraryPage() {
       newList[cat] = newList[cat].map(item => ({ ...item, checked: true }));
     });
     savePackingList(newList);
+    triggerPackingAnimation('add');
   };
 
   const uncheckAllItems = () => {
@@ -438,6 +667,7 @@ export default function ItineraryPage() {
       newList[cat] = newList[cat].map(item => ({ ...item, checked: false }));
     });
     savePackingList(newList);
+    triggerPackingAnimation('remove');
   };
 
   // Visa & Docs Logic
@@ -1230,46 +1460,55 @@ export default function ItineraryPage() {
             </div>
 
             {/* Packing List Rail Item */}
-            <button
-              type="button"
-              onClick={() => setActiveDay('packing')}
-              className={`relative w-full py-2.5 px-2 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer select-none group ${
-                activeDay === 'packing'
-                  ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-md shadow-[#FF6B2C]/20 border border-[#FF6B2C]/50 scale-[1.02]'
-                  : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent'
-              }`}
-              title="Packing List"
-            >
-              <div className={`p-1.5 rounded-xl transition-all ${
-                activeDay === 'packing' ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-xs' : 'bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
-              }`}>
-                <Briefcase className="w-4 h-4 stroke-[2.2]" />
-              </div>
-              
-              <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center">
-                Packing
-              </span>
+            {(() => {
+              const totalItems = packingList ? Object.values(packingList).flat().length : 0;
+              const checkedItems = packingList ? Object.values(packingList).flat().filter(i => i.checked).length : 0;
+              const isZero = checkedItems === 0;
+              const isComplete = checkedItems === totalItems;
 
-              {/* Live Packing Progress Badge Pill */}
-              {(() => {
-                const totalItems = packingList ? Object.values(packingList).flat().length : 0;
-                const checkedItems = packingList ? Object.values(packingList).flat().filter(i => i.checked).length : 0;
-                if (totalItems === 0) return null;
-                const isZero = checkedItems === 0;
-                const isComplete = checkedItems === totalItems;
-                return (
-                  <span className={`px-2 py-0.5 rounded-full text-[8.5px] font-mono font-black shadow-2xs mt-0.5 transition-colors ${
-                    isZero
-                      ? 'bg-[#E6DFD5] text-[#5F5E5A]'
-                      : isComplete
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-[#FF6B2C] text-white'
+              return (
+                <button
+                  type="button"
+                  onClick={() => setActiveDay('packing')}
+                  className={`relative w-full py-2.5 px-2 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer select-none group ${
+                    activeDay === 'packing'
+                      ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-md shadow-[#FF6B2C]/20 border border-[#FF6B2C]/50 scale-[1.02]'
+                      : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent'
+                  }`}
+                  title="Packing List"
+                >
+                  <div className={`relative p-1.5 rounded-xl transition-all ${
+                    activeDay === 'packing' ? 'bg-[#FF6B2C]/20 text-[#FF6B2C] border border-[#FF6B2C]/40 shadow-xs' : 'bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
                   }`}>
-                    {checkedItems}/{totalItems}
+                    <AnimatedSuitcaseIcon
+                      isAnimated={isPackingIconAnimated}
+                      actionType={packingActionType}
+                      checkedItems={checkedItems}
+                      totalItems={totalItems}
+                      size="small"
+                      flyingEmoji={flyingItemEmoji}
+                    />
+                  </div>
+                  
+                  <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center">
+                    Packing
                   </span>
-                );
-              })()}
-            </button>
+
+                  {/* Live Packing Progress Badge Pill */}
+                  {totalItems > 0 && (
+                    <span className={`px-2 py-0.5 rounded-full text-[8.5px] font-mono font-black shadow-2xs mt-0.5 transition-colors ${
+                      isZero
+                        ? 'bg-[#E6DFD5] text-[#5F5E5A]'
+                        : isComplete
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-[#FF6B2C] text-white'
+                    }`}>
+                      {checkedItems}/{totalItems}
+                    </span>
+                  )}
+                </button>
+              );
+            })()}
 
             {/* Visa & Docs Rail Item */}
             <button
@@ -1739,7 +1978,7 @@ export default function ItineraryPage() {
                 const checkedItems = packingList ? Object.values(packingList).flat().filter(i => i.checked).length : 0;
 
                 return (
-                  <section className="flex flex-col gap-10">
+                  <section className="flex flex-col gap-8 pt-10 sm:pt-14">
                     <div className="text-center max-w-2xl mx-auto relative">
                       <span className="text-xs font-mono uppercase tracking-widest text-[#FF6B2C] font-bold block mb-1">
                         Preparation &amp; Gear
@@ -1782,22 +2021,61 @@ export default function ItineraryPage() {
                       </AnimatePresence>
                     </div>
 
+                    {/* Clean Human-Crafted Completion Banner */}
+                    <AnimatePresence>
+                      {checkedItems === totalItems && totalItems > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="p-5 rounded-3xl bg-[#FAF6F0] border border-[#E6DFD5] shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                        >
+                          <div className="flex items-center gap-3.5">
+                            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-600 shrink-0">
+                              <CheckCircle2 className="w-5 h-5 stroke-[2.2]" />
+                            </div>
+                            <div>
+                              <h4 className="font-serif font-bold text-base text-[#1E1C1A] leading-tight">
+                                All {totalItems} items packed
+                              </h4>
+                              <p className="text-xs font-sans text-[#7A7268] mt-0.5">
+                                Your luggage is prepped and ready for {itinerary?.destinationName || 'your trip'}.
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setActiveDay('visa')}
+                            className="px-5 py-2.5 rounded-2xl bg-[#1E1C1A] text-white hover:bg-[#FF6B2C] font-sans text-xs font-bold transition-colors cursor-pointer flex items-center gap-2 shrink-0 self-end sm:self-auto"
+                          >
+                            <span>Next: Visa &amp; Travel Docs</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-[#E6DFD5] shadow-xs sticky top-32 z-30">
                       <div className="flex items-center gap-4">
-                        <div className={`w-14 h-14 rounded-full border flex items-center justify-center shrink-0 transition-colors duration-500 ${checkedItems === totalItems && totalItems > 0 ? 'bg-green-50 border-green-200' : 'bg-[#FAF6F0] border-[#E6DFD5]'}`}>
-                          {checkedItems === totalItems && totalItems > 0 ? (
-                            <CheckCircle2 className="w-6 h-6 text-green-500" />
-                          ) : (
-                            <svg className="w-6 h-6 text-[#FF6B2C]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                            </svg>
-                          )}
+                        <div className={`relative w-14 h-14 rounded-full border flex items-center justify-center shrink-0 transition-colors duration-500 ${checkedItems === totalItems && totalItems > 0 ? 'bg-green-50 border-green-200' : 'bg-[#FAF6F0] border-[#E6DFD5]'}`}>
+                          <AnimatedSuitcaseIcon
+                            isAnimated={isPackingIconAnimated}
+                            actionType={packingActionType}
+                            checkedItems={checkedItems}
+                            totalItems={totalItems}
+                            size="large"
+                            flyingEmoji={flyingItemEmoji}
+                          />
                         </div>
                         <div>
                           <div className="text-xs font-mono uppercase tracking-widest text-[#7A7268] mb-1">Packing Progress</div>
-                          <div className="font-serif font-bold text-xl text-[#1E1C1A]">
+                          <motion.div
+                            animate={isPackingIconAnimated ? { scale: [1, 1.15, 0.98, 1], color: ['#1E1C1A', '#FF6B2C', '#1E1C1A'] } : {}}
+                            transition={{ duration: 0.45 }}
+                            className="font-serif font-bold text-xl text-[#1E1C1A]"
+                          >
                             {checkedItems} / {totalItems} Packed
-                          </div>
+                          </motion.div>
                         </div>
                       </div>
 
