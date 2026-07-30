@@ -48,7 +48,9 @@ import {
   XCircle,
   Book,
   AlertTriangle,
-  FileText
+  FileText,
+  ShieldAlert,
+  Plane
 } from 'lucide-react';
 import {
   getActivityThumbnail,
@@ -68,6 +70,8 @@ const TicketPassModal = dynamic(() => import('../components/TicketPassModal'), {
 import InlineDiningReservation from '../components/InlineDiningReservation';
 import PriceTracker from '../components/PriceTracker';
 import { getTrackingState, saveTrackingState } from '../../lib/priceTrackingApi';
+import EmergencyInfoView from '../components/EmergencyInfoView';
+import EmergencyModal from '../components/EmergencyModal';
 
 const toRomanNumeral = (num) => {
   const romanMap = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V', 6: 'VI', 7: 'VII', 8: 'VIII', 9: 'IX', 10: 'X' };
@@ -315,8 +319,9 @@ export default function ItineraryPage() {
   }, []);
 
   // Navigation & Modal State
-  const [activeDay, setActiveDay] = useState(1); // Active Day, 'epilogue', or 'packing'
+  const [activeDay, setActiveDay] = useState(1); // Active Day, 'epilogue', 'packing', 'visa', 'tracking', or 'emergency'
   const [activeModalDay, setActiveModalDay] = useState(null);
+  const [isEmergencyModalOpen, setIsEmergencyModalOpen] = useState(false);
 
   // Packing List State
   const [packingList, setPackingList] = useState(null);
@@ -1099,9 +1104,9 @@ export default function ItineraryPage() {
 
       {/* STICKY JUMP BAR & UTILITY STRIP (Light-themed to blend cleanly with the page body background) */}
       <div className="sticky top-16 sm:top-18 z-40 bg-[#FAF6F0]/95 backdrop-blur-md border-b border-[#E6DFD5] pt-4 pb-0 px-6 shadow-2xs transition-all print:hidden">
-        <div className="max-w-5xl mx-auto w-full flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-          {/* Chapter Tabs Link System */}
-          <div className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto flex-1 min-w-0 no-scrollbar pr-6 pb-0">
+        <div className="max-w-6xl mx-auto w-full flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          {/* Chapter Tabs Link System - Single Horizontally Scrollable Row */}
+          <div className="flex items-center gap-0.5 sm:gap-1.5 overflow-x-auto flex-1 min-w-0 no-scrollbar pr-4 pb-0">
             {days.map((day, dIdx) => {
               const dayNum = day.dayNumber || dIdx + 1;
               const isSelected = activeDay === dayNum;
@@ -1127,6 +1132,8 @@ export default function ItineraryPage() {
                 </button>
               );
             })}
+
+            {/* Epilogue Tab */}
             <button
               onClick={() => setActiveDay('epilogue')}
               className={`relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'epilogue' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
@@ -1141,34 +1148,8 @@ export default function ItineraryPage() {
                 />
               )}
             </button>
-            <button
-              onClick={() => setActiveDay('packing')}
-              className={`relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'packing' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
-                }`}
-            >
-              <span>Packing List</span>
-              {activeDay === 'packing' && (
-                <motion.div
-                  layoutId="activeTabUnderline"
-                  className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#FF6B2C] rounded-t-full"
-                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveDay('visa')}
-              className={`relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'visa' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
-                }`}
-            >
-              <span>Visa &amp; Docs</span>
-              {activeDay === 'visa' && (
-                <motion.div
-                  layoutId="activeTabUnderline"
-                  className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#FF6B2C] rounded-t-full"
-                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                />
-              )}
-            </button>
+
+            {/* Price Tracking Tab */}
             <button
               onClick={() => setActiveDay('tracking')}
               className={`relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'tracking' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
@@ -1233,11 +1214,192 @@ export default function ItineraryPage() {
         </div>
       </div>
 
-      {/* DOSSIER BODY CONTENT */}
-      <main className="max-w-5xl mx-auto px-6 py-12 w-full flex flex-col gap-16">
+      {/* DOSSIER BODY CONTENT & DESKTOP SIDEBAR RAIL */}
+      <div className="max-w-6xl mx-auto px-6 py-12 w-full flex items-start gap-8 relative">
+        
+        {/* DESKTOP VERTICAL UTILITY SIDEBAR RAIL (Desktop Only - hidden on mobile/tablet < lg) */}
+        <aside className="hidden lg:flex flex-col items-center p-2.5 bg-white/95 backdrop-blur-md rounded-3xl border border-[#E6DFD5] shadow-md sticky top-36 lg:top-38 shrink-0 h-fit z-20 font-sans gap-2.5 w-28 -ml-8 lg:-ml-20 xl:-ml-28 transition-all duration-200">
+          
+          {/* GROUP 1: PREPARE (Pre-trip planning tools) */}
+          <div className="flex flex-col items-center w-full gap-2">
+            <div className="flex items-center justify-center gap-1.5 px-1 w-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B2C] shrink-0" />
+              <span className="text-[9px] font-mono font-black uppercase tracking-widest text-[#FF6B2C]">
+                Prepare
+              </span>
+            </div>
+
+            {/* Packing List Rail Item */}
+            <button
+              type="button"
+              onClick={() => setActiveDay('packing')}
+              className={`relative w-full py-2.5 px-2 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer select-none group ${
+                activeDay === 'packing'
+                  ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-md shadow-[#FF6B2C]/20 border border-[#FF6B2C]/50 scale-[1.02]'
+                  : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent'
+              }`}
+              title="Packing List"
+            >
+              <div className={`p-1.5 rounded-xl transition-all ${
+                activeDay === 'packing' ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-xs' : 'bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
+              }`}>
+                <Briefcase className="w-4 h-4 stroke-[2.2]" />
+              </div>
+              
+              <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center">
+                Packing
+              </span>
+
+              {/* Live Packing Progress Badge Pill */}
+              {(() => {
+                const totalItems = packingList ? Object.values(packingList).flat().length : 0;
+                const checkedItems = packingList ? Object.values(packingList).flat().filter(i => i.checked).length : 0;
+                if (totalItems === 0) return null;
+                const isZero = checkedItems === 0;
+                const isComplete = checkedItems === totalItems;
+                return (
+                  <span className={`px-2 py-0.5 rounded-full text-[8.5px] font-mono font-black shadow-2xs mt-0.5 transition-colors ${
+                    isZero
+                      ? 'bg-[#E6DFD5] text-[#5F5E5A]'
+                      : isComplete
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-[#FF6B2C] text-white'
+                  }`}>
+                    {checkedItems}/{totalItems}
+                  </span>
+                );
+              })()}
+            </button>
+
+            {/* Visa & Docs Rail Item */}
+            <button
+              type="button"
+              onClick={() => setActiveDay('visa')}
+              className={`w-full py-2.5 px-2 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer select-none group ${
+                activeDay === 'visa'
+                  ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-md shadow-[#FF6B2C]/20 border border-[#FF6B2C]/50 scale-[1.02]'
+                  : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent'
+              }`}
+              title="Visa & Docs"
+            >
+              <div className={`p-1.5 rounded-xl transition-all ${
+                activeDay === 'visa' ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-xs' : 'bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
+              }`}>
+                <FileText className="w-4 h-4 stroke-[2.2]" />
+              </div>
+              <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center whitespace-nowrap">
+                Visa &amp; Docs
+              </span>
+            </button>
+          </div>
+
+          <div className="w-full h-px bg-[#E6DFD5]" />
+
+          {/* GROUP 2: LIVE (Active during-trip tools) */}
+          <div className="flex flex-col items-center w-full gap-2">
+            <div className="flex items-center justify-center gap-1.5 px-1 w-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <span className="text-[9px] font-mono font-black uppercase tracking-widest text-[#FF6B2C]">
+                Live
+              </span>
+            </div>
+
+            {/* Price Tracking Rail Item */}
+            <button
+              type="button"
+              onClick={() => setActiveDay('tracking')}
+              className={`relative w-full py-2.5 px-2 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer select-none group ${
+                activeDay === 'tracking'
+                  ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-md shadow-[#FF6B2C]/20 border border-[#FF6B2C]/50 scale-[1.02]'
+                  : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent'
+              }`}
+              title="Price Tracking"
+            >
+              {/* Live Active Data Pulsing Dot */}
+              <span className="absolute top-2 right-2 flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+
+              <div className={`p-1.5 rounded-xl transition-all ${
+                activeDay === 'tracking' ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-xs' : 'bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
+              }`}>
+                <Plane className="w-4 h-4 stroke-[2.2]" />
+              </div>
+              <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center">
+                Tracking
+              </span>
+            </button>
+
+            {/* Safety / Emergency Info Rail Item */}
+            <button
+              type="button"
+              onClick={() => setActiveDay('emergency')}
+              className={`w-full py-2.5 px-2 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer select-none group ${
+                activeDay === 'emergency'
+                  ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-md shadow-[#FF6B2C]/20 border border-[#FF6B2C]/50 scale-[1.02]'
+                  : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent'
+              }`}
+              title="Emergency Safety Info"
+            >
+              <div className={`p-1.5 rounded-xl transition-all ${
+                activeDay === 'emergency' ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-xs' : 'bg-white text-[#FF6B2C] shadow-2xs'
+              }`}>
+                <ShieldAlert className="w-4 h-4 stroke-[2.2]" />
+              </div>
+              <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center">
+                Safety
+              </span>
+            </button>
+          </div>
+
+          {/* GROUP 3: ROADMAP / COMING SOON (Distinct visual zone) */}
+          <div className="flex flex-col items-center w-full gap-2 p-1.5 rounded-2xl bg-[#FAF6F0]/80 border border-dashed border-[#E6DFD5] mt-1">
+            <div className="flex items-center justify-center gap-1.5 px-1 w-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#7A7268]/50 shrink-0" />
+              <span className="text-[9px] font-mono font-black uppercase tracking-widest text-[#7A7268]">
+                Roadmap
+              </span>
+            </div>
+
+            {/* Expenses Item */}
+            <div className="w-full py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 opacity-55 bg-white border border-[#E6DFD5]/60 cursor-not-allowed select-none">
+              <span className="text-xs">💰</span>
+              <span className="text-[9px] font-sans font-bold text-[#7A7268] text-center">
+                Expenses
+              </span>
+              <span className="px-1.5 py-0.2 rounded-full bg-[#FAF6F0] border border-[#E6DFD5] text-[#7A7268] text-[7px] font-sans font-black tracking-wider uppercase">
+                Soon
+              </span>
+            </div>
+
+            {/* Offline Item */}
+            <div className="w-full py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 opacity-55 bg-white border border-[#E6DFD5]/60 cursor-not-allowed select-none">
+              <span className="text-xs">📡</span>
+              <span className="text-[9px] font-sans font-bold text-[#7A7268] text-center">
+                Offline
+              </span>
+              <span className="px-1.5 py-0.2 rounded-full bg-[#FAF6F0] border border-[#E6DFD5] text-[#7A7268] text-[7px] font-sans font-black tracking-wider uppercase">
+                Soon
+              </span>
+            </div>
+          </div>
+        </aside>
+
+        {/* MAIN DOSSIER CONTENT PANEL */}
+        <main className="flex-1 min-w-0 w-full">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeDay}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="w-full flex flex-col gap-16"
+            >
 
         {/* THE DOSSIER INDEX (Overview List - Screen Only) */}
-        {activeDay !== 'epilogue' && activeDay !== 'packing' && activeDay !== 'visa' && activeDay !== 'tracking' && (
+        {activeDay !== 'epilogue' && activeDay !== 'packing' && activeDay !== 'visa' && activeDay !== 'tracking' && activeDay !== 'emergency' && (
           <section className="bg-white rounded-3xl border border-[#E6DFD5] p-8 sm:p-10 shadow-sm relative overflow-hidden print:hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-radial from-[#FF6B2C]/5 via-transparent to-transparent pointer-events-none" />
 
@@ -1321,54 +1483,6 @@ export default function ItineraryPage() {
                   </div>
                 );
               })}
-
-              <div
-                onClick={() => setActiveDay('packing')}
-                className="flex flex-col justify-between p-6 rounded-2xl bg-[#FAF6F0] border border-[#E6DFD5]/80 hover:border-[#FF6B2C]/60 transition-all duration-300 group cursor-pointer"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="px-2.5 py-0.5 rounded-md bg-[#1E1C1A] text-[#FAF6F0] font-serif text-xs font-bold tracking-wider">
-                      Preparation
-                    </span>
-                  </div>
-                  <h3 className="text-lg font-serif font-bold text-[#1E1C1A] leading-snug group-hover:text-[#FF6B2C] transition-colors">
-                    Packing List &amp; Gear
-                  </h3>
-                  <p className="text-xs font-sans text-[#7A7268] mt-2">
-                    Auto-generated packing list based on your curated activities and climate.
-                  </p>
-                </div>
-
-                <div className="mt-6 pt-4 border-t border-[#E6DFD5] flex items-center justify-between text-[11px] font-sans text-[#5F5E5A]">
-                  <span>{packingList ? Object.values(packingList).flat().filter(i => i.checked).length : 0} of {packingList ? Object.values(packingList).flat().length : 0} Packed</span>
-                  <span className="font-bold text-[#1E1C1A]">Interactive</span>
-                </div>
-              </div>
-
-              <div
-                onClick={() => setActiveDay('visa')}
-                className="flex flex-col justify-between p-6 rounded-2xl bg-[#FAF6F0] border border-[#E6DFD5]/80 hover:border-[#FF6B2C]/60 transition-all duration-300 group cursor-pointer"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="px-2.5 py-0.5 rounded-md bg-[#1E1C1A] text-[#FAF6F0] font-serif text-xs font-bold tracking-wider">
-                      Preparation
-                    </span>
-                  </div>
-                  <h3 className="text-lg font-serif font-bold text-[#1E1C1A] leading-snug group-hover:text-[#FF6B2C] transition-colors">
-                    Visa &amp; Travel Documents
-                  </h3>
-                  <p className="text-xs font-sans text-[#7A7268] mt-2">
-                    Official visa requirements and your essential document checklist.
-                  </p>
-                </div>
-
-                <div className="mt-6 pt-4 border-t border-[#E6DFD5] flex items-center justify-between text-[11px] font-sans text-[#5F5E5A]">
-                  <span>{visaChecklist ? Object.values(visaChecklist).filter(i => i.checked).length : 0} of {visaChecklist ? Object.keys(visaChecklist).length : 0} Completed</span>
-                  <span className="font-bold text-[#1E1C1A]">Interactive</span>
-                </div>
-              </div>
             </div>
           </section>
         )}
@@ -1847,6 +1961,21 @@ export default function ItineraryPage() {
                 );
               })() : activeDay === 'tracking' ? (
                 <section className="font-sans mb-12">
+                  {/* Live Price Monitor Active Header Banner */}
+                  <div className="bg-[#FAF6F0] border-l-4 border-emerald-500 p-4 rounded-r-2xl mb-8 flex items-center justify-between shadow-2xs">
+                    <div className="flex items-center gap-3">
+                      <div className="w-3 h-3 rounded-full bg-emerald-500 animate-ping shrink-0" />
+                      <div>
+                        <span className="text-xs font-mono font-bold uppercase tracking-widest text-emerald-700 block">
+                          Live Price &amp; Route Monitor Active
+                        </span>
+                        <p className="text-xs text-[#7A7268] mt-0.5">
+                          Real-time flight fares, hotel pricing, and anchor route optimization active for {itinerary?.destinationName || 'your destination'}.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
                   <PriceTracker
                     tripId={itinerary?.id || itinerary?.db_id || activeTripId || 'shared-trip'}
                     destinationName={itinerary?.destinationName}
@@ -2082,7 +2211,25 @@ export default function ItineraryPage() {
                     )}
                   </section>
                 );
-              })() : (
+              })() : activeDay === 'emergency' ? (
+                <section className="font-sans">
+                  <div className="border-b-2 border-[#1E1C1A] pb-6 mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                    <div>
+                      <span className="text-xs font-mono uppercase tracking-widest text-[#FF6B2C] font-bold block mb-1">
+                        Safety &amp; Assistance
+                      </span>
+                      <h2 className="text-3xl font-serif font-black text-[#1E1C1A] tracking-tight">
+                        Emergency Info Concierge
+                      </h2>
+                    </div>
+                  </div>
+
+                  <EmergencyInfoView
+                    destinationName={itinerary?.destinationName}
+                    passportNationality={passportNationality}
+                  />
+                </section>
+              ) : (
                 /* ACTIVE CHAPTER VIEW */
                 (() => {
                   const dayIdx = activeDay - 1;
@@ -3020,7 +3167,10 @@ export default function ItineraryPage() {
           </section>
         </div>
 
-      </main>
+      </motion.div>
+    </AnimatePresence>
+  </main>
+</div>
 
       {/* OVERLAY MAP MODAL (InteractiveRouteMap - Itinerary View) */}
       <AnimatePresence>
@@ -3204,6 +3354,29 @@ export default function ItineraryPage() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Emergency Modal / Slide-up Bottom Sheet */}
+      <EmergencyModal
+        isOpen={isEmergencyModalOpen}
+        onClose={() => setIsEmergencyModalOpen(false)}
+        destinationName={itinerary?.destinationName}
+        passportNationality={passportNationality}
+      />
+
+      {/* PERSISTENT FLOATING EMERGENCY (SOS) BUTTON - ACCESSIBLE FROM ANY TAB */}
+      <div className="fixed bottom-6 right-6 z-[90] print:hidden">
+        <button
+          type="button"
+          onClick={() => setIsEmergencyModalOpen(true)}
+          className="group flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-[#1E1C1A] text-white shadow-lg border border-[#E6DFD5] hover:border-[#FF6B2C] hover:bg-[#FF6B2C] transition-all duration-200 cursor-pointer select-none"
+          title="Open Emergency Info & Safety Concierge"
+        >
+          <ShieldAlert className="w-4 h-4 text-[#FF6B2C] group-hover:text-white shrink-0 transition-colors" />
+          <span className="font-sans text-xs font-bold uppercase tracking-wider text-white">
+            Emergency
+          </span>
+        </button>
+      </div>
 
       <footer className="py-12 text-center text-xs font-serif italic text-[#7A7268] border-t border-[#E6DFD5] bg-white mt-auto">
         TripWise Private Travel Concierge · Published Dossier Guide · Powered by Google Gemini
