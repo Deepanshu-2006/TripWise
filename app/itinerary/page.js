@@ -6,6 +6,8 @@ import dynamic from 'next/dynamic';
 import Header from '../components/Header';
 import { generatePackingList } from '../../lib/packingListLogic';
 import { fetchVisaRequirements } from '../../lib/visaApi';
+import ExpenseTrackerView from '../components/ExpenseTrackerView';
+import { getTripExpenses, convertCurrency } from '../../lib/expenseApi';
 import Link from 'next/link';
 import {
   Download,
@@ -1320,9 +1322,20 @@ export default function ItineraryPage() {
               <span className="text-[10px] sm:text-xs font-sans font-bold text-white/70 uppercase tracking-widest">Curated Stops</span>
               <span className="text-2xl sm:text-3xl font-serif font-black text-white mt-1.5">{totalStopsCount} Stops</span>
             </div>
-            <div className="flex flex-col border-l border-white/10 pl-6 last:border-0">
-              <span className="text-[10px] sm:text-xs font-sans font-bold text-white/70 uppercase tracking-widest">Est. Budget</span>
-              <span className="text-2xl sm:text-3xl font-serif font-black text-[#FF6B2C] mt-1.5">{itinerary.estimatedCost || '$1,450'}</span>
+            <div className="flex flex-col border-l border-white/10 pl-6 last:border-0 cursor-pointer" onClick={() => setActiveDay('expenses')}>
+              <span className="text-[10px] sm:text-xs font-sans font-bold text-white/70 uppercase tracking-widest">
+                {typeof window !== 'undefined' && getTripExpenses(itinerary?.id || activeTripId || 'default_trip').length > 0 ? 'Spent / Budget' : 'Est. Budget'}
+              </span>
+              <span className="text-2xl sm:text-3xl font-serif font-black text-[#FF6B2C] mt-1.5">
+                {(() => {
+                  if (typeof window === 'undefined') return itinerary.estimatedCost || '$1,450';
+                  const currentExp = getTripExpenses(itinerary?.id || activeTripId || 'default_trip');
+                  if (currentExp.length === 0) return itinerary.estimatedCost || '$1,450';
+                  const spentUSD = currentExp.reduce((acc, e) => acc + convertCurrency(e.amount, e.currency, 'USD'), 0);
+                  const budgetNum = parseFloat((itinerary.estimatedCost || '$1,450').replace(/[^0-9.]/g, '')) || 1450;
+                  return `$${Math.round(spentUSD)} of $${budgetNum.toLocaleString()}`;
+                })()}
+              </span>
             </div>
             <div className="flex flex-col border-l border-white/10 pl-6 last:border-0">
               <span className="text-[10px] sm:text-xs font-sans font-bold text-white/70 uppercase tracking-widest">Daylight Pacing</span>
@@ -1570,6 +1583,27 @@ export default function ItineraryPage() {
               </span>
             </button>
 
+            {/* Expenses Item (Active Utility) */}
+            <button
+              type="button"
+              onClick={() => setActiveDay('expenses')}
+              className={`w-full py-2.5 px-2 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer select-none group ${
+                activeDay === 'expenses'
+                  ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-md shadow-[#FF6B2C]/20 border border-[#FF6B2C]/50 scale-[1.02]'
+                  : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent'
+              }`}
+              title="In-Trip Expense Tracker"
+            >
+              <div className={`p-1.5 rounded-xl transition-all ${
+                activeDay === 'expenses' ? 'bg-[#FF6B2C]/20 text-[#FF6B2C] border border-[#FF6B2C]/40 shadow-xs' : 'bg-white text-[#FF6B2C] shadow-2xs'
+              }`}>
+                <DollarSign className="w-4 h-4 stroke-[2.2]" />
+              </div>
+              <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center">
+                Expenses
+              </span>
+            </button>
+
             {/* Safety / Emergency Info Rail Item */}
             <button
               type="button"
@@ -1601,17 +1635,6 @@ export default function ItineraryPage() {
               </span>
             </div>
 
-            {/* Expenses Item */}
-            <div className="w-full py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 opacity-55 bg-white border border-[#E6DFD5]/60 cursor-not-allowed select-none">
-              <span className="text-xs">💰</span>
-              <span className="text-[9px] font-sans font-bold text-[#7A7268] text-center">
-                Expenses
-              </span>
-              <span className="px-1.5 py-0.2 rounded-full bg-[#FAF6F0] border border-[#E6DFD5] text-[#7A7268] text-[7px] font-sans font-black tracking-wider uppercase">
-                Soon
-              </span>
-            </div>
-
             {/* Offline Item */}
             <div className="w-full py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 opacity-55 bg-white border border-[#E6DFD5]/60 cursor-not-allowed select-none">
               <span className="text-xs">📡</span>
@@ -1638,7 +1661,7 @@ export default function ItineraryPage() {
             >
 
         {/* THE DOSSIER INDEX (Overview List - Screen Only) */}
-        {activeDay !== 'epilogue' && activeDay !== 'packing' && activeDay !== 'visa' && activeDay !== 'tracking' && activeDay !== 'emergency' && (
+        {activeDay !== 'epilogue' && activeDay !== 'packing' && activeDay !== 'visa' && activeDay !== 'tracking' && activeDay !== 'emergency' && activeDay !== 'expenses' && (
           <section className="bg-white rounded-3xl border border-[#E6DFD5] p-8 sm:p-10 shadow-sm relative overflow-hidden print:hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-radial from-[#FF6B2C]/5 via-transparent to-transparent pointer-events-none" />
 
@@ -2507,6 +2530,12 @@ export default function ItineraryPage() {
                     passportNationality={passportNationality}
                   />
                 </section>
+              ) : activeDay === 'expenses' ? (
+                <ExpenseTrackerView
+                  tripId={itinerary?.id || itinerary?.db_id || activeTripId || 'default-trip'}
+                  estBudget={itinerary?.estimatedCost ? parseFloat(itinerary.estimatedCost.replace(/[^0-9.]/g, '')) : 1450}
+                  destination={itinerary?.destinationName || 'Rome, Italy'}
+                />
               ) : (
                 /* ACTIVE CHAPTER VIEW */
                 (() => {
