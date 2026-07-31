@@ -6,7 +6,8 @@ import Link from 'next/link';
 import { 
   Bell, Plane, Hotel, AlertCircle, TrendingDown, TrendingUp, Minus, Clock, MapPin, 
   Loader2, ArrowRight, CheckCircle2, Star, SlidersHorizontal, ExternalLink, Info, 
-  Sparkles, Map, List, CheckSquare, Square, X, Layers, Scale, DollarSign, Compass
+  Sparkles, Map, List, CheckSquare, Square, X, Layers, Scale, DollarSign, Compass,
+  WifiOff
 } from 'lucide-react';
 import { activateTracking, getTrackingState, clearUnreadDrops, searchFlights, searchHotels, saveTrackingSelection, saveTrackingState } from '../../lib/priceTrackingApi';
 import { getBookingLinkInfo } from '../../lib/bookingPartners';
@@ -438,6 +439,23 @@ export default function PriceTracker({
 
   // Hotel View Mode (List vs Map)
   const [hotelViewMode, setHotelViewMode] = useState('list'); // 'list' | 'map'
+  const [isOffline, setIsOffline] = useState(false);
+
+  useEffect(() => {
+    const handleOnlineStatus = () => {
+      setIsOffline(!navigator.onLine);
+    };
+
+    if (typeof window !== 'undefined') {
+      setIsOffline(!navigator.onLine);
+      window.addEventListener('online', handleOnlineStatus);
+      window.addEventListener('offline', handleOnlineStatus);
+      return () => {
+        window.removeEventListener('online', handleOnlineStatus);
+        window.removeEventListener('offline', handleOnlineStatus);
+      };
+    }
+  }, []);
 
   useEffect(() => {
     const state = getTrackingState(tripId);
@@ -601,6 +619,38 @@ export default function PriceTracker({
   };
 
   if (!destinationName) return null;
+
+  if (isOffline) {
+    return (
+      <div className="bg-white/80 rounded-3xl border border-[#E6DFD5] p-8 text-center max-w-xl mx-auto shadow-sm my-6 font-sans">
+        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-center mx-auto text-amber-600 mb-4">
+          <WifiOff className="w-7 h-7" />
+        </div>
+        <h3 className="font-serif text-xl font-bold text-[#1E1C1A] mb-2">
+          Requires Internet Connection
+        </h3>
+        <p className="text-xs text-[#7A7268] max-w-md mx-auto leading-relaxed mb-6">
+          Price tracking requires an active internet connection to query live flight deals and hotel rates across global booking engines.
+        </p>
+
+        {trackingState ? (
+          <div className="bg-[#FAF6F0] rounded-2xl p-4 border border-[#E6DFD5] text-left text-xs space-y-2">
+            <p className="font-bold text-[#1E1C1A] flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <span>Cached Tracking Session Available</span>
+            </p>
+            <p className="text-gray-600 leading-normal">
+              Tracking configured for <strong>{destinationName}</strong> (Origin: {trackingState.config?.origin || 'JFK'}). Live price monitoring will resume automatically when you reconnect.
+            </p>
+          </div>
+        ) : (
+          <div className="bg-[#FAF6F0] rounded-2xl p-3.5 border border-[#E6DFD5] text-center text-xs text-gray-500">
+            Reconnect to an active network to activate price tracking for {destinationName}.
+          </div>
+        )}
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
