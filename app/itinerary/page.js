@@ -53,7 +53,8 @@ import {
   FileText,
   ShieldAlert,
   Plane,
-  Luggage
+  Luggage,
+  CloudOff
 } from 'lucide-react';
 import {
   getActivityThumbnail,
@@ -75,6 +76,7 @@ import PriceTracker from '../components/PriceTracker';
 import { getTrackingState, saveTrackingState } from '../../lib/priceTrackingApi';
 import EmergencyInfoView from '../components/EmergencyInfoView';
 import EmergencyModal from '../components/EmergencyModal';
+import OfflineTripManager from '../components/OfflineTripManager';
 
 const toRomanNumeral = (num) => {
   const romanMap = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V', 6: 'VI', 7: 'VII', 8: 'VIII', 9: 'IX', 10: 'X' };
@@ -536,6 +538,7 @@ export default function ItineraryPage() {
   const [activeDay, setActiveDay] = useState(1); // Active Day, 'epilogue', 'packing', 'visa', 'tracking', or 'emergency'
   const [activeModalDay, setActiveModalDay] = useState(null);
   const [isEmergencyModalOpen, setIsEmergencyModalOpen] = useState(false);
+  const [isOfflineModalOpen, setIsOfflineModalOpen] = useState(false);
 
   // Packing List State
   const [packingList, setPackingList] = useState(null);
@@ -1444,7 +1447,15 @@ export default function ItineraryPage() {
               )}
             </button>
 
-
+            <OfflineTripManager
+              tripId={activeTripId || itinerary?.id || itinerary?.db_id || 'default_trip'}
+              itinerary={itinerary}
+              expenses={getTripExpenses(activeTripId || itinerary?.id || 'default_trip')}
+              packingList={packingList}
+              visaReqs={visaReqs}
+              externalIsOpen={isOfflineModalOpen}
+              onCloseExternal={() => setIsOfflineModalOpen(false)}
+            />
 
             <a
               href={itinerary?.id || itinerary?.db_id || activeTripId ? `/ai-planner/new?action=view&trip_id=${itinerary?.id || itinerary?.db_id || activeTripId}` : '/ai-planner'}
@@ -1635,16 +1646,23 @@ export default function ItineraryPage() {
               </span>
             </div>
 
-            {/* Offline Item */}
-            <div className="w-full py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 opacity-55 bg-white border border-[#E6DFD5]/60 cursor-not-allowed select-none">
-              <span className="text-xs">📡</span>
-              <span className="text-[9px] font-sans font-bold text-[#7A7268] text-center">
+            {/* Offline Pack Item */}
+            <button
+              type="button"
+              onClick={() => setIsOfflineModalOpen(true)}
+              className="w-full py-2.5 px-2 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer select-none group bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent"
+              title="Offline Availability & Pack Download"
+            >
+              <div className="p-1.5 rounded-xl bg-white text-[#FF6B2C] shadow-2xs">
+                <CloudOff className="w-4 h-4 stroke-[2.2]" />
+              </div>
+              <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center">
                 Offline
               </span>
-              <span className="px-1.5 py-0.2 rounded-full bg-[#FAF6F0] border border-[#E6DFD5] text-[#7A7268] text-[7px] font-sans font-black tracking-wider uppercase">
-                Soon
+              <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[8px] font-mono font-black border border-emerald-300">
+                READY
               </span>
-            </div>
+            </button>
           </div>
         </aside>
 
@@ -2535,6 +2553,10 @@ export default function ItineraryPage() {
                   tripId={itinerary?.id || itinerary?.db_id || activeTripId || 'default-trip'}
                   estBudget={itinerary?.estimatedCost ? parseFloat(itinerary.estimatedCost.replace(/[^0-9.]/g, '')) : 1450}
                   destination={itinerary?.destinationName || 'Rome, Italy'}
+                  daysCount={itinerary?.days?.length || 3}
+                  collaborators={itinerary?.collaborators || [
+                    { name: 'Sarah Jenkins', photoURL: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', email: 'sarah@example.com' }
+                  ]}
                 />
               ) : (
                 /* ACTIVE CHAPTER VIEW */
