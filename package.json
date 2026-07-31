@@ -15,6 +15,7 @@
     "@heroicons/react": "^2.2.0",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
+    "@serwist/next": "^9.5.12",
     "@supabase/supabase-js": "^2.110.8",
     "cobe": "^2.0.1",
     "framer-motion": "^12.42.2",
@@ -29,6 +30,7 @@
     "react-globe.gl": "^2.38.0",
     "react-qr-code": "^2.2.0",
     "resend": "^6.18.0",
+    "serwist": "^9.5.12",
     "three": "^0.185.1"
   },
   "devDependencies": {
