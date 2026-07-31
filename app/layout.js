@@ -11,7 +11,7 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-import { ClerkProvider } from '@clerk/nextjs'
+import ClerkOfflineProvider from './components/ClerkOfflineProvider';
 
 export const metadata = {
   title: "TripWise AI Planner",
@@ -19,20 +19,24 @@ export const metadata = {
 };
 
 import SmoothScroll from "./components/SmoothScroll";
+import ServiceWorkerRegistrar from "./components/ServiceWorkerRegistrar";
+import OfflineBanner from "./components/OfflineBanner";
 
 export default function RootLayout({ children }) {
   return (
-    <ClerkProvider>
+    <ClerkOfflineProvider>
       <html
         lang="en"
         className={`${fraunces.variable} ${inter.variable} antialiased`}
       >
         <body className="flex flex-col min-h-screen">
+          <ServiceWorkerRegistrar />
+          <OfflineBanner />
           <SmoothScroll>
             {children}
           </SmoothScroll>
         </body>
       </html>
-    </ClerkProvider>
+    </ClerkOfflineProvider>
   );
 }
