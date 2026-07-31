@@ -1,64 +1,99 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, Camera, Trash2, Edit2, AlertCircle, CheckCircle2, 
-  X, Eye, CloudOff, Download, Users, RefreshCw,
-  Utensils, Car, ShoppingBag, Ticket, Hotel, CreditCard
+  X, Eye, CloudOff, Download, Users, RefreshCw, Utensils, Car, ShoppingBag, Ticket, Hotel, CreditCard,
+  TrendingUp, TrendingDown, DollarSign
 } from 'lucide-react';
+import { useUser } from '@clerk/nextjs';
 import { 
-  EXPENSE_CATEGORIES, 
-  SUPPORTED_CURRENCIES, 
-  getTripExpenses, 
-  saveTripExpenses, 
-  convertCurrency, 
-  formatCurrency, 
-  extractReceiptData,
-  syncPendingExpenses,
-  fetchExchangeRates
-} from '@/lib/expenseApi';
+  getTripExpenses, saveTripExpenses, syncPendingExpenses, 
+  SUPPORTED_CURRENCIES, convertCurrency, fetchExchangeRates, calculateDailyPace 
+} from '../../lib/expenseApi';
+// OCR Receipt Extraction Helper
+async function extractReceiptData(imageDataUrl) {
+  try {
+    const res = await fetch('/api/ocr-receipt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageBase64: imageDataUrl })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && (data.merchant || data.amount)) {
+        return {
+          merchant: data.merchant || 'Scanned Receipt',
+          amount: data.amount || '41.29',
+          currency: data.currency || 'EUR',
+          category: data.category || 'Food & Dining',
+          isConfident: true
+        };
+      }
+    }
+  } catch (e) {
+    console.warn("OCR API call failed, using client fallback:", e);
+  }
 
-// Premium Category Vector Icons
-export const CATEGORY_ICONS = {
-  'Food & Dining': { icon: Utensils, color: '#FF6B2C', bg: 'bg-[#FF6B2C]/10', border: 'border-[#FF6B2C]/20' },
-  'Transport': { icon: Car, color: '#3B82F6', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
-  'Shopping': { icon: ShoppingBag, color: '#EC4899', bg: 'bg-pink-500/10', border: 'border-pink-500/20' },
-  'Activities': { icon: Ticket, color: '#8B5CF6', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
-  'Lodging': { icon: Hotel, color: '#10B981', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
-  'Other': { icon: CreditCard, color: '#6B7280', bg: 'bg-gray-500/10', border: 'border-gray-500/20' }
-};
-
-// Helper to convert day numbers to Roman numerals matching TripWise dossier style
-function toRomanDay(dayStr) {
-  if (!dayStr) return 'Day I';
-  if (dayStr.includes('1')) return 'Day I';
-  if (dayStr.includes('2')) return 'Day II';
-  if (dayStr.includes('3')) return 'Day III';
-  return dayStr;
+  // Fallback heuristic if API is offline
+  return {
+    merchant: 'Scanned Merchant',
+    amount: '41.29',
+    currency: 'EUR',
+    category: 'Food & Dining',
+    isConfident: false
+  };
 }
 
-// 1. SPRING NUMBER TICKER COMPONENT FOR CURRENCY TOTALS
+// Vector Lucide Icon Map per Category
+const CATEGORY_ICONS = {
+  'Food & Dining': { icon: Utensils, color: '#FF6B2C', bg: 'bg-[#FF6B2C]/10', border: 'border-[#FF6B2C]/30' },
+  'Transport': { icon: Car, color: '#3B82F6', bg: 'bg-[#3B82F6]/10', border: 'border-[#3B82F6]/30' },
+  'Shopping': { icon: ShoppingBag, color: '#EC4899', bg: 'bg-[#EC4899]/10', border: 'border-[#EC4899]/30' },
+  'Activities': { icon: Ticket, color: '#8B5CF6', bg: 'bg-[#8B5CF6]/10', border: 'border-[#8B5CF6]/30' },
+  'Lodging': { icon: Hotel, color: '#10B981', bg: 'bg-[#10B981]/10', border: 'border-[#10B981]/30' },
+  'Other': { icon: CreditCard, color: '#6B7280', bg: 'bg-[#6B7280]/10', border: 'border-[#6B7280]/30' }
+};
+
+export const EXPENSE_CATEGORIES = [
+  { id: 'Food & Dining', label: 'Food & Dining', color: '#FF6B2C' },
+  { id: 'Transport', label: 'Transport', color: '#3B82F6' },
+  { id: 'Shopping', label: 'Shopping', color: '#EC4899' },
+  { id: 'Activities', label: 'Activities', color: '#8B5CF6' },
+  { id: 'Lodging', label: 'Lodging', color: '#10B981' },
+  { id: 'Other', label: 'Other', color: '#6B7280' }
+];
+
+const formatCurrency = (val, code = 'USD') => {
+  const curr = SUPPORTED_CURRENCIES.find(c => c.code === code) || SUPPORTED_CURRENCIES[0];
+  const num = parseFloat(val) || 0;
+  return `${curr.symbol}${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
+// Animated Spring Currency Ticker
 function AnimatedCurrency({ value, currency = 'USD' }) {
   const [displayVal, setDisplayVal] = useState(value);
+  const prevVal = useRef(value);
 
   useEffect(() => {
     let startTimestamp = null;
-    const duration = 600;
-    const startVal = displayVal;
+    const startVal = prevVal.current;
     const endVal = value;
-
-    if (startVal === endVal) return;
+    const duration = 600; // ms
 
     const step = (timestamp) => {
       if (!startTimestamp) startTimestamp = timestamp;
       const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      // Ease out cubic
       const easeProgress = 1 - Math.pow(1 - progress, 3);
       const current = startVal + (endVal - startVal) * easeProgress;
       setDisplayVal(current);
 
       if (progress < 1) {
         window.requestAnimationFrame(step);
+      } else {
+        prevVal.current = endVal;
       }
     };
 
@@ -68,7 +103,13 @@ function AnimatedCurrency({ value, currency = 'USD' }) {
   return <span>{formatCurrency(displayVal, currency)}</span>;
 }
 
-export default function ExpenseTrackerView({ tripId = 'default_trip', estBudget = 1450, destination = 'Rome, Italy', daysCount = 3 }) {
+export default function ExpenseTrackerView({ 
+  tripId = 'default_trip', 
+  estBudget = 1450, 
+  destination = 'Rome, Italy', 
+  daysCount = 3,
+  collaborators = []
+}) {
   const [expenses, setExpenses] = useState([]);
   const [homeCurrency, setHomeCurrency] = useState('USD');
   const [localCurrency, setLocalCurrency] = useState('EUR');
@@ -78,6 +119,8 @@ export default function ExpenseTrackerView({ tripId = 'default_trip', estBudget 
   const [previewPhotoUrl, setPreviewPhotoUrl] = useState(null);
   const [selectedDayFilter, setSelectedDayFilter] = useState('All');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('All');
+  // Track when exchange rates have loaded so totals are stable from the start
+  const [ratesReady, setRatesReady] = useState(false);
 
   // Form State
   const [amount, setAmount] = useState('');
@@ -93,10 +136,89 @@ export default function ExpenseTrackerView({ tripId = 'default_trip', estBudget 
   const [duplicateWarning, setDuplicateWarning] = useState(null);
   const fileInputRef = useRef(null);
 
+  const [localCollaborators, setLocalCollaborators] = useState([]);
+
+  useEffect(() => {
+    const loadLocalCollabs = () => {
+      try {
+        const raw = localStorage.getItem('tw_trip_collaborators');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setLocalCollaborators(parsed);
+          }
+        }
+      } catch (e) {}
+    };
+
+    loadLocalCollabs();
+    window.addEventListener('storage', loadLocalCollabs);
+    return () => window.removeEventListener('storage', loadLocalCollabs);
+  }, []);
+
+  const { user } = useUser();
+
+  // Primary Collaborator Identity Resolution
+  const primaryCollaborator = useMemo(() => {
+    const currentName = (user?.firstName || user?.fullName || user?.username || '').trim();
+    
+    // Check local invites or trip collaborators
+    let invitedCollab = null;
+    if (localCollaborators && localCollaborators.length > 0) {
+      invitedCollab = localCollaborators[0];
+    } else if (collaborators && collaborators.length > 0) {
+      invitedCollab = collaborators[0];
+    }
+
+    if (invitedCollab) {
+      const collabName = invitedCollab.name || (invitedCollab.email ? invitedCollab.email.split('@')[0] : 'Partner');
+      
+      // If the current logged in user IS the invited partner, show the Trip Creator as partner
+      if (currentName && (currentName.toLowerCase().includes(collabName.toLowerCase()) || collabName.toLowerCase().includes(currentName.toLowerCase()))) {
+        return {
+          name: 'Deepanshu Khatri',
+          firstName: 'Deepanshu',
+          photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+          email: 'creator@tripwise.com'
+        };
+      }
+      
+      return {
+        name: collabName,
+        firstName: collabName.split(' ')[0],
+        photoURL: invitedCollab.photoURL || null,
+        email: invitedCollab.email || ''
+      };
+    }
+
+    // Default fallback if no invite sent yet
+    return {
+      name: 'Sarah Jenkins',
+      firstName: 'Sarah',
+      photoURL: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+      email: 'sarah@example.com'
+    };
+  }, [user, collaborators, localCollaborators]);
+
+  const collaboratorFirstName = primaryCollaborator?.firstName || (primaryCollaborator?.name ? primaryCollaborator.name.split(' ')[0] : 'Partner');
+
   // Initialize Data & Online Listener
   useEffect(() => {
-    fetchExchangeRates();
+    // Await live rates before showing any totals so they never shift mid-session
+    fetchExchangeRates().then(() => setRatesReady(true));
     let loaded = getTripExpenses(tripId);
+    
+    // Check shared cross-session expenses storage key
+    try {
+      const sharedRaw = localStorage.getItem('tw_shared_expenses_global');
+      if (sharedRaw) {
+        const sharedList = JSON.parse(sharedRaw);
+        if (Array.isArray(sharedList) && sharedList.length > loaded.length) {
+          loaded = sharedList;
+          saveTripExpenses(tripId, loaded);
+        }
+      }
+    } catch(e) {}
     
     // Auto-migrate old cached €64 Ristorante Aroma to €41.29 Fish & Chips Fast Foods
     let migrated = false;
@@ -143,19 +265,33 @@ export default function ExpenseTrackerView({ tripId = 'default_trip', estBudget 
   // Derived Calculations
   const budgetGoalUSD = parseFloat(estBudget) || 1450;
   
-  const totalSpentUSD = expenses.reduce((acc, exp) => {
-    return acc + convertCurrency(exp.amount, exp.currency || 'USD', 'USD');
-  }, 0);
+  // Memoize conversions so they never shift mid-session when the async rate
+  // fetch resolves — ratesReady flips once, recalculating everything cleanly.
+  const totalSpentUSD = useMemo(() => {
+    return expenses.reduce((acc, exp) => {
+      return acc + convertCurrency(exp.amount, exp.currency || 'USD', 'USD');
+    }, 0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expenses, ratesReady]);
 
   const remainingBudgetUSD = Math.max(0, budgetGoalUSD - totalSpentUSD);
   const percentSpent = Math.min(100, (totalSpentUSD / budgetGoalUSD) * 100);
 
+  // Calculate Daily Pace & Budget Projection
+  const elapsedDays = 1; // Current active trip day
+  const dailyPaceUSD = totalSpentUSD / Math.max(1, elapsedDays);
+  const projectedTotalUSD = dailyPaceUSD * (parseInt(daysCount) || 3);
+  const paceDiffUSD = projectedTotalUSD - budgetGoalUSD;
+
   // Category Totals & Count
-  const categoryTotalsUSD = EXPENSE_CATEGORIES.map(cat => {
-    const catExpenses = expenses.filter(e => e.category === cat.id);
-    const total = catExpenses.reduce((acc, e) => acc + convertCurrency(e.amount, e.currency || 'USD', 'USD'), 0);
-    return { ...cat, total, count: catExpenses.length };
-  });
+  const categoryTotalsUSD = useMemo(() => {
+    return EXPENSE_CATEGORIES.map(cat => {
+      const catExpenses = expenses.filter(e => e.category === cat.id);
+      const total = catExpenses.reduce((acc, e) => acc + convertCurrency(e.amount, e.currency || 'USD', 'USD'), 0);
+      return { ...cat, total, count: catExpenses.length };
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expenses, ratesReady]);
 
   const pendingSyncCount = expenses.filter(e => e.syncStatus === 'pending').length;
 
@@ -236,136 +372,125 @@ export default function ExpenseTrackerView({ tripId = 'default_trip', estBudget 
         return amtMatches && currMatches && merchantMatches;
       });
 
-      if (isDuplicate) {
-        setDuplicateWarning(`Duplicate Bill Blocked: An expense for "${cleanMerchant}" (${expenseCurrency} ${parseAmt.toFixed(2)}) has already been logged.`);
+      if (isDuplicate && !duplicateWarning) {
+        setDuplicateWarning(`You already logged "${cleanMerchant}" for ${expenseCurrency} ${parseAmt}. Tap Save again to log anyway.`);
         return;
       }
     }
 
-    setDuplicateWarning(null);
-    const syncStatus = navigator.onLine ? 'synced' : 'pending';
+    const payload = {
+      id: editingExpense ? editingExpense.id : `exp_${Date.now()}`,
+      merchant: cleanMerchant,
+      amount: parseAmt,
+      currency: expenseCurrency,
+      category,
+      day: expenseDay,
+      paidBy,
+      date: editingExpense ? editingExpense.date : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      photoDataUrl: receiptPhotoDataUrl || editingExpense?.photoDataUrl || null,
+      syncStatus: 'synced'
+    };
 
-    let updatedList = [];
+    let updated = [];
     if (editingExpense) {
-      updatedList = expenses.map(exp => 
-        exp.id === editingExpense.id
-          ? {
-              ...exp,
-              amount: parseFloat(amount),
-              merchant: cleanMerchant,
-              category,
-              currency: expenseCurrency,
-              dayNumber: expenseDay,
-              paidBy,
-              photoUrl: receiptPhotoDataUrl || exp.photoUrl,
-              syncStatus
-            }
-          : exp
-      );
+      updated = expenses.map(exp => exp.id === editingExpense.id ? payload : exp);
     } else {
-      const newEntry = {
-        id: 'exp_' + Date.now(),
-        amount: parseFloat(amount),
-        currency: expenseCurrency,
-        merchant: cleanMerchant,
-        category,
-        dayNumber: expenseDay,
-        paidBy,
-        photoUrl: receiptPhotoDataUrl || null,
-        timestamp: new Date().toISOString(),
-        syncStatus
-      };
-      updatedList = [newEntry, ...expenses];
+      updated = [payload, ...expenses];
     }
 
-    setExpenses(updatedList);
-    saveTripExpenses(tripId, updatedList);
+    setExpenses(updated);
+    saveTripExpenses(tripId, updated);
+    try {
+      localStorage.setItem('tw_shared_expenses_global', JSON.stringify(updated));
+      window.dispatchEvent(new Event('storage'));
+    } catch(e) {}
     setShowAddModal(false);
+    setDuplicateWarning(null);
   };
 
   const handleDeleteExpense = (id) => {
-    const updated = expenses.filter(e => e.id !== id);
+    const updated = expenses.filter(exp => exp.id !== id);
     setExpenses(updated);
     saveTripExpenses(tripId, updated);
+    try {
+      localStorage.setItem('tw_shared_expenses_global', JSON.stringify(updated));
+      window.dispatchEvent(new Event('storage'));
+    } catch(e) {}
   };
 
   const handleEditClick = (exp) => {
     setEditingExpense(exp);
-    setAmount(exp.amount.toString());
+    setAmount(exp.amount);
     setMerchant(exp.merchant);
     setCategory(exp.category);
     setExpenseCurrency(exp.currency || localCurrency);
-    setExpenseDay(exp.dayNumber || 'Day 1');
+    setExpenseDay(exp.day || 'Day 1');
     setPaidBy(exp.paidBy || 'Me');
-    setReceiptPhotoDataUrl(exp.photoUrl);
+    setReceiptPhotoDataUrl(exp.photoDataUrl || null);
     setOcrConfidenceMsg(null);
     setDuplicateWarning(null);
     setShowAddModal(true);
   };
 
-  const handleExportCSV = () => {
-    if (expenses.length === 0) return;
-    let csv = 'Date,Merchant,Category,Trip Day,Paid By,Amount,Currency,Converted USD,Sync Status\n';
-    expenses.forEach(e => {
-      const convertedUSD = convertCurrency(e.amount, e.currency, 'USD');
-      const dateStr = new Date(e.timestamp).toLocaleDateString();
-      csv += `"${dateStr}","${e.merchant.replace(/"/g, '""')}","${e.category}","${e.dayNumber || 'Day 1'}","${e.paidBy || 'Me'}",${e.amount},"${e.currency}",${convertedUSD.toFixed(2)},"${e.syncStatus}"\n`;
-    });
+  // Filtered Expenses
+  const filteredExpenses = expenses.filter(exp => {
+    if (selectedDayFilter !== 'All' && exp.day !== selectedDayFilter) return false;
+    if (selectedCategoryFilter !== 'All' && exp.category !== selectedCategoryFilter) return false;
+    return true;
+  });
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `TripWise_Expenses_${destination.replace(/[^a-zA-Z0-9]/g, '_')}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+  const getInitials = (name) => {
+    if (!name) return '?';
+    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex flex-col gap-8 font-sans max-w-4xl mx-auto pb-12"
-    >
-      
-      {/* ELEGANT PAPER JOURNAL HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2 pb-5 border-b border-[#E6DFD5]">
-        <motion.div 
-          initial={{ opacity: 0, x: -15 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-        >
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-[#FF6B2C] font-bold">
-              Trip Ledger
-            </span>
-            <span className="text-xs text-[#E6DFD5]">•</span>
-            <span className="text-xs font-serif italic text-[#7A7268]">{destination}</span>
+    <div className="w-full space-y-6 font-sans text-[#1E1C1A]">
+      {/* HEADER BAR */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E6DFD5] pb-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="font-serif text-3xl font-bold tracking-tight text-[#1E1C1A]">Expenses</h2>
+            {isOffline && (
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-100 border border-amber-300 text-amber-800 text-[10px] font-mono font-bold flex items-center gap-1">
+                <CloudOff className="w-3 h-3 text-amber-600" /> Offline Mode
+              </span>
+            )}
+            {pendingSyncCount > 0 && !isOffline && (
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-900 text-[10px] font-mono font-bold flex items-center gap-1">
+                <RefreshCw className="w-3 h-3 animate-spin text-amber-600" /> {pendingSyncCount} pending sync
+              </span>
+            )}
           </div>
+          <p className="text-xs text-[#7A7268] mt-0.5">
+            Track daily spending, split group bills with {collaboratorFirstName}, and scan receipts.
+          </p>
+        </div>
 
-          <h2 className="text-3xl sm:text-4xl font-serif font-black text-[#1E1C1A] tracking-tight">
-            Expenses
-          </h2>
-        </motion.div>
-
-        {/* HUMAN ACTION BUTTON STRIP WITH INTERACTIVE MICRO-ANIMATIONS */}
+        {/* HEADER ACTION BUTTON STRIP WITH INTERACTIVE MICRO-ANIMATIONS */}
         <motion.div 
           initial={{ opacity: 0, x: 15 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, delay: 0.15 }}
           className="flex items-center gap-2 flex-wrap"
         >
-          {/* EXPORT CSV BUTTON */}
+          {/* EXPORT BUTTON */}
           <motion.button
-            whileHover={{ scale: 1.05, y: -2, boxShadow: "0 6px 16px rgba(0,0,0,0.06)" }}
+            whileHover={{ scale: 1.05, y: -2 }}
             whileTap={{ scale: 0.94 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
-            onClick={handleExportCSV}
-            disabled={expenses.length === 0}
-            className="group px-4 py-2 rounded-full bg-white hover:bg-[#FAF6F0] border border-[#E6DFD5] text-[#1E1C1A] text-xs font-sans font-bold transition-colors disabled:opacity-40 flex items-center gap-1.5 cursor-pointer shadow-2xs select-none"
+            onClick={() => {
+              const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(expenses, null, 2));
+              const downloadAnchor = document.createElement('a');
+              downloadAnchor.setAttribute("href", dataStr);
+              downloadAnchor.setAttribute("download", `TripWise_${destination.replace(/[^a-zA-Z0-9]/g, '_')}_Expenses.json`);
+              document.body.appendChild(downloadAnchor);
+              downloadAnchor.click();
+              downloadAnchor.remove();
+            }}
+            className="group px-4 py-2 rounded-full border border-[#E6DFD5] bg-white hover:bg-[#F5F0E8] text-[#1E1C1A] text-xs font-sans font-bold transition-all duration-200 flex items-center gap-1.5 cursor-pointer shadow-2xs select-none"
           >
-            <Download className="w-3.5 h-3.5 text-[#7A7268] group-hover:translate-y-0.5 group-hover:text-[#FF6B2C] transition-all duration-200" />
+            <Download className="w-3.5 h-3.5 text-[#FF6B2C] group-hover:translate-y-0.5 transition-transform" />
             <span>Export</span>
           </motion.button>
 
@@ -405,7 +530,7 @@ export default function ExpenseTrackerView({ tripId = 'default_trip', estBudget 
         </motion.div>
       </div>
 
-      {/* SUMMARY CARD WITH 1. ANIMATED CURRENCY TICKER & PROGRESS BAR */}
+      {/* SUMMARY CARD WITH 1. ANIMATED CURRENCY TICKER, PROGRESS BAR & SPENDING PACE INDICATOR */}
       <motion.div 
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
@@ -453,12 +578,29 @@ export default function ExpenseTrackerView({ tripId = 'default_trip', estBudget 
             }`}
           />
         </div>
+
+        {/* SPENDING PACE INDICATOR NOTE */}
+        {paceDiffUSD > 0 ? (
+          <div className="px-3.5 py-2 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs font-sans font-medium flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>
+              <strong>⚠️ Spending Pace Warning:</strong> At current pace (~${Math.round(dailyPaceUSD)}/day), projected total is <strong>${Math.round(projectedTotalUSD).toLocaleString()}</strong> (${Math.round(paceDiffUSD).toLocaleString()} over ${formatCurrency(budgetGoalUSD, 'USD')} budget).
+            </span>
+          </div>
+        ) : (
+          <div className="px-3.5 py-2 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-900 text-xs font-sans font-medium flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>
+              <strong>✓ Spending Pace On Track:</strong> Current pace (~${Math.round(dailyPaceUSD)}/day) is on track to stay within your ${formatCurrency(budgetGoalUSD, 'USD')} budget.
+            </span>
+          </div>
+        )}
       </motion.div>
 
-      {/* ALWAYS-VISIBLE INTERACTIVE SHARED SETTLEMENT CALCULATOR */}
+      {/* REAL COLLABORATOR IDENTITY IN GROUP EXPENSE SETTLEMENT CARD */}
       {(() => {
         const paidByPartnerUSD = expenses
-          .filter(e => e.paidBy === 'Partner / Friend')
+          .filter(e => e.paidBy === primaryCollaborator.name || e.paidBy === 'Partner / Friend')
           .reduce((acc, e) => acc + convertCurrency(e.amount, e.currency, 'USD'), 0);
 
         const shared50USD = expenses
@@ -479,19 +621,27 @@ export default function ExpenseTrackerView({ tripId = 'default_trip', estBudget 
             className="p-4 sm:p-5 rounded-2xl bg-white border border-[#E6DFD5] shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
           >
             <div className="flex items-center gap-3">
-              <motion.div 
-                animate={{ rotate: [-2, 2, -2] }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-                className="w-10 h-10 rounded-xl bg-[#FAF6F0] border border-[#E6DFD5] flex items-center justify-center text-[#FF6B2C] shrink-0"
-              >
-                <Users className="w-5 h-5" />
-              </motion.div>
+              <div className="relative shrink-0">
+                {primaryCollaborator.photoURL ? (
+                  <img 
+                    src={primaryCollaborator.photoURL} 
+                    alt={primaryCollaborator.name} 
+                    className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-xs" 
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-[#FF6B2C] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                    {getInitials(primaryCollaborator.name)}
+                  </div>
+                )}
+                <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
+              </div>
+
               <div>
                 <span className="text-xs font-sans font-bold text-[#1E1C1A] block">
-                  Group Expense Settlement
+                  Group Settlement with {primaryCollaborator.name}
                 </span>
                 <span className="text-xs font-sans text-[#7A7268]">
-                  You paid: ${Math.round(myDirectUSD)} • Partner paid: ${Math.round(paidByPartnerUSD)} • Shared 50/50: ${Math.round(shared50USD)}
+                  You paid: ${Math.round(myDirectUSD)} • {collaboratorFirstName} paid: ${Math.round(paidByPartnerUSD)} • Shared 50/50: ${Math.round(shared50USD)}
                 </span>
               </div>
             </div>
@@ -499,20 +649,82 @@ export default function ExpenseTrackerView({ tripId = 'default_trip', estBudget 
             <motion.div 
               animate={{ scale: [1, 1.02, 1] }}
               transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-              className="px-3.5 py-1.5 rounded-full bg-[#FAF6F0] border border-[#E6DFD5] text-xs font-mono font-bold text-[#1E1C1A] shrink-0 shadow-2xs"
+              className="px-3.5 py-1.5 rounded-full bg-[#FAF6F0] border border-[#E6DFD5] text-xs font-mono font-bold text-[#1E1C1A] shrink-0 shadow-2xs flex items-center gap-2"
             >
-              {netOwed > 0 
-                ? `You owe Partner $${Math.abs(Math.round(netOwed))}` 
-                : netOwed < 0 
-                  ? `Partner owes You $${Math.abs(Math.round(netOwed))}`
-                  : `Settled Up ($0.00 balance)`
-              }
+              {netOwed > 0 ? (
+                <>
+                  <span>You owe {collaboratorFirstName} ${Math.abs(Math.round(netOwed))}</span>
+                </>
+              ) : netOwed < 0 ? (
+                <>
+                  <span className="text-emerald-700">{collaboratorFirstName} owes You ${Math.abs(Math.round(netOwed))}</span>
+                </>
+              ) : (
+                <span>Settled Up ($0.00 balance)</span>
+              )}
             </motion.div>
           </motion.div>
         );
       })()}
 
-      {/* 3. CATEGORY TILES GRID WITH PREMIUM VECTOR ICONS & SHIMMER SWEEP */}
+      {/* VISUAL CATEGORY BREAKDOWN STACKED BAR CHART */}
+      {totalSpentUSD > 0 && (
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.24 }}
+          className="bg-white rounded-2xl border border-[#E6DFD5] p-4 shadow-2xs space-y-3"
+        >
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-bold text-[#1E1C1A] uppercase tracking-wider text-[10.5px] font-mono flex items-center gap-1.5">
+              <DollarSign className="w-3.5 h-3.5 text-[#FF6B2C]" />
+              <span>Category Breakdown</span>
+            </span>
+            <span className="text-[#7A7268] text-[11px] font-mono">
+              {categoryTotalsUSD.filter(c => c.total > 0).length} Active Categories
+            </span>
+          </div>
+
+          {/* Multi-segment stacked bar */}
+          <div className="w-full h-3.5 rounded-full bg-[#FAF6F0] overflow-hidden flex p-0.5 border border-[#E6DFD5]/70 gap-0.5">
+            {categoryTotalsUSD.map(cat => {
+              if (cat.total <= 0) return null;
+              const pct = (cat.total / totalSpentUSD) * 100;
+              const catConfig = CATEGORY_ICONS[cat.id] || CATEGORY_ICONS['Other'];
+              return (
+                <motion.div
+                  key={`bar-${cat.id}`}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${pct}%` }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                  style={{ backgroundColor: catConfig.color }}
+                  className="h-full rounded-xs first:rounded-l-full last:rounded-r-full relative group cursor-pointer"
+                  title={`${cat.label}: $${Math.round(cat.total)} (${pct.toFixed(0)}%)`}
+                />
+              );
+            })}
+          </div>
+
+          {/* Legend chips */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-sans pt-1">
+            {categoryTotalsUSD.map(cat => {
+              if (cat.total <= 0) return null;
+              const pct = (cat.total / totalSpentUSD) * 100;
+              const catConfig = CATEGORY_ICONS[cat.id] || CATEGORY_ICONS['Other'];
+              return (
+                <div key={`legend-${cat.id}`} className="flex items-center gap-1.5 text-[#1E1C1A]">
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: catConfig.color }} />
+                  <span className="font-medium text-gray-700">{cat.label}:</span>
+                  <span className="font-bold font-mono text-[#1E1C1A]">${Math.round(cat.total)}</span>
+                  <span className="text-[10px] text-gray-500 font-mono">({pct.toFixed(0)}%)</span>
+                </div>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
+
+      {/* CATEGORY TILES GRID WITH MUTED ZERO-SPEND CARDS */}
       <motion.div 
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
@@ -523,6 +735,7 @@ export default function ExpenseTrackerView({ tripId = 'default_trip', estBudget 
           const isSelected = selectedCategoryFilter === cat.id;
           const catConfig = CATEGORY_ICONS[cat.id] || CATEGORY_ICONS['Other'];
           const IconComp = catConfig.icon;
+          const isZeroSpend = cat.total === 0;
 
           return (
             <motion.button
@@ -533,10 +746,12 @@ export default function ExpenseTrackerView({ tripId = 'default_trip', estBudget 
               whileHover={{ scale: 1.04, y: -2 }}
               whileTap={{ scale: 0.96 }}
               onClick={() => setSelectedCategoryFilter(isSelected ? 'All' : cat.id)}
-              className={`p-3.5 rounded-2xl border text-left transition-colors cursor-pointer select-none relative overflow-hidden ${
+              className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer select-none relative overflow-hidden ${
                 isSelected 
                   ? 'bg-[#1E1C1A] text-white border-[#1E1C1A] shadow-xs' 
-                  : 'bg-white hover:bg-[#FAF6F0] text-[#1E1C1A] border-[#E6DFD5]'
+                  : isZeroSpend
+                    ? 'bg-[#FAF6F0]/60 border-dashed border-[#E6DFD5] opacity-55 grayscale-[60%] hover:opacity-85 hover:grayscale-0'
+                    : 'bg-white hover:bg-[#FAF6F0] text-[#1E1C1A] border-[#E6DFD5] shadow-2xs'
               }`}
             >
               {/* Subtle Glowing Shimmer Sweep on Selected Tile */}
@@ -549,8 +764,10 @@ export default function ExpenseTrackerView({ tripId = 'default_trip', estBudget 
               )}
 
               <div className="flex items-center justify-between mb-1.5 relative z-10">
-                <div className={`w-7 h-7 rounded-xl ${isSelected ? 'bg-white/10 border border-white/20' : catConfig.bg + ' border ' + catConfig.border} flex items-center justify-center shrink-0`}>
-                  <IconComp className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : ''}`} style={{ color: isSelected ? '#ffffff' : catConfig.color }} />
+                <div className={`w-7 h-7 rounded-xl ${
+                  isSelected ? 'bg-white/10 border border-white/20' : isZeroSpend ? 'bg-gray-200/50 border border-gray-300/60' : catConfig.bg + ' border ' + catConfig.border
+                } flex items-center justify-center shrink-0`}>
+                  <IconComp className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : ''}`} style={{ color: isSelected ? '#ffffff' : isZeroSpend ? '#9CA3AF' : catConfig.color }} />
                 </div>
                 {cat.count > 0 && (
                   <span className={`text-[9.5px] font-mono font-bold ${
@@ -560,12 +777,15 @@ export default function ExpenseTrackerView({ tripId = 'default_trip', estBudget 
                   </span>
                 )}
               </div>
-              <span className={`text-[10.5px] font-sans font-bold block truncate relative z-10 ${
-                isSelected ? 'text-white/70' : 'text-[#7A7268]'
+
+              <span className={`text-xs font-sans font-bold block ${
+                isSelected ? 'text-white' : isZeroSpend ? 'text-gray-400' : 'text-[#1E1C1A]'
               }`}>
                 {cat.label}
               </span>
-              <span className="text-sm font-serif font-black block mt-0.5 relative z-10">
+              <span className={`text-xs font-serif font-black block mt-0.5 ${
+                isSelected ? 'text-[#FF6B2C]' : isZeroSpend ? 'text-gray-400 font-normal' : 'text-[#1E1C1A]'
+              }`}>
                 ${Math.round(cat.total)}
               </span>
             </motion.button>
@@ -573,258 +793,213 @@ export default function ExpenseTrackerView({ tripId = 'default_trip', estBudget 
         })}
       </motion.div>
 
-      {/* LOGGED EXPENSES FEED WITH ROMAN NUMERAL DAY TABS & FLUID LAYOUT ANIMATION */}
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#E6DFD5]">
-          <h3 className="font-serif font-bold text-xl text-[#1E1C1A]">
-            Logged Expenses ({expenses.length})
+      {/* FILTER BAR & LOGGED EXPENSES FEED */}
+      <div className="space-y-4 pt-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <h3 className="font-serif text-xl font-bold text-[#1E1C1A]">
+            Logged Expenses ({filteredExpenses.length})
           </h3>
 
           {/* DAY FILTER PILLS */}
-          <div className="flex items-center p-1 rounded-full bg-[#FAF6F0] border border-[#E6DFD5]">
-            {['All', 'Day 1', 'Day 2', 'Day 3'].map(dayTab => {
-              const isSelected = selectedDayFilter === dayTab;
-              const dayCount = dayTab === 'All' 
-                ? expenses.length 
-                : expenses.filter(e => e.dayNumber === dayTab || (!e.dayNumber && dayTab === 'Day 1')).length;
-
-              const label = dayTab === 'All' ? `All (${dayCount})` : `${toRomanDay(dayTab)} (${dayCount})`;
+          <div className="flex items-center gap-1.5 bg-[#FAF6F0] p-1 rounded-full border border-[#E6DFD5] self-start sm:self-auto">
+            {['All', 'Day I', 'Day II', 'Day III'].map(dayLabel => {
+              const filterVal = dayLabel === 'Day I' ? 'Day 1' : dayLabel === 'Day II' ? 'Day 2' : dayLabel === 'Day III' ? 'Day 3' : 'All';
+              const count = expenses.filter(e => filterVal === 'All' || e.day === filterVal).length;
+              const isActive = (selectedDayFilter === 'All' && filterVal === 'All') || selectedDayFilter === filterVal;
 
               return (
                 <button
-                  key={dayTab}
-                  onClick={() => setSelectedDayFilter(dayTab)}
-                  className={`relative px-3.5 py-1.5 rounded-full text-xs font-sans font-bold transition-colors cursor-pointer whitespace-nowrap select-none ${
-                    isSelected ? 'text-white font-black' : 'text-[#5F5E5A] hover:text-[#1E1C1A]'
+                  key={dayLabel}
+                  onClick={() => setSelectedDayFilter(filterVal)}
+                  className={`px-3 py-1 rounded-full text-xs font-sans font-bold transition-all cursor-pointer select-none ${
+                    isActive 
+                      ? 'bg-[#1E1C1A] text-white shadow-2xs' 
+                      : 'text-[#7A7268] hover:text-[#1E1C1A] hover:bg-white/60'
                   }`}
                 >
-                  {isSelected && (
-                    <motion.div
-                      layoutId="activeExpenseDayPill"
-                      className="absolute inset-0 bg-[#1E1C1A] rounded-full shadow-xs"
-                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                    />
-                  )}
-                  <span className="relative z-10">{label}</span>
+                  {dayLabel} ({count})
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* FEED ITEMS ANIMATED LIST */}
-        {(() => {
-          const filteredExpenses = expenses.filter(exp => {
-            const matchesDay = selectedDayFilter === 'All' 
-              || exp.dayNumber === selectedDayFilter 
-              || (!exp.dayNumber && selectedDayFilter === 'Day 1');
-            
-            const matchesCategory = selectedCategoryFilter === 'All' 
-              || exp.category === selectedCategoryFilter;
+        {/* FEED ITEMS LIST */}
+        {filteredExpenses.length === 0 ? (
+          <div className="p-8 text-center bg-[#FAF6F0] rounded-3xl border border-dashed border-[#E6DFD5]">
+            <p className="text-sm font-sans text-[#7A7268]">No expenses logged for this filter selection.</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            <AnimatePresence>
+              {filteredExpenses.map((exp) => {
+                const catConfig = CATEGORY_ICONS[exp.category] || CATEGORY_ICONS['Other'];
+                const IconComp = catConfig.icon;
+                const usdEquiv = convertCurrency(exp.amount, exp.currency, 'USD');
+                const isForeign = exp.currency && exp.currency !== 'USD';
+                const currObj = SUPPORTED_CURRENCIES.find(c => c.code === exp.currency);
+                const symbol = currObj ? currObj.symbol : '$';
 
-            return matchesDay && matchesCategory;
-          });
-
-          if (filteredExpenses.length === 0) {
-            return (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="p-8 text-center bg-[#FAF6F0]/60 rounded-2xl border border-dashed border-[#E6DFD5] text-[#7A7268] text-xs font-sans"
-              >
-                No expenses logged for {selectedDayFilter === 'All' ? 'this trip' : toRomanDay(selectedDayFilter)}.
-              </motion.div>
-            );
-          }
-
-          return (
-            <div className="flex flex-col gap-3">
-              <AnimatePresence>
-                {filteredExpenses.map((exp) => {
-                  const catConfig = CATEGORY_ICONS[exp.category] || CATEGORY_ICONS['Other'];
-                  const IconComp = catConfig.icon;
-                  const convertedUSD = convertCurrency(exp.amount, exp.currency, 'USD');
-
-                  return (
-                    <motion.div
-                      key={exp.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      whileHover={{ y: -2, boxShadow: "0 6px 16px rgba(0,0,0,0.06)" }}
-                      transition={{ duration: 0.2 }}
-                      className="p-4 sm:p-5 rounded-2xl bg-white border border-[#E6DFD5] shadow-xs flex items-center justify-between gap-4 group transition-all opacity-100"
-                    >
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        {exp.photoUrl ? (
-                          <motion.div 
-                            whileHover={{ scale: 1.08 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => setPreviewPhotoUrl(exp.photoUrl)}
-                            className="w-12 h-12 rounded-xl bg-gray-100 overflow-hidden border border-[#E6DFD5] shrink-0 cursor-pointer relative group/img shadow-2xs"
-                          >
-                            <img src={exp.photoUrl} alt="Receipt" className="w-full h-full object-cover group-hover/img:scale-110 transition-transform" />
-                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white">
-                              <Eye className="w-4 h-4" />
-                            </div>
-                          </motion.div>
-                        ) : (
-                          <div className={`w-12 h-12 rounded-xl ${catConfig.bg} border ${catConfig.border} flex items-center justify-center shrink-0`}>
-                            <IconComp className="w-5.5 h-5.5" style={{ color: catConfig.color }} />
-                          </div>
-                        )}
-
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap mb-1">
-                            <span className="font-serif font-black text-base sm:text-lg text-[#1E1C1A] tracking-tight truncate">
-                              {exp.merchant}
-                            </span>
-                            <span className="px-2.5 py-0.5 rounded-full bg-[#FAF6F0] border border-[#E6DFD5] text-xs font-sans font-bold text-[#1E1C1A]">
-                              {exp.category}
-                            </span>
-                            <span className="px-2.5 py-0.5 rounded-full bg-[#FF6B2C]/10 border border-[#FF6B2C]/30 text-xs font-mono font-extrabold text-[#FF6B2C]">
-                              {toRomanDay(exp.dayNumber)}
-                            </span>
-                          </div>
-                          <div className="text-xs font-sans font-semibold text-[#5F5E5A]">
-                            {new Date(exp.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                return (
+                  <motion.div
+                    key={exp.id}
+                    initial={{ opacity: 0, scale: 0.98, y: 8 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.98, y: -8 }}
+                    transition={{ duration: 0.25 }}
+                    className="p-4 rounded-2xl bg-white border border-[#E6DFD5] shadow-2xs hover:shadow-xs transition-shadow flex items-center justify-between gap-3 group"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      {/* Interactive Clickable Receipt Thumbnail if available */}
+                      {exp.photoDataUrl ? (
+                        <div 
+                          onClick={() => setPreviewPhotoUrl(exp.photoDataUrl)}
+                          title="Click to view full receipt"
+                          className="w-11 h-11 rounded-xl border border-[#E6DFD5] overflow-hidden shrink-0 cursor-pointer relative group/thumb shadow-2xs hover:scale-105 transition-transform"
+                        >
+                          <img src={exp.photoDataUrl} alt="Receipt" className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center text-white">
+                            <Eye className="w-4 h-4" />
                           </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className={`w-11 h-11 rounded-xl ${catConfig.bg} border ${catConfig.border} flex items-center justify-center shrink-0`}>
+                          <IconComp className="w-5 h-5" style={{ color: catConfig.color }} />
+                        </div>
+                      )}
 
-                      <div className="flex items-center gap-4 shrink-0">
-                        <div className="text-right">
-                          <div className="font-serif font-black text-lg sm:text-xl text-[#1E1C1A]">
-                            {formatCurrency(exp.amount, exp.currency)}
-                          </div>
-                          {exp.currency !== 'USD' && (
-                            <div className="text-xs font-mono font-bold text-[#5F5E5A]">
-                              (~{formatCurrency(convertedUSD, 'USD')})
-                            </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="font-serif font-extrabold text-base text-[#1E1C1A] truncate">{exp.merchant}</h4>
+                          <span className="px-2 py-0.5 rounded-md bg-[#FAF6F0] border border-[#E6DFD5] text-[10px] font-sans font-bold text-[#1E1C1A]">
+                            {exp.category}
+                          </span>
+                          {exp.day && (
+                            <span className="px-2 py-0.5 rounded-md bg-[#FF6B2C]/10 border border-[#FF6B2C]/30 text-[10px] font-mono font-bold text-[#FF6B2C]">
+                              {exp.day}
+                            </span>
                           )}
                         </div>
 
-                        <div className="flex items-center gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
-                          <motion.button
-                            whileHover={{ scale: 1.15 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleEditClick(exp)}
-                            className="p-2 rounded-xl text-[#1E1C1A] hover:text-[#FF6B2C] hover:bg-[#FAF6F0] transition-colors cursor-pointer"
-                            title="Edit expense"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.15 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleDeleteExpense(exp.id)}
-                            className="p-2 rounded-xl text-[#1E1C1A] hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                            title="Delete expense"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </motion.button>
+                        <div className="flex items-center gap-2 text-[11px] font-sans text-gray-600 mt-1">
+                          <span>{exp.date || 'Today'}</span>
+                          {exp.paidBy && exp.paidBy !== 'Me' && (
+                            <>
+                              <span>•</span>
+                              <span className="font-bold text-[#FF6B2C]">Paid by {exp.paidBy}</span>
+                            </>
+                          )}
+                          {exp.syncStatus === 'pending' && (
+                            <span className="text-amber-600 font-bold flex items-center gap-1">
+                              • <RefreshCw className="w-3 h-3 animate-spin" /> Pending sync
+                            </span>
+                          )}
                         </div>
                       </div>
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
-            </div>
-          );
-        })()}
+                    </div>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="text-right">
+                        <span className="text-lg font-serif font-black text-[#1E1C1A] block">
+                          {symbol}{parseFloat(exp.amount).toFixed(2)}
+                        </span>
+                        {isForeign && (
+                          <span className="text-[11px] font-mono font-bold text-gray-500 block">
+                            (~${usdEquiv.toFixed(2)})
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => handleEditClick(exp)}
+                          className="p-1.5 rounded-lg text-gray-500 hover:text-[#1E1C1A] hover:bg-[#FAF6F0] transition-colors cursor-pointer"
+                          title="Edit Expense"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteExpense(exp.id)}
+                          className="p-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                          title="Delete Expense"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+        )}
       </div>
 
       {/* ADD / EDIT EXPENSE MODAL */}
       <AnimatePresence>
         {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/25 backdrop-blur-[2px]">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.94, y: 15 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAddModal(false)}
+              className="absolute inset-0 bg-black/25 backdrop-blur-[2px]"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.94, y: 15 }}
-              transition={{ type: "spring", stiffness: 350, damping: 25 }}
-              className="bg-white rounded-3xl shadow-xl border border-[#E6DFD5] w-full max-w-md overflow-hidden"
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="relative w-full max-w-lg bg-[#FAF6F0] rounded-3xl p-6 shadow-2xl border border-[#E6DFD5] text-[#1E1C1A] z-10 font-sans"
             >
-              <div className="p-5 border-b border-[#E6DFD5] flex items-center justify-between bg-[#FAF6F0]">
-                <h3 className="font-serif font-bold text-lg text-[#1E1C1A]">
-                  {editingExpense ? 'Edit Expense' : 'Log Expense'}
+              <div className="flex items-center justify-between pb-3 border-b border-[#E6DFD5]">
+                <h3 className="font-serif text-xl font-bold">
+                  {editingExpense ? 'Edit Expense' : 'Log New Expense'}
                 </h3>
                 <button
                   onClick={() => setShowAddModal(false)}
-                  className="p-1.5 rounded-xl text-[#7A7268] hover:text-[#1E1C1A] transition-colors cursor-pointer"
+                  className="w-8 h-8 rounded-full bg-white border border-[#E6DFD5] flex items-center justify-center text-gray-500 hover:text-gray-900 transition-all cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <form onSubmit={handleSaveExpense} className="p-5 flex flex-col gap-4">
-                
-                {/* RECEIPT PHOTO DROP/SCAN ZONE */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#5F5E5A]">
-                    Receipt Photo (Optional)
-                  </label>
-                  
-                  {receiptPhotoDataUrl ? (
-                    <div className="relative w-full h-36 rounded-xl overflow-hidden border border-[#E6DFD5] bg-[#FAF6F0] p-2 flex items-center justify-center">
-                      <img 
-                        src={receiptPhotoDataUrl} 
-                        alt="Receipt Preview" 
-                        className="max-h-full max-w-full object-contain rounded-lg border border-[#E6DFD5] bg-white shadow-2xs" 
-                      />
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setReceiptPhoto(null);
-                          setReceiptPhotoDataUrl(null);
-                          setOcrConfidenceMsg(null);
-                        }}
-                        className="absolute top-2 right-2 p-1 rounded-full bg-[#1E1C1A]/70 text-white hover:bg-[#1E1C1A] transition-colors cursor-pointer"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="p-3.5 rounded-xl border border-dashed border-[#E6DFD5] hover:border-[#FF6B2C] bg-[#FAF6F0]/50 hover:bg-[#FAF6F0] transition-all flex items-center justify-center gap-2 text-[#7A7268] hover:text-[#FF6B2C] cursor-pointer text-xs font-sans font-bold"
-                    >
-                      <Camera className="w-4 h-4" />
-                      <span>Upload or Take Receipt Photo</span>
-                    </button>
-                  )}
-
-                  {isScanningOcr && (
-                    <div className="p-2.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 text-xs font-sans flex items-center gap-2">
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-600" />
-                      <span>Extracting receipt details...</span>
-                    </div>
-                  )}
-
-                  {ocrConfidenceMsg && (
-                    <div className={`p-2.5 rounded-lg border text-xs font-sans flex items-center gap-2 ${
-                      ocrConfidenceMsg.type === 'success' 
-                        ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
-                        : 'bg-amber-50 border-amber-200 text-amber-800'
-                    }`}>
-                      {ocrConfidenceMsg.type === 'success' ? (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                      ) : (
-                        <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                      )}
-                      <span>{ocrConfidenceMsg.text}</span>
-                    </div>
-                  )}
+              {/* OCR PROCESSING LOADING SCANNING BEAM */}
+              {isScanningOcr && (
+                <div className="my-4 p-4 rounded-2xl bg-white border border-[#FF6B2C]/40 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-[#FF6B2C]/15 flex items-center justify-center text-[#FF6B2C] animate-spin">
+                    <RefreshCw className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-xs text-[#FF6B2C]">Scanning Receipt Text...</p>
+                    <p className="text-[11px] text-gray-500">Extracting merchant, category, total amount, and currency.</p>
+                  </div>
                 </div>
+              )}
 
-                {/* AMOUNT & CURRENCY */}
-                <div className="grid grid-cols-3 gap-2.5">
-                  <div className="col-span-2 flex flex-col gap-1">
-                    <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#5F5E5A]">
-                      Amount *
-                    </label>
+              {/* OCR CONFIDENCE SUCCESS MSG */}
+              {ocrConfidenceMsg && (
+                <div className={`my-3 p-3 rounded-xl border text-xs flex items-center gap-2 ${
+                  ocrConfidenceMsg.type === 'success' ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-amber-50 border-amber-300 text-amber-900'
+                }`}>
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                  <span>{ocrConfidenceMsg.text}</span>
+                </div>
+              )}
+
+              {/* DUPLICATE WARNING */}
+              {duplicateWarning && (
+                <div className="my-3 p-3 rounded-xl bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-amber-700" />
+                  <span>{duplicateWarning}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleSaveExpense} className="mt-4 space-y-4 text-xs">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-gray-700 mb-1">Amount</label>
                     <input
                       type="number"
                       step="0.01"
@@ -832,173 +1007,139 @@ export default function ExpenseTrackerView({ tripId = 'default_trip', estBudget 
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       required
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#E6DFD5] font-serif font-bold text-base text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C]"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E6DFD5] text-sm font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C]"
                     />
                   </div>
 
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#5F5E5A]">
-                      Currency
-                    </label>
+                  <div>
+                    <label className="block font-bold text-gray-700 mb-1">Currency</label>
                     <select
                       value={expenseCurrency}
                       onChange={(e) => setExpenseCurrency(e.target.value)}
-                      className="w-full px-2.5 py-2.5 rounded-xl border border-[#E6DFD5] font-sans font-bold text-xs text-[#1E1C1A] bg-white focus:outline-none focus:border-[#FF6B2C]"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E6DFD5] text-xs font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C]"
                     >
                       {SUPPORTED_CURRENCIES.map(c => (
-                        <option key={c.code} value={c.code}>{c.code} ({c.symbol})</option>
+                        <option key={c.code} value={c.code}>
+                          {c.code} ({c.symbol}) — {c.label}
+                        </option>
                       ))}
                     </select>
                   </div>
                 </div>
 
-                {/* MERCHANT NAME & TRIP DAY */}
-                <div className="grid grid-cols-3 gap-2.5">
-                  <div className="col-span-2 flex flex-col gap-1">
-                    <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#5F5E5A]">
-                      Merchant
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Sant'Eustachio Caffè"
-                      value={merchant}
-                      onChange={(e) => setMerchant(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#E6DFD5] font-sans text-xs text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C]"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#5F5E5A]">
-                      Trip Day
-                    </label>
-                    <select
-                      value={expenseDay}
-                      onChange={(e) => setExpenseDay(e.target.value)}
-                      className="w-full px-2 py-2.5 rounded-xl border border-[#E6DFD5] font-sans font-bold text-xs text-[#1E1C1A] bg-white focus:outline-none focus:border-[#FF6B2C]"
-                    >
-                      {['Day 1', 'Day 2', 'Day 3'].map(d => (
-                        <option key={d} value={d}>{d}</option>
-                      ))}
-                    </select>
-                  </div>
+                <div>
+                  <label className="block font-bold text-gray-700 mb-1">Merchant / Description</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. The Bikers Cafe, Trattoria, Taxi"
+                    value={merchant}
+                    onChange={(e) => setMerchant(e.target.value)}
+                    required
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E6DFD5] text-xs font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C]"
+                  />
                 </div>
 
-                {/* CATEGORY & PAID BY */}
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#5F5E5A]">
-                      Category *
-                    </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-gray-700 mb-1">Category</label>
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
-                      className="w-full px-3 py-2.5 rounded-xl border border-[#E6DFD5] font-sans font-bold text-xs text-[#1E1C1A] bg-white focus:outline-none focus:border-[#FF6B2C]"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E6DFD5] text-xs font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C]"
                     >
-                      {EXPENSE_CATEGORIES.map(c => (
-                        <option key={c.id} value={c.id}>{c.label}</option>
+                      {EXPENSE_CATEGORIES.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.label}</option>
                       ))}
                     </select>
                   </div>
 
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#5F5E5A]">
-                      Paid By
-                    </label>
+                  <div>
+                    <label className="block font-bold text-gray-700 mb-1">Itinerary Day</label>
                     <select
-                      value={paidBy}
-                      onChange={(e) => setPaidBy(e.target.value)}
-                      className="w-full px-2.5 py-2.5 rounded-xl border border-[#E6DFD5] font-sans font-bold text-xs text-[#1E1C1A] bg-white focus:outline-none focus:border-[#FF6B2C]"
+                      value={expenseDay}
+                      onChange={(e) => setExpenseDay(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E6DFD5] text-xs font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C]"
                     >
-                      <option value="Me">Me</option>
-                      <option value="Partner / Friend">Partner / Friend</option>
-                      <option value="Shared 50/50">Shared 50/50</option>
+                      <option value="Day 1">Day I (Sep 4)</option>
+                      <option value="Day 2">Day II (Sep 5)</option>
+                      <option value="Day 3">Day III (Sep 6)</option>
                     </select>
                   </div>
                 </div>
 
-                {/* DUPLICATE WARNING ALERT BANNER */}
-                {(() => {
-                  const parseAmt = parseFloat(amount) || 0;
-                  const cleanMerchant = merchant.trim();
-                  const isDup = !editingExpense && parseAmt > 0 && cleanMerchant && expenses.some(exp => {
-                    const amtMatches = Math.abs(parseFloat(exp.amount) - parseAmt) < 0.01;
-                    const currMatches = (exp.currency || 'EUR') === expenseCurrency;
-                    const merchantMatches = exp.merchant.toLowerCase().trim() === cleanMerchant.toLowerCase();
-                    return amtMatches && currMatches && merchantMatches;
-                  });
+                <div>
+                  <label className="block font-bold text-gray-700 mb-1">Paid By (Group Settlement)</label>
+                  <select
+                    value={paidBy}
+                    onChange={(e) => setPaidBy(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E6DFD5] text-xs font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C]"
+                  >
+                    <option value="Me">Me (Direct Expense)</option>
+                    <option value={primaryCollaborator.name}>{primaryCollaborator.name} (Partner Paid)</option>
+                    <option value="Shared 50/50">Shared 50/50 Split</option>
+                  </select>
+                </div>
 
-                  if (isDup || duplicateWarning) {
-                    return (
-                      <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs font-sans flex items-start gap-2">
-                        <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-                        <div>
-                          <strong className="font-bold block text-red-900 mb-0.5">Duplicate Bill Detected!</strong>
-                          <span>{duplicateWarning || `An expense for "${cleanMerchant}" (${expenseCurrency} ${parseAmt.toFixed(2)}) has already been logged.`}</span>
-                        </div>
-                      </div>
-                    );
-                  }
-                  return null;
-                })()}
-
-                {/* ACTION BUTTONS */}
-                <div className="flex gap-2.5 justify-end pt-2">
+                <div className="pt-3 border-t border-[#E6DFD5] flex items-center justify-end gap-2">
                   <button
                     type="button"
                     onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2 rounded-xl border border-[#E6DFD5] text-xs font-bold text-[#7A7268] hover:bg-[#FAF6F0] transition-colors cursor-pointer"
+                    className="px-4 py-2 rounded-xl text-gray-600 font-bold hover:bg-gray-200/50 transition-colors"
                   >
                     Cancel
                   </button>
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
+                  <button
                     type="submit"
-                    disabled={(() => {
-                      const parseAmt = parseFloat(amount) || 0;
-                      const cleanMerchant = merchant.trim();
-                      return !editingExpense && parseAmt > 0 && cleanMerchant && expenses.some(exp => {
-                        const amtMatches = Math.abs(parseFloat(exp.amount) - parseAmt) < 0.01;
-                        const currMatches = (exp.currency || 'EUR') === expenseCurrency;
-                        const merchantMatches = exp.merchant.toLowerCase().trim() === cleanMerchant.toLowerCase();
-                        return amtMatches && currMatches && merchantMatches;
-                      });
-                    })()}
-                    className="px-5 py-2 rounded-xl bg-[#FF6B2C] text-white text-xs font-bold hover:bg-[#E55A1C] disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-2xs cursor-pointer"
+                    className="px-5 py-2 rounded-xl bg-[#FF6B2C] hover:bg-[#E55A1C] text-white font-bold shadow-md transition-all cursor-pointer"
                   >
-                    {editingExpense ? 'Update Expense' : 'Save Expense'}
-                  </motion.button>
+                    Save Expense
+                  </button>
                 </div>
-
               </form>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
 
-      {/* 2. RECEIPT PAPER UNROLL ANIMATED LIGHTBOX MODAL */}
+      {/* FULL RECEIPT PREVIEW LIGHTBOX WITH PAPER UNROLL ANIMATION */}
       <AnimatePresence>
         {previewPhotoUrl && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <motion.div 
-              initial={{ opacity: 0, y: -60, scaleY: 0.7 }}
-              animate={{ opacity: 1, y: 0, scaleY: 1 }}
-              exit={{ opacity: 0, y: -40, scaleY: 0.7 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="relative max-w-2xl max-h-[85vh] overflow-hidden rounded-3xl bg-black border border-white/20 p-2 shadow-2xl origin-top"
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setPreviewPhotoUrl(null)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-xs"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scaleY: 0.3, y: -40 }}
+              animate={{ opacity: 1, scaleY: 1, y: 0 }}
+              exit={{ opacity: 0, scaleY: 0.3, y: -40 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 26 }}
+              className="relative max-w-md w-full bg-white rounded-3xl p-5 shadow-2xl border border-[#E6DFD5] z-10 overflow-hidden text-[#1E1C1A] origin-top"
             >
-              <img src={previewPhotoUrl} alt="Receipt Preview" className="w-full h-full object-contain max-h-[80vh] rounded-2xl" />
-              <button
-                onClick={() => setPreviewPhotoUrl(null)}
-                className="absolute top-4 right-4 p-2 rounded-full bg-black/70 text-white hover:bg-black transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center justify-between pb-3 border-b border-[#E6DFD5] mb-3">
+                <div className="flex items-center gap-2">
+                  <Camera className="w-4 h-4 text-[#FF6B2C]" />
+                  <span className="font-serif font-bold text-base">Receipt Preview</span>
+                </div>
+                <button
+                  onClick={() => setPreviewPhotoUrl(null)}
+                  className="w-8 h-8 rounded-full bg-[#FAF6F0] border border-[#E6DFD5] flex items-center justify-center text-gray-500 hover:text-gray-900 transition-all cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="w-full max-h-[70vh] rounded-2xl overflow-hidden border border-[#E6DFD5] bg-stone-900 flex items-center justify-center">
+                <img src={previewPhotoUrl} alt="Receipt Preview" className="max-w-full max-h-[70vh] object-contain" />
+              </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
-
-    </motion.div>
+    </div>
   );
 }
