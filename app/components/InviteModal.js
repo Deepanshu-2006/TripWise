@@ -47,6 +47,25 @@ const InviteModal = ({ isOpen, onClose, tripId, currentCollaborators = [] }) => 
       const result = await sendTripInvite(tripId, email, role);
       
       if (result.success) {
+          // Save invited collaborator locally so it dynamically updates the Expense Settlement card
+          try {
+            let existingCollabs = [];
+            const raw = localStorage.getItem('tw_trip_collaborators');
+            if (raw) existingCollabs = JSON.parse(raw);
+            const nameFromEmail = email.split('@')[0];
+            const formattedName = nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1);
+            const newCollab = {
+              email,
+              name: formattedName,
+              role,
+              invitedAt: new Date().toISOString()
+            };
+            const updated = [newCollab, ...existingCollabs.filter(c => c.email !== email)];
+            localStorage.setItem('tw_trip_collaborators', JSON.stringify(updated));
+            // Trigger storage event so listening components update immediately
+            window.dispatchEvent(new Event('storage'));
+          } catch (err) {}
+
           setInviteStatus('success');
           setEmail('');
           
