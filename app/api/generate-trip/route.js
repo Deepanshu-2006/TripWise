@@ -47,8 +47,10 @@ const itinerarySchema = {
                 },
                 duration: { type: 'STRING' },
                 cost: { type: 'STRING' },
+                preferenceReasoning: { type: 'STRING' },
+                indoorOutdoor: { type: 'STRING' },
               },
-              required: ['time', 'category', 'title', 'description', 'badge', 'coordinates', 'duration', 'cost'],
+              required: ['time', 'category', 'title', 'description', 'badge', 'coordinates', 'duration', 'cost', 'indoorOutdoor'],
             },
           },
         },
@@ -201,7 +203,7 @@ function getDynamicMockItinerary(promptOrDest = "", destination = "") {
 
 export async function POST(req) {
   try {
-    const { prompt = "", destination = "", basecamp = "", interests = [], budget = 'standard', pace = 'balanced' } = await req.json();
+    const { prompt = "", destination = "", basecamp = "", interests = [], budget = 'standard', pace = 'balanced', userPreferences = null } = await req.json();
 
     const apiKey = process.env.GEMINI_API_KEY;
     const mockPayload = getDynamicMockItinerary(prompt, destination);
@@ -224,6 +226,21 @@ export async function POST(req) {
 3. Provide realistic travel times and distances from this basecamp.`
       : `\nNOTE ON GEOGRAPHY: The user has not chosen a specific hotel yet (hotelMode: "undecided"). Route activities around a popular central area of the city (e.g. City Center / Central Plaza) as a placeholder anchor.`;
 
+    let preferenceInstruction = "";
+    if (userPreferences) {
+      const highAffinity = Object.entries(userPreferences.categoryAffinities || {})
+        .filter(([_, score]) => score >= 0.7)
+        .map(([cat]) => cat);
+      const dislikes = userPreferences.explicitDislikes || [];
+      
+      if (highAffinity.length > 0 || dislikes.length > 0) {
+        preferenceInstruction = `\nLEARNED PREFERENCES (CRITICAL):
+- The user has historically loved these categories (weight them highly, but don't make the trip 100% these): ${highAffinity.join(', ') || 'None specifically'}.
+- The user explicitly DISLIKES these categories (avoid them unless absolutely necessary for pacing or geography): ${dislikes.join(', ') || 'None specifically'}.
+- For EACH activity, provide a \`preferenceReasoning\` field indicating if it was suggested based on these learned preferences (e.g. "Suggested because you've consistently loved food experiences on past trips") or just general matching (e.g. "A classic must-see for first time visitors").`;
+      }
+    }
+
     const systemPrompt = `You are TripWise AI, an elite travel routing engine.
 Create a high-impact, beautifully tailored travel itinerary based on the user's prompt.
 User Prompt: "${prompt}"
@@ -231,6 +248,7 @@ Selected Vibe/Interests: ${interests.join(', ') || 'General highlights'}
 Budget Level: ${budget}
 Travel Pace: ${pace}
 ${basecampInstruction}
+${preferenceInstruction}
 
 CRITICAL RULES FOR SPEED & QUALITY:
 1. Generate exactly 3 to 4 days of itinerary (unless a specific duration is requested in the prompt).
@@ -238,7 +256,9 @@ CRITICAL RULES FOR SPEED & QUALITY:
 3. Keep activity descriptions punchy, vivid, and concise (1 to 2 sentences max) to ensure ultra-fast JSON generation latency.
 4. Provide realistic GPS coordinates (lat, lng) for the destination center and every activity.
 5. Include custom badges like "MUST SEE", "LOCAL GEM", "OPTIMIZED ROUTE", or "BUDGET MATCH".
-6. For EVERY activity, you MUST provide the EXACT REAL-WORLD local time (e.g. "09:00 AM"), exact realistic visit duration (e.g. "2 hrs" or "1.5 hrs"), and exact verified real-world ticket price or average meal cost in local currency/USD/EUR/GBP (e.g. "£34.80 entry ticket", "€32.00 Colosseum pass", "¥3,500 lunch", or "Free admission"). NEVER use generic guesses or placeholders.`;
+6. For EVERY activity, you MUST provide the EXACT REAL-WORLD local time (e.g. "09:00 AM"), exact realistic visit duration (e.g. "2 hrs" or "1.5 hrs"), and exact verified real-world ticket price or average meal cost in local currency/USD/EUR/GBP (e.g. "£34.80 entry ticket", "€32.00 Colosseum pass", "¥3,500 lunch", or "Free admission"). NEVER use generic guesses or placeholders.
+7. Fill out the \`preferenceReasoning\` field for every activity.
+8. Accurately tag EVERY activity as "Indoor" or "Outdoor" in the \`indoorOutdoor\` field.`;
 
     const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
     let response = null;
