@@ -8,6 +8,7 @@ import PlannerSidebar from '../../components/PlannerSidebar';
 import Header from '../../components/Header';
 import LiveTripDashboard from '../../components/LiveTripDashboard';
 import { saveTrip, getTripById, updateTrip } from '../../actions/trips';
+import { usePreferenceEngine } from '../../hooks/usePreferenceEngine';
 
 // Separate component so useSearchParams is inside a Suspense boundary
 function PromptSeeder({ onPrompt }) {
@@ -24,6 +25,7 @@ export default function AIPlannerPage() {
   const [currentPrompt, setCurrentPrompt] = useState('');
   const [currentStep, setCurrentStep] = useState('destination');
   const [tripId, setTripId] = useState(null);
+  const { profile } = usePreferenceEngine();
 
   useEffect(() => {
     if (typeof window !== 'undefined' && tripId) {
@@ -103,7 +105,8 @@ export default function AIPlannerPage() {
           basecamp: selections.basecamp || "",
           interests: selections.interests || [],
           budget: selections.budget || 'standard',
-          pace: selections.pace || 'balanced'
+          pace: selections.pace || 'balanced',
+          userPreferences: profile
         })
       });
       const data = await response.json();
