@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { prompt, currentDay, destinationName = "Your Destination", dayIndex = 0 } = body;
+    const { prompt, currentDay, destinationName = "Your Destination", dayIndex = 0, reason, userPreferences, activityToSwap } = body;
 
     if (!currentDay || !currentDay.activities) {
       return NextResponse.json({ error: "No day itinerary provided to refine." }, { status: 400 });
@@ -15,9 +15,33 @@ export async function POST(req) {
     if (apiKey && apiKey !== "YOUR_API_KEY") {
       try {
         const ai = new GoogleGenAI({ apiKey });
+        
+        let preferenceInstruction = "";
+        if (userPreferences) {
+          const highAffinity = Object.entries(userPreferences.categoryAffinities || {})
+            .filter(([_, score]) => score >= 0.7)
+            .map(([cat]) => cat);
+          const dislikes = userPreferences.explicitDislikes || [];
+          
+          if (highAffinity.length > 0 || dislikes.length > 0) {
+            preferenceInstruction = `\nLEARNED PREFERENCES (CRITICAL):
+- The user has historically loved these categories (weight them highly, but don't make the trip 100% these): ${highAffinity.join(', ') || 'None specifically'}.
+- The user explicitly DISLIKES these categories (avoid them unless absolutely necessary for pacing or geography): ${dislikes.join(', ') || 'None specifically'}.
+- For ANY newly generated activity, provide a \`preferenceReasoning\` field indicating if it was suggested based on these learned preferences or just general matching.`;
+          }
+        }
+
+        const weatherSwapInstruction = (reason === 'weather_swap' && activityToSwap) 
+          ? `\nWEATHER SWAP: The user wants to swap out an outdoor activity due to bad weather. 
+The activity to swap out is: ${JSON.stringify(activityToSwap)}
+Replace this activity with an INDOOR alternative of a similar vibe/category, taking the user's preferences into account. If no indoor alternative is sensible, remove it and suggest in the explanation that the user reorders the day or pushes it to tomorrow. Set \`indoorOutdoor\` to "Indoor" for the new activity.`
+          : "";
+
         const systemInstruction = `You are TripWise AI, an elite personal travel concierge and itinerary architect.
 The user wants to refine Day ${currentDay.dayNumber || dayIndex + 1} (${currentDay.dateLabel || `Day ${dayIndex + 1}`}) of their trip to ${destinationName}.
 Only modify this specific day's activities based on the user's instructions while preserving realistic travel flow, coordinates around the destination, duration, and cost format.
+${preferenceInstruction}
+${weatherSwapInstruction}
 
 Current Day Activities:
 ${JSON.stringify(currentDay.activities, null, 2)}
@@ -35,7 +59,9 @@ Return a valid JSON object matching this schema:
       "badge": "e.g. MUST SEE | LOCAL GEM | GOURMET PICK | KID FRIENDLY | FAST-TRACK",
       "coordinates": { "lat": number, "lng": number },
       "duration": "e.g. 2 hrs",
-      "cost": "e.g. €30 or Free"
+      "cost": "e.g. €30 or Free",
+      "preferenceReasoning": "e.g. Added because you love history.",
+      "indoorOutdoor": "e.g. Indoor or Outdoor"
     }
   ],
   "explanation": "A concise 1-sentence summary of the exact change made (e.g. Added a 3-course Michelin-star dinner at Pergola after Stop #3)."
@@ -74,7 +100,40 @@ Return a valid JSON object matching this schema:
     const baseLng = activities[0]?.coordinates?.lng || 12.4964;
     let explanation = `Updated Day ${dayIndex + 1} schedule as requested.`;
 
-    if (pLower.includes('michelin') || pLower.includes('dinner') || pLower.includes('after stop #3') || pLower.includes('after stop 3') || pLower.includes('food')) {
+    if (reason === 'running_late') {
+      // Find the first non-dining activity after the first two and drop it to save time
+      const dropIndex = activities.findIndex((a, i) => i > 1 && !a.category?.toLowerCase().includes('dining'));
+      if (dropIndex !== -1) {
+        const droppedName = activities[dropIndex].title;
+        activities.splice(dropIndex, 1);
+        explanation = `We skipped "${droppedName}" so you can take your time and still make your evening plans.`;
+      } else if (activities.length > 2) {
+        // Just drop the 2nd to last item
+        activities.splice(activities.length - 2, 1);
+        explanation = `We condensed your afternoon schedule to get you back on track.`;
+      } else {
+        explanation = `We couldn't drop any stops, but we've condensed the recommended durations.`;
+      }
+    } else if (reason === 'weather_swap' && activityToSwap) {
+      const swapIndex = activities.findIndex(a => a.title === activityToSwap.title);
+      if (swapIndex !== -1) {
+        const time = activities[swapIndex].time;
+        activities[swapIndex] = {
+          time,
+          category: activities[swapIndex].category || "Culture",
+          title: "World-Class Museum & Covered Atrium (Indoor Swap)",
+          description: "Escape the weather inside this premier cultural institution, featuring expansive galleries and a stunning glass-ceiling cafe.",
+          badge: "WEATHER FRIENDLY",
+          duration: activities[swapIndex].duration || "2 hrs",
+          cost: "€18 - €25 entry",
+          coordinates: { lat: baseLat + 0.002, lng: baseLng - 0.001 },
+          indoorOutdoor: "Indoor"
+        };
+        explanation = `Swapped "${activityToSwap.title}" for a weather-friendly indoor alternative.`;
+      } else {
+        explanation = `We couldn't find the exact activity to swap, but the schedule was updated.`;
+      }
+    } else if (pLower.includes('michelin') || pLower.includes('dinner') || pLower.includes('after stop #3') || pLower.includes('after stop 3') || pLower.includes('food')) {
       const newStop = {
         time: "08:30 PM",
         category: "Fine Dining",
