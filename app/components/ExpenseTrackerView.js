@@ -8,6 +8,7 @@ import {
   TrendingUp, TrendingDown, DollarSign
 } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
+import { getTripCollaborators } from '../actions/trips';
 import { 
   getTripExpenses, saveTripExpenses, syncPendingExpenses, 
   SUPPORTED_CURRENCIES, convertCurrency, fetchExchangeRates, calculateDailyPace 
@@ -137,6 +138,19 @@ export default function ExpenseTrackerView({
   const fileInputRef = useRef(null);
 
   const [localCollaborators, setLocalCollaborators] = useState([]);
+  const [supabaseCollaborators, setSupabaseCollaborators] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (tripId && tripId !== 'default-trip' && tripId !== 'default_trip') {
+      getTripCollaborators(tripId).then(list => {
+        if (isMounted && list && list.length > 0) {
+          setSupabaseCollaborators(list);
+        }
+      }).catch(e => console.warn('Failed to fetch collaborators:', e));
+    }
+    return () => { isMounted = false; };
+  }, [tripId]);
 
   useEffect(() => {
     const loadLocalCollabs = () => {
@@ -161,12 +175,41 @@ export default function ExpenseTrackerView({
   // Primary Collaborator Identity Resolution
   const primaryCollaborator = useMemo(() => {
     const currentName = (user?.firstName || user?.fullName || user?.username || '').trim();
+    const currentEmail = user?.primaryEmailAddress?.emailAddress || '';
     
-    // Check local invites or trip collaborators
+    // 1. Try to find a real friend from Supabase collaborators list
+    if (supabaseCollaborators && supabaseCollaborators.length > 0) {
+       // Filter out the current user to find the partner
+       const partners = supabaseCollaborators.filter(c => {
+         const cName = c.name || c.email?.split('@')[0] || '';
+         // Check if this collab is the current user
+         const isCurrentUser = currentName && cName && (currentName.toLowerCase().includes(cName.toLowerCase()) || cName.toLowerCase().includes(currentName.toLowerCase()));
+         const isCurrentUserEmail = currentEmail && c.email && currentEmail === c.email;
+         return !isCurrentUser && !isCurrentUserEmail;
+       });
+       
+       if (partners.length > 0) {
+         const p = partners[0];
+         const pName = p.name || p.email?.split('@')[0] || 'Partner';
+         return {
+           name: pName,
+           firstName: pName.split(' ')[0],
+           photoURL: p.photoURL || null,
+           email: p.email || ''
+         };
+       } else if (supabaseCollaborators.length > 1) {
+         // Fallback if filter failed
+         const p = supabaseCollaborators.find(c => c.name !== currentName) || supabaseCollaborators[1];
+         const pName = p.name || p.email?.split('@')[0] || 'Partner';
+         return { ...p, name: pName, firstName: pName.split(' ')[0] };
+       }
+    }
+
+    // 2. Check local invites or trip collaborators (legacy/fallback)
     let invitedCollab = null;
     if (localCollaborators && localCollaborators.length > 0) {
       invitedCollab = localCollaborators[0];
-    } else if (collaborators && collaborators.length > 0) {
+    } else if (collaborators && collaborators.length > 0 && collaborators[0].name !== 'Sarah Jenkins') {
       invitedCollab = collaborators[0];
     }
 
@@ -198,7 +241,7 @@ export default function ExpenseTrackerView({
       photoURL: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
       email: 'sarah@example.com'
     };
-  }, [user, collaborators, localCollaborators]);
+  }, [user, supabaseCollaborators, collaborators, localCollaborators]);
 
   const collaboratorFirstName = primaryCollaborator?.firstName || (primaryCollaborator?.name ? primaryCollaborator.name.split(' ')[0] : 'Partner');
 
@@ -851,22 +894,28 @@ export default function ExpenseTrackerView({
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       {/* Interactive Clickable Receipt Thumbnail if available */}
-                      {exp.photoDataUrl ? (
-                        <div 
-                          onClick={() => setPreviewPhotoUrl(exp.photoDataUrl)}
-                          title="Click to view full receipt"
-                          className="w-11 h-11 rounded-xl border border-[#E6DFD5] overflow-hidden shrink-0 cursor-pointer relative group/thumb shadow-2xs hover:scale-105 transition-transform"
-                        >
-                          <img src={exp.photoDataUrl} alt="Receipt" className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center text-white">
-                            <Eye className="w-4 h-4" />
+                      {(() => {
+                        const imgUrl = exp.receiptUrl || exp.receiptPhoto || exp.photoDataUrl;
+                        if (imgUrl) {
+                          return (
+                            <div 
+                              onClick={() => setPreviewPhotoUrl(imgUrl)}
+                              title="Click to view full receipt"
+                              className="w-11 h-11 rounded-xl border border-[#E6DFD5] overflow-hidden shrink-0 cursor-pointer relative group/thumb shadow-2xs hover:scale-105 transition-transform"
+                            >
+                              <img src={imgUrl} alt="Receipt" className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center text-white">
+                                <Eye className="w-4 h-4" />
+                              </div>
+                            </div>
+                          );
+                        }
+                        return (
+                          <div className={`w-11 h-11 rounded-xl ${catConfig.bg} border ${catConfig.border} flex items-center justify-center shrink-0`}>
+                            <IconComp className="w-5 h-5" style={{ color: catConfig.color }} />
                           </div>
-                        </div>
-                      ) : (
-                        <div className={`w-11 h-11 rounded-xl ${catConfig.bg} border ${catConfig.border} flex items-center justify-center shrink-0`}>
-                          <IconComp className="w-5 h-5" style={{ color: catConfig.color }} />
-                        </div>
-                      )}
+                        );
+                      })()}
 
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -996,6 +1045,39 @@ export default function ExpenseTrackerView({
                 </div>
               )}
 
+              {/* SCANNED BILL RECEIPT PHOTO PREVIEW INSIDE MODAL */}
+              {receiptPhotoDataUrl && (
+                <div className="my-3 p-3 rounded-2xl bg-white border border-[#E6DFD5] flex items-center justify-between gap-3 shadow-2xs">
+                  <div className="flex items-center gap-3">
+                    <div 
+                      onClick={() => setPreviewPhotoUrl(receiptPhotoDataUrl)}
+                      className="w-14 h-14 rounded-xl border border-[#E6DFD5] overflow-hidden shrink-0 cursor-pointer relative group"
+                      title="Click to view full-size receipt"
+                    >
+                      <img src={receiptPhotoDataUrl} alt="Scanned Bill" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                        <Eye className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div>
+                      <span className="font-bold text-xs text-[#1E1C1A] block">Bill Photo Attached</span>
+                      <span className="text-[11px] text-[#7A7268] block">Receipt photo will be saved & previewable in feed</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReceiptPhoto(null);
+                      setReceiptPhotoDataUrl(null);
+                    }}
+                    className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                    title="Remove Attached Photo"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
               <form onSubmit={handleSaveExpense} className="mt-4 space-y-4 text-xs">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -1079,6 +1161,20 @@ export default function ExpenseTrackerView({
                     <option value="Shared 50/50">Shared 50/50 Split</option>
                   </select>
                 </div>
+
+                {!receiptPhotoDataUrl && (
+                  <div>
+                    <label className="block font-bold text-gray-700 mb-1">Receipt / Bill (Optional)</label>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full py-2.5 rounded-xl bg-white border border-dashed border-gray-400 text-gray-600 font-bold hover:bg-gray-50 hover:text-gray-900 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Camera className="w-4 h-4" />
+                      Attach Receipt Photo
+                    </button>
+                  </div>
+                )}
 
                 <div className="pt-3 border-t border-[#E6DFD5] flex items-center justify-end gap-2">
                   <button
