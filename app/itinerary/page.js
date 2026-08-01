@@ -7,6 +7,11 @@ import Header from '../components/Header';
 import { generatePackingList } from '../../lib/packingListLogic';
 import { fetchVisaRequirements } from '../../lib/visaApi';
 import ExpenseTrackerView from '../components/ExpenseTrackerView';
+import { useLiveAssistant } from '../hooks/useLiveAssistant';
+import LiveAssistantNudge from '../components/LiveAssistantNudge';
+import WeatherNudge from '../components/WeatherNudge';
+import LiveAssistantProposalModal from '../components/LiveAssistantProposalModal';
+import { usePreferenceEngine } from '../hooks/usePreferenceEngine';
 import { getTripExpenses, convertCurrency } from '../../lib/expenseApi';
 import Link from 'next/link';
 import {
@@ -540,6 +545,119 @@ export default function ItineraryPage() {
   const [isEmergencyModalOpen, setIsEmergencyModalOpen] = useState(false);
   const [isOfflineModalOpen, setIsOfflineModalOpen] = useState(false);
 
+  // Preference Engine State
+  const { recordSkip, recordTripSignals, profile } = usePreferenceEngine();
+  const [activityRatings, setActivityRatings] = useState({});
+  
+  const handleRatingChange = (actKey, activity, rating) => {
+    setActivityRatings(prev => ({
+      ...prev,
+      [actKey]: { activity, rating }
+    }));
+  };
+
+  const handleCompleteTrip = () => {
+    if (!itinerary || !itinerary.days) return;
+    
+    const allStops = [];
+    itinerary.days.forEach((day, dayIdx) => {
+      if (day.activities) {
+        day.activities.forEach((act, stopIdx) => {
+          allStops.push({ ...act, _dayIdx: dayIdx, _stopIdx: stopIdx });
+        });
+      }
+    });
+
+    const bookedStops = allStops.filter(act => {
+      const stopKey = `tw_day${act._dayIdx}_stop${act._stopIdx}`;
+      return savedStops[stopKey];
+    });
+
+    const engagedStops = allStops.filter(act => {
+      const stopKey = `tw_day${act._dayIdx}_stop${act._stopIdx}`;
+      return expandedStops[stopKey];
+    });
+
+    recordTripSignals(activityRatings, bookedStops, engagedStops);
+    alert("Trip complete! Your travel preferences have been updated.");
+  };
+
+  // Live Assistant State
+  const activeDayData = typeof activeDay === 'number' && itinerary?.days ? itinerary.days[activeDay - 1] : null;
+  const { showNudge, weatherNudge, snoozeNudges, dismissNudge, dismissWeatherNudge } = useLiveAssistant(
+    activeDayData,
+    typeof activeDay === 'number' ? activeDay - 1 : 0,
+    itinerary?.startDate,
+    itinerary?.coordinates
+  );
+  const [liveAssistantProposal, setLiveAssistantProposal] = useState(null);
+  const [isApplyingProposal, setIsApplyingProposal] = useState(false);
+
+  const handleWeatherSwap = async () => {
+    if (!activeDayData || !weatherNudge) return;
+    try {
+      dismissWeatherNudge();
+      const res = await fetch('/api/refine-day', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: "Please swap this activity for an indoor alternative due to weather.",
+          currentDay: activeDayData,
+          destinationName: itinerary?.destinationName,
+          dayIndex: activeDay - 1,
+          reason: "weather_swap",
+          activityToSwap: weatherNudge.activity,
+          userPreferences: profile
+        }),
+      });
+      const data = await res.json();
+      if (data.updatedDay) {
+        setLiveAssistantProposal(data);
+      }
+    } catch (e) {
+      console.error("Failed to get weather swap proposal", e);
+    }
+  };
+
+  const handleLiveAssistantAdjust = async () => {
+    if (!activeDayData) return;
+    try {
+      dismissNudge();
+      const res = await fetch('/api/refine-day', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: "The user is running behind schedule by >15 minutes. Please intelligently skip or condense the remaining stops to keep their evening plans on track without feeling rushed.",
+          currentDay: activeDayData,
+          destinationName: itinerary?.destinationName,
+          dayIndex: activeDay - 1,
+          reason: "running_late"
+        }),
+      });
+      const data = await res.json();
+      if (data.updatedDay) {
+        setLiveAssistantProposal(data);
+      }
+    } catch (e) {
+      console.error("Failed to get live assistant proposal", e);
+    }
+  };
+
+  const applyLiveAssistantProposal = () => {
+    setIsApplyingProposal(true);
+    setTimeout(() => {
+      if (liveAssistantProposal?.updatedDay) {
+        const newDays = [...(itinerary.days || [])];
+        newDays[activeDay - 1] = liveAssistantProposal.updatedDay;
+        const newItinerary = { ...itinerary, days: newDays };
+        setItinerary(newItinerary);
+        localStorage.setItem('tripwise_itinerary', JSON.stringify(newItinerary));
+      }
+      setIsApplyingProposal(false);
+      setLiveAssistantProposal(null);
+    }, 600);
+  };
+
   // Packing List State
   const [packingList, setPackingList] = useState(null);
   const [customInputs, setCustomInputs] = useState({});
@@ -993,6 +1111,20 @@ export default function ItineraryPage() {
 
   const toggleSaveStop = (stopKey) => {
     setSavedStops(prev => ({ ...prev, [stopKey]: !prev[stopKey] }));
+  };
+
+  const handleSkipStop = (dayNum, stopNum, category) => {
+    recordSkip(category);
+    const newDays = [...(itinerary.days || [])];
+    const dayIdx = dayNum - 1;
+    if (newDays[dayIdx] && newDays[dayIdx].activities) {
+      newDays[dayIdx].activities = newDays[dayIdx].activities.filter((_, idx) => idx !== (stopNum - 1));
+      const newItinerary = { ...itinerary, days: newDays };
+      setItinerary(newItinerary);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('tripwise_itinerary', JSON.stringify(newItinerary));
+      }
+    }
   };
 
   const handleShareDossier = () => {
@@ -1966,6 +2098,52 @@ export default function ItineraryPage() {
                       </div>
                     </div>
 
+                    {/* Post-Trip Activity Ratings */}
+                    <div className="bg-white p-6 md:p-8 rounded-3xl border border-[#E6DFD5] shadow-sm mb-6 mt-8">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6 border-b border-[#E6DFD5] pb-4">
+                        <div className="w-10 h-10 rounded-full bg-[#FF6B2C]/10 flex items-center justify-center text-[#FF6B2C] shrink-0">
+                          <Sparkles className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="font-serif font-bold text-xl text-[#1E1C1A]">Rate this Trip's Activities</h3>
+                          <p className="text-sm font-sans text-[#7A7268] mt-1">Your ratings help TripWise learn your preferences for future trips.</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-4 max-h-96 overflow-y-auto pr-2 mb-6 custom-scrollbar">
+                        {itinerary?.days?.flatMap((day, dayIdx) => 
+                          day.activities?.map((act, stopIdx) => {
+                            const stopKey = `tw_day${dayIdx}_stop${stopIdx}`;
+                            const rating = activityRatings[stopKey]?.rating || 0;
+                            return (
+                              <div key={stopKey} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-[#FAF6F0] bg-[#FAF6F0]/50 hover:bg-white transition-colors">
+                                <div>
+                                  <strong className="block text-[#1E1C1A] font-serif text-sm">{act.title}</strong>
+                                  <span className="text-[10px] text-[#7A7268] font-sans uppercase tracking-wider">{act.category}</span>
+                                </div>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  {[1, 2, 3, 4, 5].map(star => (
+                                    <button
+                                      key={star}
+                                      onClick={() => handleRatingChange(stopKey, act, star)}
+                                      className={`p-1 text-2xl hover:scale-110 transition-transform cursor-pointer ${star <= rating ? 'text-amber-500' : 'text-[#E6DFD5]'}`}
+                                    >
+                                      ★
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          }) || []
+                        )}
+                      </div>
+                      <button
+                        onClick={handleCompleteTrip}
+                        className="w-full py-3.5 rounded-xl bg-[#1E1C1A] text-white font-bold font-sans text-sm tracking-wide hover:bg-[#FF6B2C] transition-colors cursor-pointer shadow-md"
+                      >
+                        Complete Trip & Update Preferences
+                      </button>
+                    </div>
+
                     {/* Closing signature and bottom page-turns */}
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-8 border-t border-[#E6DFD5]">
                       <div className="flex items-center gap-3">
@@ -2886,17 +3064,27 @@ export default function ItineraryPage() {
                                       <span>{categoryStyle.name}</span>
                                     </div>
 
-                                    <button
-                                      type="button"
-                                      onClick={() => toggleSaveStop(stopKey)}
-                                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-sans font-bold transition-all cursor-pointer ${isSaved
-                                          ? 'border-[#FF6B2C] bg-[#FF6B2C]/10 text-[#FF6B2C]'
-                                          : 'border-[#E6DFD5] bg-white text-[#7A7268] hover:border-[#1E1C1A]'
-                                        }`}
-                                    >
-                                      <Bookmark className={`w-3.5 h-3.5 ${isSaved ? 'fill-[#FF6B2C]' : ''}`} />
-                                      <span>{isSaved ? 'Saved' : 'Bookmark'}</span>
-                                    </button>
+                                    <div className="flex items-center gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleSkipStop(activeDay, stopNum, act.category)}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#E6DFD5] bg-white text-[#7A7268] hover:border-[#1E1C1A] text-xs font-sans font-bold transition-all cursor-pointer"
+                                      >
+                                        <X className="w-3.5 h-3.5" />
+                                        <span>Skip</span>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => toggleSaveStop(stopKey)}
+                                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-sans font-bold transition-all cursor-pointer ${isSaved
+                                            ? 'border-[#FF6B2C] bg-[#FF6B2C]/10 text-[#FF6B2C]'
+                                            : 'border-[#E6DFD5] bg-white text-[#7A7268] hover:border-[#1E1C1A]'
+                                          }`}
+                                      >
+                                        <Bookmark className={`w-3.5 h-3.5 ${isSaved ? 'fill-[#FF6B2C]' : ''}`} />
+                                        <span>{isSaved ? 'Saved' : 'Bookmark'}</span>
+                                      </button>
+                                    </div>
                                   </div>
 
                                   <h3 className="text-2xl sm:text-4xl font-serif font-black text-[#1E1C1A] tracking-tight leading-snug mb-3">
@@ -2919,7 +3107,7 @@ export default function ItineraryPage() {
 
                                   {/* Highlight: "Why this was chosen" */}
                                   <div className="text-xs font-sans italic text-[#FF6B2C] mb-4 bg-[#FF6B2C]/5 px-3 py-1.5 rounded-lg border-l border-[#FF6B2C]">
-                                    ✓ Chosen for: High local authenticity, scenic context, and balanced timing pacing.
+                                    ✓ {act.preferenceReasoning || 'Chosen for: High local authenticity, scenic context, and balanced timing pacing.'}
                                   </div>
 
                                   {/* One-Line Hook Description */}
@@ -3706,6 +3894,28 @@ export default function ItineraryPage() {
           </span>
         </button>
       </div>
+
+      <LiveAssistantNudge
+        show={showNudge}
+        onAdjust={handleLiveAssistantAdjust}
+        onSnooze={snoozeNudges}
+        onDismiss={dismissNudge}
+      />
+
+      <WeatherNudge
+        show={!!weatherNudge}
+        nudgeData={weatherNudge}
+        onAdjust={handleWeatherSwap}
+        onDismiss={dismissWeatherNudge}
+      />
+
+      <LiveAssistantProposalModal
+        show={!!liveAssistantProposal}
+        proposal={liveAssistantProposal}
+        onAccept={applyLiveAssistantProposal}
+        onReject={() => setLiveAssistantProposal(null)}
+        isApplying={isApplyingProposal}
+      />
 
       <footer className="py-12 text-center text-xs font-serif italic text-[#7A7268] border-t border-[#E6DFD5] bg-white mt-auto">
         TripWise Private Travel Concierge · Published Dossier Guide · Powered by Google Gemini
