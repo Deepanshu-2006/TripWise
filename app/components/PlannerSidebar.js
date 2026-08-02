@@ -161,6 +161,44 @@ const getDayDateString = (startDateStr, dayIndex) => {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 
+const parseTimeToMinutes = (timeStr) => {
+  if (!timeStr) return 9 * 60;
+  const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+  if (!match) return 9 * 60;
+  let h = parseInt(match[1], 10);
+  const m = parseInt(match[2], 10);
+  const ampm = match[3] ? match[3].toUpperCase() : null;
+  if (ampm === 'PM' && h < 12) h += 12;
+  if (ampm === 'AM' && h === 12) h = 0;
+  return h * 60 + m;
+};
+
+const formatMinutesToTime = (mins) => {
+  const h24 = Math.floor(mins / 60) % 24;
+  const m = Math.floor(mins % 60);
+  const ampm = h24 >= 12 ? 'PM' : 'AM';
+  let h12 = h24 % 12;
+  if (h12 === 0) h12 = 12;
+  return `${h12.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
+};
+
+const getDurationMinutes = (durationStr) => {
+  if (!durationStr) return 90;
+  const hoursMatch = durationStr.match(/(\d+)\s*hr/i) || durationStr.match(/(\d+)\s*hour/i);
+  const minsMatch = durationStr.match(/(\d+)\s*min/i);
+  if (hoursMatch || minsMatch) {
+    let h = 0, m = 0;
+    if (hoursMatch) h = parseInt(hoursMatch[1], 10);
+    if (minsMatch) m = parseInt(minsMatch[1], 10);
+    return h * 60 + m;
+  }
+  const floatMatch = durationStr.match(/(\d+\.?\d*)\s*hr/i) || durationStr.match(/(\d+\.?\d*)\s*hour/i);
+  if (floatMatch) {
+    return Math.round(parseFloat(floatMatch[1]) * 60);
+  }
+  return 90;
+};
+
 export default function PlannerSidebar({
   currentStep = 'destination',
   onStepChange = () => { },
@@ -519,9 +557,22 @@ export default function PlannerSidebar({
     }
 
     const currentDay = itinerary.days[selectedDayIndex];
+    let startMins = 9 * 60;
+    if (currentDay.activities && currentDay.activities.length > 0) {
+      startMins = parseTimeToMinutes(currentDay.activities[0].time);
+    }
+    
     const newActivities = [...(currentDay.activities || [])];
     const [movedItem] = newActivities.splice(draggedStopIdx, 1);
     newActivities.splice(targetIdx, 0, movedItem);
+
+    // Recalculate times for the new order
+    let currentMins = startMins;
+    newActivities.forEach((act) => {
+      act.time = formatMinutesToTime(currentMins);
+      const duration = getDurationMinutes(act.duration);
+      currentMins += duration + 30; // Add duration + 30 mins padding for transit between stops
+    });
 
     const updatedDays = itinerary.days.map((day, dIdx) => {
       if (dIdx === selectedDayIndex) {
@@ -1116,12 +1167,16 @@ export default function PlannerSidebar({
 
     if (trackPrices) {
       // Activate price tracking baseline in background
-      activateTracking(activeTripId || 'shared-trip', destName, {
-        startDate,
-        trackFlights: true,
-        trackHotels: true,
-        origin: trackOrigin
-      }).catch(e => console.error("Tracking setup error", e));
+      try {
+        activateTracking(activeTripId || 'shared-trip', {
+          startDate,
+          trackFlights: true,
+          trackHotels: true,
+          origin: trackOrigin
+        });
+      } catch(e) {
+        console.error("Tracking setup error", e);
+      }
     }
 
     startProgressTransition({
