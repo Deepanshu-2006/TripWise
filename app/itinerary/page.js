@@ -59,7 +59,11 @@ import {
   ShieldAlert,
   Plane,
   Luggage,
-  CloudOff
+  CloudOff,
+  PenLine,
+  BookOpen,
+  Save,
+  FastForward
 } from 'lucide-react';
 import {
   getActivityThumbnail,
@@ -82,6 +86,11 @@ import { getTrackingState, saveTrackingState } from '../../lib/priceTrackingApi'
 import EmergencyInfoView from '../components/EmergencyInfoView';
 import EmergencyModal from '../components/EmergencyModal';
 import OfflineTripManager from '../components/OfflineTripManager';
+import JournalView from '../components/JournalView';
+import JournalEntryModal from '../components/JournalEntryModal';
+import TripRecapBanner from '../components/TripRecapBanner';
+import TripRecapModal from '../components/TripRecapModal';
+import { getTripJournalEntries, saveTripJournalEntries, addJournalEntry } from '../../lib/journalApi';
 
 const toRomanNumeral = (num) => {
   const romanMap = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V', 6: 'VI', 7: 'VII', 8: 'VIII', 9: 'IX', 10: 'X' };
@@ -518,6 +527,9 @@ const getDistanceAndProximity = (p1, p2, basecampName = 'Basecamp') => {
   const mins = Math.max(15, Math.round(distMeters / 600 + 5));
   return { label: `${mins} min transit from ${basecampName}`, distKm };
 };
+import HiddenGemsWall from '../components/HiddenGemsWall';
+import FeaturesSelection from '../components/FeaturesSelection';
+import SavedPlacesModal from '../components/SavedPlacesModal';
 
 const getDayDateString = (startDateStr, dayIndex) => {
   if (!startDateStr) return null;
@@ -543,12 +555,29 @@ export default function ItineraryPage() {
   const [activeDay, setActiveDay] = useState(1); // Active Day, 'epilogue', 'packing', 'visa', 'tracking', or 'emergency'
   const [activeModalDay, setActiveModalDay] = useState(null);
   const [isEmergencyModalOpen, setIsEmergencyModalOpen] = useState(false);
+  const [isSavedPlacesModalOpen, setIsSavedPlacesModalOpen] = useState(false);
+  const [isRecapModalOpen, setIsRecapModalOpen] = useState(false);
   const [isOfflineModalOpen, setIsOfflineModalOpen] = useState(false);
 
   // Preference Engine State
   const { recordSkip, recordTripSignals, profile } = usePreferenceEngine();
   const [activityRatings, setActivityRatings] = useState({});
   
+  // Journal State
+  const [journalEntries, setJournalEntries] = useState([]);
+  const [journalModalOpen, setJournalModalOpen] = useState(false);
+  const [journalModalActivity, setJournalModalActivity] = useState(null);
+  const [journalSuccessMessage, setJournalSuccessMessage] = useState(null);
+
+  useEffect(() => {
+    if (journalSuccessMessage) {
+      const timer = setTimeout(() => {
+        setJournalSuccessMessage(null);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [journalSuccessMessage]); // { activity, dayNum, stopNum }
+
   const handleRatingChange = (actKey, activity, rating) => {
     setActivityRatings(prev => ({
       ...prev,
@@ -706,6 +735,15 @@ export default function ItineraryPage() {
           localStorage.setItem(storageKey, JSON.stringify(newList));
         } catch (e) { }
       }
+    }
+  }, [itinerary, activeTripId]);
+
+  // Load Journal Entries
+  useEffect(() => {
+    if (itinerary) {
+      const tripId = activeTripId || itinerary?.id || itinerary?.db_id || 'shared-trip';
+      const loadedEntries = getTripJournalEntries(tripId);
+      setJournalEntries(loadedEntries);
     }
   }, [itinerary, activeTripId]);
 
@@ -935,6 +973,20 @@ export default function ItineraryPage() {
   const [expandedStops, setExpandedStops] = useState({});
   const [showAlternatives, setShowAlternatives] = useState({});
   const [savedStops, setSavedStops] = useState({});
+
+  // Load saved stops on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('tripwise_saved_stops');
+      if (stored) {
+        try {
+          setSavedStops(JSON.parse(stored));
+        } catch (e) {
+          console.error("Failed to parse saved stops", e);
+        }
+      }
+    }
+  }, []);
   const [shareCopied, setShareCopied] = useState(false);
   const [activePassModal, setActivePassModal] = useState(null);
   const [stampInView, setStampInView] = useState(false);
@@ -1110,7 +1162,13 @@ export default function ItineraryPage() {
   };
 
   const toggleSaveStop = (stopKey) => {
-    setSavedStops(prev => ({ ...prev, [stopKey]: !prev[stopKey] }));
+    setSavedStops(prev => {
+      const newState = { ...prev, [stopKey]: !prev[stopKey] };
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('tripwise_saved_stops', JSON.stringify(newState));
+      }
+      return newState;
+    });
   };
 
   const handleSkipStop = (dayNum, stopNum, category) => {
@@ -1118,12 +1176,17 @@ export default function ItineraryPage() {
     const newDays = [...(itinerary.days || [])];
     const dayIdx = dayNum - 1;
     if (newDays[dayIdx] && newDays[dayIdx].activities) {
+      const skippedActivity = newDays[dayIdx].activities[stopNum - 1];
       newDays[dayIdx].activities = newDays[dayIdx].activities.filter((_, idx) => idx !== (stopNum - 1));
       const newItinerary = { ...itinerary, days: newDays };
       setItinerary(newItinerary);
       if (typeof window !== 'undefined') {
         localStorage.setItem('tripwise_itinerary', JSON.stringify(newItinerary));
       }
+      setJournalSuccessMessage({
+        isSkip: true,
+        title: skippedActivity ? skippedActivity.title : 'Activity'
+      });
     }
   };
 
@@ -1480,6 +1543,12 @@ export default function ItineraryPage() {
         </motion.div>
       </section>
 
+      {/* Trip Recap Banner */}
+      <TripRecapBanner 
+        itinerary={itinerary} 
+        onLaunchRecap={() => setIsRecapModalOpen(true)} 
+      />
+
       {/* STICKY JUMP BAR & UTILITY STRIP (Light-themed to blend cleanly with the page body background) */}
       <div className="sticky top-16 sm:top-18 z-40 bg-[#FAF6F0]/95 backdrop-blur-md border-b border-[#E6DFD5] pt-4 pb-0 px-6 shadow-2xs transition-all print:hidden">
         <div className="max-w-6xl mx-auto w-full flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -1527,6 +1596,22 @@ export default function ItineraryPage() {
               )}
             </button>
 
+            {/* Journal Tab */}
+            <button
+              onClick={() => setActiveDay('journal')}
+              className={`relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'journal' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+                }`}
+            >
+              <span>Journal</span>
+              {activeDay === 'journal' && (
+                <motion.div
+                  layoutId="activeTabUnderline"
+                  className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#FF6B2C] rounded-t-full"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
+            </button>
+
             {/* Price Tracking Tab */}
             <button
               onClick={() => setActiveDay('tracking')}
@@ -1545,7 +1630,7 @@ export default function ItineraryPage() {
           </div>
 
           {/* Actions Set (Aligned with bottom spacing) */}
-          <div className="flex items-center gap-2 shrink-0 pb-3.5 self-end sm:self-auto">
+          <div className="flex items-center gap-2 shrink-0 pb-3.5 self-end sm:self-auto flex-wrap justify-end">
             <div className="relative group/print">
               <button
                 type="button"
@@ -1686,6 +1771,21 @@ export default function ItineraryPage() {
                 Visa &amp; Docs
               </span>
             </button>
+
+            {/* Bookmarks Rail Item */}
+            <button
+              type="button"
+              onClick={() => setIsSavedPlacesModalOpen(true)}
+              className={`w-full py-2.5 px-2 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer select-none group bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent`}
+              title="Saved Bookmarks"
+            >
+              <div className={`p-1.5 rounded-xl transition-all bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs`}>
+                <Bookmark className="w-4 h-4 stroke-[2.2] group-hover:fill-[#FF6B2C]/20" />
+              </div>
+              <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center">
+                Bookmarks
+              </span>
+            </button>
           </div>
 
           <div className="w-full h-px bg-[#E6DFD5]" />
@@ -1811,7 +1911,7 @@ export default function ItineraryPage() {
             >
 
         {/* THE DOSSIER INDEX (Overview List - Screen Only) */}
-        {activeDay !== 'epilogue' && activeDay !== 'packing' && activeDay !== 'visa' && activeDay !== 'tracking' && activeDay !== 'emergency' && activeDay !== 'expenses' && (
+        {activeDay !== 'epilogue' && activeDay !== 'packing' && activeDay !== 'visa' && activeDay !== 'tracking' && activeDay !== 'emergency' && activeDay !== 'expenses' && activeDay !== 'journal' && (
           <section className="bg-white rounded-3xl border border-[#E6DFD5] p-8 sm:p-10 shadow-sm relative overflow-hidden print:hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-radial from-[#FF6B2C]/5 via-transparent to-transparent pointer-events-none" />
 
@@ -1911,7 +2011,13 @@ export default function ItineraryPage() {
               style={{ transformStyle: "preserve-3d" }}
               className="w-full"
             >
-              {activeDay === 'epilogue' ? (() => {
+              {activeDay === 'journal' ? (
+                <JournalView 
+                  tripId={activeTripId || itinerary?.id || itinerary?.db_id || 'shared-trip'}
+                  itinerary={itinerary}
+                  onEntriesChange={setJournalEntries}
+                />
+              ) : activeDay === 'epilogue' ? (() => {
                 const tripDiningRollup = computeDiningRollup(null);
                 return (
                   /* SECTION 3: THE EPILOGUE & 3D STAMP FLOURISH (Accesses Requirement 4) */
@@ -3047,7 +3153,7 @@ export default function ItineraryPage() {
 
                                 {/* Editorial details side spread */}
                                 <div className="w-full lg:w-1/2 flex flex-col justify-center px-2 lg:px-6">
-                                  <div className="flex items-center justify-between gap-3 mb-2">
+                                  <div className="flex flex-wrap items-center justify-between gap-y-3 gap-x-4 mb-2">
                                     <div className="flex items-center gap-2 text-xs font-sans tracking-widest uppercase text-[#7A7268] font-bold">
                                       <span>{act.time || '10:00 AM'}</span>
                                       <span className="text-[#FF6B2C] font-serif">•</span>
@@ -3065,25 +3171,61 @@ export default function ItineraryPage() {
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                      <button
+                                      {/* Skip Button - Tactile 3D */}
+                                      <motion.button
+                                        whileHover={{ y: -2 }}
+                                        whileTap={{ y: 4, boxShadow: "0px 0px 0px #D8D1C7" }}
+                                        transition={{ type: "spring", stiffness: 400, damping: 20 }}
                                         type="button"
                                         onClick={() => handleSkipStop(activeDay, stopNum, act.category)}
-                                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#E6DFD5] bg-white text-[#7A7268] hover:border-[#1E1C1A] text-xs font-sans font-bold transition-all cursor-pointer"
+                                        className="relative inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl border-2 border-[#E6DFD5] bg-white text-[#7A7268] hover:bg-red-50 hover:border-red-200 hover:text-red-500 text-xs font-sans font-black whitespace-nowrap shadow-[0_4px_0_#E6DFD5] hover:shadow-[0_4px_0_#FCA5A5] cursor-pointer group"
                                       >
-                                        <X className="w-3.5 h-3.5" />
+                                        <X className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-300" />
                                         <span>Skip</span>
-                                      </button>
-                                      <button
+                                      </motion.button>
+                                      
+                                      {/* Bookmark Button - Tactile 3D */}
+                                      <motion.button
+                                        whileHover={{ y: -2 }}
+                                        whileTap={{ y: 4, boxShadow: isSaved ? "0px 0px 0px #CC5522" : "0px 0px 0px #D8D1C7" }}
+                                        transition={{ type: "spring", stiffness: 400, damping: 20 }}
                                         type="button"
                                         onClick={() => toggleSaveStop(stopKey)}
-                                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-sans font-bold transition-all cursor-pointer ${isSaved
-                                            ? 'border-[#FF6B2C] bg-[#FF6B2C]/10 text-[#FF6B2C]'
-                                            : 'border-[#E6DFD5] bg-white text-[#7A7268] hover:border-[#1E1C1A]'
-                                          }`}
+                                        className={`relative inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl border-2 text-xs font-sans font-black cursor-pointer group ${isSaved
+                                            ? 'border-[#FF6B2C] bg-[#FFF0E8] text-[#FF6B2C] shadow-[0_4px_0_#FF6B2C]'
+                                            : 'border-[#E6DFD5] bg-white text-[#7A7268] hover:border-[#FF6B2C] hover:text-[#FF6B2C] shadow-[0_4px_0_#E6DFD5] hover:shadow-[0_4px_0_#FF6B2C]'
+                                          } whitespace-nowrap`}
                                       >
-                                        <Bookmark className={`w-3.5 h-3.5 ${isSaved ? 'fill-[#FF6B2C]' : ''}`} />
+                                        <Bookmark className={`w-3.5 h-3.5 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300 ${isSaved ? 'fill-[#FF6B2C]' : ''}`} />
                                         <span>{isSaved ? 'Saved' : 'Bookmark'}</span>
-                                      </button>
+                                      </motion.button>
+                                      
+                                      {/* Journal Entry Button - Tactile 3D Primary */}
+                                      {(() => {
+                                        const journalId = `${activeDay}-${stopNum}`;
+                                        const entry = journalEntries.find(e => e.activityId === journalId);
+                                        return (
+                                          <motion.button
+                                            whileHover={{ y: -2 }}
+                                            whileTap={{ y: 4, boxShadow: entry ? "0px 0px 0px #000" : "0px 0px 0px #CC5522" }}
+                                            transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                                            type="button"
+                                            onClick={() => {
+                                              setJournalModalActivity({ activity: act, dayNum: activeDay, stopNum });
+                                              setJournalModalOpen(true);
+                                            }}
+                                            className={`relative inline-flex items-center gap-1.5 px-5 py-1.5 rounded-xl border-2 text-xs font-sans font-black cursor-pointer group ${entry
+                                                ? 'border-[#1E1C1A] bg-[#222] text-white shadow-[0_4px_0_#1E1C1A]'
+                                                : 'border-[#FF6B2C] bg-[#FF7744] text-white shadow-[0_4px_0_#CC5522]'
+                                              } whitespace-nowrap`}
+                                          >
+                                            <span className="flex items-center justify-center group-hover:scale-110 group-hover:-rotate-12 transition-transform duration-300">
+                                              {entry ? <BookOpen className="w-4 h-4" /> : <PenLine className="w-4 h-4" />}
+                                            </span>
+                                            <span className="tracking-wide">{entry ? 'View Journal' : 'Add Journal Entry'}</span>
+                                          </motion.button>
+                                        );
+                                      })()}
                                     </div>
                                   </div>
 
@@ -3878,6 +4020,102 @@ export default function ItineraryPage() {
         onClose={() => setIsEmergencyModalOpen(false)}
         destinationName={itinerary?.destinationName}
         passportNationality={passportNationality}
+      />
+
+      {/* Saved Places Modal */}
+      <SavedPlacesModal 
+        isOpen={isSavedPlacesModalOpen}
+        onClose={() => setIsSavedPlacesModalOpen(false)}
+        savedStops={savedStops}
+        itinerary={itinerary}
+      />
+
+      {/* Journal Entry Modal */}
+      <JournalEntryModal
+        isOpen={journalModalOpen}
+        onClose={() => { setJournalModalOpen(false); setJournalModalActivity(null); }}
+        activity={journalModalActivity?.activity}
+        dayNum={journalModalActivity?.dayNum}
+        stopNum={journalModalActivity?.stopNum}
+        existingEntry={journalModalActivity ? journalEntries.find(e => e.activityId === `${journalModalActivity.dayNum}-${journalModalActivity.stopNum}`) : null}
+        onSave={(entryData) => {
+          const tripId = activeTripId || itinerary?.id || itinerary?.db_id || 'shared-trip';
+          const isNew = !entryData.id;
+          const activityTitle = journalModalActivity?.activity?.title;
+          
+          addJournalEntry(tripId, entryData);
+          setJournalEntries(getTripJournalEntries(tripId));
+          setJournalModalOpen(false);
+          
+          setJournalSuccessMessage({
+            title: activityTitle || "Activity",
+            isNew
+          });
+          
+          setJournalModalActivity(null);
+          
+          // Fire preference signal for journal engagement
+          if (entryData.personalRating > 0 && journalModalActivity?.activity) {
+            recordTripSignals({}, [], [], [{
+              activity: journalModalActivity.activity,
+              entry: entryData
+            }]);
+          }
+        }}
+        onDelete={(entryId) => {
+          import('../../lib/journalApi').then(({ removeJournalEntry }) => {
+            const tripId = activeTripId || itinerary?.id || itinerary?.db_id || 'shared-trip';
+            removeJournalEntry(tripId, entryId);
+            setJournalEntries(getTripJournalEntries(tripId));
+            setJournalModalOpen(false);
+            setJournalModalActivity(null);
+          });
+        }}
+      />
+
+      {/* Premium Animated Success Message */}
+      <AnimatePresence>
+        {journalSuccessMessage && (
+          <div className="fixed bottom-10 left-0 right-0 z-[200000] flex justify-center pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0, y: 40, scale: 0.85 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.9 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              className="bg-white/95 backdrop-blur-xl border border-[#E6DFD5]/60 shadow-[0_12px_40px_-10px_rgba(0,0,0,0.15)] p-2 pr-6 rounded-full flex items-center gap-3 pointer-events-auto"
+              whileHover={{ scale: 1.02, y: -2 }}
+            >
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-[0_4px_12px_rgba(255,107,44,0.3)] ${journalSuccessMessage.isSkip ? 'bg-[#7A7268]' : 'bg-[#FF6B2C]'}`}>
+                <motion.div
+                   initial={{ scale: 0, rotate: -45 }}
+                   animate={{ scale: 1, rotate: 0 }}
+                   transition={{ type: "spring", stiffness: 400, delay: 0.1 }}
+                >
+                  {journalSuccessMessage.isSkip ? (
+                     <FastForward className="w-5 h-5 text-white stroke-[3px] ml-0.5" />
+                  ) : (
+                     <Check className="w-5 h-5 text-white stroke-[3px]" />
+                  )}
+                </motion.div>
+              </div>
+              <div className="flex flex-col justify-center">
+                <h4 className="text-[13px] font-sans font-bold text-[#1E1C1A] leading-none mb-1">
+                  {journalSuccessMessage.isSkip ? 'Activity Skipped' : (journalSuccessMessage.isNew ? 'Entry saved successfully' : 'Entry updated')}
+                </h4>
+                <p className="text-[11px] font-sans font-medium text-[#7A7268] truncate max-w-[200px] leading-none">
+                  {journalSuccessMessage.title}
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Trip Recap Modal */}
+      <TripRecapModal
+        isOpen={isRecapModalOpen}
+        onClose={() => setIsRecapModalOpen(false)}
+        itinerary={itinerary}
       />
 
       {/* PERSISTENT FLOATING EMERGENCY (SOS) BUTTON - ACCESSIBLE FROM ANY TAB */}
