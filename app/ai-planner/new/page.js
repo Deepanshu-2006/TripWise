@@ -239,6 +239,7 @@ export default function AIPlannerPage() {
               onSelectPrompt={(promptText) => {
                 setCurrentPrompt(promptText);
               }}
+              tripId={tripId}
             />
           </div>
         </div>

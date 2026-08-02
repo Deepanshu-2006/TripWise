@@ -52,7 +52,8 @@ export default function LiveTripDashboard({
   onHoverStop = null,
   selectedStopIdx: propSelectedStopIdx = null,
   onSelectStop = null,
-  onSelectPrompt
+  onSelectPrompt,
+  tripId
 }) {
   const [internalSelectedDayIndex, setInternalSelectedDayIndex] = useState(0);
   const [internalSelectedStopIdx, setInternalSelectedStopIdx] = useState(null);
@@ -237,6 +238,7 @@ export default function LiveTripDashboard({
                 onHoverStop={setHoveredStopIdx}
                 selectedStopIdx={selectedStopIdx}
                 onSelectStop={setSelectedStopIdx}
+                tripId={tripId}
               />
             </div>
           </div>
