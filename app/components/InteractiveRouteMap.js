@@ -2,15 +2,20 @@
 
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Route, Ticket, Heart, Share2, ArrowRight, ArrowUpRight, ArrowUp } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { Route, Ticket, Heart, Share2, ArrowRight, ArrowUpRight, ArrowUp, Star, Clock, Banknote } from 'lucide-react';
 import {
   getActivityThumbnail,
   getActivityRating,
   getCategoryStyling,
   getAiInsight,
   formatCost,
-  formatReviewCount
+  formatReviewCount,
+  getIconBadges
 } from './itineraryHelpers';
+
+const TicketPassModal = dynamic(() => import('./TicketPassModal'), { ssr: false });
+const InviteModal = dynamic(() => import('./InviteModal'), { ssr: false });
 
 const MAP_STYLES = {
   streets: {
@@ -194,7 +199,8 @@ export default function InteractiveRouteMap({
   onHoverStop = () => {},
   selectedStopIdx: propSelectedStopIdx = null,
   onSelectStop = () => {},
-  isItineraryView = false
+  isItineraryView = false,
+  tripId
 }) {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
@@ -214,6 +220,34 @@ export default function InteractiveRouteMap({
     ? basecampHotel
     : (basecampHotel?.name || `${destinationName && destinationName !== 'Your Destination' ? destinationName.split(',')[0] + ' ' : ''}Basecamp Hotel`);
   const [isDestinationSaved, setIsDestinationSaved] = useState(false);
+  const [activePassModal, setActivePassModal] = useState(null);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+
+  // Keep isDestinationSaved synced with activeDestination and localStorage
+  useEffect(() => {
+    if (activeDestination) {
+      const saved = JSON.parse(localStorage.getItem('tripwise_saved_places') || '[]');
+      const exists = saved.some(s => s.id === activeDestination.id || s.placeName === activeDestination.placeName || s.title === activeDestination.title);
+      setIsDestinationSaved(exists);
+    }
+  }, [activeDestination]);
+
+  const toggleSaveDestination = () => {
+    if (!activeDestination) return;
+    const saved = JSON.parse(localStorage.getItem('tripwise_saved_places') || '[]');
+    const existsIndex = saved.findIndex(s => s.id === activeDestination.id || s.placeName === activeDestination.placeName || s.title === activeDestination.title);
+    
+    if (existsIndex >= 0) {
+      saved.splice(existsIndex, 1);
+      setIsDestinationSaved(false);
+    } else {
+      saved.push({ ...activeDestination, savedAt: new Date().toISOString() });
+      setIsDestinationSaved(true);
+    }
+    localStorage.setItem('tripwise_saved_places', JSON.stringify(saved));
+    window.dispatchEvent(new Event('storage'));
+  };
+
   const [heroImageLoaded, setHeroImageLoaded] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -1820,12 +1854,13 @@ export default function InteractiveRouteMap({
         if (!currentTarget || !currentTarget.act) return null;
 
         const { act, stopIndex, totalStops, isBasecamp, dayStops = loopedStops } = currentTarget;
-        const meta = isBasecamp ? { icon: '🏨', label: 'Basecamp Hub', bg: '#1E293B' } : getCategoryStyling(act);
+        const meta = isBasecamp ? { icon: '🏨', name: 'Basecamp Hub', bg: '#1E293B' } : getCategoryStyling(act);
         const stopNumberLabel = isBasecamp ? 'Anchor Hub' : `Stop ${stopIndex} of ${totalStops || (dayStops.length - 1)}`;
         const heroImageUrl = getDestinationHeroImage(act, destinationName, isBasecamp, stopIndex);
         const ratingInfo = getActivityRating(act, stopIndex || 0);
         const costInfo = formatCost(act);
         const aiTipText = getAiInsight(act, stopIndex || 0);
+        const iconBadges = getIconBadges(act);
 
         let prevTransit = null;
         if (stopIndex > 0 && dayStops[stopIndex - 1]?.coordinates && act?.coordinates) {
@@ -1978,13 +2013,13 @@ export default function InteractiveRouteMap({
               <div className="absolute inset-0 bg-linear-to-t from-[rgba(0,0,0,0.70)] via-black/20 to-transparent pointer-events-none" />
 
               {/* Category & Stop number badge inside image */}
-              <div className="absolute top-3.5 left-3.5 flex items-center gap-1.5 z-10">
-                <span className="px-3 py-1 bg-black/55 backdrop-blur-md text-white text-[11px] font-extrabold rounded-full border border-white/20 shadow-sm flex items-center gap-1.5">
-                  <span>{meta.icon}</span>
-                  <span>{meta.label}</span>
-                </span>
-                <span className="px-2.5 py-1 bg-[#FF6B2C]/90 backdrop-blur-md text-white text-[11px] font-extrabold rounded-full shadow-sm">
+              <div className="absolute top-3.5 left-3.5 z-10 flex items-center gap-1.5 bg-black/55 backdrop-blur-md text-white text-[11px] font-extrabold rounded-full p-1 border border-white/20 shadow-sm">
+                <span className="bg-[#FF6B2C] text-white px-2 py-0.5 rounded-full shadow-xs whitespace-nowrap">
                   {stopNumberLabel}
+                </span>
+                <span className="flex items-center gap-1 pr-2 whitespace-nowrap">
+                  <span>{meta.icon}</span>
+                  <span>{meta.name}</span>
                 </span>
               </div>
 
@@ -2010,7 +2045,7 @@ export default function InteractiveRouteMap({
                   {act.title || (isBasecamp ? derivedBasecampTitle : `Waypoint ${stopIndex}`)}
                 </h3>
                 <p className="text-xs font-medium text-white/80 mt-0.5 truncate">
-                  {act.location || `${destinationName} • ${meta.label}`}
+                  {act.location || `${destinationName}${meta.name ? ` • ${meta.name}` : ''}`}
                 </p>
               </div>
             </div>
@@ -2050,50 +2085,30 @@ export default function InteractiveRouteMap({
                 </p>
               )}
 
-              {/* 6. Quick Information Grid (2x2 with refined padding & Walk Distance format) */}
-              <div className="grid grid-cols-2 gap-2.5 bg-[#FAF8F5] rounded-2xl p-3 border border-[#ECE8E2]">
-                <div className="flex flex-col gap-0.5 p-2.5 bg-white/75 border border-[#ECE8E2]/80 rounded-xl shadow-2xs transition-all duration-200 hover:shadow-xs">
-                  <span className="text-[10px] font-bold text-[#8A8580] uppercase tracking-wider flex items-center gap-1 mb-0.5">
-                    <span>⏳</span> Suggested Duration
+              {/* 6. Quick Information Grid (Replaced with Pill Chips) */}
+              <div className="flex items-center flex-wrap gap-1.5">
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#5F5E5A] bg-[#F7F5F2] px-2 py-1 rounded-full border border-[#ECE8E2]">
+                  <span className="text-stone-400"><Clock size={10} strokeWidth={2.5} /></span> {act?.duration || (isBasecamp ? 'All-Day Hub' : '1.5 – 2 Hours')}
+                </span>
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#5F5E5A] bg-[#F7F5F2] px-2 py-1 rounded-full border border-[#ECE8E2]">
+                  <span className="text-stone-400"><Banknote size={10} strokeWidth={2.5} /></span> {isBasecamp ? 'Included in Stay' : costInfo.title.replace('💰 ', '')}
+                </span>
+                {walkTimeFormatted !== 'Not Available' && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#5F5E5A] bg-[#F7F5F2] px-2 py-1 rounded-full border border-[#ECE8E2]">
+                    <span className="text-stone-400">🚶</span> {walkTimeFormatted} {walkDistFormatted ? `(${walkDistFormatted})` : ''}
                   </span>
-                  <span className="text-xs sm:text-[13px] font-extrabold text-[#1F1F1F]">
-                    {act?.duration || (isBasecamp ? 'All-Day Hub' : '1.5 – 2 Hours')}
-                  </span>
-                </div>
-
-                <div className="flex flex-col gap-0.5 p-2.5 bg-white/75 border border-[#ECE8E2]/80 rounded-xl shadow-2xs transition-all duration-200 hover:shadow-xs">
-                  <span className="text-[10px] font-bold text-[#8A8580] uppercase tracking-wider flex items-center gap-1 mb-0.5">
-                    <span>💰</span> Estimated Cost
-                  </span>
-                  <span className="text-xs sm:text-[13px] font-extrabold text-[#1F1F1F]">
-                    {isBasecamp ? 'Included in Stay' : costInfo.title.replace('💰 ', '')}
-                  </span>
-                </div>
-
-                <div className="flex flex-col gap-0.5 p-2.5 bg-white/75 border border-[#ECE8E2]/80 rounded-xl shadow-2xs transition-all duration-200 hover:shadow-xs">
-                  <span className="text-[10px] font-bold text-[#8A8580] uppercase tracking-wider flex items-center gap-1 mb-0.5">
-                    <span>🚶</span> Walking Distance
-                  </span>
-                  <div className="flex flex-col leading-tight">
-                    <span className="text-xs sm:text-[13px] font-extrabold text-[#1F1F1F]">
-                      {walkTimeFormatted}
+                )}
+                {iconBadges.map((badge, bIdx) => {
+                  let premiumIcon = null;
+                  if (badge.icon === '⚡') premiumIcon = <Star size={10} strokeWidth={2.5} className="text-[#FF6B2C] fill-[#FF6B2C]" />;
+                  else if (badge.icon === '🎯') premiumIcon = <ArrowUpRight size={10} strokeWidth={2.5} className="text-[#059669]" />;
+                  else premiumIcon = badge.icon;
+                  return (
+                    <span key={bIdx} className={`inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-1 rounded-full border ${badge.colorClass}`}>
+                      <span className="opacity-80">{premiumIcon}</span> <span>{badge.text}</span>
                     </span>
-                    {walkDistFormatted && (
-                      <span className="text-[11px] font-semibold text-[#6B6B6B] mt-0.5">
-                        {walkDistFormatted}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-0.5 p-2.5 bg-white/75 border border-[#ECE8E2]/80 rounded-xl shadow-2xs transition-all duration-200 hover:shadow-xs">
-                  <span className="text-[10px] font-bold text-[#8A8580] uppercase tracking-wider flex items-center gap-1 mb-0.5">
-                    <span>🏷️</span> Category
-                  </span>
-                  <span className="text-xs sm:text-[13px] font-extrabold text-[#FF6B2C] truncate">
-                    {meta.label}
-                  </span>
-                </div>
+                  );
+                })}
               </div>
 
               {/* Weather & Crowd Level compact chips */}
@@ -2165,22 +2180,23 @@ export default function InteractiveRouteMap({
                   ))}
                 </div>
               </div>
+              
+              {/* Spacer to prevent content clipping under the sticky footer */}
+              <div className="h-8 sm:h-10 shrink-0 w-full" />
 
               {/* STICKY ACTION BAR & 10. Footer Navigation (Pinned to bottom of panel when scrolling) */}
               <div className="sticky bottom-0 z-40 bg-[rgba(255,255,255,0.88)] backdrop-blur-md border-t border-[#ECE8E2] pt-3 pb-3 sm:pb-4 mt-2 -mx-4 sm:-mx-5 px-4 sm:px-5 rounded-b-3xl shadow-[0_-8px_24px_rgba(0,0,0,0.06)] flex flex-col gap-2.5">
                 {/* Premium Compact Sticky Action Bar (always 1 click away on scroll) */}
                 <div className="flex items-center justify-between gap-1.5 sm:gap-2 w-full">
-                  {/* Primary CTA: Tickets (reduced px & height for ultra-sleek compact look) */}
-                  <a
-                    href={googleMapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 min-w-0 bg-linear-to-r from-[#FF6B2C] via-[#FF5814] to-[#E04B10] hover:from-[#FF7A40] hover:via-[#FF6524] hover:to-[#EB5416] text-white font-semibold rounded-xl px-2 h-10 flex items-center justify-center shadow-[0_3px_12px_rgba(255,107,44,0.28)] hover:shadow-[0_6px_18px_rgba(255,107,44,0.42)] hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out text-center group cursor-pointer border border-[#FF814A]/30"
+                  {/* Primary CTA: Tickets */}
+                  <button
+                    type="button"
+                    onClick={() => setActivePassModal({ activity: act, dayNum: selectedDayIndex + 1, stopNum: (selectedStopIdx !== null ? selectedStopIdx + 1 : 1) })}
+                    className="flex-[1.4] min-w-0 bg-linear-to-r from-[#FF6B2C] to-[#E65D20] hover:from-[#E65D20] hover:to-[#D95524] text-white font-bold rounded-xl px-2 sm:px-3 h-10 flex items-center justify-center gap-1.5 shadow-[0_4px_16px_rgba(255,107,44,0.3)] hover:shadow-[0_6px_20px_rgba(255,107,44,0.4)] hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out cursor-pointer"
                   >
-                    <Ticket size={15} strokeWidth={2.2} className="shrink-0 text-white mr-1 sm:mr-1.5 transition-transform duration-200 group-hover:scale-105 group-hover:-rotate-12" />
-                    <span className="tracking-tight whitespace-nowrap text-xs sm:text-[13px]">Tickets</span>
-                    <ArrowRight size={14} strokeWidth={2.6} className="shrink-0 text-white max-w-0 opacity-0 -translate-x-1.5 overflow-hidden transition-all duration-200 ease-out group-hover:max-w-4 group-hover:opacity-100 group-hover:translate-x-0 group-hover:ml-1" />
-                  </a>
+                    <Ticket size={15} strokeWidth={2.5} className="shrink-0" />
+                    <span className="tracking-tight whitespace-nowrap text-[13px] sm:text-sm">Tickets</span>
+                  </button>
 
                   {/* Secondary CTA: Start Route (with Upright Arrow instead of diagonal icon) */}
                   <a
@@ -2200,7 +2216,7 @@ export default function InteractiveRouteMap({
                   {/* Secondary CTA: Save */}
                   <button
                     type="button"
-                    onClick={() => setIsDestinationSaved(!isDestinationSaved)}
+                    onClick={toggleSaveDestination}
                     className={`flex-[0.9] min-w-0 hover:bg-[#FAF8F5] ${
                       isDestinationSaved
                         ? 'bg-linear-to-r from-[#FFE8DE] to-[#FFF3ED] text-[#D94E14] border border-[#FF6B2C]/30 shadow-2xs'
@@ -2222,13 +2238,7 @@ export default function InteractiveRouteMap({
                   {/* Secondary CTA: Share (icon fills solid on hover) */}
                   <button
                     type="button"
-                    onClick={() => {
-                      if (typeof navigator !== 'undefined' && navigator.clipboard) {
-                        navigator.clipboard.writeText(window.location.href);
-                        setShowShareToast(true);
-                        setTimeout(() => setShowShareToast(false), 3000);
-                      }
-                    }}
+                    onClick={() => setIsInviteModalOpen(true)}
                     className="flex-[0.9] min-w-0 bg-white hover:bg-[#FAF8F5] text-[#1F1F1F] border border-black/6 hover:border-black/12 font-semibold rounded-xl px-2 h-10 flex items-center justify-center gap-1 sm:gap-1.5 shadow-2xs hover:shadow-sm hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out text-center group cursor-pointer"
                   >
                     <Share2
@@ -2280,32 +2290,73 @@ export default function InteractiveRouteMap({
     </div>
   );
 
-  if (isFullscreen && typeof document !== 'undefined') {
-    return (
-      <>
-        {/* Placeholder in right panel so it doesn't collapse into a blank white space */}
-        <div className="w-full h-full min-h-105 rounded-3xl border border-[#ECE8E2] bg-[#FAF8F5] flex flex-col items-center justify-center p-6 text-center animate-fade-in shadow-inner">
-          <div className="w-14 h-14 rounded-2xl bg-[#FF6B2C]/10 border border-[#FF6B2C]/20 flex items-center justify-center text-2xl mb-3.5 shadow-sm">
-            ⛶
+  const finalJSX = (
+    <>
+      {isFullscreen && typeof document !== 'undefined' ? (
+        <>
+          {/* Placeholder in right panel so it doesn't collapse into a blank white space */}
+          <div className="w-full h-full min-h-105 rounded-3xl border border-[#ECE8E2] bg-[#FAF8F5] flex flex-col items-center justify-center p-6 text-center animate-fade-in shadow-inner">
+            <div className="w-14 h-14 rounded-2xl bg-[#FF6B2C]/10 border border-[#FF6B2C]/20 flex items-center justify-center text-2xl mb-3.5 shadow-sm">
+              ⛶
+            </div>
+            <h4 className="text-base font-bold text-[#1F1F1F]">Map is Expanded Fullscreen</h4>
+            <p className="text-xs text-[#6B6B6B] mt-1 max-w-xs leading-relaxed">
+              You are currently exploring your interactive trip route across the entire screen.
+            </p>
+            <button
+              onClick={() => setIsFullscreen(false)}
+              className="mt-5 px-5 py-2.5 rounded-xl bg-[#FF6B2C] text-white text-xs font-bold shadow-md hover:bg-[#E05A20] active:scale-95 transition-all flex items-center gap-2"
+            >
+              <span>✕</span>
+              <span>Exit Fullscreen (Esc)</span>
+            </button>
           </div>
-          <h4 className="text-base font-bold text-[#1F1F1F]">Map is Expanded Fullscreen</h4>
-          <p className="text-xs text-[#6B6B6B] mt-1 max-w-xs leading-relaxed">
-            You are currently exploring your interactive trip route across the entire screen.
-          </p>
-          <button
-            onClick={() => setIsFullscreen(false)}
-            className="mt-5 px-5 py-2.5 rounded-xl bg-[#FF6B2C] text-white text-xs font-bold shadow-md hover:bg-[#E05A20] active:scale-95 transition-all flex items-center gap-2"
-          >
-            <span>✕</span>
-            <span>Exit Fullscreen (Esc)</span>
-          </button>
-        </div>
 
-        {/* Full-screen map portaled to document.body */}
-        {createPortal(mapJSX, document.body)}
-      </>
-    );
-  }
+          {/* Full-screen map portaled to document.body */}
+          {createPortal(mapJSX, document.body)}
+        </>
+      ) : mapJSX}
+      {typeof document !== 'undefined'
+        ? createPortal(
+            <>
+              <TicketPassModal
+                isOpen={Boolean(activePassModal)}
+                onClose={() => setActivePassModal(null)}
+                activity={activePassModal?.activity}
+                destinationName={destinationName || 'Destination'}
+                dayNumber={activePassModal?.dayNum || 1}
+                stopNumber={activePassModal?.stopNum || 1}
+                onStatusChange={() => {}}
+              />
+              <InviteModal
+                isOpen={isInviteModalOpen}
+                onClose={() => setIsInviteModalOpen(false)}
+                tripId={tripId}
+              />
+            </>,
+            document.body
+          )
+        : (
+            <>
+              <TicketPassModal
+                isOpen={Boolean(activePassModal)}
+                onClose={() => setActivePassModal(null)}
+                activity={activePassModal?.activity}
+                destinationName={destinationName || 'Destination'}
+                dayNumber={activePassModal?.dayNum || 1}
+                stopNumber={activePassModal?.stopNum || 1}
+                onStatusChange={() => {}}
+              />
+              <InviteModal
+                isOpen={isInviteModalOpen}
+                onClose={() => setIsInviteModalOpen(false)}
+                tripId={tripId}
+              />
+            </>
+          )}
+    </>
+  );
 
-  return mapJSX;
+  return finalJSX;
 }
+
