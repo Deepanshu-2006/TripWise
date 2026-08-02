@@ -248,7 +248,7 @@ export default function TicketPassModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div data-lenis-prevent="true" className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 overflow-hidden">
+        <div data-lenis-prevent="true" className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 overflow-hidden">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
