@@ -3,7 +3,28 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import CustomDatePicker from './CustomDatePicker';
-import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw, Check, Map, Compass, ThumbsUp, ThumbsDown, Users, UserPlus } from 'lucide-react';
+import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw, Check, Map, Compass, ThumbsUp, ThumbsDown, Users, UserPlus, Landmark, Utensils, Zap, Gem, Star, Lightbulb, Smile, TreePine, Coffee, Palmtree, Banknote } from 'lucide-react';
+
+const renderPremiumIcon = (emojiStr, size = 12) => {
+  if (!emojiStr) return <Star size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('🏛')) return <Landmark size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('🍝')) return <Utensils size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('⚡')) return <Zap size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('💎')) return <Gem size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('⭐')) return <Star size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('⏱')) return <Clock size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('💰')) return <Banknote size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('🗺')) return <Map size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('💡')) return <Lightbulb size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('✨')) return <Sparkles size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('🎟')) return <Ticket size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('🎭')) return <Smile size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('🌳') || emojiStr.includes('🌲')) return <TreePine size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('🍷') || emojiStr.includes('☕')) return <Coffee size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('🏖') || emojiStr.includes('🌴')) return <Palmtree size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('🚶') || emojiStr.includes('🚊')) return <Compass size={size} strokeWidth={2.5} />;
+  return <Star size={size} strokeWidth={2.5} />; 
+};
 import {
   getActivityThumbnail,
   getTransportBetweenStops,
@@ -2095,15 +2116,15 @@ export default function PlannerSidebar({
                                 handleSelectStop(isSelected ? null : stopNum);
                                 handleHoverStop(stopNum);
                               }}
-                              className={`scroll-mt-40 w-full box-border p-4 rounded-2xl border transition-all duration-300 ease-out flex flex-col gap-3 cursor-pointer select-none relative z-10 ${dragOverStopIdx === idx
+                              className={`scroll-mt-40 w-full box-border p-4 rounded-3xl border transition-all duration-300 ease-out flex flex-col gap-3 cursor-pointer select-none relative z-10 ${dragOverStopIdx === idx
                                   ? 'border-[#FF6B2C] border-2 bg-[#FFF8F5] scale-[1.02] ring-4 ring-[#FF6B2C]/30 shadow-2xl z-30'
                                   : draggedStopIdx === idx
                                     ? 'opacity-40 border-dashed border-[#FF6B2C] scale-95'
                                     : isSelected
-                                      ? 'border-[#EC6735] border-2 bg-[#FFF8F5] shadow-[0_12px_36px_rgba(236,103,53,0.18)] scale-[1.01] z-20'
+                                      ? 'border-[#FF6B2C] bg-[#FFF8F5] shadow-xl scale-[1.01] z-20'
                                       : isHovered || hoveredStopIdx === stopNum
-                                        ? 'border-[#FF6B2C] bg-white shadow-[0_12px_28px_rgba(255,107,44,0.16)] -translate-y-1 z-20'
-                                        : 'border-[#ECE8E2] bg-white shadow-2xs hover:border-[#FF6B2C]/60 hover:shadow-md hover:-translate-y-0.5'
+                                        ? 'border-[#FF6B2C]/40 bg-white shadow-lg -translate-y-1 z-20'
+                                        : 'border-[#E6DFD5]/70 bg-white shadow-sm hover:border-[#FF6B2C]/40 hover:shadow-md hover:-translate-y-0.5'
                                 }`}
                             >
                               <div className="flex items-start gap-3.5">
@@ -2118,57 +2139,57 @@ export default function PlannerSidebar({
                                 </div>
 
                                 {/* Point 2: Activity Thumbnail (80-100px) */}
-                                <div className="relative w-20 h-20 rounded-xl overflow-hidden shrink-0 border border-[#ECE8E2] shadow-2xs">
+                                <div className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-[#ECE8E2] shadow-2xs group/thumb">
                                   <img
                                     src={getActivityThumbnail(act, idx)}
                                     alt={act.title}
-                                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover/thumb:scale-110"
                                     loading="lazy"
                                   />
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none" />
+                                  <div className="absolute bottom-2 left-2 flex items-center gap-1 text-[10px] font-extrabold text-white">
+                                    <Star size={10} className="fill-amber-400 text-amber-400" />
+                                    <span>{ratingData.rating}</span>
+                                  </div>
                                 </div>
 
                                 {/* Main Content Hierarchy */}
-                                <div className="flex-1 min-w-0 flex flex-col gap-1">
-                                  <div className="flex items-center justify-between gap-1 flex-wrap">
+                                <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                                  <div className="flex items-center justify-between gap-1 w-full">
                                     <div className="flex items-center gap-1.5">
-                                      <span className="text-xs font-mono font-extrabold text-[#FF6B2C]">{act.time || '10:00 AM'}</span>
-                                      <span>•</span>
-                                      <span className={`inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md border ${categoryStyle.badgeClass}`}>
-                                        <span>{categoryStyle.icon}</span> <span>{categoryStyle.name}</span>
+                                      <span className="text-[11px] font-mono font-extrabold text-stone-500">{act.time || '10:00 AM'}</span>
+                                      <span className="text-stone-300">•</span>
+                                      <span className="flex items-center gap-1 text-[10px] font-extrabold uppercase text-stone-500 tracking-tight">
+                                        <span className="text-stone-400">{renderPremiumIcon(categoryStyle.icon, 11)}</span> 
+                                        <span>{categoryStyle.name}</span>
                                       </span>
                                     </div>
-                                  </div>
+                                    
+                                    {/* Voting Actions (Top Right Pill) */}
+                                    <div className="flex items-center shrink-0 bg-[#F7F5F2] rounded-full border border-[#ECE8E2] shadow-2xs overflow-hidden" onClick={(e) => e.stopPropagation()}>
 
-                                  <div className="flex items-start justify-between gap-2">
-                                    <h4 className="text-sm sm:text-base font-black text-[#1C1B1B] leading-snug tracking-tight">
-                                      {act.title}
-                                    </h4>
-
-                                    {/* Voting Actions */}
-                                    <div className="flex items-center gap-1.5 shrink-0 bg-[#F7F5F2] p-1 rounded-lg border border-[#ECE8E2]" onClick={(e) => e.stopPropagation()}>
                                       {(() => {
                                         const stopKey = `${selectedDayIndex}-${idx}`;
                                         const voteData = mockVotes[stopKey] || { up: 0, down: 0, userVote: null };
-                                        // Mock base vote for demo if it's not interacted yet
                                         const displayUp = voteData.up + (voteData.userVote === 'up' ? 0 : (idx === 0 ? 1 : 0));
 
                                         return (
                                           <>
                                             <button
                                               onClick={() => handleVote(stopKey, 'up')}
-                                              className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md hover:bg-[#FFF8F5] hover:text-[#FF6B2C] transition-colors ${voteData.userVote === 'up' ? 'bg-[#FFF8F5] text-[#FF6B2C]' : 'text-[#5F5E5A]'}`}
+                                              className={`flex items-center gap-1 pl-2.5 pr-2 py-1 hover:bg-[#FFF8F5] hover:text-[#FF6B2C] transition-colors ${voteData.userVote === 'up' ? 'bg-[#FFF8F5] text-[#FF6B2C]' : 'text-stone-500'}`}
                                               title="Upvote"
                                             >
                                               <ThumbsUp size={12} strokeWidth={2.5} className={voteData.userVote === 'up' ? 'fill-[#FF6B2C]/20' : ''} />
                                               <span className="text-[10px] font-bold">{displayUp > 0 ? displayUp : ''}</span>
                                             </button>
-                                            <div className="w-px h-3 bg-[#ECE8E2]"></div>
+                                            <div className="w-px h-3.5 bg-[#ECE8E2]"></div>
                                             <button
                                               onClick={() => handleVote(stopKey, 'down')}
-                                              className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md hover:bg-gray-200 transition-colors ${voteData.userVote === 'down' ? 'bg-gray-200 text-[#1C1B1B]' : 'text-[#5F5E5A]'}`}
+                                              className={`flex items-center gap-1 pr-2.5 pl-2 py-1 hover:bg-stone-200 transition-colors ${voteData.userVote === 'down' ? 'bg-stone-200 text-stone-800' : 'text-stone-500'}`}
                                               title="Downvote"
                                             >
-                                              <ThumbsDown size={12} strokeWidth={2.5} className={voteData.userVote === 'down' ? 'fill-gray-400/30' : ''} />
+                                              <ThumbsDown size={12} strokeWidth={2.5} className={voteData.userVote === 'down' ? 'fill-stone-400/30' : ''} />
                                             </button>
                                           </>
                                         );
@@ -2176,11 +2197,10 @@ export default function PlannerSidebar({
                                     </div>
                                   </div>
 
-                                  {/* Rating */}
-                                  <div className="flex items-center gap-1 text-[11px] font-extrabold text-[#1C1B1B]">
-                                    <span className="text-amber-500">★★★★★</span>
-                                    <span>{ratingData.rating}</span>
-                                    <span className="text-[#5F5E5A] font-medium">({formatReviewCount(ratingData.reviews)})</span>
+                                  <div className="flex items-start justify-between gap-2">
+                                    <h4 className="text-sm sm:text-base font-black text-[#1C1B1B] leading-snug tracking-tight">
+                                      {act.title}
+                                    </h4>
                                   </div>
                                 </div>
                               </div>
@@ -2191,31 +2211,33 @@ export default function PlannerSidebar({
                               </p>
 
                               {/* Pills: Duration, Cost, Badges */}
-                              <div className="pl-12 sm:pl-13 flex items-center flex-wrap gap-1.5 pt-0.5">
+                              <div className="pl-14 sm:pl-15 flex items-center flex-wrap gap-1.5 pt-0.5 pb-1">
                                 {act.duration && (
-                                  <span className="text-[10px] font-bold text-[#5F5E5A] bg-[#F7F5F2] px-2 py-0.5 rounded-md border border-[#ECE8E2]">
-                                    ⏱️ {act.duration}
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#5F5E5A] bg-[#F7F5F2] px-2 py-1 rounded-full border border-[#ECE8E2]">
+                                    <span className="text-stone-400"><Clock size={10} strokeWidth={2.5} /></span> {act.duration}
                                   </span>
                                 )}
-                                <span className="text-[10px] font-bold text-[#0D9488] bg-[#0D9488]/10 px-2 py-0.5 rounded-md border border-[#0D9488]/20">
-                                  {costInfo.title}
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#5F5E5A] bg-[#F7F5F2] px-2 py-1 rounded-full border border-[#ECE8E2]">
+                                  <span className="text-stone-400"><Banknote size={10} strokeWidth={2.5} /></span> {costInfo.title.replace('💰 ', '')}
                                 </span>
                                 {iconBadges.map((badge, bIdx) => (
-                                  <span key={bIdx} className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md border flex items-center gap-1 ${badge.colorClass}`}>
-                                    <span>{badge.icon}</span> <span>{badge.text}</span>
+                                  <span key={bIdx} className={`inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-1 rounded-full border ${badge.colorClass}`}>
+                                    <span className="opacity-80">{renderPremiumIcon(badge.icon, 10)}</span> <span>{badge.text}</span>
                                   </span>
                                 ))}
                               </div>
 
-                              {/* AI Insight Collapsible */}
-                              <div className="pl-12 sm:pl-13 pt-1 border-t border-[rgba(28,27,27,0.06)]" onClick={(e) => e.stopPropagation()}>
+                              {/* AI Insight Collapsible Footer */}
+                              <div className="-mx-4 px-4 pt-3 mt-1 border-t border-[#ECE8E2]/70" onClick={(e) => e.stopPropagation()}>
                                 <details className="group/tip cursor-pointer">
-                                  <summary className="inline-flex items-center gap-1 text-[11px] font-bold text-[#FF6B2C] hover:text-[#D95524] select-none py-0.5">
-                                    <span>💡 AI Insight &amp; Tip</span>
-                                    <span className="text-[9px] opacity-70 group-open/tip:rotate-180 transition-transform">▼</span>
+                                  <summary className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#FF6B2C] hover:text-[#D95524] select-none">
+                                    <Lightbulb size={12} strokeWidth={2.5} className="text-[#FF6B2C]" />
+                                    <span>AI Insight &amp; Tip</span>
+                                    <span className="text-[9px] opacity-70 group-open/tip:rotate-180 transition-transform ml-0.5"><ChevronRight size={12} /></span>
                                   </summary>
-                                  <div className="mt-1 p-2.5 rounded-xl bg-[#FFF8F5] border border-[#FF6B2C]/20 text-xs text-[#1C1B1B] font-medium leading-relaxed shadow-2xs">
-                                    ✨ {aiInsightText}
+                                  <div className="mt-2.5 p-3 rounded-2xl bg-[#FFF8F5] border border-[#FF6B2C]/20 text-[11px] sm:text-xs text-[#1C1B1B] font-medium leading-relaxed shadow-sm flex items-start gap-2.5">
+                                    <Sparkles size={14} strokeWidth={2.5} className="text-[#FF6B2C] shrink-0 mt-0.5 opacity-90" />
+                                    <span>{aiInsightText.replace('✨ ', '')}</span>
                                   </div>
                                 </details>
                               </div>

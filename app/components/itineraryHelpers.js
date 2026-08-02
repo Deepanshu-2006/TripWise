@@ -3,7 +3,7 @@
 
 export const ACTIVITY_THUMBNAILS = {
   colosseum: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=400&auto=format&fit=crop&q=80',
-  pantheon: 'https://images.unsplash.com/photo-1548013146-72479768bada?w=400&auto=format&fit=crop&q=80',
+  pantheon: 'https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?w=400&auto=format&fit=crop&q=80',
   vatican: 'https://images.unsplash.com/photo-1531572753322-ad063cecc140?w=400&auto=format&fit=crop&q=80',
   trevi: 'https://images.unsplash.com/photo-1588614959060-4d144f28b207?w=400&auto=format&fit=crop&q=80',
   forum: 'https://images.unsplash.com/photo-1515542622106-78bda8ba0e5b?w=400&auto=format&fit=crop&q=80',
@@ -231,26 +231,22 @@ export function getIconBadges(act, idx = 0) {
       if (badgeText.toUpperCase() === 'BUDGET MATCH') badgeText = 'Budget Match';
     }
 
-    let colorClass = 'bg-amber-500/10 text-amber-800 border-amber-500/30';
-    if (icon === '💎') colorClass = 'bg-emerald-500/10 text-emerald-800 border-emerald-500/30';
-    else if (icon === '🗺️') colorClass = 'bg-blue-500/10 text-blue-800 border-blue-500/30';
-    else if (icon === '🍝') colorClass = 'bg-[#EC6735]/10 text-[#EC6735] border-[#EC6735]/30';
-    else if (icon === '⚡') colorClass = 'bg-purple-500/10 text-purple-800 border-purple-500/30';
-    else if (icon === '💰') colorClass = 'bg-teal-500/10 text-teal-800 border-teal-500/30';
+    let colorClass = 'bg-[#F7F5F2] text-[#5F5E5A] border-[#ECE8E2]';
+    if (icon === '⚡') colorClass = 'bg-[#FFF8F5] text-[#FF6B2C] border-[#FF6B2C]/20';
 
     badges.push({ icon, text: badgeText, colorClass });
   } else {
     // Generate smart defaults based on index or type
     if (idx === 0 || text.includes('colosseum') || text.includes('vatican') || text.includes('attraction')) {
-      badges.push({ icon: '⭐', text: 'Must See', colorClass: 'bg-amber-500/10 text-amber-800 border-amber-500/30' });
+      badges.push({ icon: '⭐', text: 'Must See', colorClass: 'bg-[#F7F5F2] text-[#5F5E5A] border-[#ECE8E2]' });
     } else if (text.includes('food') || text.includes('pasta') || text.includes('din')) {
-      badges.push({ icon: '🍝', text: 'Gourmet Pick', colorClass: 'bg-[#EC6735]/10 text-[#EC6735] border-[#EC6735]/30' });
+      badges.push({ icon: '🍝', text: 'Gourmet Pick', colorClass: 'bg-[#F7F5F2] text-[#5F5E5A] border-[#ECE8E2]' });
     } else if (text.includes('cafe') || text.includes('gelato') || text.includes('hidden')) {
-      badges.push({ icon: '💎', text: 'Local Gem', colorClass: 'bg-emerald-500/10 text-emerald-800 border-emerald-500/30' });
+      badges.push({ icon: '💎', text: 'Local Gem', colorClass: 'bg-[#F7F5F2] text-[#5F5E5A] border-[#ECE8E2]' });
     } else if (idx === 1 || text.includes('fast') || text.includes('vip')) {
-      badges.push({ icon: '⚡', text: 'Fast Track', colorClass: 'bg-purple-500/10 text-purple-800 border-purple-500/30' });
+      badges.push({ icon: '⚡', text: 'Fast Track', colorClass: 'bg-[#FFF8F5] text-[#FF6B2C] border-[#FF6B2C]/20' });
     } else {
-      badges.push({ icon: '🗺️', text: 'Optimized Route', colorClass: 'bg-blue-500/10 text-blue-800 border-blue-500/30' });
+      badges.push({ icon: '🗺️', text: 'Optimized Route', colorClass: 'bg-[#F7F5F2] text-[#5F5E5A] border-[#ECE8E2]' });
     }
   }
 
@@ -258,9 +254,9 @@ export function getIconBadges(act, idx = 0) {
   if (badges.length === 1 && idx % 2 === 0) {
     const existingText = badges[0].text.toLowerCase();
     if (!existingText.includes('optim') && !existingText.includes('route')) {
-      badges.push({ icon: '🗺️', text: 'Optimized Route', colorClass: 'bg-blue-500/10 text-blue-800 border-blue-500/30' });
+      badges.push({ icon: '🗺️', text: 'Optimized Route', colorClass: 'bg-[#F7F5F2] text-[#5F5E5A] border-[#ECE8E2]' });
     } else if (!existingText.includes('fast') && !existingText.includes('track')) {
-      badges.push({ icon: '⚡', text: 'Fast Track', colorClass: 'bg-purple-500/10 text-purple-800 border-purple-500/30' });
+      badges.push({ icon: '⚡', text: 'Fast Track', colorClass: 'bg-[#FFF8F5] text-[#FF6B2C] border-[#FF6B2C]/20' });
     }
   }
 
