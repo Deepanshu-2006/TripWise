@@ -55,12 +55,17 @@ export function usePreferenceEngine() {
     saveProfile(newProfile);
   };
 
-  const recordTripSignals = (ratings, bookedStops, engagedStops) => {
+  const recordTripSignals = (ratings, bookedStops, engagedStops, journalEntries = []) => {
     const newProfile = { ...profile };
     
     // Convert arrays of full activity objects to arrays of category strings for easier matching
     const bookedCategories = bookedStops.map(a => (a.category || '').toUpperCase().trim());
     const engagedCategories = engagedStops.map(a => (a.category || '').toUpperCase().trim());
+    
+    // Map journal entries to their activities' categories
+    // We assume the caller passes journalEntries as [{ activity: { category: '...' }, entry: { ... } }, ...]
+    const journaledCategories = journalEntries.map(j => (j.activity?.category || '').toUpperCase().trim());
+
 
     // 1. Calculate the signal score for each category seen in this trip
     // Score based on: 
@@ -81,7 +86,9 @@ export function usePreferenceEngine() {
       
       let score = (rating - 1) / 4; // Map 1-5 to 0.0-1.0
       
-      if (bookedCategories.includes(cat)) score += 0.2;
+      // Boost based on journal engagement
+      if (journaledCategories.includes(cat)) score += 0.4;
+      else if (bookedCategories.includes(cat)) score += 0.2;
       else if (engagedCategories.includes(cat)) score += 0.1;
       
       score = Math.min(Math.max(score, 0), 1); // Clamp to 0-1
@@ -95,7 +102,11 @@ export function usePreferenceEngine() {
       const cat = (act.category || '').toUpperCase().trim();
       if (!cat || signalScores[cat]) return; // already handled by rating logic
       if (!signalScores[cat]) signalScores[cat] = { totalScore: 0, count: 0 };
-      signalScores[cat].totalScore += 0.7; // Implicit positive signal
+      
+      let baseScore = 0.7; // Implicit positive signal
+      if (journaledCategories.includes(cat)) baseScore += 0.2; // Extra boost if journaled
+      
+      signalScores[cat].totalScore += baseScore;
       signalScores[cat].count += 1;
     });
 
