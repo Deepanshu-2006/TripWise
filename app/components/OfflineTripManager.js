@@ -189,16 +189,33 @@ export default function OfflineTripManager({
           </div>
         ) : (
           /* Make Available Offline Toggle Button */
-          <motion.button
+          <button
             type="button"
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.95 }}
             onClick={() => setShowModal(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#FF6B2C]/40 bg-[#FF6B2C]/10 text-xs font-sans font-bold text-[#FF6B2C] hover:bg-[#FF6B2C] hover:text-white transition-all cursor-pointer shadow-2xs"
+            className="group/offline relative inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-white/20 bg-gradient-to-r from-[#FF6B2C] via-[#FFA057] to-[#FF6B2C] bg-[length:200%_auto] text-xs font-sans font-bold text-white shadow-[0_4px_12px_-2px_rgba(255,107,44,0.4)] hover:-translate-y-1 hover:scale-[1.02] hover:animate-[bg-shift_2s_ease-in-out_infinite,pulse-shadow_1.5s_infinite] transition-all duration-300 ease-out cursor-pointer active:scale-95"
           >
-            <CloudOff className="w-3.5 h-3.5" />
-            <span>Make Available Offline</span>
-          </motion.button>
+            {/* Inner Glow to make the button look 3D */}
+            <div className="absolute inset-0 rounded-full border border-white/20 pointer-events-none" />
+            
+            <div className="relative flex items-center justify-center">
+               <CloudOff className="w-4 h-4 relative z-10 group-hover/offline:-translate-y-0.5 group-hover/offline:scale-110 group-hover/offline:drop-shadow-[0_2px_4px_rgba(255,255,255,0.5)] transition-all duration-300 mr-0.5" />
+            </div>
+            
+            <span className="relative z-10 tracking-wide drop-shadow-sm group-hover/offline:text-white">Make Available Offline</span>
+            
+            <style dangerouslySetInnerHTML={{ __html: `
+              @keyframes bg-shift {
+                0% { background-position: 0% 50%; }
+                50% { background-position: 100% 50%; }
+                100% { background-position: 0% 50%; }
+              }
+              @keyframes pulse-shadow {
+                0% { box-shadow: 0 0 0 0 rgba(255, 107, 44, 0.6), 0 8px 24px -4px rgba(255, 107, 44, 0.7); }
+                70% { box-shadow: 0 0 0 12px rgba(255, 107, 44, 0), 0 8px 24px -4px rgba(255, 107, 44, 0.7); }
+                100% { box-shadow: 0 0 0 0 rgba(255, 107, 44, 0), 0 8px 24px -4px rgba(255, 107, 44, 0.7); }
+              }
+            `}} />
+          </button>
         )}
       </div>
 
