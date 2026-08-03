@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import CustomDatePicker from './CustomDatePicker';
-import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw, Check, Map, Compass, ThumbsUp, ThumbsDown, Users, UserPlus, Landmark, Utensils, Zap, Gem, Star, Lightbulb, Smile, TreePine, Coffee, Palmtree, Banknote } from 'lucide-react';
+import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw, Check, Map, Compass, ThumbsUp, ThumbsDown, Users, UserPlus, Landmark, Utensils, Zap, Gem, Star, Lightbulb, Smile, TreePine, Coffee, Palmtree, Banknote, Sun, Footprints, Coins } from 'lucide-react';
 
 const renderPremiumIcon = (emojiStr, size = 12) => {
   if (!emojiStr) return <Star size={size} strokeWidth={2.5} />;
@@ -1841,7 +1841,7 @@ export default function PlannerSidebar({
                           ) : <div />}
 
                           <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#1C1B1B] bg-[#F7F5F2] px-2.5 py-1 rounded-full border border-[#ECE8E2] shrink-0 select-none shadow-2xs">
-                            <span>☀︎</span>
+                            <Sun className="w-3.5 h-3.5 text-[#1C1B1B]" />
                             <span>{daySummary.stats.weather || '32°'}</span>
                           </div>
                         </div>
@@ -1851,22 +1851,22 @@ export default function PlannerSidebar({
                           {/* Left: Clean horizontal statistics separated by subtle dots */}
                           <div className="flex items-center flex-wrap gap-x-2.5 gap-y-1 min-w-0 select-none text-[#5F5E5A]">
                             <span className="inline-flex items-center gap-1">
-                              <span className="text-[11px] text-[#8C8B88]">📍</span>
+                              <MapPin className="w-3.5 h-3.5 text-[#8C8B88]" />
                               <span>{String(daySummary.stats.stops).includes('Stop') ? daySummary.stats.stops : `${daySummary.stats.stops} Stops`}</span>
                             </span>
                             <span className="text-[#ECE8E2] font-light">•</span>
                             <span className="inline-flex items-center gap-1">
-                              <span className="text-[11px] text-[#8C8B88]">🕒</span>
+                              <Clock className="w-3.5 h-3.5 text-[#8C8B88]" />
                               <span>{daySummary.stats.hours}</span>
                             </span>
                             <span className="text-[#ECE8E2] font-light">•</span>
                             <span className="inline-flex items-center gap-1">
-                              <span className="text-[11px] text-[#8C8B88]">🚶</span>
+                              <Footprints className="w-3.5 h-3.5 text-[#8C8B88]" />
                               <span>{daySummary.stats.distance}</span>
                             </span>
                             <span className="text-[#ECE8E2] font-light">•</span>
                             <span className="inline-flex items-center gap-1 text-[#15803D] font-bold">
-                              <span className="text-[11px]">💰</span>
+                              <Coins className="w-3.5 h-3.5" />
                               <span>{daySummary.stats.cost}</span>
                             </span>
                           </div>
