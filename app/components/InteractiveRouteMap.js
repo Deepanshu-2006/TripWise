@@ -2,8 +2,10 @@
 
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { renderToString } from 'react-dom/server';
 import dynamic from 'next/dynamic';
-import { Route, Ticket, Heart, Share2, ArrowRight, ArrowUpRight, ArrowUp, Star, Clock, Banknote } from 'lucide-react';
+import { Route, Ticket, Heart, Share2, ArrowRight, ArrowUpRight, ArrowUp, Star, Clock, Banknote, Check, Utensils, Building2, Coffee, TreePine, ShoppingBag, LocateFixed, Ruler, Map, Maximize, Minimize, X, ChevronDown, Satellite, Moon, Mountain, Wine, Footprints, MapPin, ExternalLink } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   getActivityThumbnail,
   getActivityRating,
@@ -20,28 +22,28 @@ const InviteModal = dynamic(() => import('./InviteModal'), { ssr: false });
 const MAP_STYLES = {
   streets: {
     name: 'Streets (Voyager)',
-    icon: '🗺️',
+    icon: <Map size={13} strokeWidth={2.5} className="mr-[1px]" />,
     url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
     subdomains: 'abcd',
     maxZoom: 19
   },
   satellite: {
     name: 'Satellite (Imagery)',
-    icon: '🛰️',
+    icon: <Satellite size={13} strokeWidth={2.5} className="mr-[1px]" />,
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     subdomains: '',
     maxZoom: 18
   },
   dark: {
     name: 'Dark Mode (Cyber)',
-    icon: '🌙',
+    icon: <Moon size={13} strokeWidth={2.5} className="mr-[1px]" />,
     url: 'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png',
     subdomains: 'abcd',
     maxZoom: 19
   },
   terrain: {
     name: 'Topographic (Terrain)',
-    icon: '🏔️',
+    icon: <Mountain size={13} strokeWidth={2.5} className="mr-[1px]" />,
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
     subdomains: '',
     maxZoom: 18
@@ -222,6 +224,7 @@ export default function InteractiveRouteMap({
   const [isDestinationSaved, setIsDestinationSaved] = useState(false);
   const [activePassModal, setActivePassModal] = useState(null);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [saveMessage, setSaveMessage] = useState(null);
 
   // Keep isDestinationSaved synced with activeDestination and localStorage
   useEffect(() => {
@@ -240,12 +243,18 @@ export default function InteractiveRouteMap({
     if (existsIndex >= 0) {
       saved.splice(existsIndex, 1);
       setIsDestinationSaved(false);
+      setSaveMessage({ isAdd: false, title: activeDestination.placeName || activeDestination.title });
     } else {
       saved.push({ ...activeDestination, savedAt: new Date().toISOString() });
       setIsDestinationSaved(true);
+      setSaveMessage({ isAdd: true, title: activeDestination.placeName || activeDestination.title });
     }
     localStorage.setItem('tripwise_saved_places', JSON.stringify(saved));
     window.dispatchEvent(new Event('storage'));
+    
+    setTimeout(() => {
+        setSaveMessage(null);
+    }, 3000);
   };
 
   const [heroImageLoaded, setHeroImageLoaded] = useState(false);
@@ -260,7 +269,18 @@ export default function InteractiveRouteMap({
   const [showMapControls, setShowMapControls] = useState(false);
   const [showFabMenu, setShowFabMenu] = useState(false);
   const [showShareToast, setShowShareToast] = useState(false);
+  const [saveToastName, setSaveToastName] = useState(null);
   const [isRouteSyncing, setIsRouteSyncing] = useState(false);
+
+  useEffect(() => {
+    window.handleSavePopupPlace = (name) => {
+      setSaveToastName(name);
+      setTimeout(() => setSaveToastName(null), 3000);
+    };
+    return () => {
+      delete window.handleSavePopupPlace;
+    };
+  }, []);
 
   const activeHoverIdx = propHoveredIdx !== undefined ? propHoveredIdx : internalHoveredIdx;
   const selectedStopIdx = propSelectedStopIdx !== undefined ? propSelectedStopIdx : internalSelectedStopIdx;
@@ -533,7 +553,7 @@ export default function InteractiveRouteMap({
     {
       id: 'all',
       label: 'All',
-      icon: '⭐',
+      icon: <Star size={13} strokeWidth={2.5} className="mr-[1px]" />,
       count: nonBasecampStopsCount,
       activeBg: 'bg-[#FF7A1A] text-white shadow-sm border-[#FF7A1A] font-extrabold',
       badgeBg: 'bg-white/20 text-white'
@@ -541,7 +561,7 @@ export default function InteractiveRouteMap({
     {
       id: 'dining',
       label: 'Food',
-      icon: '🍝',
+      icon: <Utensils size={13} strokeWidth={2.5} className="mr-[1px]" />,
       count: loopedStops.filter((act, idx) => !(act.isBasecamp === true || idx === 0) && getCategoryMeta(act).label === 'Dining').length,
       activeBg: 'bg-[#FF7A1A] text-white shadow-sm border-[#FF7A1A] font-extrabold',
       badgeBg: 'bg-white/20 text-white'
@@ -549,7 +569,7 @@ export default function InteractiveRouteMap({
     {
       id: 'attractions',
       label: 'Attractions',
-      icon: '🏛️',
+      icon: <Building2 size={13} strokeWidth={2.5} className="mr-[1px]" />,
       count: loopedStops.filter((act, idx) => !(act.isBasecamp === true || idx === 0) && getCategoryMeta(act).label !== 'Dining').length,
       activeBg: 'bg-[#FF7A1A] text-white shadow-sm border-[#FF7A1A] font-extrabold',
       badgeBg: 'bg-white/20 text-white'
@@ -557,7 +577,7 @@ export default function InteractiveRouteMap({
     {
       id: 'landmark',
       label: 'Cafes',
-      icon: '☕',
+      icon: <Coffee size={13} strokeWidth={2.5} className="mr-[1px]" />,
       count: loopedStops.filter((act, idx) => !(act.isBasecamp === true || idx === 0) && getCategoryMeta(act).label === 'Landmark').length,
       activeBg: 'bg-[#FF7A1A] text-white shadow-sm border-[#FF7A1A] font-extrabold',
       badgeBg: 'bg-white/20 text-white'
@@ -565,7 +585,7 @@ export default function InteractiveRouteMap({
     {
       id: 'nature',
       label: 'Parks',
-      icon: '🌳',
+      icon: <TreePine size={13} strokeWidth={2.5} className="mr-[1px]" />,
       count: loopedStops.filter((act, idx) => !(act.isBasecamp === true || idx === 0) && getCategoryMeta(act).label === 'Nature').length,
       activeBg: 'bg-[#FF7A1A] text-white shadow-sm border-[#FF7A1A] font-extrabold',
       badgeBg: 'bg-white/20 text-white'
@@ -573,7 +593,7 @@ export default function InteractiveRouteMap({
     {
       id: 'shopping',
       label: 'Shopping',
-      icon: '🛍️',
+      icon: <ShoppingBag size={13} strokeWidth={2.5} className="mr-[1px]" />,
       count: loopedStops.filter((act, idx) => !(act.isBasecamp === true || idx === 0) && getCategoryMeta(act).label === 'Shopping').length,
       activeBg: 'bg-[#FF7A1A] text-white shadow-sm border-[#FF7A1A] font-extrabold',
       badgeBg: 'bg-white/20 text-white'
@@ -707,6 +727,15 @@ export default function InteractiveRouteMap({
       realWalkablePlaces.forEach((place) => {
         if (!place.coordinates?.lat || !place.coordinates?.lng) return;
 
+        const coffeeSvg = renderToString(<Coffee size={18} strokeWidth={2.5} />);
+        const wineSvg = renderToString(<Wine size={18} strokeWidth={2.5} />);
+        const walkSvg = renderToString(<Footprints size={12} strokeWidth={2.5} />);
+        const starSvg = renderToString(<Star size={14} strokeWidth={3} fill="currentColor" />);
+        const pinSvg = renderToString(<MapPin size={14} strokeWidth={2.5} />);
+        const extSvg = renderToString(<ExternalLink size={14} strokeWidth={2.5} />);
+        const saveSvg = renderToString(<Heart size={15} strokeWidth={2.5} />);
+        const photoUrl = getActivityThumbnail({ name: place.name, type: place.type === 'coffee' ? 'Cafe' : 'Dining' });
+
         const customIcon = L.divIcon({
           className: 'custom-walkable-place-marker',
           html: `
@@ -715,55 +744,133 @@ export default function InteractiveRouteMap({
               display: flex;
               align-items: center;
               justify-content: center;
-              width: 26px;
-              height: 26px;
+              width: 28px;
+              height: 28px;
               background: linear-gradient(135deg, #EF4444, #B91C1C);
               border: 2px solid #ffffff;
               border-radius: 50% 50% 50% 0;
               transform: rotate(-45deg);
-              box-shadow: 0 3px 8px rgba(239, 68, 68, 0.55);
+              box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
               cursor: pointer;
-              transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-            ">
+              transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            " class="hover:scale-110">
               <span style="
                 transform: rotate(45deg);
-                font-size: 13px;
-                line-height: 1;
-              ">${place.type === 'coffee' ? '☕' : '🍷'}</span>
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+              ">${place.type === 'coffee' ? renderToString(<Coffee size={14} strokeWidth={2.5} />) : renderToString(<Wine size={14} strokeWidth={2.5} />)}</span>
             </div>
           `,
-          iconSize: [26, 26],
-          iconAnchor: [13, 26],
-          popupAnchor: [0, -26]
+          iconSize: [28, 28],
+          iconAnchor: [14, 28],
+          popupAnchor: [0, -28]
         });
 
         const placeMarker = L.marker([place.coordinates.lat, place.coordinates.lng], {
           icon: customIcon,
           zIndexOffset: 1500,
-          title: `${place.type === 'coffee' ? '☕ Morning Coffee' : '🍷 Late-Night Dining'}: ${place.name}`
+          title: `${place.name}`
         });
 
         const popupHtml = `
-          <div style="padding: 10px; font-family: system-ui, -apple-system, sans-serif; min-width: 210px; max-width: 250px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-              <span style="font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 6px; background: ${place.type === 'coffee' ? '#FEF3C7' : '#FFE4E6'}; color: ${place.type === 'coffee' ? '#D97706' : '#E11D48'}; text-transform: uppercase; letter-spacing: 0.05em;">
-                ${place.type === 'coffee' ? '☕ Morning Coffee' : '🍷 Late-Night Dining'}
-              </span>
-              <span style="font-size: 10px; font-weight: 800; color: #059669; background: #ECFDF5; padding: 2px 6px; border-radius: 6px; border: 1px solid #A7F3D0;">
-                🚶 ${place.walkMins} min walk
-              </span>
+          <style>
+            .custom-walkable-place-popup .leaflet-popup-content-wrapper {
+              background: transparent !important;
+              box-shadow: none !important;
+              padding: 0 !important;
+            }
+            .custom-walkable-place-popup .leaflet-popup-content {
+              margin: 0 !important;
+              width: auto !important;
+            }
+            .custom-walkable-place-popup .leaflet-popup-tip-container {
+              display: none !important;
+            }
+            .marker-pulse-active {
+              animation: pinPulse 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+              filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.8));
+              z-index: 9999 !important;
+            }
+            @keyframes pinPulse {
+              0% { transform: rotate(-45deg) scale(1); }
+              50% { transform: rotate(-45deg) scale(1.3); }
+              100% { transform: rotate(-45deg) scale(1.15); }
+            }
+            @keyframes premiumPopupSpring {
+              0% { opacity: 0; transform: scale(0.3) translateY(30px); }
+              100% { opacity: 1; transform: scale(1) translateY(0); }
+            }
+            .animated-premium-popup {
+              animation: premiumPopupSpring 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+              transform-origin: bottom center;
+            }
+            @media (prefers-reduced-motion: reduce) {
+              .animated-premium-popup { animation: fade-in 0.1s ease-out forwards; }
+              @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+              .marker-pulse-active { animation: none; transform: rotate(-45deg) scale(1.15); }
+            }
+
+            .animated-gmaps-btn {
+              position: relative;
+              background: #111827;
+              color: white;
+              box-shadow: 0 4px 0 #030712, 0 6px 12px rgba(17, 24, 39, 0.3);
+              transition: all 0.15s ease-out;
+              border-radius: 9999px;
+            }
+            .animated-gmaps-btn:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 6px 0 #030712, 0 10px 20px rgba(17, 24, 39, 0.4);
+            }
+            .animated-gmaps-btn:active {
+              transform: translateY(4px);
+              box-shadow: 0 0 0 #030712, 0 2px 4px rgba(17, 24, 39, 0.4);
+            }
+            .animated-gmaps-btn:hover svg {
+              animation: bounce-icon 0.5s ease-in-out infinite alternate;
+            }
+            @keyframes bounce-icon {
+              0% { transform: translateY(0) scale(1) rotate(0deg); }
+              100% { transform: translateY(-4px) scale(1.15) rotate(10deg); }
+            }
+          </style>
+          <div class="animated-premium-popup" style="background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 0; font-family: system-ui, -apple-system, sans-serif; min-width: 270px; max-width: 300px; box-shadow: 0 16px 40px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.06); border-radius: 16px; border: 1px solid rgba(255,255,255,0.8); position: relative;">
+            <div style="position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); border-width: 8px 8px 0; border-style: solid; border-color: rgba(255,255,255,0.98) transparent transparent transparent; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.03)); z-index: -1;"></div>
+            
+            <div style="position: relative; height: 130px; width: 100%;">
+              <img src="${photoUrl}" alt="${place.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 16px 16px 0 0;" />
+              <div style="position: absolute; bottom: 12px; left: 12px; background: rgba(17,24,39,0.85); backdrop-filter: blur(8px); color: white; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                ★ ${place.rating ? place.rating.replace(' ★', '') : '4.9'}
+              </div>
             </div>
-            <h4 style="font-size: 13px; font-weight: 900; color: #1C1B1B; margin: 0 0 4px 0; line-height: 1.3;">
-              ${place.name}
-            </h4>
-            <p style="font-size: 11px; color: #4B5563; margin: 0 0 8px 0; line-height: 1.45;">
-              ${place.description}
-            </p>
-            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; font-weight: 700; color: #374151; border-top: 1px solid #E5E7EB; padding-top: 6px;">
-              <span style="color: #F59E0B; font-weight: 800;">⭐ ${place.rating || '4.8 ★'}</span>
-              <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name + ' ' + (destinationName || ''))}" target="_blank" rel="noopener noreferrer" style="color: #2563EB; text-decoration: none; font-weight: 800; background: #EFF6FF; padding: 3px 8px; border-radius: 6px;">
-                📍 Google Maps ↗
-              </a>
+
+            <div style="padding: 16px;">
+              <div style="display: flex; align-items: flex-start; margin-bottom: 12px; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 6px; background: #F3F4F6; color: #374151; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.2; border: 1px solid #E5E7EB;">
+                  ${place.type === 'coffee' ? 'Morning Coffee' : 'Late-Night Dining'}
+                </div>
+                <div style="display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 800; color: #374151; background: #F3F4F6; padding: 4px 8px; border-radius: 6px; border: 1px solid #E5E7EB; white-space: nowrap; text-transform: uppercase;">
+                  ${walkSvg} ${place.walkMins} min walk
+                </div>
+              </div>
+              
+              <h4 style="font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif; font-size: 18px; font-weight: 800; color: #111827; margin: 0 0 6px 0; line-height: 1.25; letter-spacing: -0.01em;">
+                ${place.name}
+              </h4>
+              <p style="font-size: 13px; color: #4B5563; margin: 0 0 16px 0; line-height: 1.5; font-weight: 400;">
+                ${place.description}
+              </p>
+              
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <button onclick="if(window.handleSavePopupPlace) window.handleSavePopupPlace('${place.name.replace(/'/g, "\\'")}')" class="hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all duration-300" style="display: flex; align-items: center; justify-content: center; gap: 6px; color: #374151; background: #F3F4F6; padding: 8px; border-radius: 10px; border: 1px solid #E5E7EB; cursor: pointer;">
+                  ${saveSvg}
+                </button>
+                <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name + ' ' + (destinationName || ''))}" target="_blank" rel="noopener noreferrer" class="animated-gmaps-btn" style="flex: 1; display: inline-flex; justify-content: center; align-items: center; gap: 8px; color: white; text-decoration: none; font-weight: 800; font-size: 13px; padding: 10px 16px; border: none; letter-spacing: 0.02em;">
+                  Google Maps ${extSvg}
+                </a>
+              </div>
             </div>
           </div>
         `;
@@ -772,6 +879,39 @@ export default function InteractiveRouteMap({
           closeButton: false,
           offset: [0, -22],
           className: 'custom-walkable-place-popup'
+        });
+
+        // Add event listeners for animations and route highlighting
+        placeMarker.on('popupopen', () => {
+          const el = placeMarker.getElement();
+          if (el) {
+            const markerDiv = el.querySelector('div');
+            if (markerDiv) markerDiv.classList.add('marker-pulse-active');
+          }
+          if (basecampStop?.coordinates) {
+            const routeLine = L.polyline([
+              [basecampStop.coordinates.lat, basecampStop.coordinates.lng],
+              [place.coordinates.lat, place.coordinates.lng]
+            ], {
+              color: '#10B981',
+              weight: 3,
+              dashArray: '5, 8',
+              className: 'walk-route-highlight'
+            }).addTo(walkableRingLayerRef.current);
+            placeMarker.walkRouteLine = routeLine;
+          }
+        });
+
+        placeMarker.on('popupclose', () => {
+          const el = placeMarker.getElement();
+          if (el) {
+            const markerDiv = el.querySelector('div');
+            if (markerDiv) markerDiv.classList.remove('marker-pulse-active');
+          }
+          if (placeMarker.walkRouteLine) {
+            walkableRingLayerRef.current.removeLayer(placeMarker.walkRouteLine);
+            placeMarker.walkRouteLine = null;
+          }
         });
 
         placeMarker.addTo(walkableRingLayerRef.current);
@@ -1034,19 +1174,26 @@ export default function InteractiveRouteMap({
           const isFilterActive = selectedCategory !== 'all';
           const isHighlightedByFilter = isFilterActive && isCategoryMatch && !isBasecamp;
  
-          const gradientBg = isSelected
-            ? `linear-gradient(135deg, ${themeColor} 0%, ${themeHoverColor} 100%)`
-            : (isBasecamp
-              ? 'linear-gradient(135deg, #334155 0%, #0F172A 100%)'
-              : (isMultiDayMode
-                ? `linear-gradient(135deg, ${dayColorMeta.color} 0%, #1E293B 100%)`
-                : (meta.label === 'Dining' ? 'linear-gradient(135deg, #FF8A00 0%, #C2410C 100%)'
-                  : meta.label === 'Culture' ? 'linear-gradient(135deg, #A855F7 0%, #6D28D9 100%)'
-                    : meta.label === 'Nature' ? 'linear-gradient(135deg, #34D399 0%, #047857 100%)'
-                      : meta.label === 'Shopping' ? 'linear-gradient(135deg, #FB7185 0%, #BE123C 100%)'
-                        : meta.label === 'Landmark' ? 'linear-gradient(135deg, #2DD4BF 0%, #0F766E 100%)'
-                          : `linear-gradient(135deg, ${pinBg} 0%, #1D4ED8 100%)`)));
-
+          let gradientBg = '';
+          if (isSelected) {
+            gradientBg = `linear-gradient(135deg, ${themeColor} 0%, ${themeHoverColor} 100%)`;
+          } else if (isBasecamp) {
+            gradientBg = 'linear-gradient(135deg, #334155 0%, #0F172A 100%)';
+          } else if (isMultiDayMode) {
+            gradientBg = `linear-gradient(135deg, ${dayColorMeta.color} 0%, #1E293B 100%)`;
+          } else if (meta.label === 'Dining') {
+            gradientBg = 'linear-gradient(135deg, #FF8A00 0%, #C2410C 100%)';
+          } else if (meta.label === 'Culture') {
+            gradientBg = 'linear-gradient(135deg, #A855F7 0%, #6D28D9 100%)';
+          } else if (meta.label === 'Nature') {
+            gradientBg = 'linear-gradient(135deg, #34D399 0%, #047857 100%)';
+          } else if (meta.label === 'Shopping') {
+            gradientBg = 'linear-gradient(135deg, #FB7185 0%, #BE123C 100%)';
+          } else if (meta.label === 'Landmark') {
+            gradientBg = 'linear-gradient(135deg, #2DD4BF 0%, #0F766E 100%)';
+          } else {
+            gradientBg = `linear-gradient(135deg, ${pinBg} 0%, #1D4ED8 100%)`;
+          }
           const isOtherStop = !isSelected && !isHighlightedByFilter && isCategoryMatch;
           const customIcon = L.divIcon({
             className: `custom-tripwise-pin ${isSelected ? 'tripwise-marker-bounce' : ''}`,
@@ -1221,32 +1368,40 @@ export default function InteractiveRouteMap({
 
             const dy = p2.lat - p1.lat;
             const dx = (p2.lng - p1.lng) * Math.cos(p1.lat * (Math.PI / 180));
-            const angleDeg = (Math.atan2(dy, dx) * (180 / Math.PI)) * -1 + 90;
+            // '➤' natively points right (0 degrees Cartesian). CSS rotation is clockwise.
+            // Math.atan2 gives angle in Cartesian plane (counter-clockwise from Right).
+            // So to get CSS rotation, we just negate the atan2 angle.
+            const angleDeg = -(Math.atan2(dy, dx) * (180 / Math.PI));
 
             const arrowIcon = L.divIcon({
               className: 'route-directional-arrow',
               html: `
                 <div style="
                   transform: rotate(${angleDeg}deg);
-                  color: #ffffff;
-                  font-size: ${isMultiDayMode ? '9px' : '11px'};
-                  font-weight: 900;
                   display: flex;
                   align-items: center;
                   justify-content: center;
-                  width: ${isMultiDayMode ? '18px' : '22px'};
-                  height: ${isMultiDayMode ? '18px' : '22px'};
-                  background: ${routeColor};
-                  border: 2px solid #ffffff;
-                  border-radius: 50%;
-                  box-shadow: 0 3px 10px rgba(0,0,0,0.35);
+                  width: ${isMultiDayMode ? '40px' : '60px'};
+                  height: 20px;
                   opacity: ${selectedCategory !== 'all' ? '0.35' : '1'};
                 ">
-                  ➤
+                  <div style="animation: shooting-star 2s infinite ease-in-out; display: flex; align-items: center;">
+                    <div style="
+                      width: ${isMultiDayMode ? '20px' : '30px'};
+                      height: 4px;
+                      background: linear-gradient(to right, transparent, #111827);
+                      border-radius: 4px;
+                      margin-right: -4px;
+                      opacity: 0.9;
+                    "></div>
+                    <svg width="${isMultiDayMode ? '14' : '18'}" height="${isMultiDayMode ? '14' : '18'}" viewBox="0 0 24 24" fill="#111827" style="filter: drop-shadow(0 2px 4px rgba(17,24,39,0.5)); z-index: 1;">
+                      <path d="M2 2L22 12L2 22L6 12Z" />
+                    </svg>
+                  </div>
                 </div>
               `,
-              iconSize: isMultiDayMode ? [18, 18] : [22, 22],
-              iconAnchor: isMultiDayMode ? [9, 9] : [11, 11]
+              iconSize: isMultiDayMode ? [40, 20] : [60, 20],
+              iconAnchor: isMultiDayMode ? [20, 10] : [30, 10]
             });
 
             L.marker([midLat, midLng], { icon: arrowIcon, interactive: false }).addTo(layerGroupRef.current);
@@ -1564,7 +1719,7 @@ export default function InteractiveRouteMap({
                 className="h-8 px-3.5 rounded-xl text-[11px] font-semibold bg-[#FFFFFF] text-[#BA5536] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:bg-[#BA5536] hover:text-white hover:border-[#BA5536] transition-all duration-300 flex items-center gap-1.5 cursor-pointer active:scale-95"
                 title="Fit Entire Route"
               >
-                <span className="text-xs">🎯</span>
+                <LocateFixed size={14} strokeWidth={2.5} />
                 <span>Fit Route</span>
               </button>
             </div>
@@ -1573,40 +1728,40 @@ export default function InteractiveRouteMap({
               <button
                 type="button"
                 onClick={handleFitRoute}
-                className="h-8 px-3 rounded-xl text-[11px] font-medium bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)] hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-1.5 cursor-pointer active:scale-95"
+                className="group h-8 px-2.5 rounded-xl text-[11px] font-medium bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)] hover:-translate-y-0.5 transition-all duration-300 flex items-center cursor-pointer active:scale-95"
                 title="Fit Entire Route"
               >
-                <span className="text-xs">🎯</span>
-                <span className={`${isFullscreen ? 'inline' : 'hidden 2xl:inline'} font-medium`}>Fit Route</span>
+                <LocateFixed size={14} strokeWidth={2.5} className="shrink-0" />
+                <span className={`font-medium whitespace-nowrap overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] ${isFullscreen ? 'max-w-[100px] opacity-100 ml-1.5' : 'max-w-0 opacity-0 group-hover:max-w-[100px] group-hover:opacity-100 group-hover:ml-1.5'}`}>Fit Route</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setIsHotelRingActive(!isHotelRingActive)}
-                className={`h-8 px-3 rounded-xl text-[11px] font-medium transition-all duration-300 flex items-center gap-1.5 cursor-pointer hover:-translate-y-0.5 active:scale-95 ${
+                className={`group h-8 px-2.5 rounded-xl text-[11px] font-medium transition-all duration-300 flex items-center cursor-pointer hover:-translate-y-0.5 active:scale-95 ${
                   isHotelRingActive
                     ? 'bg-[#FF6B2C] text-white font-semibold shadow-[0_4px_16px_rgba(255,107,44,0.3)] border border-[#FF6B2C]'
                     : 'bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)]'
                 }`}
                 title="Toggle 15-min walk geofence around Basecamp Hotel"
               >
-                <span className="text-xs">📏</span>
-                <span className={`${isFullscreen ? 'inline' : 'hidden 2xl:inline'} font-medium`}>15-Min Walk</span>
+                <Ruler size={14} strokeWidth={2.5} className="shrink-0" />
+                <span className={`font-medium whitespace-nowrap overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] ${isFullscreen ? 'max-w-[100px] opacity-100 ml-1.5' : 'max-w-0 opacity-0 group-hover:max-w-[100px] group-hover:opacity-100 group-hover:ml-1.5'}`}>15-Min Walk</span>
               </button>
 
               {allDays && allDays.length > 1 && (
                 <button
                   type="button"
                   onClick={() => setShowAllDaysOverview(!showAllDaysOverview)}
-                  className={`h-8 px-3 rounded-xl text-[11px] font-medium transition-all duration-300 flex items-center gap-1.5 cursor-pointer hover:-translate-y-0.5 active:scale-95 ${
+                  className={`group h-8 px-2.5 rounded-xl text-[11px] font-medium transition-all duration-300 flex items-center cursor-pointer hover:-translate-y-0.5 active:scale-95 ${
                     showAllDaysOverview
                       ? 'bg-[#FF6B2C] text-white font-semibold shadow-[0_4px_16px_rgba(255,107,44,0.3)] border border-[#FF6B2C]'
                       : 'bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)]'
                   }`}
                   title="Toggle all days route comparison"
                 >
-                  <span className="text-xs">🗺️</span>
-                  <span className={`${isFullscreen ? 'inline' : 'hidden 2xl:inline'} font-medium`}>All Days</span>
+                  <Map size={14} strokeWidth={2.5} className="shrink-0" />
+                  <span className={`font-medium whitespace-nowrap overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] ${isFullscreen ? 'max-w-[100px] opacity-100 ml-1.5' : 'max-w-0 opacity-0 group-hover:max-w-[100px] group-hover:opacity-100 group-hover:ml-1.5'}`}>All Days</span>
                 </button>
               )}
 
@@ -1616,11 +1771,11 @@ export default function InteractiveRouteMap({
                   setIsFullscreen(!isFullscreen);
                   setTimeout(() => mapRef.current?.invalidateSize(), 350);
                 }}
-                className={`h-8 ${isFullscreen ? 'px-3 gap-1.5' : 'w-8 px-0 justify-center'} rounded-xl text-[11px] font-medium bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)] transition-all duration-300 flex items-center cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0`}
+                className={`group h-8 px-2.5 rounded-xl text-[11px] font-medium bg-[#FFFFFF] text-[#1F1F1F] border border-[#ECE8E2] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C] hover:shadow-[0_4px_12px_rgba(255,107,44,0.12)] transition-all duration-300 flex items-center cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0`}
                 title={isFullscreen ? "Exit Fullscreen" : "Expand Map Fullscreen"}
               >
-                <span className="text-xs">{isFullscreen ? '✕' : '⛶'}</span>
-                {isFullscreen && <span className="font-medium">Exit Fullscreen</span>}
+                {isFullscreen ? <X size={14} strokeWidth={2.5} className="shrink-0" /> : <Maximize size={14} strokeWidth={2.5} className="shrink-0" />}
+                <span className={`font-medium whitespace-nowrap overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] ${isFullscreen ? 'max-w-[100px] opacity-100 ml-1.5' : 'max-w-0 opacity-0 group-hover:max-w-[100px] group-hover:opacity-100 group-hover:ml-1.5'}`}>{isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}</span>
               </button>
             </div>
           )}
@@ -1636,9 +1791,9 @@ export default function InteractiveRouteMap({
                   : 'bg-[rgba(255,255,255,0.92)] backdrop-blur-md text-[#1F1F1F] border-[rgba(0,0,0,0.06)] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]'
               }`}
             >
-              <span className="text-xs">{MAP_STYLES[mapStyle]?.icon || '🗺️'}</span>
+              {MAP_STYLES[mapStyle]?.icon || <Map size={13} strokeWidth={2.5} />}
               <span className="hidden md:inline font-medium">{MAP_STYLES[mapStyle]?.name?.split(' ')[0] || 'Streets'}</span>
-              <span className="text-[10px] opacity-70">▼</span>
+              <ChevronDown size={13} strokeWidth={2.5} className={`transition-transform duration-300 ${showMapControls ? 'rotate-180' : ''}`} />
             </button>
 
             {showMapControls && (
@@ -1660,7 +1815,7 @@ export default function InteractiveRouteMap({
                             : 'bg-[#F7F5F2] text-[#1F1F1F] hover:bg-[#ECE8E2]'
                         }`}
                       >
-                        <span className="text-xs">{style.icon}</span>
+                        {style.icon}
                         <span className="truncate">{style.name.split(' ')[0]}</span>
                       </button>
                     ))}
@@ -1704,6 +1859,14 @@ export default function InteractiveRouteMap({
           </div>
         )}
       </div>
+
+      {/* Save Toast Notification */}
+      {saveToastName && (
+        <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-3 z-[6000] animate-[popIn_0.3s_ease-out]">
+          <Heart size={16} fill="currentColor" className="text-red-400" />
+          <span className="font-semibold text-sm">Saved "{saveToastName}" to your itinerary</span>
+        </div>
+      )}
 
       {/* Share/Export Toast Notification */}
       {showShareToast && (
@@ -2192,10 +2355,11 @@ export default function InteractiveRouteMap({
                   <button
                     type="button"
                     onClick={() => setActivePassModal({ activity: act, dayNum: selectedDayIndex + 1, stopNum: (selectedStopIdx !== null ? selectedStopIdx + 1 : 1) })}
-                    className="flex-[1.4] min-w-0 bg-linear-to-r from-[#FF6B2C] to-[#E65D20] hover:from-[#E65D20] hover:to-[#D95524] text-white font-bold rounded-xl px-2 sm:px-3 h-10 flex items-center justify-center gap-1.5 shadow-[0_4px_16px_rgba(255,107,44,0.3)] hover:shadow-[0_6px_20px_rgba(255,107,44,0.4)] hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out cursor-pointer"
+                    className="group/ticket flex-[1.4] min-w-0 bg-linear-to-r from-[#FF6B2C] to-[#E65D20] hover:from-[#E65D20] hover:to-[#D95524] text-white font-bold rounded-xl px-2 sm:px-3 h-10 flex items-center justify-center gap-1.5 shadow-[0_4px_16px_rgba(255,107,44,0.3)] hover:shadow-[0_6px_20px_rgba(255,107,44,0.4)] hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out cursor-pointer"
                   >
-                    <Ticket size={15} strokeWidth={2.5} className="shrink-0" />
+                    <Ticket size={15} strokeWidth={2.5} className="shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover/ticket:-rotate-[15deg] group-hover/ticket:scale-110" />
                     <span className="tracking-tight whitespace-nowrap text-[13px] sm:text-sm">Tickets</span>
+                    <ArrowRight size={15} strokeWidth={2.5} className="shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover/ticket:translate-x-1" />
                   </button>
 
                   {/* Secondary CTA: Start Route (with Upright Arrow instead of diagonal icon) */}
@@ -2333,6 +2497,41 @@ export default function InteractiveRouteMap({
                 onClose={() => setIsInviteModalOpen(false)}
                 tripId={tripId}
               />
+              <AnimatePresence>
+                {saveMessage && (
+                  <div className="fixed bottom-10 left-0 right-0 z-[200000] flex justify-center pointer-events-none">
+                    <motion.div
+                      initial={{ opacity: 0, y: 40, scale: 0.85 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 20, scale: 0.9 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                      className="bg-white/95 backdrop-blur-xl border border-[#E6DFD5]/60 shadow-[0_12px_40px_-10px_rgba(0,0,0,0.15)] p-2 pr-6 rounded-full flex items-center gap-3 pointer-events-auto"
+                    >
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-[0_4px_12px_rgba(255,107,44,0.3)] ${!saveMessage.isAdd ? 'bg-[#7A7268]' : 'bg-rose-500'}`}>
+                        <motion.div
+                           initial={{ scale: 0, rotate: -45 }}
+                           animate={{ scale: 1, rotate: 0 }}
+                           transition={{ type: "spring", stiffness: 400, delay: 0.1 }}
+                        >
+                          {!saveMessage.isAdd ? (
+                             <Heart className="w-5 h-5 text-white stroke-[3px] ml-0.5" />
+                          ) : (
+                             <Heart fill="currentColor" className="w-5 h-5 text-white stroke-[3px]" />
+                          )}
+                        </motion.div>
+                      </div>
+                      <div className="flex flex-col justify-center">
+                        <h4 className="text-[13px] font-sans font-bold text-[#1E1C1A] leading-none mb-1">
+                          {!saveMessage.isAdd ? 'Removed from saved' : 'Added to saved places'}
+                        </h4>
+                        <p className="text-[11px] font-sans font-medium text-[#7A7268] truncate max-w-[200px] leading-none">
+                          {saveMessage.title}
+                        </p>
+                      </div>
+                    </motion.div>
+                  </div>
+                )}
+              </AnimatePresence>
             </>,
             document.body
           )
@@ -2352,8 +2551,51 @@ export default function InteractiveRouteMap({
                 onClose={() => setIsInviteModalOpen(false)}
                 tripId={tripId}
               />
+              <AnimatePresence>
+                {saveMessage && (
+                  <div className="fixed bottom-10 left-0 right-0 z-[200000] flex justify-center pointer-events-none">
+                    <motion.div
+                      initial={{ opacity: 0, y: 40, scale: 0.85 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 20, scale: 0.9 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                      className="bg-white/95 backdrop-blur-xl border border-[#E6DFD5]/60 shadow-[0_12px_40px_-10px_rgba(0,0,0,0.15)] p-2 pr-6 rounded-full flex items-center gap-3 pointer-events-auto"
+                    >
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-[0_4px_12px_rgba(255,107,44,0.3)] ${!saveMessage.isAdd ? 'bg-[#7A7268]' : 'bg-rose-500'}`}>
+                        <motion.div
+                           initial={{ scale: 0, rotate: -45 }}
+                           animate={{ scale: 1, rotate: 0 }}
+                           transition={{ type: "spring", stiffness: 400, delay: 0.1 }}
+                        >
+                          {!saveMessage.isAdd ? (
+                             <Heart className="w-5 h-5 text-white stroke-[3px] ml-0.5" />
+                          ) : (
+                             <Heart fill="currentColor" className="w-5 h-5 text-white stroke-[3px]" />
+                          )}
+                        </motion.div>
+                      </div>
+                      <div className="flex flex-col justify-center">
+                        <h4 className="text-[13px] font-sans font-bold text-[#1E1C1A] leading-none mb-1">
+                          {!saveMessage.isAdd ? 'Removed from saved' : 'Added to saved places'}
+                        </h4>
+                        <p className="text-[11px] font-sans font-medium text-[#7A7268] truncate max-w-[200px] leading-none">
+                          {saveMessage.title}
+                        </p>
+                      </div>
+                    </motion.div>
+                  </div>
+                )}
+              </AnimatePresence>
             </>
           )}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes shooting-star {
+          0% { opacity: 0; transform: translateX(-15px) scale(0.6); }
+          20% { opacity: 1; transform: translateX(-5px) scale(1); }
+          80% { opacity: 1; transform: translateX(5px) scale(1); }
+          100% { opacity: 0; transform: translateX(15px) scale(0.6); }
+        }
+      ` }} />
     </>
   );
 
