@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AnimatedFlightMap from '../components/AnimatedFlightMap';
 import TripsCalendarView from '../components/TripsCalendarView';
 import { getTrackingState, pollForPriceDrops } from '../../lib/priceTrackingApi';
+import Animated3DBackground from '../components/Animated3DBackground';
 
 
 const PLANNING_STAGES = [
@@ -277,7 +278,24 @@ export default function AIPlannerDashboard() {
                         };
                     });
                     
-                    setSavedTrips(formatted);
+                    // Filter out any pending deletes from previous sessions
+                    const pendingDeletesStr = localStorage.getItem('pendingDeletes');
+                    if (pendingDeletesStr) {
+                        const pendingDeletes = JSON.parse(pendingDeletesStr);
+                        if (pendingDeletes.length > 0) {
+                            setSavedTrips(formatted.filter(t => !pendingDeletes.includes(t.db_id)));
+                            
+                            // Process orphaned deletes in the background
+                            pendingDeletes.forEach(async (id) => {
+                                try { await deleteTrip(id); } catch (e) { console.error(e) }
+                            });
+                            localStorage.removeItem('pendingDeletes');
+                        } else {
+                            setSavedTrips(formatted);
+                        }
+                    } else {
+                        setSavedTrips(formatted);
+                    }
 
                     // Check for price drops for confirmed/upcoming trips
                     formatted.forEach(async (trip) => {
@@ -336,19 +354,29 @@ export default function AIPlannerDashboard() {
         const tripId = tripToDelete;
         const tripToRestore = savedTrips.find(t => t.db_id === tripId);
         
+        // Save to local storage in case of reload
+        const pending = JSON.parse(localStorage.getItem('pendingDeletes') || '[]');
+        pending.push(tripId);
+        localStorage.setItem('pendingDeletes', JSON.stringify(pending));
+
         // Optimistically remove from UI
         setSavedTrips(prev => prev.filter(t => t.db_id !== tripId));
         setTripToDelete(null); // Close modal instantly
         
-        // Setup actual backend deletion after 5 seconds
+        // Setup actual backend deletion after 7 seconds
         const timeoutId = setTimeout(async () => {
             try {
                 await deleteTrip(tripId);
             } catch (err) {
                 console.error("Error deleting trip:", err);
             }
+            
+            // Remove from local storage once processed
+            const currentPending = JSON.parse(localStorage.getItem('pendingDeletes') || '[]');
+            localStorage.setItem('pendingDeletes', JSON.stringify(currentPending.filter(id => id !== tripId)));
+            
             setToast(null);
-        }, 5000);
+        }, 7000);
         
         // Show Toast
         setToast({
@@ -362,6 +390,11 @@ export default function AIPlannerDashboard() {
     const handleUndo = () => {
         if (!toast) return;
         clearTimeout(toast.timeoutId);
+        
+        // Remove from pending deletes
+        const currentPending = JSON.parse(localStorage.getItem('pendingDeletes') || '[]');
+        localStorage.setItem('pendingDeletes', JSON.stringify(currentPending.filter(id => id !== toast.tripId)));
+        
         // Restore trip to local state
         setSavedTrips(prev => [...prev, toast.tripData]);
         setToast(null);
@@ -603,11 +636,9 @@ export default function AIPlannerDashboard() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, ease: "easeOut" }}
-                        className="relative flex flex-col items-center justify-center py-32 px-6 rounded-[2.5rem] border border-stone-200/50 shadow-sm overflow-hidden bg-white isolate"
+                        className="relative flex flex-col items-center justify-center py-32 px-6 rounded-[2.5rem] border border-stone-200/50 shadow-sm overflow-hidden bg-white/80 backdrop-blur-sm isolate"
                     >
-                        {/* Decorative Background Gradients */}
-                        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-orange-50/40 via-white to-white"></div>
-                        <div className="absolute inset-0 -z-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03]"></div>
+                        <Animated3DBackground />
                         
                         {/* Floating Icon Container */}
                         <motion.div 
@@ -715,21 +746,52 @@ export default function AIPlannerDashboard() {
                                             </div>
 
                                             {/* Floating Quick Actions (Hover) */}
-                                            <div className="absolute right-5 bottom-5 z-20 flex items-center gap-2 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 ease-out">
-                                                <button 
+                                            <div className="absolute right-5 bottom-5 z-20 flex items-center gap-2.5 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 ease-out">
+                                                <motion.button 
+                                                    whileHover={{ scale: 1.05, y: -2 }}
+                                                    whileTap={{ scale: 0.95, y: 1 }}
                                                     onClick={(e) => handleShare(e, trip.db_id)}
-                                                    className="p-2 bg-white/90 backdrop-blur-md rounded-full text-stone-700 hover:bg-[#FF6B2C] hover:text-white transition-all shadow-lg border border-white/50"
+                                                    className="group/share relative p-2.5 bg-white/90 backdrop-blur-xl rounded-full text-stone-600 transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_20px_rgba(255,107,44,0.3)] border border-white/60 hover:border-[#FF6B2C]/30 overflow-hidden"
                                                     title="Share Trip"
                                                 >
-                                                    {copiedId === trip.db_id ? <Check size={14} /> : <Share2 size={14} />}
-                                                </button>
-                                                <button 
+                                                    <div className="absolute inset-0 bg-[#FF6B2C] translate-y-[100%] group-hover/share:translate-y-0 transition-transform duration-300 ease-out" />
+                                                    <div className="relative z-10 flex items-center justify-center group-hover/share:text-white transition-colors duration-300">
+                                                      {copiedId === trip.db_id ? (
+                                                          <Check size={15} strokeWidth={2.5} />
+                                                      ) : (
+                                                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="overflow-visible">
+                                                              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" className="transition-transform duration-300 group-hover/share:translate-y-[1px]" />
+                                                              <g className="transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover/share:-translate-y-[4px] group-hover/share:scale-110 origin-bottom">
+                                                                  <polyline points="16 6 12 2 8 6"/>
+                                                                  <line x1="12" y1="2" x2="12" y2="15"/>
+                                                              </g>
+                                                          </svg>
+                                                      )}
+                                                    </div>
+                                                </motion.button>
+                                                
+                                                <motion.button 
+                                                    whileHover={{ scale: 1.05, y: -2 }}
+                                                    whileTap={{ scale: 0.95, y: 1 }}
                                                     onClick={(e) => handleDelete(e, trip.db_id)}
-                                                    className="p-2 bg-white/90 backdrop-blur-md rounded-full text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-lg border border-white/50"
+                                                    className="group/delete relative p-2.5 bg-white/90 backdrop-blur-xl rounded-full text-rose-500 transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_20px_rgba(244,63,94,0.3)] border border-white/60 hover:border-rose-500/30 overflow-hidden"
                                                     title="Delete Trip"
                                                 >
-                                                    <Trash2 size={14} />
-                                                </button>
+                                                    <div className="absolute inset-0 bg-rose-500 translate-y-[100%] group-hover/delete:translate-y-0 transition-transform duration-300 ease-out" />
+                                                    <div className="relative z-10 flex items-center justify-center group-hover/delete:text-white transition-colors duration-300">
+                                                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="overflow-visible">
+                                                          <g className="transition-transform duration-300 group-hover/delete:-translate-y-[1px]">
+                                                              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                                              <line x1="10" x2="10" y1="11" y2="17"/>
+                                                              <line x1="14" x2="14" y1="11" y2="17"/>
+                                                          </g>
+                                                          <g className="origin-[12px_6px] transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover/delete:-translate-y-[3px] group-hover/delete:rotate-[-12deg]">
+                                                              <path d="M3 6h18"/>
+                                                              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                                          </g>
+                                                      </svg>
+                                                    </div>
+                                                </motion.button>
                                             </div>
                                         </div>
 
@@ -941,11 +1003,11 @@ export default function AIPlannerDashboard() {
             <AnimatePresence>
                 {toast && (
                     <motion.div
-                        initial={{ x: "-50%", opacity: 0, y: 80, scale: 0.8, rotateX: -60, transformPerspective: 1000 }}
-                        animate={{ x: "-50%", opacity: 1, y: 0, scale: 1, rotateX: 0 }}
-                        exit={{ x: "-50%", opacity: 0, y: 40, scale: 0.8, rotateX: 60 }}
+                        initial={{ x: 80, opacity: 0, y: 0, scale: 0.8, rotateX: -60, transformPerspective: 1000 }}
+                        animate={{ x: 0, opacity: 1, y: 0, scale: 1, rotateX: 0 }}
+                        exit={{ x: 80, opacity: 0, y: 0, scale: 0.8, rotateX: 60 }}
                         transition={{ type: "spring", bounce: 0.35, duration: 0.7 }}
-                        className="fixed bottom-10 left-1/2 z-100 flex items-center gap-4 bg-stone-900/90 backdrop-blur-xl border border-white/10 text-white pl-5 pr-3 py-2.5 rounded-2xl shadow-[0_30px_60px_rgba(0,0,0,0.6)] overflow-hidden min-w-75 origin-bottom"
+                        className="fixed bottom-10 right-10 z-100 flex items-center gap-4 bg-stone-900/90 backdrop-blur-xl border border-white/10 text-white pl-5 pr-3 py-2.5 rounded-2xl shadow-[0_30px_60px_rgba(0,0,0,0.6)] overflow-hidden min-w-75 origin-right"
                     >
                         <AnimatedTrashIcon />
                         
@@ -966,7 +1028,7 @@ export default function AIPlannerDashboard() {
                         <motion.div 
                             initial={{ width: "100%" }}
                             animate={{ width: "0%" }}
-                            transition={{ duration: 5, ease: "linear" }}
+                            transition={{ duration: 7, ease: "linear" }}
                             className="absolute bottom-0 left-0 h-0.75 bg-[#FF6B2C]"
                         />
                     </motion.div>
