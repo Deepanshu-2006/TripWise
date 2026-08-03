@@ -1562,12 +1562,16 @@ export default function ItineraryPage() {
                 <button
                   key={dayNum}
                   onClick={() => setActiveDay(dayNum)}
-                  className={`relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif font-bold transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap flex flex-col items-center justify-center ${isSelected ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+                  className={`group relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif font-bold transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap flex flex-col items-center justify-center ${isSelected ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
                     }`}
                 >
                   <span>Day {toRomanNumeral(dayNum)}</span>
                   {dateStr && (
                     <span className="text-[9px] font-sans text-stone-400 font-bold -mt-0.5 tracking-wide">{dateStr}</span>
+                  )}
+                  {/* Hover Underline */}
+                  {!isSelected && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#E6DFD5] rounded-t-full opacity-0 scale-x-50 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-300 ease-out origin-center" />
                   )}
                   {isSelected && (
                     <motion.div
@@ -1583,10 +1587,14 @@ export default function ItineraryPage() {
             {/* Epilogue Tab */}
             <button
               onClick={() => setActiveDay('epilogue')}
-              className={`relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'epilogue' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+              className={`group relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'epilogue' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
                 }`}
             >
               <span>Epilogue</span>
+              {/* Hover Underline */}
+              {activeDay !== 'epilogue' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#E6DFD5] rounded-t-full opacity-0 scale-x-50 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-300 ease-out origin-center" />
+              )}
               {activeDay === 'epilogue' && (
                 <motion.div
                   layoutId="activeTabUnderline"
@@ -1599,10 +1607,14 @@ export default function ItineraryPage() {
             {/* Journal Tab */}
             <button
               onClick={() => setActiveDay('journal')}
-              className={`relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'journal' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+              className={`group relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'journal' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
                 }`}
             >
               <span>Journal</span>
+              {/* Hover Underline */}
+              {activeDay !== 'journal' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#E6DFD5] rounded-t-full opacity-0 scale-x-50 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-300 ease-out origin-center" />
+              )}
               {activeDay === 'journal' && (
                 <motion.div
                   layoutId="activeTabUnderline"
@@ -1615,10 +1627,14 @@ export default function ItineraryPage() {
             {/* Price Tracking Tab */}
             <button
               onClick={() => setActiveDay('tracking')}
-              className={`relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'tracking' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+              className={`group relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'tracking' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
                 }`}
             >
               <span>Price Tracking</span>
+              {/* Hover Underline */}
+              {activeDay !== 'tracking' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#E6DFD5] rounded-t-full opacity-0 scale-x-50 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-300 ease-out origin-center" />
+              )}
               {activeDay === 'tracking' && (
                 <motion.div
                   layoutId="activeTabUnderline"
@@ -1635,13 +1651,28 @@ export default function ItineraryPage() {
               <button
                 type="button"
                 onClick={handlePrintOrDownload}
-                title="Tip: Disable 'Headers and footers' in print dialog for cleanest PDF output"
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#E6DFD5] bg-white text-xs font-sans font-bold text-[#1E1C1A] hover:bg-[#F5F0E8] transition-all cursor-pointer shadow-2xs"
+                className="group/btn relative overflow-hidden inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] text-xs font-sans font-bold text-[#1E1C1A] hover:border-[#FF6B2C]/60 hover:shadow-[0_8px_20px_-6px_rgba(255,107,44,0.4)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer active:scale-95"
               >
-                <Printer className="w-3.5 h-3.5 text-[#FF6B2C]" />
-                <span>Download PDF</span>
+                {/* 1. Shimmer Gloss Sweep */}
+                <div className="absolute top-0 left-[-100%] w-[120%] h-full bg-gradient-to-r from-transparent via-white/90 to-transparent skew-x-[-25deg] group-hover/btn:left-[100%] transition-all duration-700 ease-out z-0 pointer-events-none" />
+                
+                {/* 2. Intense Icon Glow */}
+                <div className="absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 bg-[#FF6B2C]/30 rounded-full blur-md opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500 z-0 pointer-events-none" />
+                
+                <div className="relative flex items-center justify-center w-4 h-4 z-10 mr-0.5">
+                  {/* Animated paper sliding up out of the printer */}
+                  <div className="absolute top-1 w-2.5 h-2 bg-white border border-[#1E1C1A] rounded-[1px] opacity-0 group-hover/btn:opacity-100 group-hover/btn:-translate-y-2.5 transition-all duration-500 ease-out flex flex-col justify-evenly px-[1px] py-[1px] shadow-sm">
+                     <div className="w-full h-[0.5px] bg-[#1E1C1A]/40" />
+                     <div className="w-full h-[0.5px] bg-[#1E1C1A]/40" />
+                  </div>
+                  {/* Printer icon placed on top so the paper slides out from behind */}
+                  <div className="bg-white rounded-[2px] relative z-10">
+                    <Printer className="w-4 h-4 text-[#FF6B2C] group-hover/btn:scale-110 transition-transform duration-300" />
+                  </div>
+                </div>
+                <span className="relative z-10 group-hover/btn:text-[#FF6B2C] transition-colors duration-300">Download PDF</span>
               </button>
-              <div className="absolute right-0 top-full mt-1.5 hidden group-hover/print:block z-50 bg-[#1E1C1A] text-white text-[10px] font-sans py-1.5 px-2.5 rounded-lg shadow-lg whitespace-nowrap border border-[#FF6B2C]/40 pointer-events-none">
+              <div className="absolute right-0 top-full mt-2.5 opacity-0 translate-y-1 pointer-events-none group-hover/print:opacity-100 group-hover/print:translate-y-0 transition-all duration-300 ease-out z-50 bg-[#1E1C1A] text-white text-[10px] font-sans py-1.5 px-2.5 rounded-lg shadow-lg whitespace-nowrap border border-[#FF6B2C]/40">
                 💡 Tip: Uncheck "Headers and footers" in print dialog
               </div>
             </div>
@@ -1649,17 +1680,23 @@ export default function ItineraryPage() {
             <button
               type="button"
               onClick={handleShareDossier}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#E6DFD5] bg-white text-xs font-sans font-bold text-[#1E1C1A] hover:bg-[#F5F0E8] transition-all cursor-pointer shadow-2xs"
+              className="group/btn relative overflow-hidden inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] text-xs font-sans font-bold text-[#1E1C1A] hover:border-[#FF6B2C]/60 hover:shadow-[0_8px_20px_-6px_rgba(255,107,44,0.4)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer active:scale-95"
             >
+              {/* 1. Shimmer Gloss Sweep */}
+              <div className="absolute top-0 left-[-100%] w-[120%] h-full bg-gradient-to-r from-transparent via-white/90 to-transparent skew-x-[-25deg] group-hover/btn:left-[100%] transition-all duration-700 ease-out z-0 pointer-events-none" />
+              
+              {/* 2. Intense Icon Glow */}
+              <div className="absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 bg-[#FF6B2C]/30 rounded-full blur-md opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500 z-0 pointer-events-none" />
+              
               {shareCopied ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-emerald-600" />
-                  <span className="text-emerald-700">Copied!</span>
+                  <Check className="w-4 h-4 text-emerald-600 relative z-10 group-hover/btn:scale-110 transition-transform duration-300 mr-0.5" />
+                  <span className="text-emerald-700 relative z-10 transition-colors duration-300">Copied!</span>
                 </>
               ) : (
                 <>
-                  <Share2 className="w-3.5 h-3.5 text-[#FF6B2C]" />
-                  <span>Share Link</span>
+                  <Share2 className="w-4 h-4 text-[#FF6B2C] relative z-10 group-hover/btn:scale-110 group-hover/btn:rotate-[15deg] transition-transform duration-300 ease-out mr-0.5" />
+                  <span className="relative z-10 group-hover/btn:text-[#FF6B2C] transition-colors duration-300">Share Link</span>
                 </>
               )}
             </button>
@@ -1676,10 +1713,15 @@ export default function ItineraryPage() {
 
             <a
               href={itinerary?.id || itinerary?.db_id || activeTripId ? `/ai-planner/new?action=view&trip_id=${itinerary?.id || itinerary?.db_id || activeTripId}` : '/ai-planner'}
-              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-[#FF6B2C] bg-[#FF6B2C]/10 text-xs font-sans font-bold text-[#FF6B2C] hover:bg-[#FF6B2C] hover:text-white transition-all cursor-pointer shadow-2xs ml-1"
+              className="group/edit relative overflow-hidden inline-flex items-center gap-1.5 px-5 py-1.5 rounded-full border border-[#FF6B2C] bg-white text-xs font-sans font-bold text-[#FF6B2C] hover:text-white hover:shadow-[0_8px_20px_-6px_rgba(255,107,44,0.6)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer active:scale-95 ml-1"
             >
-              <Edit3 className="w-3.5 h-3.5" />
-              <span>Edit in Planner</span>
+              {/* Premium Left-to-Right Ink Fill */}
+              <div className="absolute inset-0 bg-[#FF6B2C] origin-left scale-x-0 group-hover/edit:scale-x-100 transition-transform duration-500 ease-[cubic-bezier(0.19,1,0.22,1)] z-0 pointer-events-none" />
+              
+              {/* Writing marker pop & tilt */}
+              <Edit3 className="w-4 h-4 relative z-10 group-hover/edit:-translate-y-0.5 group-hover/edit:translate-x-0.5 group-hover/edit:rotate-12 group-hover/edit:scale-110 group-hover/edit:drop-shadow-[0_2px_2px_rgba(0,0,0,0.15)] transition-all duration-300 mr-0.5" />
+              
+              <span className="relative z-10">Edit in Planner</span>
             </a>
           </div>
         </div>
@@ -1689,7 +1731,7 @@ export default function ItineraryPage() {
       <div className="max-w-6xl mx-auto px-6 py-12 w-full flex items-start gap-8 relative">
         
         {/* DESKTOP VERTICAL UTILITY SIDEBAR RAIL (Desktop Only - hidden on mobile/tablet < lg) */}
-        <aside className="hidden lg:flex flex-col items-center p-2.5 bg-white/95 backdrop-blur-md rounded-3xl border border-[#E6DFD5] shadow-md sticky top-36 lg:top-38 shrink-0 h-fit z-20 font-sans gap-2.5 w-28 -ml-8 lg:-ml-20 xl:-ml-28 transition-all duration-200">
+        <aside className="hidden lg:flex flex-col items-center p-2.5 bg-white/95 backdrop-blur-md rounded-3xl border border-[#E6DFD5] shadow-md sticky top-36 lg:top-40 shrink-0 h-fit z-20 font-sans gap-2 w-28 -ml-8 lg:-ml-20 xl:-ml-28 transition-all duration-200">
           
           {/* GROUP 1: PREPARE (Pre-trip planning tools) */}
           <div className="flex flex-col items-center w-full gap-2">
@@ -1711,7 +1753,7 @@ export default function ItineraryPage() {
                 <button
                   type="button"
                   onClick={() => setActiveDay('packing')}
-                  className={`relative w-full py-2.5 px-2 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer select-none group ${
+                  className={`relative w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group ${
                     activeDay === 'packing'
                       ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-md shadow-[#FF6B2C]/20 border border-[#FF6B2C]/50 scale-[1.02]'
                       : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent'
@@ -1755,7 +1797,7 @@ export default function ItineraryPage() {
             <button
               type="button"
               onClick={() => setActiveDay('visa')}
-              className={`w-full py-2.5 px-2 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer select-none group ${
+              className={`w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group ${
                 activeDay === 'visa'
                   ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-md shadow-[#FF6B2C]/20 border border-[#FF6B2C]/50 scale-[1.02]'
                   : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent'
@@ -1776,7 +1818,7 @@ export default function ItineraryPage() {
             <button
               type="button"
               onClick={() => setIsSavedPlacesModalOpen(true)}
-              className={`w-full py-2.5 px-2 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer select-none group bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent`}
+              className={`w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent`}
               title="Saved Bookmarks"
             >
               <div className={`p-1.5 rounded-xl transition-all bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs`}>
@@ -1803,7 +1845,7 @@ export default function ItineraryPage() {
             <button
               type="button"
               onClick={() => setActiveDay('tracking')}
-              className={`relative w-full py-2.5 px-2 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer select-none group ${
+              className={`relative w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group ${
                 activeDay === 'tracking'
                   ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-md shadow-[#FF6B2C]/20 border border-[#FF6B2C]/50 scale-[1.02]'
                   : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent'
@@ -1830,7 +1872,7 @@ export default function ItineraryPage() {
             <button
               type="button"
               onClick={() => setActiveDay('expenses')}
-              className={`w-full py-2.5 px-2 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer select-none group ${
+              className={`w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group ${
                 activeDay === 'expenses'
                   ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-md shadow-[#FF6B2C]/20 border border-[#FF6B2C]/50 scale-[1.02]'
                   : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent'
@@ -1851,7 +1893,7 @@ export default function ItineraryPage() {
             <button
               type="button"
               onClick={() => setActiveDay('emergency')}
-              className={`w-full py-2.5 px-2 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer select-none group ${
+              className={`w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group ${
                 activeDay === 'emergency'
                   ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-md shadow-[#FF6B2C]/20 border border-[#FF6B2C]/50 scale-[1.02]'
                   : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent'
@@ -1882,7 +1924,7 @@ export default function ItineraryPage() {
             <button
               type="button"
               onClick={() => setIsOfflineModalOpen(true)}
-              className="w-full py-2.5 px-2 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer select-none group bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent"
+              className="w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent"
               title="Offline Availability & Pack Download"
             >
               <div className="p-1.5 rounded-xl bg-white text-[#FF6B2C] shadow-2xs">
