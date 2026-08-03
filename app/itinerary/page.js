@@ -4100,7 +4100,7 @@ export default function ItineraryPage() {
               </div>
               <div className="flex flex-col justify-center">
                 <h4 className="text-[13px] font-sans font-bold text-[#1E1C1A] leading-none mb-1">
-                  {journalSuccessMessage.isSkip ? 'Activity Skipped' : (journalSuccessMessage.isNew ? 'Entry saved successfully' : 'Entry updated')}
+                  {journalSuccessMessage.isSkip ? 'Activity Skipped' : (journalSuccessMessage.isNew ? 'Entry saved successfully' : 'Entry updated successfully')}
                 </h4>
                 <p className="text-[11px] font-sans font-medium text-[#7A7268] truncate max-w-[200px] leading-none">
                   {journalSuccessMessage.title}
