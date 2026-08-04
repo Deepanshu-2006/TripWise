@@ -163,42 +163,31 @@ function CustomAIPlanConsole() {
   };
 
   return (
-    <section className="rounded-3xl bg-[#151518] border border-stone-800 p-8 sm:p-11 shadow-2xl relative overflow-hidden">
-      {/* Animated Floating Flight Path Background Grid (Zero radial color gradients!) */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-25" viewBox="0 0 1000 300" preserveAspectRatio="none">
-        <g fill="none" stroke="#71717a" strokeWidth="1" strokeDasharray="4 6">
-          <path d="M -50 150 Q 250 20 500 150 T 1050 150" />
-          <path d="M -50 80 Q 400 280 800 60 T 1050 220" />
+    <section className="rounded-3xl bg-[#121214] border border-stone-800 p-8 sm:p-12 shadow-2xl relative overflow-hidden">
+      {/* Clean Architectural Compass Grid (Zero planes/rockets) */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20 select-none" viewBox="0 0 1000 360" preserveAspectRatio="none">
+        {/* Subdued Coordinate Grid Lines */}
+        <g stroke="#71717a" strokeWidth="0.75" fill="none" opacity="0.35">
+          <line x1="0" y1="90" x2="1000" y2="90" strokeDasharray="4 8" />
+          <line x1="0" y1="180" x2="1000" y2="180" strokeDasharray="4 8" />
+          <line x1="0" y1="270" x2="1000" y2="270" strokeDasharray="4 8" />
+          <line x1="250" y1="0" x2="250" y2="360" strokeDasharray="4 8" />
+          <line x1="500" y1="0" x2="500" y2="360" strokeDasharray="4 8" />
+          <line x1="750" y1="0" x2="750" y2="360" strokeDasharray="4 8" />
         </g>
-        <motion.circle
-          r="4"
-          fill="#FF5B1D"
-          animate={{
-            cx: [-50, 500, 1050],
-            cy: [150, 150, 150]
-          }}
-          transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-        />
-        <motion.circle
-          r="3"
-          fill="#FF5B1D"
-          animate={{
-            cx: [-50, 400, 1050],
-            cy: [80, 280, 220]
-          }}
-          transition={{ duration: 16, repeat: Infinity, ease: "linear", delay: 2 }}
-        />
+
+        {/* Subtle Slow Rotating Compass Scope */}
+        <motion.g
+          transform="translate(500, 180)"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+        >
+          <circle r="160" fill="none" stroke="#71717a" strokeWidth="0.75" strokeDasharray="3 8" opacity="0.4" />
+          <circle r="90" fill="none" stroke="#52525b" strokeWidth="0.75" strokeDasharray="2 6" opacity="0.3" />
+        </motion.g>
       </svg>
 
       <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center text-center">
-        {/* Custom AI Badge */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-stone-900 border border-stone-800 shadow-xs mb-4">
-          <span className="w-2 h-2 rounded-full bg-[#FF5B1D] animate-pulse" />
-          <span className="text-[10px] font-mono font-bold text-[#FF5B1D] uppercase tracking-widest">
-            Custom AI Travel Engine
-          </span>
-        </div>
-
         {/* Headline */}
         <h3 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight font-serif tracking-tight">
           Don&apos;t see your dream trip?
