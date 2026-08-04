@@ -110,6 +110,161 @@ const REGION_FILTERS = [
 
 const TRENDING_IDS = ['kyoto', 'new-york', 'barcelona', 'queenstown'];
 
+function CustomAIPlanConsole() {
+  const [promptText, setPromptText] = useState('');
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const [displayedText, setDisplayedText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const samplePrompts = [
+    { label: '🇮🇹 Amalfi Coast', prompt: '7 Days in Amalfi Coast with sunset boat tour, lemon grove walks & luxury pasta masterclasses' },
+    { label: '🌸 Spring in Kyoto', prompt: '5 Days in Kyoto during Cherry Blossom season with tea ceremonies & bamboo forest' },
+    { label: '❄️ Iceland Lights', prompt: '6 Days in Iceland for Northern Lights, Blue Lagoon geothermal spa & glacier hikes' },
+    { label: '🍷 Tuscan Wine', prompt: '4 Days in Tuscany with wine tasting, truffle hunting & villa stay' },
+  ];
+
+  const placeholderPhrases = [
+    'e.g. 5 days in Tokyo with Shibuya crossing & sushi masterclass...',
+    'e.g. 7 days in Amalfi Coast with sunset sailboat tour & wine tasting...',
+    'e.g. 6 days in Iceland for Northern Lights & geothermal spas...',
+    'e.g. 4 days in Tuscany for vineyard tours & cooking masterclasses...'
+  ];
+
+  // Auto-typing placeholder effect
+  useEffect(() => {
+    if (promptText) return; // don't animate if user typed text
+    const currentPhrase = placeholderPhrases[placeholderIndex];
+    
+    let timer;
+    if (!isDeleting && displayedText.length < currentPhrase.length) {
+      timer = setTimeout(() => {
+        setDisplayedText(currentPhrase.slice(0, displayedText.length + 1));
+      }, 45);
+    } else if (!isDeleting && displayedText.length === currentPhrase.length) {
+      timer = setTimeout(() => {
+        setIsDeleting(true);
+      }, 2200);
+    } else if (isDeleting && displayedText.length > 0) {
+      timer = setTimeout(() => {
+        setDisplayedText(currentPhrase.slice(0, displayedText.length - 1));
+      }, 25);
+    } else if (isDeleting && displayedText.length === 0) {
+      setIsDeleting(false);
+      setPlaceholderIndex((prev) => (prev + 1) % placeholderPhrases.length);
+    }
+
+    return () => clearTimeout(timer);
+  }, [displayedText, isDeleting, placeholderIndex, promptText]);
+
+  const handleSubmit = (e) => {
+    e?.preventDefault();
+    const finalPrompt = promptText.trim() || displayedText || 'A dream trip';
+    window.location.href = `/ai-planner?prompt=${encodeURIComponent(finalPrompt)}`;
+  };
+
+  return (
+    <section className="rounded-3xl bg-[#151518] border border-stone-800 p-8 sm:p-11 shadow-2xl relative overflow-hidden">
+      {/* Animated Floating Flight Path Background Grid (Zero radial color gradients!) */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-25" viewBox="0 0 1000 300" preserveAspectRatio="none">
+        <g fill="none" stroke="#71717a" strokeWidth="1" strokeDasharray="4 6">
+          <path d="M -50 150 Q 250 20 500 150 T 1050 150" />
+          <path d="M -50 80 Q 400 280 800 60 T 1050 220" />
+        </g>
+        <motion.circle
+          r="4"
+          fill="#FF5B1D"
+          animate={{
+            cx: [-50, 500, 1050],
+            cy: [150, 150, 150]
+          }}
+          transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+        />
+        <motion.circle
+          r="3"
+          fill="#FF5B1D"
+          animate={{
+            cx: [-50, 400, 1050],
+            cy: [80, 280, 220]
+          }}
+          transition={{ duration: 16, repeat: Infinity, ease: "linear", delay: 2 }}
+        />
+      </svg>
+
+      <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center text-center">
+        {/* Custom AI Badge */}
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-stone-900 border border-stone-800 shadow-xs mb-4">
+          <span className="w-2 h-2 rounded-full bg-[#FF5B1D] animate-pulse" />
+          <span className="text-[10px] font-mono font-bold text-[#FF5B1D] uppercase tracking-widest">
+            Custom AI Travel Engine
+          </span>
+        </div>
+
+        {/* Headline */}
+        <h3 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight font-serif tracking-tight">
+          Don&apos;t see your dream trip?
+        </h3>
+        
+        <p className="text-stone-400 text-sm sm:text-base mt-2.5 max-w-2xl font-medium leading-relaxed">
+          Describe any city, vibe, or budget in natural language and let TripWise AI craft your entire custom itinerary — stops, timings, budget, and flights included.
+        </p>
+
+        {/* Interactive Prompt Console Form */}
+        <form onSubmit={handleSubmit} className="w-full max-w-2xl mt-8 flex flex-col sm:flex-row items-center gap-3 bg-[#1C1B1B] border border-stone-700 p-2.5 rounded-2xl sm:rounded-full shadow-2xl transition-all hover:border-[#FF5B1D]/60 focus-within:border-[#FF5B1D] focus-within:ring-2 focus-within:ring-[#FF5B1D]/30">
+          <div className="flex items-center gap-3 pl-4 flex-1 w-full text-left">
+            <span className="text-lg animate-bounce">✨</span>
+            <input
+              type="text"
+              value={promptText}
+              onChange={(e) => setPromptText(e.target.value)}
+              placeholder={displayedText || "e.g. 5 days in Tokyo on standard budget..."}
+              className="w-full bg-transparent text-white text-sm placeholder:text-stone-400 focus:outline-none font-sans font-medium"
+            />
+          </div>
+
+          {/* Jet Takeoff Button */}
+          <button
+            type="submit"
+            className="group relative overflow-hidden shrink-0 w-full sm:w-auto flex items-center justify-center gap-2.5 rounded-full text-white font-extrabold text-xs px-6 py-3.5 cursor-pointer tracking-wider uppercase font-mono transition-all duration-300 bg-gradient-to-r from-[#FF5B1D] via-[#FE6B25] to-[#FF5B1D] shadow-[0_6px_25px_rgba(255,91,29,0.45)] hover:shadow-[0_10px_35px_rgba(255,91,29,0.75)] hover:-translate-y-0.5 border border-white/20"
+          >
+            <span className="absolute inset-0 bg-gradient-to-r from-[#FF5B1D] via-[#FE7717] to-[#FF5B1D] translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-0" />
+            <span className="relative z-10 flex items-center justify-center gap-2 group-hover:tracking-widest transition-all duration-300">
+              <span>Generate Trip</span>
+            </span>
+            <div className="relative z-10 w-4 h-4 overflow-hidden flex items-center justify-center shrink-0">
+              <span className="inline-block transform rotate-45 group-hover:translate-x-6 group-hover:-translate-y-6 transition-all duration-300 ease-in text-white">
+                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                  <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" />
+                </svg>
+              </span>
+              <span className="absolute inline-block transform rotate-45 -translate-x-6 translate-y-6 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-300 ease-out text-white delay-75">
+                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                  <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" />
+                </svg>
+              </span>
+            </div>
+          </button>
+        </form>
+
+        {/* Quick Sample Prompt Chips with Micro-Hover Lift */}
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+          <span className="text-[10px] font-mono text-stone-500 uppercase tracking-wider font-semibold mr-1">Popular Prompts:</span>
+          {samplePrompts.map((item, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => {
+                setPromptText(item.prompt);
+              }}
+              className="text-[11px] font-medium text-stone-300 bg-stone-900/90 hover:bg-[#FF5B1D] hover:text-white border border-stone-800 hover:border-[#FF5B1D] px-3.5 py-1.5 rounded-full transition-all duration-200 cursor-pointer shadow-xs hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(255,91,29,0.3)]"
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 function Stars({ rating }) {
   const full = Math.floor(rating);
@@ -1121,18 +1276,8 @@ export default function DestinationsPage() {
         </AnimatePresence>
         </div>
 
-        {/* Bottom CTA */}
-        <section className="rounded-3xl bg-[#1C1B1B] p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_20px_60px_rgba(0,0,0,0.12)] relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,107,44,0.12),transparent_60%)] pointer-events-none" />
-          <div className="relative z-10">
-            <p className="text-xs font-bold text-[#FF6B2C] uppercase tracking-widest mb-2">Custom AI Planning</p>
-            <h3 className="text-2xl md:text-3xl font-extrabold text-white leading-tight">Don&apos;t see your dream trip?</h3>
-            <p className="text-stone-400 text-sm mt-2 max-w-md">Describe any destination in natural language and let TripWise AI craft your entire itinerary — stops, timings, budget and all.</p>
-          </div>
-          <a href="/ai-planner" className="relative z-10 shrink-0 px-8 py-3.5 bg-[#FF6B2C] hover:bg-[#E55A20] text-white font-extrabold text-sm rounded-full transition-all duration-200 shadow-lg hover:shadow-[0_8px_28px_rgba(255,107,44,0.4)] hover:scale-105 active:scale-95 uppercase tracking-wider whitespace-nowrap">
-            Plan My Trip →
-          </a>
-        </section>
+        {/* Bottom Custom AI Planning Console */}
+        <CustomAIPlanConsole />
       </div>
 
       <div className="h-16" />
