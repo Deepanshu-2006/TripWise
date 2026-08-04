@@ -316,8 +316,8 @@ export default function AtlasRadarMap({ destinations = [], onCardClick }) {
       </div>
 
       {/* ─── RIGHT PANEL: DESTINATION EXPLORER DRAWER ─── */}
-      <div className="lg:w-5/12 xl:w-1/3 bg-[#161618] border border-stone-800 rounded-3xl p-6 flex flex-col h-[640px] shadow-xl">
-        <div className="flex items-center justify-between pb-4 border-b border-stone-800 mb-4">
+      <div className="lg:w-5/12 xl:w-1/3 bg-[#161618] border border-stone-800 rounded-3xl p-5 sm:p-6 flex flex-col h-[640px] shadow-xl">
+        <div className="flex items-center justify-between pb-3.5 border-b border-stone-800 mb-3 shrink-0">
           <h3 className="text-xs font-mono font-extrabold text-white uppercase tracking-widest flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#FF5B1D]" />
             <span>Destination Explorer</span>
@@ -327,7 +327,10 @@ export default function AtlasRadarMap({ destinations = [], onCardClick }) {
           </span>
         </div>
 
-        <div className="flex-1 overflow-y-auto pr-1.5 space-y-3.5 custom-scrollbar">
+        <div 
+          data-lenis-prevent="true"
+          className="flex-1 overflow-y-auto min-h-0 px-1 py-1.5 pr-2 space-y-3 custom-scrollbar"
+        >
           {destinations.map((dest) => {
             const isHovered = hoveredId === dest.id;
             const isSelected = selectedId === dest.id;
@@ -339,39 +342,57 @@ export default function AtlasRadarMap({ destinations = [], onCardClick }) {
                 onMouseEnter={() => setHoveredId(dest.id)}
                 onMouseLeave={() => setHoveredId(null)}
                 onClick={() => handleSelect(dest)}
-                className={`cursor-pointer rounded-2xl p-4 transition-all duration-200 border ${
+                className={`group cursor-pointer rounded-2xl p-4 transition-all duration-300 border ${
                   isActive
-                    ? 'bg-[#18181B] border-[#FF5B1D] shadow-xs -translate-y-0.5'
-                    : 'bg-stone-900/60 border-stone-800/80 hover:border-stone-700 hover:bg-[#18181B]/70'
+                    ? 'bg-[#1C1B1E] border-[#FF5B1D] shadow-lg shadow-[#FF5B1D]/15 scale-[1.015]'
+                    : 'bg-[#18181B]/80 border-stone-800/90 hover:border-stone-700 hover:bg-[#1A1A1D]'
                 }`}
               >
-                <div className="flex items-center justify-between gap-3.5">
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    {dest.imageUrl && (
-                      <img src={dest.imageUrl} alt={dest.name} className="w-12 h-12 rounded-xl object-cover border border-stone-700 shrink-0 shadow-xs" />
-                    )}
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <h4 className="text-sm font-extrabold text-white truncate">{dest.name}</h4>
-                        <span className="text-[9px] font-mono font-extrabold text-[#FF5B1D] bg-[#FF5B1D]/10 px-1.5 py-0.5 rounded uppercase shrink-0">
-                          {dest.country}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-stone-400 font-medium mt-0.5 truncate">
-                        {dest.tagline}
-                      </p>
-                    </div>
+                {/* Top Row: Title, Country Badge & Rating Badge */}
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <h4 className="text-base font-extrabold text-white truncate group-hover:text-[#FF5B1D] transition-colors">
+                      {dest.name}
+                    </h4>
+                    <span className="text-[9px] font-mono font-extrabold text-[#FF5B1D] bg-[#FF5B1D]/15 border border-[#FF5B1D]/30 px-2 py-0.5 rounded-full uppercase shrink-0">
+                      {dest.country}
+                    </span>
                   </div>
-
-                  <div className="flex flex-col items-end shrink-0">
-                    <Stars rating={dest.rating} />
+                  <div className="bg-stone-900/90 border border-stone-800 px-2.5 py-1 rounded-full flex items-center gap-1.5 shrink-0">
+                    <span className="text-amber-400 text-xs font-bold">★</span>
+                    <span className="text-xs font-mono font-bold text-white">{dest.rating.toFixed(1)}</span>
                   </div>
                 </div>
 
-                <div className="mt-3 pt-3 border-t border-stone-800/80 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 text-[10px] font-mono text-stone-400">
-                    {dest.weather && <span>{dest.weather.split('•')[0]}</span>}
-                    {dest.duration && <span>• {dest.duration}</span>}
+                {/* Middle Content Row: Thumbnail & Description */}
+                <div className="flex items-start gap-3.5 mb-3">
+                  {dest.imageUrl && (
+                    <img
+                      src={dest.imageUrl}
+                      alt={dest.name}
+                      className="w-14 h-14 rounded-xl object-cover border border-stone-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform duration-300"
+                    />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-stone-300 font-medium leading-relaxed line-clamp-2">
+                      {dest.tagline}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Bottom Action Footer: Weather, Duration & Takeoff Button */}
+                <div className="pt-3 border-t border-stone-800/80 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-[10px] font-mono font-medium text-stone-400">
+                    {dest.weather && (
+                      <span className="bg-stone-900/80 border border-stone-800 px-2 py-0.5 rounded-md text-stone-300">
+                        {dest.weather.split('•')[0]}
+                      </span>
+                    )}
+                    {dest.duration && (
+                      <span className="bg-stone-900/80 border border-stone-800 px-2 py-0.5 rounded-md text-stone-300">
+                        {dest.duration}
+                      </span>
+                    )}
                   </div>
                   <FlightButton
                     label="Plan Trip"

@@ -865,7 +865,8 @@ export default function DestinationsPage() {
       if (!ticking) {
         window.requestAnimationFrame(() => {
           const heroHeight = window.innerWidth >= 768 ? 650 : 550;
-          setIsScrolledPastHero(window.scrollY >= heroHeight - 10);
+          const isPast = window.scrollY >= heroHeight - 10;
+          setIsScrolledPastHero(prev => (prev !== isPast ? isPast : prev));
           ticking = false;
         });
         ticking = true;
