@@ -127,18 +127,27 @@ function FilterPill({ label, icon, active, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs md:text-sm font-semibold transition-all duration-150 cursor-pointer shadow-2xs hover:scale-[1.01] active:scale-95 whitespace-nowrap ${
+      className={`group relative flex items-center gap-2 px-4 py-2 rounded-full text-xs md:text-sm transition-all duration-200 ease-out cursor-pointer whitespace-nowrap select-none ${
         active
-          ? 'bg-[#FF6B2C]/10 border-2 border-[#FF6B2C] text-stone-900 font-extrabold shadow-sm'
-          : 'bg-white border border-stone-200 text-stone-650 hover:border-stone-400 font-medium'
+          ? 'bg-[#FF5B1D] text-white border-2 border-[#FF5B1D] font-extrabold shadow-[0_6px_20px_rgba(255,91,29,0.35)] -translate-y-0.5'
+          : 'bg-white border border-stone-200/90 text-stone-700 font-semibold hover:border-[#FF5B1D]/60 hover:text-[#FF5B1D] hover:bg-[#FF5B1D]/[0.05] hover:shadow-[0_6px_16px_rgba(255,91,29,0.15)] hover:-translate-y-0.5 active:scale-95'
       }`}
     >
       {icon && (
-        <span className={active ? 'text-[#FF6B2C]' : 'text-stone-400'}>
+        <span className={`transition-transform duration-200 ${
+          active 
+            ? 'text-white scale-110' 
+            : 'text-stone-400 group-hover:text-[#FF5B1D] group-hover:scale-110'
+        }`}>
           {icon}
         </span>
       )}
-      {label}
+      <span>{label}</span>
+
+      {/* Active Dot Indicator */}
+      {active && (
+        <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse ml-0.5" />
+      )}
     </button>
   );
 }
@@ -895,7 +904,13 @@ export default function DestinationsPage() {
                 {hasFilters && (
                   <>
                     <div className="h-6 w-px bg-stone-200 mx-2 shrink-0" />
-                    <button type="button" onClick={clearAll} className="text-[11px] font-bold text-stone-400 hover:text-[#FF6B2C] transition-colors whitespace-nowrap px-2 shrink-0">Clear all ×</button>
+                    <button 
+                      type="button" 
+                      onClick={clearAll} 
+                      className="text-[11px] font-mono font-bold text-stone-400 hover:text-[#FF5B1D] hover:bg-[#FF5B1D]/10 px-2.5 py-1 rounded-full transition-all duration-200 cursor-pointer whitespace-nowrap shrink-0"
+                    >
+                      Clear all ×
+                    </button>
                   </>
                 )}
               </div>
@@ -905,7 +920,7 @@ export default function DestinationsPage() {
             <div className="px-5 py-3 flex items-center justify-between border-t border-stone-100 bg-[#FAF8F5]/50 rounded-b-2xl">
               <div className="flex items-center gap-2 overflow-x-auto flex-1 pr-4" style={{ scrollbarWidth: 'none' }}>
                 {hasFilters ? (
-                  <span className="text-[11px] font-bold text-[#FF6B2C] shrink-0">{filteredDests.length} destinations match</span>
+                  <span className="text-[11px] font-bold text-[#FF5B1D] shrink-0">{filteredDests.length} destinations match</span>
                 ) : (
                   <span className="text-[11px] font-bold text-stone-400 shrink-0">Filter your perfect trip</span>
                 )}
@@ -914,20 +929,20 @@ export default function DestinationsPage() {
                   <button
                     key={chip.id}
                     onClick={() => removeFilter(chip.id, chip.type)}
-                    className="flex items-center gap-1.5 bg-[#fe7717]/10 border border-[#fe7717]/20 text-[#fe7717] px-2.5 py-1 rounded-full text-[10px] font-bold hover:bg-[#fe7717]/20 hover:border-[#fe7717]/30 transition-all shrink-0 group"
+                    className="flex items-center gap-1.5 bg-[#FF5B1D]/10 border border-[#FF5B1D]/25 text-[#FF5B1D] px-2.5 py-1 rounded-full text-[10px] font-bold hover:bg-[#FF5B1D] hover:text-white hover:border-[#FF5B1D] hover:shadow-[0_4px_12px_rgba(255,91,29,0.25)] hover:-translate-y-0.5 transition-all duration-200 shrink-0 group cursor-pointer"
                   >
-                    {chip.label} <span className="text-[#fe7717]/50 text-xs leading-none font-normal group-hover:text-[#fe7717] transition-colors">×</span>
+                    {chip.label} <span className="text-[#FF5B1D]/60 text-xs leading-none font-normal group-hover:text-white transition-colors">×</span>
                   </button>
                 ))}
               </div>
               
               <div className="flex items-center gap-3 shrink-0">
-                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest hidden sm:inline">Sort</span>
+                <span className="text-[10px] font-mono font-bold text-stone-400 uppercase tracking-widest hidden sm:inline">Sort</span>
                 <div className="relative group">
                   <select
                     value={sortOption}
                     onChange={(e) => setSortOption(e.target.value)}
-                    className="appearance-none bg-white shadow-xs border border-stone-200 group-hover:border-stone-300 text-stone-700 text-[11px] font-bold rounded-full pl-3 pr-8 py-1.5 focus:outline-none focus:border-[#fe7717] focus:ring-1 focus:ring-[#fe7717]/20 cursor-pointer transition-all"
+                    className="appearance-none bg-white border border-stone-200 text-stone-700 text-xs font-bold py-1.5 pl-3 pr-8 rounded-full shadow-2xs hover:border-[#FF5B1D]/60 hover:text-[#FF5B1D] hover:bg-[#FF5B1D]/[0.03] hover:shadow-[0_4px_14px_rgba(255,91,29,0.15)] hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#FF5B1D]/20 transition-all duration-200 cursor-pointer"
                   >
                     <option>Most Popular</option>
                     <option>Highest Rated</option>
