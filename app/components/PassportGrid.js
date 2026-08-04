@@ -302,7 +302,7 @@ export default function PassportGrid() {
     }, []);
 
     return (
-        <section ref={sectionRef} className="py-28 md:py-36 bg-[#FFF8F5] relative overflow-hidden border-t border-brand-dark/5">
+        <section ref={sectionRef} className="py-28 md:py-36 bg-transparent relative overflow-hidden border-t border-brand-dark/5">
             {/* Ambient background glow decoration */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-1/3 left-1/4 -translate-y-1/2 w-96 h-96 rounded-full bg-[#0D9488]/5 blur-[140px]" />

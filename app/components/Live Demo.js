@@ -171,7 +171,7 @@ export default function RealTimeAdjuster() {
     }, []);
 
     return (
-        <section ref={sectionRef} className="pt-30 pb-32 bg-[#FFF8F5] relative overflow-hidden border-t border-brand-dark/5">
+        <section ref={sectionRef} className="pt-30 pb-32 bg-transparent relative overflow-hidden border-t border-brand-dark/5">
             {/* Ambient decorative glowing spots */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-1/4 left-1/4 -translate-y-1/2 w-87.5 h-87.5 rounded-full bg-[#FF5B1D]/3 blur-[120px]" />

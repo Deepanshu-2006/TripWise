@@ -310,7 +310,7 @@ function FeaturesSelection() {
     ];
 
     return (
-        <section ref={containerRef} className="relative w-full h-[300vh] bg-[#FFF8F5]">
+        <section ref={containerRef} className="relative w-full h-[300vh] bg-transparent">
             <div ref={stickyRef} className="sticky top-0 w-full h-screen overflow-hidden flex items-center justify-center">
                 {/* Background elements */}
                 <div className="absolute top-1/4 left-0 w-96 h-96 bg-[#fe7717]/5 rounded-full filter blur-[100px] pointer-events-none" />

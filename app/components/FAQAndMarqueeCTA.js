@@ -264,9 +264,9 @@ export default function FAQAndMarqueeCTA() {
   }, []);
 
   return (
-    <div className="w-full bg-[#FFF8F5] overflow-hidden relative">
+    <div className="w-full bg-transparent overflow-hidden relative">
       {/* 1. FAQ Accordion Architecture */}
-      <section className="py-24 md:py-32 max-w-4xl mx-auto px-4 md:px-8 relative z-10">
+      <section data-color="#FFF8F5" className="py-24 md:py-32 max-w-4xl mx-auto px-4 md:px-8 relative z-10">
         <div className="text-center mb-16 md:mb-20">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-[#FF5B1D] text-xs font-bold tracking-widest uppercase mb-4">
             <span className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D] animate-pulse" />
@@ -328,7 +328,8 @@ export default function FAQAndMarqueeCTA() {
       {/* 2. The Final Marquee CTA Container */}
       <section
         ref={ctaContainerRef}
-        className="relative w-full bg-[#0A0A0A] py-32 md:py-44 overflow-hidden flex flex-col items-center justify-center text-center select-none"
+        data-color="#0A0A0A"
+        className="relative w-full bg-transparent py-32 md:py-44 overflow-hidden flex flex-col items-center justify-center text-center select-none"
       >
         {/* Soft Ambient Orange Pulse Layer */}
         <div className="cta-ambient-glow absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-87.5 md:w-162.5 h-62.5 md:h-112.5 rounded-full bg-[#F97316]/30 blur-[130px] md:blur-[180px] pointer-events-none z-0" />
