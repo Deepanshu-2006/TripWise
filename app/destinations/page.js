@@ -159,7 +159,7 @@ function CustomAIPlanConsole() {
   const handleSubmit = (e) => {
     e?.preventDefault();
     const finalPrompt = promptText.trim() || displayedText || 'A dream trip';
-    window.location.href = `/ai-planner?prompt=${encodeURIComponent(finalPrompt)}`;
+    window.location.href = `/ai-planner/new?prompt=${encodeURIComponent(finalPrompt)}`;
   };
 
   return (
@@ -966,7 +966,7 @@ export default function DestinationsPage() {
   ];
 
   const handleUseTemplate = (dest) => {
-    router.push(`/ai-planner?prompt=${encodeURIComponent(dest.prompt)}`);
+    router.push(`/ai-planner/new?prompt=${encodeURIComponent(dest.prompt)}`);
   };
 
   const handleGlobePinClick = (id) => {

@@ -213,8 +213,8 @@ export default function AtlasRadarMap({ destinations = [], onCardClick }) {
               const isSelected = selectedId === d.id || (!selectedId && activeDest?.id === d.id);
               const isActive = isHovered || isSelected;
 
-              const labelText = `${flag} ${d.name}`;
-              const badgeWidth = labelText.length * 8.5 + 24;
+              const mapPos = CITY_MAP_POSITIONS[d.id] || { flag: flag || '📍' };
+              const cityName = d.name.split(',')[0];
 
               return (
                 <g 
@@ -237,7 +237,7 @@ export default function AtlasRadarMap({ destinations = [], onCardClick }) {
                     />
                   )}
 
-                  {/* Bold Pin Dot */}
+                  {/* Pin Dot */}
                   <circle
                     cx={x}
                     cy={y}
@@ -245,35 +245,38 @@ export default function AtlasRadarMap({ destinations = [], onCardClick }) {
                     fill={isActive ? '#FF5B1D' : '#94a3b8'}
                     className="transition-all duration-200"
                   />
-                  <circle
-                    cx={x}
-                    cy={y}
-                    r={isActive ? '4' : '2.5'}
-                    fill="#161618"
-                  />
+                  <circle cx={x} cy={y} r={isActive ? '4' : '2.5'} fill="#161618" />
 
-                  {/* High-Visibility City Label Badge */}
-                  <g transform={`translate(${x + 14}, ${y + 5})`}>
+                  <g transform={`translate(${x + 14}, ${y - 12})`} className="pointer-events-none">
                     <rect
                       x="-4"
-                      y="-17"
-                      width={badgeWidth}
-                      height="28"
-                      rx="8"
-                      fill={isActive ? '#FF5B1D' : '#1F1F23'}
-                      stroke={isActive ? '#FFFFFF' : 'rgba(255,255,255,0.2)'}
-                      strokeWidth={isActive ? '2' : '1'}
-                      className="shadow-lg transition-colors duration-200"
+                      y="-12"
+                      width={cityName.length * 7.5 + 24}
+                      height="20"
+                      rx="6"
+                      fill={isActive ? '#FF5B1D' : '#18181B'}
+                      stroke={isActive ? '#FFFFFF' : '#3f3f46'}
+                      strokeWidth="1"
+                      className="transition-all duration-200 shadow-sm"
                     />
                     <text
-                      x="6"
+                      x="2"
                       y="1"
                       fill="#FFFFFF"
-                      fontSize="13"
+                      fontSize="10"
+                      fontFamily="system-ui, -apple-system, sans-serif"
+                    >
+                      {mapPos.flag}
+                    </text>
+                    <text
+                      x="18"
+                      y="1"
+                      fill="#FFFFFF"
+                      fontSize="10"
                       fontWeight={isActive ? '900' : '700'}
                       fontFamily="system-ui, -apple-system, sans-serif"
                     >
-                      {labelText}
+                      {cityName}
                     </text>
                   </g>
                 </g>
@@ -284,8 +287,8 @@ export default function AtlasRadarMap({ destinations = [], onCardClick }) {
 
         {/* Bottom Selected Destination Card */}
         {activeDest && (
-          <div className="relative z-10 bg-[#18181B] border border-stone-800 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg">
-            <div className="flex items-center gap-3.5 min-w-0">
+          <div className="relative z-10 bg-[#18181B] border border-stone-800 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg mt-auto">
+            <div className="flex items-center gap-4 min-w-0">
               {activeDest.imageUrl && (
                 <img src={activeDest.imageUrl} alt={activeDest.name} className="w-14 h-14 rounded-xl object-cover border border-stone-700 shrink-0 shadow-xs" />
               )}
@@ -313,18 +316,18 @@ export default function AtlasRadarMap({ destinations = [], onCardClick }) {
       </div>
 
       {/* ─── RIGHT PANEL: DESTINATION EXPLORER DRAWER ─── */}
-      <div className="lg:w-5/12 xl:w-1/3 bg-[#161618] border border-stone-800 rounded-3xl p-5 flex flex-col max-h-160 shadow-xl">
-        <div className="flex items-center justify-between pb-3.5 border-b border-stone-800 mb-3.5">
+      <div className="lg:w-5/12 xl:w-1/3 bg-[#161618] border border-stone-800 rounded-3xl p-6 flex flex-col h-[640px] shadow-xl">
+        <div className="flex items-center justify-between pb-4 border-b border-stone-800 mb-4">
           <h3 className="text-xs font-mono font-extrabold text-white uppercase tracking-widest flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#FF5B1D]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#FF5B1D]" />
             <span>Destination Explorer</span>
           </h3>
-          <span className="text-[10px] font-mono text-stone-400 bg-stone-900 px-2.5 py-1 rounded-full border border-stone-800 font-bold">
+          <span className="text-[10px] font-mono text-stone-400 bg-stone-900 px-3 py-1 rounded-full border border-stone-800 font-bold">
             Interactive List
           </span>
         </div>
 
-        <div className="flex-1 overflow-y-auto pr-1 space-y-3 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto pr-1.5 space-y-3.5 custom-scrollbar">
           {destinations.map((dest) => {
             const isHovered = hoveredId === dest.id;
             const isSelected = selectedId === dest.id;
@@ -336,14 +339,14 @@ export default function AtlasRadarMap({ destinations = [], onCardClick }) {
                 onMouseEnter={() => setHoveredId(dest.id)}
                 onMouseLeave={() => setHoveredId(null)}
                 onClick={() => handleSelect(dest)}
-                className={`cursor-pointer rounded-2xl p-3.5 transition-all duration-200 border ${
+                className={`cursor-pointer rounded-2xl p-4 transition-all duration-200 border ${
                   isActive
                     ? 'bg-[#18181B] border-[#FF5B1D] shadow-xs -translate-y-0.5'
                     : 'bg-stone-900/60 border-stone-800/80 hover:border-stone-700 hover:bg-[#18181B]/70'
                 }`}
               >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center justify-between gap-3.5">
+                  <div className="flex items-center gap-3.5 min-w-0">
                     {dest.imageUrl && (
                       <img src={dest.imageUrl} alt={dest.name} className="w-12 h-12 rounded-xl object-cover border border-stone-700 shrink-0 shadow-xs" />
                     )}
@@ -365,7 +368,7 @@ export default function AtlasRadarMap({ destinations = [], onCardClick }) {
                   </div>
                 </div>
 
-                <div className="mt-2.5 pt-2 border-t border-stone-800 flex items-center justify-between gap-2">
+                <div className="mt-3 pt-3 border-t border-stone-800/80 flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 text-[10px] font-mono text-stone-400">
                     {dest.weather && <span>{dest.weather.split('•')[0]}</span>}
                     {dest.duration && <span>• {dest.duration}</span>}
