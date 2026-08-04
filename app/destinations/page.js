@@ -147,7 +147,25 @@ function DestCard({ dest, onClick, isHighlighted }) {
   const minBudget = dest.budget.includes('economy') ? 'Economy' : dest.budget.includes('standard') ? 'Standard' : 'Premium';
   const budgetStr = minBudget === 'Economy' ? '$ Economy' : minBudget === 'Standard' ? '$$ Standard' : '$$$ Premium';
 
+  const cardRef = useRef(null);
+  const [glowPos, setGlowPos] = useState({ x: 50, y: 50 });
+  const [isHovered, setIsHovered] = useState(false);
   const [isZooming, setIsZooming] = useState(false);
+
+  const handleMouseMove = (e) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    // Calculate spotlight percentage position
+    const glowX = (x / rect.width) * 100;
+    const glowY = (y / rect.height) * 100;
+    setGlowPos({ x: glowX, y: glowY });
+  };
+
+  const handleMouseEnter = () => setIsHovered(true);
+  const handleMouseLeave = () => setIsHovered(false);
 
   const handleClick = () => {
     setIsZooming(true);
@@ -158,17 +176,22 @@ function DestCard({ dest, onClick, isHighlighted }) {
 
   return (
     <motion.div 
-      className="relative w-full h-full"
-      style={{ perspective: 1200 }}
-      initial={{ opacity: 0, rotateX: -40, y: 40 }}
-      whileInView={{ opacity: 1, rotateX: 0, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.7, type: "spring", bounce: 0.4 }}
+      ref={cardRef}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className="relative w-full h-full cursor-pointer"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
     >
       <motion.div
         className="w-full h-full relative"
         style={{ transformStyle: 'preserve-3d' }}
-        animate={{ rotateY: isZooming ? 180 : 0 }}
+        animate={{ 
+          rotateY: isZooming ? 180 : 0
+        }}
         transition={{ duration: 0.8, type: "spring", bounce: 0.3 }}
       >
         {/* FRONT FACE */}
@@ -176,12 +199,22 @@ function DestCard({ dest, onClick, isHighlighted }) {
           <div
             id={`dest-card-${dest.id}`}
             onClick={handleClick}
-            className={`group cursor-pointer rounded-2xl overflow-hidden bg-white border ${isHighlighted ? 'border-[#FF6B2C]' : 'border-stone-200/50'} shadow-sm hover:border-[#FF6B2C]/30 hover:shadow-[0_20px_50px_rgba(255,107,44,0.2)] flex flex-col relative h-full transition-all duration-300 ease-out z-10 hover:-translate-y-1.5`}
-            style={{ 
-              boxShadow: isHighlighted ? '0 0 0 2px #FF6B2C, 0 0 30px rgba(255,107,44,0.4)' : undefined
-            }}
+            className={`group rounded-2xl overflow-hidden bg-white border ${
+              isHighlighted ? 'border-[#FF5B1D] ring-2 ring-[#FF5B1D]/40' : 'border-stone-200/80'
+            } shadow-xs hover:border-[#FF5B1D] hover:shadow-[0_20px_40px_-10px_rgba(255,91,29,0.25)] flex flex-col relative h-full transition-all duration-300 ease-out z-10 hover:-translate-y-2`}
           >
-            <div className="relative h-52 overflow-hidden group-hover:scale-[1.02] transition-transform duration-500 ease-out" style={{ backgroundColor: dest.bgColor }}>
+            {/* Interactive Mouse Spotlight Radial Glow */}
+            <div 
+              className="absolute inset-0 pointer-events-none transition-opacity duration-300 z-30 rounded-2xl"
+              style={{
+                opacity: isHovered ? 1 : 0,
+                background: `radial-gradient(350px circle at ${glowPos.x}% ${glowPos.y}%, rgba(255, 91, 29, 0.18), transparent 80%)`
+              }}
+            />
+
+            {/* Card Hero Image Header */}
+            <div className="relative h-44 overflow-hidden" style={{ backgroundColor: dest.bgColor }}>
+              {/* Flight path dotted curve animation */}
               <motion.svg 
                 className="absolute top-0 left-0 w-full h-8 z-10 pointer-events-none" 
                 viewBox="0 0 100 10" preserveAspectRatio="none"
@@ -189,97 +222,121 @@ function DestCard({ dest, onClick, isHighlighted }) {
                 <motion.path 
                   d="M 0 5 Q 50 -2 100 5" 
                   fill="transparent" 
-                  stroke="white" 
-                  strokeWidth="0.5" 
-                  strokeDasharray="2 2"
+                  stroke="rgba(255,255,255,0.7)" 
+                  strokeWidth="0.75" 
+                  strokeDasharray="3 3"
                   initial={{ pathLength: 0, opacity: 0 }}
-                  whileInView={{ pathLength: 1, opacity: [0, 0.8, 0] }}
-                  transition={{ duration: 1.2, ease: "easeOut", times: [0, 0.3, 1] }}
-                  viewport={{ once: false, margin: "-50px" }}
+                  whileInView={{ pathLength: 1, opacity: [0, 1, 0] }}
+                  transition={{ duration: 1.5, ease: "easeOut" }}
+                  viewport={{ once: false }}
                 />
               </motion.svg>
               
-              <div className="absolute inset-0 transition-transform duration-500 ease-out group-hover:scale-110">
+              {/* Clean Minimal Cover Photo (Subtle Zoom & High Contrast Shift) */}
+              <div className="absolute inset-0 overflow-hidden">
                 {dest.imageUrl && (
-                  <img src={dest.imageUrl} alt={dest.name} className="w-full h-full object-cover" />
+                  <img 
+                    src={dest.imageUrl} 
+                    alt={dest.name} 
+                    className="w-full h-full object-cover transition-all duration-500 ease-out group-hover:scale-105 group-hover:brightness-105" 
+                  />
                 )}
-                <div className={`absolute inset-0 bg-linear-to-t ${dest.gradient}`} />
+                {/* Contrast Vignette Overlay for Readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1C1B1B]/95 via-[#1C1B1B]/30 to-[#1C1B1B]/35 transition-opacity duration-500 group-hover:opacity-90" />
               </div>
               
-              {/* Top Info Bar: Category & Duration */}
-              <div className="absolute top-3 left-3 right-3 z-10 flex items-start justify-between gap-2 transition-transform duration-500 ease-out group-hover:scale-105 group-hover:-translate-y-1 origin-top">
-                <span className="text-[10px] font-bold uppercase tracking-[0.15em] px-2.5 py-1 rounded-full text-white/95 bg-black/30 backdrop-blur-md border border-white/10 shadow-sm whitespace-nowrap overflow-hidden text-ellipsis">
+              {/* Top Info Bar: Category Badge (Left) & Duration Pill (Right) */}
+              <div className="absolute top-2.5 left-2.5 right-2.5 z-10 flex items-center justify-between gap-1.5 transition-transform duration-300 group-hover:-translate-y-0.5">
+                <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full text-white bg-[#1C1B1B]/60 backdrop-blur-md border border-white/20 shadow-xs whitespace-nowrap overflow-hidden text-ellipsis group-hover:border-white/40 transition-colors">
                   {dest.badge}
                 </span>
-                <span className="text-[10px] font-semibold bg-black/40 text-white/90 px-2 py-1 rounded-full backdrop-blur-sm border border-white/10 shadow-sm whitespace-nowrap shrink-0">
+                <span className="text-[9px] font-black bg-white/25 text-white px-2.5 py-1 rounded-full backdrop-blur-md border border-white/30 shadow-xs whitespace-nowrap shrink-0 font-mono">
                   {dest.duration}
                 </span>
               </div>
               
-              {/* Bottom Info Bar: Weather, Season & Price */}
-              <div className="absolute bottom-0 left-0 right-0 z-10 p-3 pt-6 flex items-end justify-between bg-linear-to-t from-black/80 via-black/40 to-transparent transition-transform duration-500 ease-out group-hover:scale-105 group-hover:-translate-y-1 origin-bottom">
-                <div className="flex flex-col gap-1.5">
+              {/* Bottom Info Bar: Weather & Season (Left) + Budget Tier (Right) */}
+              <div className="absolute bottom-2.5 left-2.5 right-2.5 z-10 flex items-end justify-between transition-transform duration-300 group-hover:translate-y-0.5">
+                <div className="flex items-center gap-1 flex-wrap">
                   {dest.weather && (
-                    <span className="text-[9px] font-semibold text-white/90 drop-shadow-md">
+                    <span className="text-[9px] font-bold text-white px-2 py-0.5 rounded-md bg-[#1C1B1B]/70 backdrop-blur-md border border-white/20 font-mono">
                       {dest.weather.split('•')[0]}
                     </span>
                   )}
                   {dest.crowdLevel && (
-                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md backdrop-blur-md border shadow-sm w-fit ${
+                    <span className={`text-[8px] font-black px-2 py-0.5 rounded-md backdrop-blur-md border uppercase tracking-wider ${
                       dest.crowdLevel.includes('Low') 
-                        ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40' 
+                        ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/50' 
                         : dest.crowdLevel.includes('Moderate') 
-                        ? 'bg-amber-950/80 text-amber-300 border-amber-500/40' 
-                        : 'bg-rose-950/80 text-rose-300 border-rose-500/40'
+                        ? 'bg-amber-950/80 text-amber-300 border-amber-500/50' 
+                        : 'bg-rose-950/80 text-rose-300 border-rose-500/50'
                     }`}>
-                      {dest.crowdLevel}
+                      • {dest.crowdLevel}
                     </span>
                   )}
                 </div>
-                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white shadow-sm">
-                  From {budgetStr}
+                <span className="text-[9px] font-black px-2.5 py-0.5 rounded-full bg-[#1C1B1B]/80 backdrop-blur-md border border-[#FF5B1D]/40 text-[#FF5B1D] font-mono group-hover:border-[#FF5B1D] transition-colors">
+                  {budgetStr}
                 </span>
               </div>
             </div>
 
-            <div className="flex flex-col p-5 flex-1 bg-white h-58">
-              <div className="mb-2">
-                {/* Editorial hierarchy: Country above City */}
-                <div className="flex items-center justify-between mb-1.5">
-                  <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest">{dest.country}</p>
+            {/* Perforated Ticket Seam Divider */}
+            <div className="relative w-full h-px bg-stone-200 border-b border-dashed border-stone-300/80 z-20">
+              <div className="absolute -left-2 -top-2 w-4 h-4 rounded-full bg-[#FFF8F5] border-r border-stone-300/50" />
+              <div className="absolute -right-2 -top-2 w-4 h-4 rounded-full bg-[#FFF8F5] border-l border-stone-300/50" />
+            </div>
+
+            {/* Card Body Details */}
+            <div className="flex flex-col p-4 flex-1 bg-white justify-between relative z-10">
+              <div>
+                {/* Header Row: Country Tag & Star Rating */}
+                <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D] animate-pulse" />
+                    <p className="text-[9px] text-[#FF5B1D] font-mono font-black uppercase tracking-widest">
+                      {dest.country}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 group-hover:bg-amber-500/15 transition-colors">
                     <Stars rating={dest.rating} />
-                    <span className="text-[10px] font-bold text-stone-800 ml-0.5">
+                    <span className="text-[10px] font-black text-amber-950 ml-0.5 font-mono">
                       {dest.rating.toFixed(1)}
                     </span>
-                    <span className="text-[9px] font-medium text-stone-400 ml-0.5 hidden sm:inline-block">({dest.reviews.toLocaleString()})</span>
+                    <span className="text-[8px] font-bold text-amber-900/60 ml-0.5 hidden sm:inline-block">({dest.reviews.toLocaleString()})</span>
                   </div>
                 </div>
-                <h3 className="font-serif font-bold text-[#1F1F1F] text-2xl tracking-tight leading-tight group-hover:text-[#FF6B2C] transition-colors truncate">{dest.name}</h3>
+
+                {/* City Title & Tagline */}
+                <h3 className="font-serif font-extrabold text-[#1C1B1B] text-xl tracking-tight leading-tight group-hover:text-[#FF5B1D] transition-colors truncate">
+                  {dest.name}
+                </h3>
+                <p className="text-[11px] text-stone-500 leading-tight mt-0.5 font-medium italic truncate">{dest.tagline}</p>
               </div>
 
-              <p className="text-xs text-stone-500 leading-relaxed truncate">{dest.tagline}</p>
-
-              {/* AI Tip Box - Clean minimal look */}
-              {dest.aiTip && (
-                <div className="mt-3.5 mb-4 rounded-xl p-3 bg-[#FF6B2C]/[0.03] border border-[#FF6B2C]/10 flex items-start gap-2.5">
-                  <div className="shrink-0 w-5 h-5 rounded-full bg-white border border-[#FF6B2C]/20 flex items-center justify-center shadow-xs">
-                    <span className="text-[10px]">✨</span>
+              {/* Compact AI Prompt Preview Box */}
+              {dest.prompt && (
+                <div className="mt-2.5 mb-2.5 rounded-xl p-2.5 bg-gradient-to-br from-[#FF5B1D]/[0.06] via-amber-500/[0.03] to-transparent border border-[#FF5B1D]/20 flex flex-col gap-1 shadow-2xs group-hover:border-[#FF5B1D]/45 group-hover:bg-[#FF5B1D]/[0.08] transition-all">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1">
+                      <span className="w-3.5 h-3.5 rounded-full bg-[#FF5B1D] text-white flex items-center justify-center text-[8px] font-black shadow-xs">✨</span>
+                      <span className="text-[8px] font-mono font-black text-[#FF5B1D] uppercase tracking-wider">AI PREVIEW</span>
+                    </div>
                   </div>
-                  <p className="text-[11px] font-medium text-stone-700/90 leading-snug line-clamp-2">
-                    {dest.aiTip.replace('💡 AI Verdict: ', '').replace('💡 AI Tip: ', '')}
+                  <p className="text-[10px] font-semibold text-stone-700 leading-snug line-clamp-2">
+                    "{dest.prompt}"
                   </p>
                 </div>
               )}
 
-              {/* Use Prompt Button - Premium interaction */}
-              <div className="mt-auto pt-1">
+              {/* Primary Compact CTA Button */}
+              <div className="mt-auto pt-0.5">
                 <button
                   type="button"
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-stone-100/50 border border-transparent text-stone-600 group-hover:bg-[#FF6B2C] group-hover:text-white font-bold text-xs transition-all duration-300 group-hover:shadow-[0_8px_20px_rgba(255,107,44,0.25)]"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[#1C1B1B] text-white font-extrabold text-[10px] group-hover:bg-[#FF5B1D] transition-all duration-300 group-hover:shadow-[0_10px_25px_rgba(255,91,29,0.4)] cursor-pointer tracking-wider uppercase font-mono"
                 >
-                  <span className="uppercase tracking-wider text-[10px]">Plan trip to {dest.name.split(',')[0]}</span>
-                  <span className="group-hover:translate-x-1 transition-transform duration-200">
+                  <span>Plan Trip to {dest.name.split(',')[0]}</span>
+                  <span className="group-hover:translate-x-1.5 transition-transform duration-300">
                     <ArrowRightIcon />
                   </span>
                 </button>
