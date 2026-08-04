@@ -147,22 +147,8 @@ function DestCard({ dest, onClick, isHighlighted }) {
   const minBudget = dest.budget.includes('economy') ? 'Economy' : dest.budget.includes('standard') ? 'Standard' : 'Premium';
   const budgetStr = minBudget === 'Economy' ? '$ Economy' : minBudget === 'Standard' ? '$$ Standard' : '$$$ Premium';
 
-  const cardRef = useRef(null);
-  const [glowPos, setGlowPos] = useState({ x: 50, y: 50 });
   const [isHovered, setIsHovered] = useState(false);
   const [isZooming, setIsZooming] = useState(false);
-
-  const handleMouseMove = (e) => {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    // Calculate spotlight percentage position
-    const glowX = (x / rect.width) * 100;
-    const glowY = (y / rect.height) * 100;
-    setGlowPos({ x: glowX, y: glowY });
-  };
 
   const handleMouseEnter = () => setIsHovered(true);
   const handleMouseLeave = () => setIsHovered(false);
@@ -176,8 +162,6 @@ function DestCard({ dest, onClick, isHighlighted }) {
 
   return (
     <motion.div 
-      ref={cardRef}
-      onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className="relative w-full h-full cursor-pointer"
@@ -201,16 +185,8 @@ function DestCard({ dest, onClick, isHighlighted }) {
             onClick={handleClick}
             className={`group rounded-2xl overflow-hidden bg-white border ${
               isHighlighted ? 'border-[#FF5B1D] ring-2 ring-[#FF5B1D]/40' : 'border-stone-200/80'
-            } shadow-xs hover:border-[#FF5B1D] hover:shadow-[0_20px_40px_-10px_rgba(255,91,29,0.25)] flex flex-col relative h-full transition-all duration-300 ease-out z-10 hover:-translate-y-2`}
+            } shadow-xs hover:border-[#FF5B1D]/50 hover:shadow-[0_20px_45px_-10px_rgba(255,91,29,0.2)] flex flex-col relative h-full transition-all duration-300 ease-out z-10 hover:-translate-y-1.5`}
           >
-            {/* Interactive Mouse Spotlight Radial Glow */}
-            <div 
-              className="absolute inset-0 pointer-events-none transition-opacity duration-300 z-30 rounded-2xl"
-              style={{
-                opacity: isHovered ? 1 : 0,
-                background: `radial-gradient(350px circle at ${glowPos.x}% ${glowPos.y}%, rgba(255, 91, 29, 0.18), transparent 80%)`
-              }}
-            />
 
             {/* Card Hero Image Header */}
             <div className="relative h-44 overflow-hidden" style={{ backgroundColor: dest.bgColor }}>
@@ -232,51 +208,46 @@ function DestCard({ dest, onClick, isHighlighted }) {
                 />
               </motion.svg>
               
-              {/* Clean Minimal Cover Photo (Subtle Zoom & High Contrast Shift) */}
+              {/* Animated Cover Photo (Continuous Slow Pan & Scale Drift on Hover) */}
               <div className="absolute inset-0 overflow-hidden">
                 {dest.imageUrl && (
-                  <img 
+                  <motion.img 
                     src={dest.imageUrl} 
                     alt={dest.name} 
-                    className="w-full h-full object-cover transition-all duration-500 ease-out group-hover:scale-105 group-hover:brightness-105" 
+                    className="w-full h-full object-cover origin-center"
+                    animate={isHovered ? {
+                      scale: 1.12,
+                      x: [0, -5, 5, 0],
+                      y: [0, -3, 3, 0],
+                      filter: 'brightness(1.08) saturate(1.12)'
+                    } : {
+                      scale: 1,
+                      x: 0,
+                      y: 0,
+                      filter: 'brightness(1) saturate(1)'
+                    }}
+                    transition={isHovered ? {
+                      scale: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+                      x: { duration: 5, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" },
+                      y: { duration: 7, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" },
+                      filter: { duration: 0.4 }
+                    } : {
+                      duration: 0.5,
+                      ease: "easeOut"
+                    }}
                   />
                 )}
                 {/* Contrast Vignette Overlay for Readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#1C1B1B]/95 via-[#1C1B1B]/30 to-[#1C1B1B]/35 transition-opacity duration-500 group-hover:opacity-90" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1C1B1B]/95 via-[#1C1B1B]/30 to-[#1C1B1B]/35 transition-opacity duration-500 group-hover:opacity-85 pointer-events-none" />
               </div>
               
               {/* Top Info Bar: Category Badge (Left) & Duration Pill (Right) */}
-              <div className="absolute top-2.5 left-2.5 right-2.5 z-10 flex items-center justify-between gap-1.5 transition-transform duration-300 group-hover:-translate-y-0.5">
-                <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full text-white bg-[#1C1B1B]/60 backdrop-blur-md border border-white/20 shadow-xs whitespace-nowrap overflow-hidden text-ellipsis group-hover:border-white/40 transition-colors">
+              <div className="absolute top-2.5 left-2.5 right-2.5 z-10 flex items-center justify-between gap-1.5 pointer-events-none">
+                <span className="text-[9px] font-mono font-black uppercase tracking-wider px-2.5 py-1 rounded-full text-white bg-[#1C1B1B]/75 backdrop-blur-md border border-white/20 shadow-xs whitespace-nowrap overflow-hidden text-ellipsis max-w-[65%] leading-none group-hover:border-white/40 transition-colors">
                   {dest.badge}
                 </span>
-                <span className="text-[9px] font-black bg-white/25 text-white px-2.5 py-1 rounded-full backdrop-blur-md border border-white/30 shadow-xs whitespace-nowrap shrink-0 font-mono">
+                <span className="text-[9px] font-mono font-black text-white px-2.5 py-1 rounded-full bg-[#1C1B1B]/75 backdrop-blur-md border border-white/20 shadow-xs whitespace-nowrap shrink-0 tracking-wider leading-none group-hover:border-white/40 transition-colors">
                   {dest.duration}
-                </span>
-              </div>
-              
-              {/* Bottom Info Bar: Weather & Season (Left) + Budget Tier (Right) */}
-              <div className="absolute bottom-2.5 left-2.5 right-2.5 z-10 flex items-end justify-between transition-transform duration-300 group-hover:translate-y-0.5">
-                <div className="flex items-center gap-1 flex-wrap">
-                  {dest.weather && (
-                    <span className="text-[9px] font-bold text-white px-2 py-0.5 rounded-md bg-[#1C1B1B]/70 backdrop-blur-md border border-white/20 font-mono">
-                      {dest.weather.split('•')[0]}
-                    </span>
-                  )}
-                  {dest.crowdLevel && (
-                    <span className={`text-[8px] font-black px-2 py-0.5 rounded-md backdrop-blur-md border uppercase tracking-wider ${
-                      dest.crowdLevel.includes('Low') 
-                        ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/50' 
-                        : dest.crowdLevel.includes('Moderate') 
-                        ? 'bg-amber-950/80 text-amber-300 border-amber-500/50' 
-                        : 'bg-rose-950/80 text-rose-300 border-rose-500/50'
-                    }`}>
-                      • {dest.crowdLevel}
-                    </span>
-                  )}
-                </div>
-                <span className="text-[9px] font-black px-2.5 py-0.5 rounded-full bg-[#1C1B1B]/80 backdrop-blur-md border border-[#FF5B1D]/40 text-[#FF5B1D] font-mono group-hover:border-[#FF5B1D] transition-colors">
-                  {budgetStr}
                 </span>
               </div>
             </div>
@@ -290,33 +261,47 @@ function DestCard({ dest, onClick, isHighlighted }) {
             {/* Card Body Details */}
             <div className="flex flex-col p-4 flex-1 bg-white justify-between relative z-10">
               <div>
-                {/* Header Row: Country Tag & Star Rating */}
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D] animate-pulse" />
-                    <p className="text-[9px] text-[#FF5B1D] font-mono font-black uppercase tracking-widest">
-                      {dest.country}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 group-hover:bg-amber-500/15 transition-colors">
-                    <Stars rating={dest.rating} />
-                    <span className="text-[10px] font-black text-amber-950 ml-0.5 font-mono">
+                {/* Upper Meta Row: Budget Tier (Left) & Star Rating (Right) */}
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span className="text-[9px] font-mono font-extrabold text-stone-700 bg-stone-100/90 px-2.5 py-1 rounded-full border border-stone-200/80 uppercase tracking-wider whitespace-nowrap shrink-0 group-hover:bg-stone-200/80 transition-colors">
+                    {budgetStr}
+                  </span>
+
+                  {/* Rating Badge */}
+                  <div className="flex items-center gap-1 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20 whitespace-nowrap shrink-0 group-hover:bg-amber-500/15 transition-colors">
+                    <span className="text-amber-500 text-xs">★</span>
+                    <span className="text-[10px] font-black text-amber-950 font-mono">
                       {dest.rating.toFixed(1)}
                     </span>
-                    <span className="text-[8px] font-bold text-amber-900/60 ml-0.5 hidden sm:inline-block">({dest.reviews.toLocaleString()})</span>
+                    <span className="text-[8px] font-bold text-amber-900/60 ml-0.5">({dest.reviews >= 1000 ? `${(dest.reviews / 1000).toFixed(1)}k` : dest.reviews})</span>
                   </div>
                 </div>
 
-                {/* City Title & Tagline */}
-                <h3 className="font-serif font-extrabold text-[#1C1B1B] text-xl tracking-tight leading-tight group-hover:text-[#FF5B1D] transition-colors truncate">
-                  {dest.name}
-                </h3>
-                <p className="text-[11px] text-stone-500 leading-tight mt-0.5 font-medium italic truncate">{dest.tagline}</p>
+                {/* Destination Title with Country Name on the Side */}
+                <div className="flex items-center gap-2 truncate mb-0.5">
+                  <h3 className="font-serif font-extrabold text-[#1C1B1B] text-xl tracking-tight leading-tight group-hover:text-[#FF5B1D] transition-colors truncate">
+                    {dest.name}
+                  </h3>
+                  <span className="text-[9px] font-mono font-black text-[#FF5B1D] bg-[#FF5B1D]/10 border border-[#FF5B1D]/20 px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 group-hover:bg-[#FF5B1D] group-hover:text-white group-hover:border-[#FF5B1D] transition-all">
+                    {dest.country}
+                  </span>
+                </div>
+                
+                {/* Weather & Tagline Row */}
+                <div className="flex items-center gap-2 mt-1 text-[11px] text-stone-500 font-medium">
+                  {dest.weather && (
+                    <span className="font-mono font-bold text-stone-700 shrink-0">
+                      {dest.weather.split('•')[0]}
+                    </span>
+                  )}
+                  {dest.weather && <span className="text-stone-300">•</span>}
+                  <span className="truncate italic group-hover:text-stone-700 transition-colors">{dest.tagline}</span>
+                </div>
               </div>
 
               {/* Compact AI Prompt Preview Box */}
               {dest.prompt && (
-                <div className="mt-2.5 mb-2.5 rounded-xl p-2.5 bg-gradient-to-br from-[#FF5B1D]/[0.06] via-amber-500/[0.03] to-transparent border border-[#FF5B1D]/20 flex flex-col gap-1 shadow-2xs group-hover:border-[#FF5B1D]/45 group-hover:bg-[#FF5B1D]/[0.08] transition-all">
+                <div className="mt-2.5 mb-2.5 rounded-xl p-2.5 bg-stone-50/80 border border-stone-200/80 flex flex-col gap-1 shadow-2xs group-hover:border-[#FF5B1D]/35 group-hover:bg-[#FF5B1D]/[0.04] transition-all">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
                       <span className="w-3.5 h-3.5 rounded-full bg-[#FF5B1D] text-white flex items-center justify-center text-[8px] font-black shadow-xs">✨</span>
@@ -329,16 +314,33 @@ function DestCard({ dest, onClick, isHighlighted }) {
                 </div>
               )}
 
-              {/* Primary Compact CTA Button */}
+              {/* Primary Crazy Jet Takeoff CTA Button */}
               <div className="mt-auto pt-0.5">
                 <button
                   type="button"
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[#1C1B1B] text-white font-extrabold text-[10px] group-hover:bg-[#FF5B1D] transition-all duration-300 group-hover:shadow-[0_10px_25px_rgba(255,91,29,0.4)] cursor-pointer tracking-wider uppercase font-mono"
+                  className="relative w-full overflow-hidden flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl bg-[#1C1B1B] text-white border border-stone-800 group-hover:border-[#FF5B1D] font-extrabold text-[10px] cursor-pointer tracking-wider uppercase font-mono transition-all duration-300 group-hover:shadow-[0_8px_30px_rgba(255,91,29,0.45)]"
                 >
-                  <span>Plan Trip to {dest.name.split(',')[0]}</span>
-                  <span className="group-hover:translate-x-1.5 transition-transform duration-300">
-                    <ArrowRightIcon />
+                  {/* Liquid Orange Jet Fuel Morph Layer */}
+                  <span className="absolute inset-0 bg-gradient-to-r from-[#FF5B1D] via-[#FE7717] to-[#FF5B1D] translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-0" />
+
+                  {/* Button Text */}
+                  <span className="relative z-10 flex items-center justify-center gap-2 group-hover:tracking-widest transition-all duration-300">
+                    <span>Plan Trip to {dest.name.split(',')[0]}</span>
                   </span>
+
+                  {/* Vector SVG Jet Flight Loop Animation */}
+                  <div className="relative z-10 w-4 h-4 overflow-hidden flex items-center justify-center shrink-0">
+                    <span className="inline-block transform rotate-45 group-hover:translate-x-6 group-hover:-translate-y-6 transition-all duration-300 ease-in text-white">
+                      <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                        <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" />
+                      </svg>
+                    </span>
+                    <span className="absolute inline-block transform rotate-45 -translate-x-6 translate-y-6 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-300 ease-out text-white delay-75">
+                      <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                        <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" />
+                      </svg>
+                    </span>
+                  </div>
                 </button>
               </div>
             </div>
