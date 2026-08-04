@@ -163,29 +163,126 @@ function CustomAIPlanConsole() {
   };
 
   return (
-    <section className="rounded-3xl bg-[#121214] border border-stone-800 p-8 sm:p-12 shadow-2xl relative overflow-hidden">
-      {/* Clean Architectural Compass Grid (Zero planes/rockets) */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20 select-none" viewBox="0 0 1000 360" preserveAspectRatio="none">
-        {/* Subdued Coordinate Grid Lines */}
-        <g stroke="#71717a" strokeWidth="0.75" fill="none" opacity="0.35">
-          <line x1="0" y1="90" x2="1000" y2="90" strokeDasharray="4 8" />
-          <line x1="0" y1="180" x2="1000" y2="180" strokeDasharray="4 8" />
-          <line x1="0" y1="270" x2="1000" y2="270" strokeDasharray="4 8" />
-          <line x1="250" y1="0" x2="250" y2="360" strokeDasharray="4 8" />
-          <line x1="500" y1="0" x2="500" y2="360" strokeDasharray="4 8" />
-          <line x1="750" y1="0" x2="750" y2="360" strokeDasharray="4 8" />
+    <section className="rounded-3xl bg-[#141416] border border-stone-800 p-8 sm:p-12 shadow-2xl relative overflow-hidden">
+      {/* Architectural Global Airport Blueprint Grid with Flowing Flight Stream Animations */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-35 select-none" viewBox="0 0 1000 360" preserveAspectRatio="none">
+        {/* Fine Architectural Grid Mesh */}
+        <g stroke="#3f3f46" strokeWidth="0.75" fill="none" opacity="0.4">
+          <line x1="0" y1="60" x2="1000" y2="60" strokeDasharray="4 6" />
+          <line x1="0" y1="180" x2="1000" y2="180" strokeDasharray="4 6" />
+          <line x1="0" y1="300" x2="1000" y2="300" strokeDasharray="4 6" />
+          <line x1="200" y1="0" x2="200" y2="360" strokeDasharray="4 6" />
+          <line x1="500" y1="0" x2="500" y2="360" strokeDasharray="4 6" />
+          <line x1="800" y1="0" x2="800" y2="360" strokeDasharray="4 6" />
         </g>
 
-        {/* Subtle Slow Rotating Compass Scope */}
+        {/* Animated Flowing Flight Data Stream Lines */}
+        <g stroke="#FF5B1D" strokeWidth="1.25" opacity="0.55" fill="none">
+          <motion.polyline
+            points="150,90 480,70 820,110"
+            strokeDasharray="8 8"
+            animate={{ strokeDashoffset: [0, -100] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+          />
+          <motion.polyline
+            points="850,290 520,220 220,180"
+            strokeDasharray="8 8"
+            animate={{ strokeDashoffset: [0, 100] }}
+            transition={{ duration: 7, repeat: Infinity, ease: "linear" }}
+          />
+        </g>
+
+        {/* Scanning Radar Crosshair Reticle tracking across Airport Hubs */}
         <motion.g
-          transform="translate(500, 180)"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+          animate={{ x: [150, 480, 820, 520, 220, 150], y: [90, 70, 110, 220, 180, 90] }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
         >
-          <circle r="160" fill="none" stroke="#71717a" strokeWidth="0.75" strokeDasharray="3 8" opacity="0.4" />
-          <circle r="90" fill="none" stroke="#52525b" strokeWidth="0.75" strokeDasharray="2 6" opacity="0.3" />
+          <circle r="12" fill="none" stroke="#FF5B1D" strokeWidth="1" strokeDasharray="2 3" opacity="0.8" />
+          <line x1="-16" y1="0" x2="16" y2="0" stroke="#FF5B1D" strokeWidth="0.75" opacity="0.6" />
+          <line x1="0" y1="-16" x2="0" y2="16" stroke="#FF5B1D" strokeWidth="0.75" opacity="0.6" />
         </motion.g>
+
+        {/* City Hub Coordinate Pins & Labels */}
+        {[
+          { x: 150, y: 90, code: 'NYC 40.71°N' },
+          { x: 480, y: 70, code: 'PAR 48.85°N' },
+          { x: 820, y: 110, code: 'TYO 35.67°N' },
+          { x: 220, y: 180, code: 'LHR 51.50°N' },
+          { x: 520, y: 220, code: 'DXB 25.20°N' },
+          { x: 850, y: 290, code: 'SYD 33.86°S' },
+        ].map((hub, i) => (
+          <g key={i}>
+            <motion.circle
+              cx={hub.x}
+              cy={hub.y}
+              r="10"
+              fill="none"
+              stroke="#FF5B1D"
+              strokeWidth="1"
+              animate={{ scale: [0.8, 2], opacity: [0.8, 0] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut", delay: i * 0.4 }}
+            />
+            <circle cx={hub.x} cy={hub.y} r="2.5" fill="#FF5B1D" />
+            <text x={hub.x + 6} y={hub.y - 6} fill="#a1a1aa" fontSize="8" fontFamily="monospace" fontWeight="bold">
+              {hub.code}
+            </text>
+          </g>
+        ))}
       </svg>
+
+      {/* Perforated Ticket Side Notches */}
+      <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#0A0A0B] border-r border-stone-800 z-20 pointer-events-none" />
+      <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#0A0A0B] border-l border-stone-800 z-20 pointer-events-none" />
+
+      {/* Floating 3D Passport Stamp Badges */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+        {/* Stamp 1: Top-Left Tokyo Passport Entry */}
+        <motion.div
+          className="absolute -top-3 left-6 sm:left-12 bg-[#1C1B1B] border border-stone-800 p-2.5 rounded-xl text-left shadow-md opacity-50"
+          animate={{ rotate: [-5, 2, -5], y: [0, -8, 0] }}
+          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <div className="flex items-center gap-1.5 text-[9px] font-mono font-bold text-[#FF5B1D] uppercase">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D]" />
+            <span>NRT ENTRY • 2026</span>
+          </div>
+          <p className="text-[10px] font-extrabold text-stone-300 font-mono tracking-widest mt-0.5">TOKYO IMMIGRATION</p>
+        </motion.div>
+
+        {/* Stamp 2: Top-Right Boarding Pass TW-808 */}
+        <motion.div
+          className="absolute top-4 right-6 sm:right-12 bg-[#1C1B1B] border border-stone-800 p-2.5 rounded-xl text-right shadow-md opacity-50"
+          animate={{ rotate: [5, -3, 5], y: [0, 10, 0] }}
+          transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        >
+          <div className="text-[9px] font-mono font-extrabold text-stone-400 uppercase tracking-widest">FIRST CLASS • TW-808</div>
+          <div className="flex items-center justify-end gap-1 mt-1">
+            <span className="w-8 h-2 bg-stone-700/60 rounded-xs inline-block" />
+            <span className="text-[8px] font-mono text-stone-500">GATE B4</span>
+          </div>
+        </motion.div>
+
+        {/* Stamp 3: Bottom-Left Amalfi Customs Stamp */}
+        <motion.div
+          className="absolute bottom-4 left-6 sm:left-16 bg-[#1C1B1B] border border-stone-800 p-2 rounded-full text-center shadow-md opacity-45"
+          animate={{ rotate: [-10, -2, -10], y: [0, -6, 0] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+        >
+          <div className="w-14 h-14 rounded-full border border-dashed border-stone-700 flex flex-col items-center justify-center p-1">
+            <span className="text-[7px] font-mono font-bold text-[#FF5B1D] uppercase">APPROVED</span>
+            <span className="text-[9px] font-extrabold text-white font-serif">AMALFI</span>
+          </div>
+        </motion.div>
+
+        {/* Stamp 4: Bottom-Right VIP Lounge Access */}
+        <motion.div
+          className="absolute -bottom-2 right-8 sm:right-20 bg-[#1C1B1B] border border-stone-800 px-3 py-1.5 rounded-lg text-left shadow-md opacity-45"
+          animate={{ rotate: [6, 0, 6], y: [0, 8, 0] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
+        >
+          <span className="text-[8px] font-mono font-bold text-amber-500 uppercase tracking-widest">★ VIP LOUNGE ACCESS</span>
+        </motion.div>
+      </div>
 
       <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center text-center">
         {/* Headline */}
@@ -198,7 +295,7 @@ function CustomAIPlanConsole() {
         </p>
 
         {/* Interactive Prompt Console Form */}
-        <form onSubmit={handleSubmit} className="w-full max-w-2xl mt-8 flex flex-col sm:flex-row items-center gap-3 bg-[#1C1B1B] border border-stone-700 p-2.5 rounded-2xl sm:rounded-full shadow-2xl transition-all hover:border-[#FF5B1D]/60 focus-within:border-[#FF5B1D] focus-within:ring-2 focus-within:ring-[#FF5B1D]/30">
+        <form onSubmit={handleSubmit} className="w-full max-w-2xl mt-7 flex flex-col sm:flex-row items-center gap-3 bg-[#1C1B1B] border border-stone-700 p-2.5 rounded-2xl sm:rounded-full shadow-2xl transition-all hover:border-[#FF5B1D]/60 focus-within:border-[#FF5B1D] focus-within:ring-2 focus-within:ring-[#FF5B1D]/30">
           <div className="flex items-center gap-3 pl-4 flex-1 w-full text-left">
             <span className="text-lg animate-bounce">✨</span>
             <input
@@ -213,9 +310,8 @@ function CustomAIPlanConsole() {
           {/* Jet Takeoff Button */}
           <button
             type="submit"
-            className="group relative overflow-hidden shrink-0 w-full sm:w-auto flex items-center justify-center gap-2.5 rounded-full text-white font-extrabold text-xs px-6 py-3.5 cursor-pointer tracking-wider uppercase font-mono transition-all duration-300 bg-gradient-to-r from-[#FF5B1D] via-[#FE6B25] to-[#FF5B1D] shadow-[0_6px_25px_rgba(255,91,29,0.45)] hover:shadow-[0_10px_35px_rgba(255,91,29,0.75)] hover:-translate-y-0.5 border border-white/20"
+            className="group relative overflow-hidden shrink-0 w-full sm:w-auto flex items-center justify-center gap-2.5 rounded-full text-white font-extrabold text-xs px-6 py-3.5 cursor-pointer tracking-wider uppercase font-mono transition-all duration-300 bg-[#FF5B1D] hover:bg-[#E04D15] shadow-lg border border-white/20"
           >
-            <span className="absolute inset-0 bg-gradient-to-r from-[#FF5B1D] via-[#FE7717] to-[#FF5B1D] translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-0" />
             <span className="relative z-10 flex items-center justify-center gap-2 group-hover:tracking-widest transition-all duration-300">
               <span>Generate Trip</span>
             </span>
@@ -249,6 +345,18 @@ function CustomAIPlanConsole() {
               {item.label}
             </button>
           ))}
+        </div>
+
+        {/* Live TripWise AI Telemetry Bar */}
+        <div className="mt-6 pt-4 border-t border-stone-800/80 flex items-center justify-center gap-4 text-[9px] font-mono text-stone-500">
+          <span className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            ENGINE: TRIPWISE V4.2
+          </span>
+          <span>•</span>
+          <span>LATENCY: &lt;1.2s</span>
+          <span>•</span>
+          <span>FLIGHT MATRIX: ACTIVE</span>
         </div>
       </div>
     </section>
