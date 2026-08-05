@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import CustomDatePicker from './CustomDatePicker';
-import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw, Check, Map, Compass, ThumbsUp, ThumbsDown, Users, UserPlus, Landmark, Utensils, Zap, Gem, Star, Lightbulb, Smile, TreePine, Coffee, Palmtree, Banknote, Sun, Footprints, Coins, Plane } from 'lucide-react';
+import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw, Check, Map, Compass, ThumbsUp, ThumbsDown, Users, UserPlus, Landmark, Utensils, Zap, Gem, Star, Lightbulb, Smile, TreePine, Coffee, Palmtree, Banknote, Sun, Footprints, Coins, Plane, Building2, TrendingDown } from 'lucide-react';
 
 const renderPremiumIcon = (emojiStr, size = 12) => {
   if (!emojiStr) return <Star size={size} strokeWidth={2.5} />;
@@ -1485,30 +1485,26 @@ export default function PlannerSidebar({
 
   const toggleVibeEnhancer = (tag) => {
     const cleanTag = tag.replace('➕ ', '').replace('✓ ', '').trim();
-    const searchPattern = new RegExp(`[,.\\s]*include\\s+${cleanTag.toLowerCase()}[,.\\s]*`, 'gi');
+    const searchPattern = new RegExp('[,.\\s]*include\\s+' + cleanTag.toLowerCase() + '[,.\\s]*', 'gi');
 
     if (isTagActive(tag)) {
-      setUserPromptInput((prev) => {
-        let updated = prev.replace(searchPattern, ' ').trim();
-        updated = updated.replace(/,\s*,/g, ',').replace(/\s+/g, ' ').trim();
-        if (updated.startsWith(',')) updated = updated.slice(1).trim();
-        if (updated.endsWith(',')) updated = updated.slice(0, -1).trim();
-        if (onPromptChange) onPromptChange(updated);
-        return updated;
-      });
+      let updated = userPromptInput.replace(searchPattern, ' ').trim();
+      updated = updated.replace(/,\s*,/g, ',').replace(/\s+/g, ' ').trim();
+      if (updated.startsWith(',')) updated = updated.slice(1).trim();
+      if (updated.endsWith(',')) updated = updated.slice(0, -1).trim();
+      setUserPromptInput(updated);
+      if (onPromptChange) onPromptChange(updated);
     } else {
-      setUserPromptInput((prev) => {
-        const trimmed = prev.trim();
-        let updated = '';
-        if (!trimmed) {
-          updated = `Include ${cleanTag.toLowerCase()}.`;
-        } else {
-          const cleanPrev = trimmed.endsWith('.') ? trimmed.slice(0, -1) : trimmed;
-          updated = `${cleanPrev}, include ${cleanTag.toLowerCase()}.`;
-        }
-        if (onPromptChange) onPromptChange(updated);
-        return updated;
-      });
+      const trimmed = userPromptInput.trim();
+      let updated = '';
+      if (!trimmed) {
+        updated = `Include ${cleanTag.toLowerCase()}.`;
+      } else {
+        const cleanPrev = trimmed.endsWith('.') ? trimmed.slice(0, -1) : trimmed;
+        updated = `${cleanPrev}, include ${cleanTag.toLowerCase()}.`;
+      }
+      setUserPromptInput(updated);
+      if (onPromptChange) onPromptChange(updated);
     }
   };
 
@@ -1808,230 +1804,295 @@ export default function PlannerSidebar({
 
         {/* STATE 2: Confirmation */}
         {step === 'confirming' && (
-          <div className="flex flex-col gap-5 animate-fade-in pb-16">
+          <motion.div
+            className="flex flex-col gap-6 pb-16"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: {},
+              visible: { transition: { staggerChildren: 0.07 } }
+            }}
+          >
+            {/* Inject shimmer keyframes once */}
+            <style>{`
+              @keyframes shimmer-sweep {
+                0% { transform: translateX(-100%); }
+                100% { transform: translateX(200%); }
+              }
+              @keyframes float-up {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-2px); }
+              }
+            `}</style>
 
-            {/* ── Heading ── */}
-            <div className="flex flex-col gap-1">
-              <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-[#FF6B2C]">
-                ✦ a couple quick things
-              </span>
-              <h2 className="text-xl font-black text-[#1C1B1B] leading-snug">
-                Got it,{' '}
-                <span style={{
-                  background: 'linear-gradient(135deg,#FF6B2C,#E55A20)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}>
+            {/* ── Editorial Header ── */}
+            <motion.div
+              className="flex flex-col gap-1.5 pb-3 border-b border-[#E6DFD5]/60"
+              variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.16,1,0.3,1] } } }}
+            >
+              <div className="flex items-center gap-2">
+                <motion.span
+                  className="w-2 h-2 rounded-full bg-[#FF6B2C]"
+                  animate={{ scale: [1, 1.35, 1], opacity: [1, 0.6, 1] }}
+                  transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
+                />
+                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#7A7268]">
+                  TRIPWISE · PREFERENCES
+                </span>
+              </div>
+              <h2 className="text-xl md:text-2xl font-serif font-black text-[#1E1C1A] tracking-tight leading-snug">
+                Fine-tune your trip to{' '}
+                <span className="italic font-serif text-[#FF6B2C] underline decoration-[#FF6B2C]/30 underline-offset-4">
                   {destinationName}
                 </span>
               </h2>
-            </div>
+            </motion.div>
 
             {/* ── Editable Prompt ── */}
-            <div>
-              <label className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-stone-400 mb-2">
-                <span>Your Prompt</span>
-              </label>
-              <div style={{
-                position: 'relative',
-                background: '#fff',
-                borderRadius: 12,
-                border: '1.5px solid rgba(28,27,27,0.09)',
-                overflow: 'hidden',
-              }}>
-                {/* Left accent bar */}
-                <span style={{
-                  position: 'absolute', left: 0, top: 0, bottom: 0, width: 3,
-                  background: 'linear-gradient(180deg,#FF6B2C,#E55A20)',
-                  borderRadius: '12px 0 0 12px',
-                }} />
+            <motion.div
+              className="flex flex-col gap-2"
+              variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.16,1,0.3,1] } } }}
+            >
+              <div className="flex items-center justify-between">
+                <label className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#7A7268]">
+                  YOUR PROMPT
+                </label>
+                <span className="text-[9px] font-mono font-medium text-[#A89F91]">EDITABLE</span>
+              </div>
+              <motion.div
+                className="relative bg-white rounded-2xl border border-[#E6DFD5] p-3.5 shadow-2xs transition-all focus-within:border-[#FF6B2C] focus-within:ring-2 focus-within:ring-[#FF6B2C]/15"
+                whileHover={{ boxShadow: '0 4px 20px rgba(255,107,44,0.08)', borderColor: '#d4c9bd' }}
+                transition={{ duration: 0.2 }}
+              >
                 <textarea
                   value={userPromptInput}
                   onChange={handlePromptTextChange}
                   rows={2}
-                  style={{ fontFamily: 'monospace', paddingLeft: 16 }}
-                  className="w-full pl-4 pr-3 py-3 bg-transparent text-[13px] text-[#1C1B1B] placeholder-stone-300 focus:outline-none resize-none"
+                  className="w-full bg-transparent text-sm font-sans text-[#1E1C1A] placeholder-[#A89F91] focus:outline-none resize-none leading-relaxed"
                   placeholder="E.g., 5 days in Tokyo — street food & neon lights..."
                 />
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
 
             {/* ── Tune Your Vibe ── */}
-            <div>
-              <label className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-stone-400 mb-2.5">
-                Tune Your Vibe
+            <motion.div
+              className="flex flex-col gap-2.5"
+              variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.16,1,0.3,1] } } }}
+            >
+              <label className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#7A7268]">
+                TUNE YOUR VIBE
               </label>
-              <div className="flex flex-wrap gap-1.5">
-                {INTEREST_OPTIONS.map((item) => {
+              <div className="flex flex-wrap gap-2">
+                {INTEREST_OPTIONS.map((item, i) => {
                   const isActive = selectedInterests.includes(item.id);
                   return (
-                    <button
+                    <motion.button
                       key={item.id}
                       type="button"
                       onClick={() => toggleInterest(item.id)}
-                      style={{
-                        padding: '6px 13px',
-                        borderRadius: 99,
-                        fontSize: 12,
-                        fontWeight: isActive ? 700 : 500,
-                        display: 'flex', alignItems: 'center', gap: 6,
-                        cursor: 'pointer',
-                        transition: 'all 0.18s cubic-bezier(0.16,1,0.3,1)',
-                        transform: isActive ? 'scale(1.03)' : 'scale(1)',
-                        background: isActive ? '#FF6B2C' : '#fff',
-                        color: isActive ? '#fff' : '#4b4541',
-                        border: isActive ? '1.5px solid #FF6B2C' : '1.5px solid rgba(28,27,27,0.12)',
-                        boxShadow: isActive ? '0 4px 12px rgba(255,107,44,0.25)' : '0 1px 3px rgba(0,0,0,0.05)',
+                      initial={{ opacity: 0, scale: 0.85 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: i * 0.04, duration: 0.3, ease: [0.16,1,0.3,1] }}
+                      whileHover={{
+                        scale: 1.06,
+                        y: -2,
+                        boxShadow: isActive ? '0 6px 18px rgba(30,28,26,0.25)' : '0 6px 16px rgba(0,0,0,0.1)',
+                        transition: { duration: 0.18, ease: 'easeOut' }
                       }}
+                      whileTap={{ scale: 0.94 }}
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-semibold cursor-pointer ${
+                        isActive
+                          ? 'bg-[#1E1C1A] text-[#FAF6F0] border border-[#1E1C1A]'
+                          : 'bg-white text-[#5F5E5A] border border-[#E6DFD5]'
+                      }`}
+                      style={{ transition: 'background 0.2s, color 0.2s, border-color 0.2s' }}
                     >
-                      <span style={{ opacity: isActive ? 1 : 0.6, filter: isActive ? 'brightness(10)' : 'none' }}>
+                      <motion.span
+                        className={isActive ? 'text-[#FF6B2C]' : 'text-[#7A7268]'}
+                        animate={isActive ? { rotate: [0, -8, 8, 0] } : { rotate: 0 }}
+                        transition={{ duration: 0.4 }}
+                      >
                         {item.icon}
-                      </span>
-                      {item.label}
-                    </button>
+                      </motion.span>
+                      <span className="tracking-wide">{item.label}</span>
+                    </motion.button>
                   );
                 })}
               </div>
-            </div>
+            </motion.div>
 
             {/* ── Set Your Budget ── */}
-            <div>
-              <label className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-stone-400 mb-2.5">
-                Set Your Budget
+            <motion.div
+              className="flex flex-col gap-2.5"
+              variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.16,1,0.3,1] } } }}
+            >
+              <label className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#7A7268]">
+                SET YOUR BUDGET
               </label>
-              <div className="flex flex-col gap-2">
+              <div className="grid grid-cols-3 gap-2.5">
                 {BUDGET_OPTIONS.map((item, idx) => {
                   const isSelected = selectedBudget === item.id;
-                  const icons = ['🎒', '🏨', '💎'];
+                  const budgetIcons = [<Coins key="1" className="w-4 h-4" />, <Building2 key="2" className="w-4 h-4" />, <Sparkles key="3" className="w-4 h-4" />];
                   return (
-                    <div
+                    <motion.button
                       key={item.id}
+                      type="button"
                       onClick={() => setSelectedBudget(item.id)}
-                      style={{
-                        padding: '11px 14px',
-                        borderRadius: 12,
-                        cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', gap: 12,
-                        transition: 'all 0.2s cubic-bezier(0.16,1,0.3,1)',
-                        background: isSelected ? 'rgba(255,107,44,0.06)' : '#fff',
-                        border: isSelected ? '1.5px solid #FF6B2C' : '1.5px solid rgba(28,27,27,0.09)',
-                        transform: isSelected ? 'scale(1.01)' : 'scale(1)',
-                        boxShadow: isSelected ? '0 4px 16px rgba(255,107,44,0.12)' : '0 1px 3px rgba(0,0,0,0.04)',
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.06, duration: 0.35, ease: [0.16,1,0.3,1] }}
+                      whileHover={{
+                        y: -4,
+                        boxShadow: isSelected
+                          ? '0 10px 28px rgba(255,107,44,0.2)'
+                          : '0 8px 24px rgba(0,0,0,0.09)',
+                        transition: { duration: 0.2, ease: 'easeOut' }
                       }}
+                      whileTap={{ scale: 0.97 }}
+                      className={`relative p-3.5 rounded-2xl border text-left flex flex-col justify-between overflow-hidden cursor-pointer ${
+                        isSelected
+                          ? 'bg-white border-[#FF6B2C] shadow-sm ring-2 ring-[#FF6B2C]/15'
+                          : 'bg-white/70 border-[#E6DFD5]'
+                      }`}
+                      style={{ transition: 'background 0.2s, border-color 0.2s' }}
                     >
-                      <span style={{ fontSize: 20, lineHeight: 1 }}>{icons[idx]}</span>
-                      <div className="flex-1 min-w-0">
-                        <div style={{
-                          fontSize: 13, fontWeight: 700,
-                          color: isSelected ? '#FF6B2C' : '#1C1B1B',
-                          transition: 'color 0.2s ease',
-                        }}>
+                      {/* Shimmer on hover */}
+                      <span
+                        aria-hidden
+                        style={{
+                          position: 'absolute', inset: 0,
+                          background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.55) 50%, transparent 70%)',
+                          animation: 'shimmer-sweep 1.6s ease-in-out infinite',
+                          opacity: 0,
+                          transition: 'opacity 0.2s',
+                          pointerEvents: 'none',
+                        }}
+                        className="group-hover:opacity-100"
+                      />
+                      <div className="flex items-center justify-between w-full mb-3">
+                        <motion.span
+                          className={`p-2 rounded-xl ${isSelected ? 'bg-[#FF6B2C]/10 text-[#FF6B2C]' : 'bg-[#FAF6F0] text-[#7A7268]'}`}
+                          animate={isSelected ? { rotate: [0, -10, 10, 0] } : {}}
+                          transition={{ duration: 0.4 }}
+                        >
+                          {budgetIcons[idx]}
+                        </motion.span>
+                        <motion.span
+                          className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                            isSelected ? 'border-[#FF6B2C] bg-[#FF6B2C]' : 'border-[#E6DFD5]'
+                          }`}
+                          animate={isSelected ? { scale: [1, 1.3, 1] } : { scale: 1 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                        </motion.span>
+                      </div>
+                      <div>
+                        <div className={`text-xs font-bold ${isSelected ? 'text-[#1E1C1A]' : 'text-[#5F5E5A]'}`}>
                           {item.title}
                         </div>
-                        <div style={{ fontSize: 11, color: '#9a9189', marginTop: 1 }}>
+                        <div className="text-[10px] text-[#7A7268] mt-0.5 line-clamp-1">
                           {item.desc}
                         </div>
                       </div>
-                      {isSelected && (
-                        <span style={{
-                          width: 18, height: 18, borderRadius: '50%',
-                          background: '#FF6B2C', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          flexShrink: 0,
-                        }}>
-                          <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
-                            <path d="M1 3.5L3.5 6L8 1" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </span>
-                      )}
-                    </div>
+                    </motion.button>
                   );
                 })}
               </div>
-            </div>
+            </motion.div>
 
             {/* ── Choose Your Pace ── */}
-            <div>
-              <label className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-stone-400 mb-2.5">
-                Choose Your Pace
+            <motion.div
+              className="flex flex-col gap-2.5"
+              variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.16,1,0.3,1] } } }}
+            >
+              <label className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#7A7268]">
+                CHOOSE YOUR PACE
               </label>
-              <div style={{
-                display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
-                gap: 6, padding: 5,
-                background: '#fff', borderRadius: 14,
-                border: '1.5px solid rgba(28,27,27,0.09)',
-              }}>
+              <div className="grid grid-cols-3 p-1 rounded-2xl bg-white border border-[#E6DFD5] shadow-2xs relative">
+                {/* Sliding active background */}
+                {PACE_OPTIONS.map((item, idx) => {
+                  const isActive = selectedPace === item.id;
+                  return isActive ? (
+                    <motion.div
+                      key="pace-bg"
+                      layoutId="pace-active-bg"
+                      className="absolute inset-1 rounded-xl bg-[#1E1C1A]"
+                      style={{ width: `calc(33.33% - 4px)`, left: `calc(${idx * 33.33}% + 2px)` }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    />
+                  ) : null;
+                })}
                 {PACE_OPTIONS.map((item) => {
                   const isActive = selectedPace === item.id;
-                  const paceEmoji = { Relaxed: '🌿', Balanced: '⚡', 'Fast-paced': '🚀' };
                   return (
-                    <button
+                    <motion.button
                       key={item.id}
                       type="button"
                       onClick={() => setSelectedPace(item.id)}
-                      style={{
-                        padding: '8px 4px',
-                        borderRadius: 10,
-                        fontSize: 11,
-                        fontWeight: isActive ? 700 : 500,
-                        cursor: 'pointer',
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
-                        transition: 'all 0.2s cubic-bezier(0.16,1,0.3,1)',
-                        background: isActive ? 'rgba(255,107,44,0.08)' : 'transparent',
-                        color: isActive ? '#FF6B2C' : '#7a7268',
-                        border: isActive ? '1px solid rgba(255,107,44,0.2)' : '1px solid transparent',
-                      }}
+                      className={`relative z-10 py-2.5 px-2 rounded-xl text-xs font-bold cursor-pointer text-center ${
+                        isActive ? 'text-[#FAF6F0]' : 'text-[#7A7268]'
+                      }`}
+                      whileHover={!isActive ? { color: '#1E1C1A', scale: 1.02 } : {}}
+                      whileTap={{ scale: 0.96 }}
+                      style={{ transition: 'color 0.2s' }}
                     >
-                      <span style={{ fontSize: 14 }}>{paceEmoji[item.label] || '⚡'}</span>
                       {item.label}
-                    </button>
+                    </motion.button>
                   );
                 })}
               </div>
-            </div>
+            </motion.div>
 
             {/* ── Trip Duration ── */}
-            <div>
-              <label className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-stone-400 mb-2.5">
-                Trip Duration (Days)
+            <motion.div
+              className="flex flex-col gap-2.5"
+              variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.16,1,0.3,1] } } }}
+            >
+              <label className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#7A7268]">
+                TRIP DURATION
               </label>
-              <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '6px 6px', borderRadius: 12,
-                background: '#fff', border: '1.5px solid rgba(28,27,27,0.09)',
-              }}>
-                <button
+              <div className="flex items-center justify-between p-1.5 rounded-2xl bg-white border border-[#E6DFD5] shadow-2xs">
+                <motion.button
                   type="button"
                   onClick={() => handleDaysCounterChange(Math.max(1, selectedDays - 1))}
-                  style={{
-                    width: 36, height: 36, borderRadius: 9, border: '1px solid rgba(28,27,27,0.1)',
-                    background: '#FAF6F0', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 18, fontWeight: 300, color: '#7a7268', cursor: 'pointer',
-                  }}
+                  className="w-9 h-9 flex items-center justify-center rounded-xl bg-[#FAF6F0] text-[#1E1C1A] font-bold text-lg cursor-pointer"
+                  whileHover={{ scale: 1.15, backgroundColor: '#e8ddd5' }}
+                  whileTap={{ scale: 0.88 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 22 }}
                 >
-                  −
-                </button>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                  <span style={{ fontSize: 22, fontWeight: 900, color: '#FF6B2C' }}>{selectedDays}</span>
-                  <span style={{ fontSize: 11, fontWeight: 500, color: '#b0a89e' }}>days</span>
-                </div>
-                <button
+                  –
+                </motion.button>
+                <motion.div
+                  className="flex items-baseline gap-1"
+                  key={selectedDays}
+                  initial={{ scale: 1.3, opacity: 0.6 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 18 }}
+                >
+                  <span className="text-lg font-black text-[#1E1C1A]">{selectedDays}</span>
+                  <span className="text-xs font-medium text-[#7A7268]">days</span>
+                </motion.div>
+                <motion.button
                   type="button"
                   onClick={() => handleDaysCounterChange(Math.min(30, selectedDays + 1))}
-                  style={{
-                    width: 36, height: 36, borderRadius: 9, border: '1px solid rgba(28,27,27,0.1)',
-                    background: '#FAF6F0', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 18, fontWeight: 300, color: '#7a7268', cursor: 'pointer',
-                  }}
+                  className="w-9 h-9 flex items-center justify-center rounded-xl bg-[#FAF6F0] text-[#1E1C1A] font-bold text-lg cursor-pointer"
+                  whileHover={{ scale: 1.15, backgroundColor: '#e8ddd5' }}
+                  whileTap={{ scale: 0.88 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 22 }}
                 >
                   +
-                </button>
+                </motion.button>
               </div>
-            </div>
+            </motion.div>
 
             {/* ── Travel Dates ── */}
-            <div>
-              <label className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-stone-400 mb-2.5">
-                Travel Dates <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+            <motion.div
+              className="flex flex-col gap-2.5"
+              variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.16,1,0.3,1] } } }}
+            >
+              <label className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#7A7268]">
+                TRAVEL DATES <span className="text-[#A89F91] font-normal font-sans">(OPTIONAL)</span>
               </label>
               <div className="flex gap-2 relative z-50">
                 <div className="flex-1">
@@ -2041,7 +2102,7 @@ export default function PlannerSidebar({
                     placeholder="Start date"
                   />
                 </div>
-                <div className="flex items-center text-stone-300">
+                <div className="flex items-center text-[#A89F91]">
                   <ArrowRightIcon />
                 </div>
                 <div className="flex-1">
@@ -2052,104 +2113,205 @@ export default function PlannerSidebar({
                   />
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* ── Track Prices ── */}
-            <div style={{
-              padding: '12px 14px', borderRadius: 12,
-              background: '#FAF6F0', border: '1.5px solid #EDE5D8',
-            }}>
-              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontSize: 18 }}>📈</span>
+            <motion.div
+              className={`rounded-2xl border transition-all duration-300 overflow-hidden relative ${
+                trackPrices
+                  ? 'bg-white border-[#FF6B2C]/40 shadow-md ring-2 ring-[#FF6B2C]/10'
+                  : 'bg-white border-[#E6DFD5] shadow-2xs'
+              }`}
+              variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.16,1,0.3,1] } } }}
+              whileHover={{ boxShadow: '0 10px 28px rgba(255,107,44,0.1)', borderColor: trackPrices ? '#FF6B2C' : '#d4c9bd' }}
+              transition={{ duration: 0.2 }}
+            >
+              <label className="flex items-center justify-between cursor-pointer p-4 select-none">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <motion.div
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
+                        trackPrices ? 'bg-[#FF6B2C] text-white shadow-sm' : 'bg-[#FF6B2C]/10 text-[#FF6B2C]'
+                      }`}
+                      whileHover={{ scale: 1.15, rotate: -10 }}
+                      whileTap={{ scale: 0.9 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                    >
+                      <TrendingDown className="w-4.5 h-4.5" />
+                    </motion.div>
+                    {trackPrices && (
+                      <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF6B2C] opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#FF6B2C]"></span>
+                      </span>
+                    )}
+                  </div>
                   <div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#1E1C1A' }}>Track Prices</div>
-                    <div style={{ fontSize: 10, color: '#9a9189', marginTop: 1 }}>Monitor flight & hotel prices for drops</div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-[#1E1C1A]">Track Price Drops</span>
+                      {trackPrices && (
+                        <motion.span
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FF6B2C]/10 text-[#FF6B2C] text-[9px] font-mono font-bold uppercase tracking-wider"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B2C] animate-pulse" />
+                          RADAR ACTIVE
+                        </motion.span>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-[#7A7268] mt-0.5">Monitor flight & hotel rates for sudden price dips</div>
                   </div>
                 </div>
-                <div
-                  style={{
-                    width: 40, height: 22, borderRadius: 99, position: 'relative', flexShrink: 0,
-                    background: trackPrices ? '#FF6B2C' : '#DDD5C8',
-                    transition: 'background 0.25s ease',
-                  }}
+                <motion.div
+                  className={`w-10 h-5.5 rounded-full relative shrink-0 cursor-pointer transition-colors ${
+                    trackPrices ? 'bg-[#FF6B2C]' : 'bg-[#E6DFD5]'
+                  }`}
+                  animate={{ backgroundColor: trackPrices ? '#FF6B2C' : '#E6DFD5' }}
+                  transition={{ duration: 0.25 }}
+                  whileTap={{ scale: 0.92 }}
                 >
                   <input type="checkbox" className="sr-only" checked={trackPrices} onChange={() => setTrackPrices(!trackPrices)} />
-                  <div style={{
-                    position: 'absolute', top: 3, left: trackPrices ? 21 : 3,
-                    width: 16, height: 16, borderRadius: '50%', background: '#fff',
-                    boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
-                    transition: 'left 0.25s cubic-bezier(0.16,1,0.3,1)',
-                  }} />
-                </div>
+                  <motion.div
+                    className="absolute top-0.5 left-0.5 bg-white w-4.5 h-4.5 rounded-full shadow-md"
+                    animate={{ x: trackPrices ? 18 : 0 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+                  />
+                </motion.div>
               </label>
+
               <AnimatePresence>
                 {trackPrices && (
                   <motion.div
-                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                    animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
-                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                    className="overflow-hidden"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    className="overflow-hidden px-4 pb-4 pt-2 border-t border-[#E6DFD5]/60 bg-gradient-to-b from-[#FAF6F0]/60 to-[#FAF6F0]/20"
                   >
-                    <label className="block text-[9px] font-bold text-[#7A7268] uppercase tracking-wider mb-1">Origin Airport</label>
-                    <input
-                      type="text"
-                      value={trackOrigin}
-                      onChange={(e) => setTrackOrigin(e.target.value.toUpperCase())}
-                      maxLength={3}
-                      className="w-full bg-white border border-[#E6DFD5] py-2 px-3 rounded-lg text-sm font-mono font-bold focus:outline-none focus:border-[#FF6B2C] transition-colors"
-                      placeholder="JFK"
-                    />
+                    <div className="flex flex-col gap-3 pt-1">
+                      {/* Label & Active Airport Resolved Name */}
+                      <div className="flex items-center justify-between">
+                        <label className="font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-[#7A7268]">
+                          ORIGIN AIRPORT (IATA CODE)
+                        </label>
+                        {trackOrigin.length === 3 && (
+                          <motion.span
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="inline-flex items-center gap-1 text-[9px] font-mono font-bold text-[#FF6B2C] bg-[#FF6B2C]/10 px-2 py-0.5 rounded-md"
+                          >
+                            <Check className="w-3 h-3" />
+                            {({
+                              JFK: 'New York (JFK)',
+                              LHR: 'London (LHR)',
+                              DEL: 'New Delhi (DEL)',
+                              SFO: 'San Francisco (SFO)',
+                              DXB: 'Dubai (DXB)',
+                              CDG: 'Paris (CDG)',
+                              LAX: 'Los Angeles (LAX)'
+                            })[trackOrigin] || `${trackOrigin} AIRPORT`}
+                          </motion.span>
+                        )}
+                      </div>
+
+                      {/* Input Field with animated Plane Icon */}
+                      <motion.div
+                        className="relative flex items-center bg-white rounded-xl border border-[#E6DFD5] p-1.5 focus-within:border-[#FF6B2C] focus-within:ring-2 focus-within:ring-[#FF6B2C]/15 transition-all shadow-2xs"
+                        whileHover={{ borderColor: '#d4c9bd' }}
+                      >
+                        <motion.div
+                          className="w-8 h-8 rounded-lg bg-[#FAF6F0] text-[#FF6B2C] flex items-center justify-center shrink-0 ml-1"
+                          animate={trackOrigin ? { x: [0, 4, 0], rotate: [45, 50, 45] } : { rotate: 45 }}
+                          transition={{ duration: 0.4 }}
+                        >
+                          <Plane className="w-4 h-4" />
+                        </motion.div>
+                        <input
+                          type="text"
+                          value={trackOrigin}
+                          onChange={(e) => setTrackOrigin(e.target.value.toUpperCase().slice(0, 3))}
+                          maxLength={3}
+                          className="w-full bg-transparent px-3 text-sm font-mono font-black text-[#1E1C1A] placeholder-[#A89F91] tracking-widest uppercase focus:outline-none"
+                          placeholder="E.G. JFK"
+                        />
+                        {trackOrigin && (
+                          <motion.button
+                            type="button"
+                            onClick={() => setTrackOrigin('')}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            className="mr-2 px-2 py-0.5 text-[9px] font-mono font-bold text-[#7A7268] hover:text-[#1E1C1A] hover:bg-[#FAF6F0] rounded-md cursor-pointer transition-colors"
+                          >
+                            CLEAR
+                          </motion.button>
+                        )}
+                      </motion.div>
+
+                      {/* Quick Airport Suggestions with City Names */}
+                      <div className="flex flex-col gap-1.5 pt-1">
+                        <span className="text-[9px] font-mono text-[#A89F91] uppercase tracking-wider">
+                          POPULAR HUBS:
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {[
+                            { code: 'JFK', city: 'NYC' },
+                            { code: 'LHR', city: 'London' },
+                            { code: 'DEL', city: 'Delhi' },
+                            { code: 'SFO', city: 'SFO' },
+                            { code: 'DXB', city: 'Dubai' },
+                            { code: 'CDG', city: 'Paris' },
+                          ].map(({ code, city }) => {
+                            const isSelected = trackOrigin === code;
+                            return (
+                              <motion.button
+                                key={code}
+                                type="button"
+                                onClick={() => setTrackOrigin(code)}
+                                whileHover={{ scale: 1.06, y: -1 }}
+                                whileTap={{ scale: 0.94 }}
+                                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-mono font-bold cursor-pointer transition-all ${
+                                  isSelected
+                                    ? 'bg-[#1E1C1A] text-[#FAF6F0] shadow-sm ring-2 ring-[#1E1C1A]/20 scale-[1.02]'
+                                    : 'bg-white border border-[#E6DFD5] text-[#7A7268] hover:border-[#1E1C1A]/40 hover:text-[#1E1C1A]'
+                                }`}
+                              >
+                                <span>{code}</span>
+                                <span className={`text-[8px] font-normal font-sans ${isSelected ? 'text-[#FF6B2C]' : 'text-[#A89F91]'}`}>
+                                  • {city}
+                                </span>
+                              </motion.button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
+            </motion.div>
 
-            {/* ── Actions ── */}
-            <div className="flex flex-col gap-2 mt-1">
-              <button
-                type="button"
-                onClick={handleGenerateClick}
-                style={{
-                  width: '100%', padding: '13px 20px', borderRadius: 14,
-                  background: 'linear-gradient(110deg,#FF6B2C,#E55A20)',
-                  color: '#fff', fontWeight: 900, fontSize: 14,
-                  letterSpacing: '0.08em', textTransform: 'uppercase',
-                  border: 'none', cursor: 'pointer',
-                  boxShadow: '0 6px 20px rgba(255,107,44,0.32)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = '0 10px 28px rgba(255,107,44,0.4)';
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(255,107,44,0.32)';
-                }}
-              >
-                <Plane style={{ width: 15, height: 15, fill: '#fff', color: '#fff' }} />
-                Generate My Trip
-              </button>
-              <button
+            {/* ── Action Buttons ── */}
+            <motion.div
+              className="flex flex-col gap-2.5 pt-2"
+              variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16,1,0.3,1] } } }}
+            >
+              <PlanButton onClick={handleGenerateClick} />
+              <motion.button
                 type="button"
                 onClick={handleSkipClick}
-                style={{
-                  width: '100%', padding: '9px', border: 'none',
-                  background: 'transparent', cursor: 'pointer',
-                  fontSize: 11, fontWeight: 600, color: '#a89f91',
-                  letterSpacing: '0.06em',
-                  transition: 'color 0.2s ease',
-                }}
-                onMouseEnter={e => e.currentTarget.style.color = '#FF6B2C'}
-                onMouseLeave={e => e.currentTarget.style.color = '#a89f91'}
+                className="relative w-full py-1 text-center font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#7A7268] cursor-pointer bg-transparent border-none overflow-hidden"
+                whileHover={{ color: '#FF6B2C' }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ duration: 0.2 }}
               >
-                Skip, just generate →
-              </button>
-            </div>
-          </div>
+                SKIP & GENERATE IMMEDIATELY →
+              </motion.button>
+            </motion.div>
+          </motion.div>
         )}
+
+
 
         {/* STATE 3: Progress Tracker OR Live Day Schedule Cards (`showFinalCTA && itinerary`) */}
         {step === 'progress' && (
