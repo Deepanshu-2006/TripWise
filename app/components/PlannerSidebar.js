@@ -3196,28 +3196,108 @@ export default function PlannerSidebar({
                   </AnimatePresence>
                 </div>
 
-                {/* Minimal Final Action Button */}
-                {showFinalCTA && (
-                  <motion.div
-                    className="pt-2"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 22 }}
-                  >
-                    <button
-                      type="button"
-                      onClick={onViewItinerary || (() => {
-                        if (typeof window !== 'undefined') {
-                          window.location.href = '/itinerary';
-                        }
-                      })}
-                      className="w-full py-3 px-5 rounded-xl font-bold bg-[#FF6B2C] text-white hover:bg-[#E55A20] active:scale-[0.98] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 text-xs md:text-sm shadow-sm"
+                {/* ── Plane Runway Animation ── */}
+                <div className="relative flex-1 flex flex-col justify-end overflow-hidden" style={{ minHeight: 90 }}>
+                  {/* Dashed runway strip */}
+                  <div className="absolute bottom-5 left-0 right-0 flex items-center gap-[6px] px-0 overflow-hidden">
+                    {Array.from({ length: 28 }).map((_, i) => (
+                      <motion.div
+                        key={i}
+                        className="h-[2px] rounded-full bg-[#E6DFD5] shrink-0"
+                        style={{ width: 10 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: i * 0.03, duration: 0.2 }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Plane */}
+                  <AnimatePresence mode="wait">
+                    {!showFinalCTA ? (
+                      /* Idle — plane parked on runway with engine shimmer */
+                      <motion.div
+                        key="plane-idle"
+                        className="absolute bottom-[18px] left-4"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 10 }}
+                        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                      >
+                        <div className="relative flex items-center">
+                          {/* Engine heat shimmer blur */}
+                          <motion.div
+                            className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-3 rounded-full bg-[#FF6B2C]/20 blur-[6px]"
+                            animate={{ opacity: [0.4, 0.9, 0.4], scaleX: [0.8, 1.3, 0.8] }}
+                            transition={{ repeat: Infinity, duration: 0.8, ease: 'easeInOut' }}
+                          />
+                          <Plane
+                            className="w-7 h-7 text-[#1E1C1A]"
+                            style={{ transform: 'rotate(0deg)' }}
+                          />
+                          {/* Idle vibration */}
+                          <motion.div
+                            className="absolute inset-0"
+                            animate={{ y: [0, -0.5, 0] }}
+                            transition={{ repeat: Infinity, duration: 0.4, ease: 'easeInOut' }}
+                          />
+                        </div>
+                        <p className="text-[9px] font-mono text-[#A89F91] mt-1 tracking-widest uppercase">Preparing for takeoff…</p>
+                      </motion.div>
+                    ) : (
+                      /* Complete — plane takes off diagonally */
+                      <motion.div
+                        key="plane-takeoff"
+                        className="absolute bottom-[18px] left-4"
+                        initial={{ x: 0, y: 0, rotate: 0, opacity: 1 }}
+                        animate={{ x: 260, y: -70, rotate: -22, opacity: 0 }}
+                        transition={{ duration: 1.1, ease: [0.4, 0, 0.2, 1], delay: 0.15 }}
+                      >
+                        <Plane className="w-7 h-7 text-[#FF6B2C]" style={{ transform: 'rotate(0deg)' }} />
+                        {/* Jet contrail */}
+                        <motion.div
+                          className="absolute top-1/2 -left-3 h-[1.5px] rounded-full bg-gradient-to-l from-[#FF6B2C]/40 to-transparent"
+                          initial={{ width: 0 }}
+                          animate={{ width: 60 }}
+                          transition={{ duration: 0.9, ease: 'easeOut', delay: 0.2 }}
+                          style={{ translateY: '-50%' }}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* CTA — slides in after takeoff */}
+                <AnimatePresence>
+                  {showFinalCTA && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ type: 'spring', stiffness: 360, damping: 24, delay: 0.7 }}
                     >
-                      <span>View My Itinerary</span>
-                      <ArrowRightIcon />
-                    </button>
-                  </motion.div>
-                )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          /* Flash transition overlay before navigating */
+                          const overlay = document.createElement('div');
+                          overlay.style.cssText = 'position:fixed;inset:0;background:#FF6B2C;opacity:0;z-index:9999;pointer-events:none;transition:opacity 0.35s ease';
+                          document.body.appendChild(overlay);
+                          requestAnimationFrame(() => { overlay.style.opacity = '0.18'; });
+                          setTimeout(() => {
+                            if (onViewItinerary) onViewItinerary();
+                            else if (typeof window !== 'undefined') window.location.href = '/itinerary';
+                            setTimeout(() => overlay.remove(), 600);
+                          }, 350);
+                        }}
+                        className="w-full py-3 px-5 rounded-xl font-bold bg-[#FF6B2C] text-white hover:bg-[#E55A20] active:scale-[0.98] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 text-xs md:text-sm shadow-sm"
+                      >
+                        <Plane className="w-3.5 h-3.5 -rotate-45" />
+                        <span>View My Itinerary</span>
+                        <ArrowRightIcon />
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             )}
           </div>
