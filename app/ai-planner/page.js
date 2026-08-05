@@ -278,24 +278,7 @@ export default function AIPlannerDashboard() {
                         };
                     });
                     
-                    // Filter out any pending deletes from previous sessions
-                    const pendingDeletesStr = localStorage.getItem('pendingDeletes');
-                    if (pendingDeletesStr) {
-                        const pendingDeletes = JSON.parse(pendingDeletesStr);
-                        if (pendingDeletes.length > 0) {
-                            setSavedTrips(formatted.filter(t => !pendingDeletes.includes(t.db_id)));
-                            
-                            // Process orphaned deletes in the background
-                            pendingDeletes.forEach(async (id) => {
-                                try { await deleteTrip(id); } catch (e) { console.error(e) }
-                            });
-                            localStorage.removeItem('pendingDeletes');
-                        } else {
-                            setSavedTrips(formatted);
-                        }
-                    } else {
-                        setSavedTrips(formatted);
-                    }
+                    setSavedTrips(formatted);
 
                     // Check for price drops for confirmed/upcoming trips
                     formatted.forEach(async (trip) => {
@@ -348,56 +331,65 @@ export default function AIPlannerDashboard() {
         setTripToDelete(tripId);
     };
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (!tripToDelete) return;
         
         const tripId = tripToDelete;
         const tripToRestore = savedTrips.find(t => t.db_id === tripId);
         
-        // Save to local storage in case of reload
-        const pending = JSON.parse(localStorage.getItem('pendingDeletes') || '[]');
-        pending.push(tripId);
-        localStorage.setItem('pendingDeletes', JSON.stringify(pending));
-
         // Optimistically remove from UI
         setSavedTrips(prev => prev.filter(t => t.db_id !== tripId));
         setTripToDelete(null); // Close modal instantly
-        
-        // Setup actual backend deletion after 7 seconds
-        const timeoutId = setTimeout(async () => {
-            try {
-                await deleteTrip(tripId);
-            } catch (err) {
-                console.error("Error deleting trip:", err);
+
+        // Clear local storage if active trip matches deleted trip
+        if (typeof window !== 'undefined') {
+            if (localStorage.getItem('tripwise_trip_id') === tripId) {
+                localStorage.removeItem('tripwise_trip_id');
+                localStorage.removeItem('tripwise_itinerary');
             }
-            
-            // Remove from local storage once processed
-            const currentPending = JSON.parse(localStorage.getItem('pendingDeletes') || '[]');
-            localStorage.setItem('pendingDeletes', JSON.stringify(currentPending.filter(id => id !== tripId)));
-            
-            setToast(null);
-        }, 7000);
-        
-        // Show Toast
+        }
+
+        // Perform immediate cloud DB deletion
+        try {
+            await deleteTrip(tripId);
+            console.log("Successfully deleted trip from cloud DB:", tripId);
+        } catch (err) {
+            console.error("Error deleting trip from DB:", err);
+            // Restore trip if deletion failed
+            if (tripToRestore) {
+                setSavedTrips(prev => [...prev, tripToRestore]);
+            }
+        }
+
+        // Show toast notification
         setToast({
             tripId,
-            timeoutId,
             tripData: tripToRestore,
-            destinationName: tripToRestore.destinationName.split(',')[0]
+            destinationName: tripToRestore?.destinationName?.split(',')[0] || "Trip"
         });
+        setTimeout(() => setToast(null), 4000);
     };
 
-    const handleUndo = () => {
-        if (!toast) return;
-        clearTimeout(toast.timeoutId);
-        
-        // Remove from pending deletes
-        const currentPending = JSON.parse(localStorage.getItem('pendingDeletes') || '[]');
-        localStorage.setItem('pendingDeletes', JSON.stringify(currentPending.filter(id => id !== toast.tripId)));
-        
-        // Restore trip to local state
-        setSavedTrips(prev => [...prev, toast.tripData]);
+    const handleUndo = async () => {
+        if (!toast || !toast.tripData) return;
+        const tripDataToRestore = toast.tripData;
         setToast(null);
+        
+        // Optimistically restore to local UI state
+        setSavedTrips(prev => [...prev, tripDataToRestore]);
+        
+        // Re-save trip to database
+        try {
+            const rawItinerary = {
+                destinationName: tripDataToRestore.destinationName,
+                days: tripDataToRestore.days,
+                status: tripDataToRestore.status,
+                lastCompletedStep: tripDataToRestore.lastCompletedStep
+            };
+            await saveTrip(tripDataToRestore.destinationName, rawItinerary);
+        } catch (err) {
+            console.error("Failed to restore trip to cloud:", err);
+        }
     };
 
     const handleShare = (e, tripId) => {
