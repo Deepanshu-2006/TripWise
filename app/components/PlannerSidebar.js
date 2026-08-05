@@ -3106,29 +3106,42 @@ export default function PlannerSidebar({
                 </motion.div>
               </div>
             ) : (
-              /* progress bar & status checkmarks during generation */
-              <>
-                <div>
-                  <span className="text-xs font-semibold uppercase tracking-wider text-secondary-text block mb-2">
-                    Building your itinerary
-                  </span>
-                  <div className="w-full h-1.5 rounded-full bg-[rgba(28,27,27,0.06)] border border-[rgba(28,27,27,0.04)] overflow-hidden relative">
-                    <div
-                      className="h-full bg-accent-orange transition-all duration-100 ease-linear"
-                      style={{ width: `${progressPercent}%` }}
-                    />
-                    {/* Glowing moving strip across progress bar */}
-                    {progressPercent > 0 && progressPercent < 100 && (
-                      <motion.div
-                        className="absolute top-0 bottom-0 left-0 w-1/3 bg-linear-to-r from-transparent via-white/50 to-transparent"
-                        animate={{ x: ['-100%', '400%'] }}
-                        transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
-                      />
-                    )}
+              /* ── Non-Scrollable Minimal Editorial Progress View ── */
+              <div className="flex flex-col gap-6 py-2 overflow-hidden select-none">
+                {/* Header Badge & Title */}
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[9px] font-extrabold uppercase tracking-[0.2em] text-[#FF6B2C] flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B2C] animate-ping" />
+                      TRIPWISE AI · GENERATING
+                    </span>
+                    <span className="font-mono text-[11px] font-black text-[#FF6B2C]">
+                      {Math.round(progressPercent)}%
+                    </span>
                   </div>
+                  <h3 className="text-lg font-serif font-black text-[#1E1C1A] tracking-tight leading-snug">
+                    Building your custom itinerary
+                  </h3>
                 </div>
 
-                <div className="flex flex-col gap-4 mt-2">
+                {/* Sleek Minimal Progress Track */}
+                <div className="w-full h-1.5 rounded-full bg-[#E6DFD5]/60 overflow-hidden relative">
+                  <motion.div
+                    className="h-full rounded-full bg-[#FF6B2C] relative"
+                    initial={{ width: '0%' }}
+                    animate={{ width: `${Math.max(3, progressPercent)}%` }}
+                    transition={{ duration: 0.35, ease: 'easeOut' }}
+                  >
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent"
+                      animate={{ x: ['-100%', '200%'] }}
+                      transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
+                    />
+                  </motion.div>
+                </div>
+
+                {/* Minimal Single-Line Step Timeline */}
+                <div className="flex flex-col gap-3 pt-1">
                   <AnimatePresence>
                     {STATUS_ROWS.map((row, index) => {
                       const isRevealed = activeRowIndex >= index;
@@ -3140,70 +3153,57 @@ export default function PlannerSidebar({
                       return (
                         <motion.div
                           key={row.id}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: isDone ? 1 : 1, x: 0 }}
-                          className={`flex items-center gap-3 transition-opacity duration-300 ${isDone
-                              ? 'text-[#1F1F1F] font-semibold opacity-100'
-                              : 'text-[#6B6B6B] opacity-85'
-                            }`}
+                          initial={{ opacity: 0, x: -8 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                          className="flex items-center gap-3"
                         >
-                          <div className="relative">
-                            {/* Glowing ring for active state */}
-                            {isActive && (
+                          {/* Left Indicator Dot / Check */}
+                          <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0">
+                            {isDone ? (
                               <motion.div
-                                className="absolute -inset-1.5 rounded-xl border border-[#FF6B2C]/40"
-                                animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.8, 0.3] }}
-                                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                              />
-                            )}
-
-                            <div
-                              className={`relative z-10 p-1.5 rounded-lg border transition-all duration-300 overflow-hidden ${isDone
-                                  ? 'bg-[#FFDBC8]/40 border-[#FF6B2C]/60 text-[#FF6B2C] shadow-sm'
-                                  : isActive
-                                    ? 'bg-white border-2 border-[#FF6B2C] text-[#FF6B2C] shadow-sm shadow-[#FF6B2C]/30 scale-105'
-                                    : 'bg-white border-[rgba(28,27,27,0.1)] text-[#6B6B6B] shadow-2xs'
-                                }`}
-                            >
-                              {/* Shimmering background overlay for active state */}
-                              {isActive && (
-                                <motion.div
-                                  className="absolute inset-0 bg-linear-to-r from-transparent via-[#FF6B2C]/10 to-transparent skew-x-[-20deg]"
-                                  style={{ width: '200%' }}
-                                  animate={{ x: ['-100%', '100%'] }}
-                                  transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
-                                />
-                              )}
-                              <div className="relative z-10">
-                                {row.icon}
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="w-4 h-4 rounded-full bg-[#2FA66A] text-white flex items-center justify-center text-[9px] font-bold"
+                              >
+                                ✓
+                              </motion.div>
+                            ) : isActive ? (
+                              <div className="relative flex items-center justify-center">
+                                <span className="w-2.5 h-2.5 rounded-full bg-[#FF6B2C] animate-ping opacity-75 absolute" />
+                                <span className="w-2.5 h-2.5 rounded-full bg-[#FF6B2C] relative" />
                               </div>
-                            </div>
+                            ) : (
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#E6DFD5]" />
+                            )}
                           </div>
 
-                          {/* Shimmering text for active state */}
-                          {isActive ? (
-                            <motion.span
-                              className="text-xs md:text-sm leading-snug font-medium bg-clip-text text-transparent bg-linear-to-r from-[#FF6B2C] via-[#FFA37C] to-[#FF6B2C]"
-                              style={{ backgroundSize: '200% 100%' }}
-                              animate={{ backgroundPosition: ['200% 0', '-200% 0'] }}
-                              transition={{ repeat: Infinity, duration: 3, ease: 'linear' }}
-                            >
-                              {row.label}
-                            </motion.span>
-                          ) : (
-                            <span className="text-xs md:text-sm leading-snug">
-                              {row.label}
-                            </span>
-                          )}
+                          {/* Text Label */}
+                          <span
+                            className={`text-xs transition-colors duration-200 ${
+                              isActive
+                                ? 'font-bold text-[#FF6B2C]'
+                                : isDone
+                                ? 'font-medium text-[#1E1C1A]'
+                                : 'font-normal text-[#A89F91]'
+                            }`}
+                          >
+                            {row.label}
+                          </span>
                         </motion.div>
                       );
                     })}
                   </AnimatePresence>
                 </div>
 
-                {/* Final Button Revealed after last row visible for ~1.3s */}
+                {/* Minimal Final Action Button */}
                 {showFinalCTA && (
-                  <div className="mt-6 animate-fade-in">
+                  <motion.div
+                    className="pt-2"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+                  >
                     <button
                       type="button"
                       onClick={onViewItinerary || (() => {
@@ -3211,14 +3211,14 @@ export default function PlannerSidebar({
                           window.location.href = '/itinerary';
                         }
                       })}
-                      className="w-full py-3.5 px-6 rounded-xl font-semibold bg-accent-orange text-bg-white hover:opacity-90 active:scale-[0.99] transition-all duration-150 cursor-pointer flex items-center justify-center gap-2 text-sm md:text-base shadow-md shadow-(--accent-orange)/20"
+                      className="w-full py-3 px-5 rounded-xl font-bold bg-[#FF6B2C] text-white hover:bg-[#E55A20] active:scale-[0.98] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 text-xs md:text-sm shadow-sm"
                     >
-                      <span>View my itinerary</span>
+                      <span>View My Itinerary</span>
                       <ArrowRightIcon />
                     </button>
-                  </div>
+                  </motion.div>
                 )}
-              </>
+              </div>
             )}
           </div>
         )}
