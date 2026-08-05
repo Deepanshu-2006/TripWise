@@ -1525,7 +1525,7 @@ export default function PlannerSidebar({
             <button
               type="button"
               onClick={handleNewPrompt}
-              className="font-mono text-[10px] uppercase tracking-widest font-bold text-[#FF6B2C] hover:text-[#E55A20] cursor-pointer bg-transparent border-none transition-colors"
+              className="font-mono text-[10px] uppercase tracking-wide font-bold text-[#FF6B2C] hover:text-[#E55A20] cursor-pointer bg-transparent border-none transition-colors"
             >
               ← Reset
             </button>
@@ -1544,58 +1544,189 @@ export default function PlannerSidebar({
           </div>
         )}
 
-        {/* ── Boarding-Pass Stepper ───────────────────────────────────────── */}
-        <div className="flex items-stretch gap-0">
-          {[
-            { label: 'Prompt',   id: 'input'      },
-            { label: 'Details',  id: 'parsing'    },
-            { label: 'Vibe',     id: 'confirming' },
-            { label: 'Generate', id: 'progress'   }
-          ].map((s, idx) => {
-            const stepOrder = ['input', 'parsing', 'confirming', 'progress'];
-            const currentIdx = stepOrder.indexOf(step);
-            const isCompleted = currentIdx > idx;
-            const isActive    = currentIdx === idx;
+        {/* ── Premium Step Indicator ── */}
+        <style>{`
+          @keyframes glow-ring {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,44,0.6), 0 0 12px 2px rgba(255,107,44,0.2); }
+            50%       { box-shadow: 0 0 0 5px rgba(255,107,44,0), 0 0 20px 6px rgba(255,107,44,0.08); }
+          }
+          @keyframes green-glow-ring {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(47,166,106,0.5); }
+            50%       { box-shadow: 0 0 0 4px rgba(47,166,106,0); }
+          }
+          @keyframes progress-shimmer {
+            0%   { transform: translateX(-100%) skewX(-15deg); }
+            100% { transform: translateX(500%)  skewX(-15deg); }
+          }
+          @keyframes float-up {
+            0%, 100% { transform: translateY(0px); }
+            50%       { transform: translateY(-3px); }
+          }
+        `}</style>
 
-            return (
-              <React.Fragment key={s.id}>
-                {/* Segment */}
-                <div
-                  className={`relative flex flex-col items-center justify-center px-2 py-2 min-w-0 flex-1 transition-all duration-300
-                    ${ isActive    ? 'bg-[#FF6B2C]/8 border-b-2 border-[#FF6B2C]'
-                     : isCompleted ? 'bg-[#2FA66A]/6 border-b-2 border-[#2FA66A]'
-                     : 'border-b-2 border-stone-200' }`}
+        {(() => {
+          const stepOrder = ['input', 'parsing', 'confirming', 'progress'];
+          const currentIdx = stepOrder.indexOf(step);
+          const steps = [
+            { label: 'Prompt',   id: 'input',      icon: '✦' },
+            { label: 'Details',  id: 'parsing',    icon: '◈' },
+            { label: 'Vibe',     id: 'confirming', icon: '◉' },
+            { label: 'Generate', id: 'progress',   icon: '▶' },
+          ];
+
+          return (
+            <div className="flex flex-col gap-2 mb-1">
+              {/* Progress track */}
+              <div className="relative h-[3px] bg-stone-100 rounded-full overflow-visible mx-0.5">
+                <motion.div
+                  className="absolute left-0 top-0 h-full rounded-full overflow-hidden"
+                  initial={{ width: '2%' }}
+                  animate={{ width: currentIdx === 0 ? '2%' : `${(currentIdx / (steps.length - 1)) * 100}%` }}
+                  transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ background: 'linear-gradient(90deg, #2FA66A, #FF6B2C)' }}
                 >
-                  {/* Number or check */}
-                  <div className={`w-5 h-5 rounded-sm flex items-center justify-center text-[9px] font-black mb-0.5 transition-all duration-300
-                    ${ isCompleted ? 'bg-[#2FA66A] text-white'
-                     : isActive    ? 'bg-[#FF6B2C] text-white'
-                     : 'bg-stone-200 text-stone-400' }`}
-                  >
-                    {isCompleted ? '✓' : idx + 1}
-                  </div>
-                  <span className={`text-[8px] font-mono font-bold uppercase tracking-widest transition-colors duration-300
-                    ${ isActive    ? 'text-[#FF6B2C]'
-                     : isCompleted ? 'text-[#2FA66A]'
-                     : 'text-stone-400' }`}
-                  >
-                    {s.label}
-                  </span>
+                  {/* Shimmer on track fill */}
+                  <span style={{
+                    position: 'absolute', inset: 0,
+                    background: 'linear-gradient(90deg, transparent 20%, rgba(255,255,255,0.6) 50%, transparent 80%)',
+                    animation: 'progress-shimmer 2s ease-in-out infinite',
+                  }} />
+                </motion.div>
 
-                  {/* Active fill bar animation */}
-                  {isActive && (
-                    <span className="absolute bottom-[-2px] left-0 h-0.5 bg-[#FF6B2C] w-1/2 animate-pulse rounded-full" />
-                  )}
-                </div>
+                {/* Step dots on track */}
+                {steps.map((s, idx) => {
+                  const isCompleted = currentIdx > idx;
+                  const isActive = currentIdx === idx;
+                  const pct = idx === 0 ? 0 : (idx / (steps.length - 1)) * 100;
+                  return (
+                    <motion.div
+                      key={s.id}
+                      className="absolute top-1/2 -translate-y-1/2"
+                      style={{ left: `${pct}%`, translateX: '-50%' }}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: 'spring', stiffness: 700, damping: 20, delay: idx * 0.07 }}
+                    >
+                      <motion.div
+                        className={`w-2.5 h-2.5 rounded-full border-2 border-white transition-all ${
+                          isCompleted ? 'bg-[#2FA66A]' : isActive ? 'bg-[#FF6B2C]' : 'bg-stone-200'
+                        }`}
+                        animate={isActive ? { scale: [1, 1.3, 1] } : { scale: 1 }}
+                        transition={{ repeat: isActive ? Infinity : 0, duration: 1.5, ease: 'easeInOut' }}
+                        style={isActive ? { animation: 'glow-ring 1.5s ease-in-out infinite' } : isCompleted ? { animation: 'green-glow-ring 2s ease-in-out infinite' } : {}}
+                      />
+                    </motion.div>
+                  );
+                })}
+              </div>
 
-                {/* Dashed notch divider between segments */}
-                {idx < 3 && (
-                  <div className="flex items-center self-stretch border-b-2 border-dashed border-stone-200/80 w-2 shrink-0" />
-                )}
-              </React.Fragment>
-            );
-          })}
-        </div>
+              {/* Step pills row */}
+              <div className="flex items-center gap-1.5">
+                {steps.map((s, idx) => {
+                  const isCompleted = currentIdx > idx;
+                  const isActive    = currentIdx === idx;
+
+                  return (
+                    <motion.div
+                      key={s.id}
+                      className={`relative flex-1 flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl cursor-default overflow-hidden select-none ${
+                        isActive    ? 'bg-[#FF6B2C]/10'
+                      : isCompleted ? 'bg-[#2FA66A]/8'
+                      : 'bg-stone-50'
+                      }`}
+                      initial={{ opacity: 0, y: 10, scale: 0.92 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 24, delay: idx * 0.07 }}
+                      whileHover={{
+                        y: -3,
+                        scale: 1.03,
+                        boxShadow: isActive
+                          ? '0 8px 24px rgba(255,107,44,0.25), 0 2px 6px rgba(255,107,44,0.15)'
+                          : isCompleted
+                          ? '0 8px 20px rgba(47,166,106,0.2)'
+                          : '0 6px 18px rgba(0,0,0,0.08)',
+                        transition: { type: 'spring', stiffness: 500, damping: 18 }
+                      }}
+                      whileTap={{ scale: 0.97 }}
+                    >
+                      {/* Active shimmer sweep */}
+                      {isActive && (
+                        <span aria-hidden style={{
+                          position: 'absolute', inset: 0, zIndex: 0,
+                          background: 'linear-gradient(105deg, transparent 30%, rgba(255,107,44,0.12) 50%, transparent 70%)',
+                          animation: 'progress-shimmer 2.2s ease-in-out infinite',
+                          pointerEvents: 'none',
+                        }} />
+                      )}
+
+                      {/* Number badge */}
+                      <motion.div
+                        className={`relative z-10 w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black shrink-0 ${
+                          isCompleted ? 'bg-[#2FA66A] text-white' : isActive ? 'bg-[#FF6B2C] text-white' : 'bg-stone-200 text-stone-400'
+                        }`}
+                        key={`badge-${s.id}-${isCompleted}`}
+                        initial={{ scale: 0, rotate: -20 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ type: 'spring', stiffness: 800, damping: 18, delay: idx * 0.07 + 0.05 }}
+                        whileHover={{ scale: 1.25, rotate: isActive ? -8 : isCompleted ? 6 : 0, transition: { type: 'spring', stiffness: 600, damping: 12 } }}
+                        style={isActive ? { animation: 'glow-ring 1.6s ease-in-out infinite' } : isCompleted ? { animation: 'green-glow-ring 2.5s ease-in-out infinite' } : {}}
+                      >
+                        <AnimatePresence mode="wait">
+                          {isCompleted ? (
+                            <motion.span key="chk" initial={{ scale: 0, rotate: -90 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0, rotate: 90 }} transition={{ type: 'spring', stiffness: 800, damping: 14 }} style={{ display: 'inline-block' }}>✓</motion.span>
+                          ) : (
+                            <motion.span key="num" initial={{ scale: 0, y: -8 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0, y: 8 }} transition={{ type: 'spring', stiffness: 700, damping: 18 }} style={{ display: 'inline-block' }}>{idx + 1}</motion.span>
+                          )}
+                        </AnimatePresence>
+
+                        {/* Active pulsing ring */}
+                        {isActive && (
+                          <motion.span
+                            className="absolute inset-0 rounded-md"
+                            style={{ background: '#FF6B2C', zIndex: -1 }}
+                            animate={{ scale: [1, 1.9], opacity: [0.55, 0] }}
+                            transition={{ repeat: Infinity, duration: 1.2, ease: 'easeOut' }}
+                          />
+                        )}
+                      </motion.div>
+
+                      {/* Label */}
+                      <motion.span
+                        className={`relative z-10 text-[9px] font-mono font-bold uppercase tracking-wider leading-none ${
+                          isActive ? 'text-[#FF6B2C]' : isCompleted ? 'text-[#2FA66A]' : 'text-stone-400'
+                        }`}
+                        animate={isActive ? { y: [0, -1, 0], opacity: [0.8, 1, 0.8] } : {}}
+                        transition={isActive ? { repeat: Infinity, duration: 2, ease: 'easeInOut' } : {}}
+                      >
+                        {s.label}
+                      </motion.span>
+
+                      {/* Active glowing border bottom */}
+                      {isActive && (
+                        <motion.span
+                          className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full bg-[#FF6B2C]"
+                          initial={{ scaleX: 0, opacity: 0 }}
+                          animate={{ scaleX: 1, opacity: 1 }}
+                          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                          style={{ boxShadow: '0 0 8px rgba(255,107,44,0.7)' }}
+                        />
+                      )}
+                      {isCompleted && (
+                        <motion.span
+                          className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full bg-[#2FA66A]"
+                          initial={{ scaleX: 0 }}
+                          animate={{ scaleX: 1 }}
+                          transition={{ duration: 0.4, delay: idx * 0.05, ease: [0.16, 1, 0.3, 1] }}
+                          style={{ boxShadow: '0 0 6px rgba(47,166,106,0.5)' }}
+                        />
+                      )}
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       <div data-lenis-prevent="true" className="flex-1 overflow-y-auto overflow-x-hidden pr-2 -mr-3 scroll-smooth min-h-0">
@@ -1860,8 +1991,8 @@ export default function PlannerSidebar({
                 <span className="text-[9px] font-mono font-medium text-[#A89F91]">EDITABLE</span>
               </div>
               <motion.div
-                className="relative bg-white rounded-2xl border border-[#E6DFD5] p-3.5 shadow-2xs transition-all focus-within:border-[#FF6B2C] focus-within:ring-2 focus-within:ring-[#FF6B2C]/15"
-                whileHover={{ boxShadow: '0 4px 20px rgba(255,107,44,0.08)', borderColor: '#d4c9bd' }}
+                className="relative bg-white rounded-2xl border border-[#E6DFD5] border-l-4 border-l-[#FF6B2C] p-3.5 pl-4 shadow-2xs transition-all focus-within:border-[#FF6B2C] focus-within:ring-2 focus-within:ring-[#FF6B2C]/15"
+                whileHover={{ boxShadow: '0 4px 20px rgba(255,107,44,0.12)', borderColor: '#FF6B2C' }}
                 transition={{ duration: 0.2 }}
               >
                 <textarea
