@@ -530,6 +530,7 @@ const getDistanceAndProximity = (p1, p2, basecampName = 'Basecamp') => {
 import HiddenGemsWall from '../components/HiddenGemsWall';
 import FeaturesSelection from '../components/FeaturesSelection';
 import SavedPlacesModal from '../components/SavedPlacesModal';
+import NoDossierState from '../components/NoDossierState';
 
 const getDayDateString = (startDateStr, dayIndex) => {
   if (!startDateStr) return null;
@@ -1243,29 +1244,7 @@ export default function ItineraryPage() {
   }
 
   if (!itinerary) {
-    return (
-      <div className="min-h-screen bg-[#FAF6F0] text-[#1E1C1A] flex flex-col justify-between font-sans selection:bg-[#FF6B2C]/15">
-        <Header />
-        <div className="max-w-xl mx-auto px-6 py-32 text-center my-auto">
-          <div className="w-16 h-16 rounded-full border border-[#E6DFD5] bg-[#F5F0E8] text-[#FF6B2C] flex items-center justify-center mx-auto mb-6 text-2xl font-serif italic shadow-2xs">
-            I
-          </div>
-          <h1 className="text-4xl font-serif font-black tracking-tight mb-3 text-[#1E1C1A]">No Dossier Found</h1>
-          <p className="text-base font-serif italic text-[#7A7268] leading-relaxed mb-8">
-            Your travel dossier has not been generated yet. Please head to the AI Planner to build an interactive trip schedule.
-          </p>
-          <a
-            href="/ai-planner"
-            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full font-sans text-xs font-bold uppercase tracking-wider bg-[#1E1C1A] text-[#FAF6F0] hover:bg-[#FF6B2C] transition-all duration-300 shadow-md"
-          >
-            <span>Create Itinerary in Planner →</span>
-          </a>
-        </div>
-        <footer className="py-8 text-center text-xs font-serif italic text-[#7A7268] border-t border-[#E6DFD5]/60">
-          TripWise Private Travel Concierge · Published Dossier Guide
-        </footer>
-      </div>
-    );
+    return <NoDossierState />;
   }
 
   const rawDest = itinerary.destinationName || 'Your Custom Journey';
