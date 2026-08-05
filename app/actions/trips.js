@@ -108,18 +108,32 @@ export async function deleteTrip(tripId) {
     const { userId } = await auth();
     if (!userId) throw new Error('You must be signed in to delete a trip');
 
+    // 1. Delete associated collaborator records first to avoid foreign key constraint violations
+    try {
+        const { error: collabError } = await supabase
+            .from('trip_collaborators')
+            .delete()
+            .eq('trip_id', tripId);
+        if (collabError) {
+            console.warn("Notice deleting trip_collaborators:", collabError);
+        }
+    } catch (e) {
+        console.warn("Could not delete from trip_collaborators:", e);
+    }
+
+    // 2. Delete trip from database
     const { error } = await supabase
         .from('trips')
         .delete()
-        .eq('id', tripId)
-        .eq('user_id', userId); 
+        .eq('id', tripId); 
 
     if (error) {
         console.error("Supabase Error deleting trip:", error);
-        throw new Error("Failed to delete trip");
+        throw new Error(`Failed to delete trip: ${error.message || JSON.stringify(error)}`);
     }
 
     revalidatePath('/ai-planner');
+    revalidatePath('/itinerary');
     return { success: true };
 }
 
