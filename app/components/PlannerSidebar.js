@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import CustomDatePicker from './CustomDatePicker';
-import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw, Check, Map, Compass, ThumbsUp, ThumbsDown, Users, UserPlus, Landmark, Utensils, Zap, Gem, Star, Lightbulb, Smile, TreePine, Coffee, Palmtree, Banknote, Sun, Footprints, Coins } from 'lucide-react';
+import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw, Check, Map, Compass, ThumbsUp, ThumbsDown, Users, UserPlus, Landmark, Utensils, Zap, Gem, Star, Lightbulb, Smile, TreePine, Coffee, Palmtree, Banknote, Sun, Footprints, Coins, Plane } from 'lucide-react';
 
 const renderPremiumIcon = (emojiStr, size = 12) => {
   if (!emojiStr) return <Star size={size} strokeWidth={2.5} />;
@@ -219,6 +219,246 @@ const getDurationMinutes = (durationStr) => {
   }
   return 90;
 };
+
+
+// ─── RouteRow ─────────────────────────────────────────────────────────────────
+function RouteRow({ idx, dest, detail, onClick }) {
+  const [hovered, setHovered] = useState(false);
+  const nums = ['01', '02', '03'];
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="w-full flex items-center justify-between text-left p-3 rounded-xl bg-white border border-stone-200/70 cursor-pointer transition-colors duration-200 hover:border-[#FF6B2C]/40 hover:bg-[#FAF6F0]"
+      style={{ boxShadow: hovered ? '0 4px 16px rgba(255,107,44,0.08)' : '0 1px 3px rgba(0,0,0,0.04)', transition: 'box-shadow 0.25s ease, border-color 0.2s ease, background 0.2s ease' }}
+    >
+      {/* Index + text */}
+      <div className="flex items-center gap-3 min-w-0">
+        <span
+          className="font-mono text-[10px] font-black shrink-0 tabular-nums transition-colors duration-200"
+          style={{ color: hovered ? '#FF6B2C' : '#a8a29e' }}
+        >
+          {nums[idx] || `0${idx + 1}`}
+        </span>
+        <div className="min-w-0">
+          <div
+            className="font-serif font-black text-sm leading-tight transition-colors duration-200"
+            style={{ color: hovered ? '#FF6B2C' : '#1c1917' }}
+          >
+            {dest}
+          </div>
+          <div className="font-mono text-[9px] text-stone-400 uppercase tracking-wider truncate mt-0.5">
+            {detail}
+          </div>
+        </div>
+      </div>
+
+      {/* Arrow circle with shoot-out / fly-in */}
+      <div
+        className="shrink-0 ml-3 flex items-center justify-center rounded-full transition-all duration-300"
+        style={{
+          width: 28, height: 28,
+          background: hovered ? '#FF6B2C' : 'rgba(230,223,213,0.5)',
+          boxShadow: hovered ? '0 4px 14px rgba(255,107,44,0.3)' : 'none',
+          transform: hovered ? 'scale(1.1)' : 'scale(1)',
+          overflow: 'hidden',
+          position: 'relative',
+        }}
+      >
+        {/* Arrow that shoots out */}
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+          style={{
+            position: 'absolute',
+            color: hovered ? '#fff' : '#78716c',
+            opacity: hovered ? 0 : 1,
+            transform: hovered ? 'translate(16px,-16px) rotate(-45deg)' : 'translate(0,0) rotate(0deg)',
+            transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.18s ease',
+          }}
+        >
+          <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+        </svg>
+        {/* Arrow that flies in */}
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+          style={{
+            position: 'absolute',
+            color: '#fff',
+            opacity: hovered ? 1 : 0,
+            transform: hovered ? 'translate(0,0) rotate(0deg)' : 'translate(-16px,16px) rotate(-45deg)',
+            transition: 'transform 0.25s cubic-bezier(0.16,1,0.3,1) 0.04s, opacity 0.18s ease 0.04s',
+          }}
+        >
+          <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+        </svg>
+      </div>
+    </button>
+  );
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ─── PlanButton ───────────────────────────────────────────────────────────────
+function PlanButton({ disabled, onClick }) {
+  const [hovered, setHovered] = useState(false);
+  const [particles, setParticles] = useState([]);
+
+  const handleClick = (e) => {
+    if (disabled) return;
+    // Spawn 6 planes in a burst
+    const burst = Array.from({ length: 6 }, (_, i) => ({
+      id: Date.now() + i,
+      angle: i * 60 + Math.random() * 20 - 10,
+      dist: 48 + Math.random() * 24,
+      delay: i * 30,
+    }));
+    setParticles(burst);
+    setTimeout(() => setParticles([]), 750);
+    setTimeout(() => onClick && onClick(e), 50);
+  };
+
+  return (
+    <div className="relative w-full" style={{ isolation: 'isolate' }}>
+      {/* ── Keyframes injected once ── */}
+      <style>{`
+        @keyframes planeBurst {
+          0%   { opacity: 1; transform: translate(var(--tx0), var(--ty0)) scale(1); }
+          60%  { opacity: 0.7; }
+          100% { opacity: 0; transform: translate(var(--tx1), var(--ty1)) scale(0.4); }
+        }
+      `}</style>
+
+      {/* ── Particle planes (overflow the button) ── */}
+      {particles.map((p) => {
+        const rad = (p.angle * Math.PI) / 180;
+        const tx = Math.cos(rad) * p.dist;
+        const ty = Math.sin(rad) * p.dist;
+        return (
+          <Plane
+            key={p.id}
+            style={{
+              position: 'absolute',
+              left: '50%', top: '50%',
+              width: 11, height: 11,
+              color: '#FF6B2C', fill: '#FF6B2C',
+              pointerEvents: 'none', zIndex: 50,
+              '--tx0': '0px', '--ty0': '0px',
+              '--tx1': `${tx}px`, '--ty1': `${ty}px`,
+              animation: `planeBurst 0.65s cubic-bezier(0.2,0,0.8,1) ${p.delay}ms forwards`,
+              transform: 'translate(-50%,-50%)',
+            }}
+          />
+        );
+      })}
+
+      {/* ── The button itself ── */}
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={handleClick}
+        onMouseEnter={() => !disabled && setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          width: '100%',
+          transform: hovered && !disabled ? 'translateY(-2px)' : 'translateY(0)',
+          boxShadow: hovered && !disabled
+            ? '0 12px 28px rgba(255,107,44,0.4), 0 3px 8px rgba(255,107,44,0.15)'
+            : disabled ? 'none' : '0 4px 14px rgba(255,107,44,0.22)',
+          transition: 'transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s ease',
+        }}
+        className={`relative rounded-2xl overflow-hidden flex items-center cursor-pointer active:scale-[0.98] ${
+          disabled
+            ? 'bg-stone-200 text-stone-400 cursor-not-allowed opacity-60'
+            : 'bg-gradient-to-r from-[#FF6B2C] via-[#F96620] to-[#E55A20] text-white'
+        }`}
+      >
+        {/* Dark ink fill sweeps from left on hover */}
+        {!disabled && (
+          <span aria-hidden style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(110deg, #1a1816 0%, #252220 100%)',
+            transform: hovered ? 'scaleX(1)' : 'scaleX(0)',
+            transformOrigin: 'left center',
+            transition: 'transform 0.5s cubic-bezier(0.16,1,0.3,1)',
+            pointerEvents: 'none',
+          }} />
+        )}
+
+        {/* LEFT: text block */}
+        <div className="relative z-10 flex-1 flex flex-col justify-center px-5 py-3">
+          <span className="font-mono text-[7px] uppercase tracking-[0.22em] leading-none mb-1"
+            style={{ color: 'rgba(255,255,255,0.5)' }}>
+            {hovered && !disabled ? '✦ ready for takeoff' : 'your journey awaits'}
+          </span>
+          <span
+            className="font-black text-[14px] uppercase leading-none"
+            style={{
+              letterSpacing: hovered && !disabled ? '0.15em' : '0.10em',
+              transition: 'letter-spacing 0.4s cubic-bezier(0.16,1,0.3,1)',
+            }}
+          >
+            Plan My Trip
+          </span>
+        </div>
+
+        {/* Thin vertical separator */}
+        {!disabled && (
+          <span className="relative z-10 self-stretch w-px shrink-0"
+            style={{
+              background: hovered ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.15)',
+              transition: 'background 0.3s ease',
+            }}
+          />
+        )}
+
+        {/* RIGHT: plane circle */}
+        <div className="relative z-10 flex items-center justify-center px-4 shrink-0">
+          <div style={{
+            width: 32, height: 32, borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            position: 'relative', overflow: 'hidden',
+            background: hovered && !disabled ? '#FF6B2C' : '#fff',
+            boxShadow: hovered && !disabled
+              ? '0 0 0 2px rgba(255,255,255,0.25), 0 4px 12px rgba(0,0,0,0.15)'
+              : '0 2px 8px rgba(0,0,0,0.1)',
+            transition: 'background 0.3s ease, box-shadow 0.3s ease',
+          }}>
+            {/* Spinning dashed ring */}
+            <span aria-hidden style={{
+              position: 'absolute', inset: 3, borderRadius: '50%',
+              border: `1.5px dashed ${hovered && !disabled ? 'rgba(255,255,255,0.55)' : 'rgba(255,107,44,0.45)'}`,
+              animation: 'spin 5s linear infinite',
+              transition: 'border-color 0.3s ease',
+            }} />
+            {/* Plane out */}
+            <Plane style={{
+              width: 13, height: 13, position: 'absolute',
+              color: hovered && !disabled ? '#fff' : '#FF6B2C',
+              fill: hovered && !disabled ? '#fff' : '#FF6B2C',
+              opacity: hovered ? 0 : 1,
+              transform: hovered ? 'translate(16px,-16px)' : 'translate(0,0)',
+              transition: 'transform 0.24s cubic-bezier(0.4,0,0.2,1), opacity 0.15s ease',
+            }} />
+            {/* Plane in */}
+            <Plane style={{
+              width: 13, height: 13, position: 'absolute',
+              color: hovered && !disabled ? '#fff' : '#FF6B2C',
+              fill: hovered && !disabled ? '#fff' : '#FF6B2C',
+              opacity: hovered ? 1 : 0,
+              transform: hovered ? 'translate(0,0)' : 'translate(-16px,16px)',
+              transition: 'transform 0.26s cubic-bezier(0.16,1,0.3,1) 0.05s, opacity 0.16s ease 0.05s',
+            }} />
+          </div>
+        </div>
+      </button>
+    </div>
+  );
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
+
+
+
+
 
 export default function PlannerSidebar({
   currentStep = 'destination',
@@ -1274,75 +1514,87 @@ export default function PlannerSidebar({
 
   return (
     <div className={`w-full flex-1 min-h-full bg-[#FAF3EE] text-stone-900 ${step === 'progress' && showFinalCTA && itinerary ? 'p-4 md:p-6' : 'p-6 md:p-8'} flex flex-col justify-between font-sans select-none border-r border-stone-200/60`}>
-      {/* Top Header Brand / Label with Sticky wrapper */}
-      <div className="sticky top-0 z-30 bg-[#FAF3EE] pt-2 pb-4 -mx-6 md:-mx-8 px-6 md:px-8 border-b border-stone-200/50 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B2C]" />
-            <span className="text-xs font-bold tracking-widest uppercase text-stone-500">
-              TripWise AI Planner
+      {/* ── Sticky Header ────────────────────────────────────────────────── */}
+      <div className="sticky top-0 z-30 bg-[#FAF3EE] pt-3 pb-4 -mx-6 md:-mx-8 px-6 md:px-8 border-b border-stone-200/50 mb-6">
+
+        {/* Stamp badge row */}
+        <div className="flex items-center justify-between mb-5">
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 border border-stone-300/70 rounded-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B2C]" />
+            <span className="font-mono text-[10px] font-bold tracking-[0.18em] uppercase text-stone-500">
+              TripWise · Planner
             </span>
           </div>
           {step !== 'input' && !(step === 'progress' && showFinalCTA && itinerary) && (
             <button
               type="button"
               onClick={handleNewPrompt}
-              className="text-xs font-semibold text-[#FF6B2C] hover:underline cursor-pointer bg-transparent border-none"
+              className="font-mono text-[10px] uppercase tracking-widest font-bold text-[#FF6B2C] hover:text-[#E55A20] cursor-pointer bg-transparent border-none transition-colors"
             >
-              ← New Prompt
+              ← Reset
             </button>
           )}
         </div>
 
+        {/* Headline — only on step=input */}
         {step === 'input' && (
-          <div className="space-y-2 mb-4">
-            <h2 className="text-3xl md:text-4xl font-black text-stone-900 tracking-tight leading-tight">
+          <div className="mb-5">
+            <h2 className="text-3xl md:text-4xl font-serif font-black text-stone-900 tracking-tight leading-tight mb-1.5">
               Where to next?
             </h2>
-            <p className="text-sm md:text-base text-stone-650 leading-relaxed">
-              Tell TripWise your dream destination, vibe, budget, or timeline. Our AI will craft your custom itinerary in seconds.
+            <p className="text-sm text-stone-500 leading-relaxed font-sans">
+              Tell TripWise your destination, vibe, budget, or timeline — we'll craft the rest.
             </p>
           </div>
         )}
 
-        {/* Visual Progress Stepper placed prominently near the top */}
-        <div className="flex items-center justify-between max-w-md mx-auto mt-4 px-2">
+        {/* ── Boarding-Pass Stepper ───────────────────────────────────────── */}
+        <div className="flex items-stretch gap-0">
           {[
-            { label: 'Prompt', id: 'input' },
-            { label: 'Details', id: 'parsing' },
-            { label: 'Vibe', id: 'confirming' },
-            { label: 'Generate', id: 'progress' }
+            { label: 'Prompt',   id: 'input'      },
+            { label: 'Details',  id: 'parsing'    },
+            { label: 'Vibe',     id: 'confirming' },
+            { label: 'Generate', id: 'progress'   }
           ].map((s, idx) => {
             const stepOrder = ['input', 'parsing', 'confirming', 'progress'];
             const currentIdx = stepOrder.indexOf(step);
             const isCompleted = currentIdx > idx;
-            const isActive = currentIdx === idx;
+            const isActive    = currentIdx === idx;
 
             return (
               <React.Fragment key={s.id}>
-                <div className="flex flex-col items-center gap-1.5 shrink-0">
-                  <div className={`w-6.5 h-6.5 rounded-full flex items-center justify-center text-[10px] font-black transition-all duration-300 ${isCompleted
-                      ? 'bg-[#2FA66A] text-white shadow-xs'
-                      : isActive
-                        ? 'bg-[#FF6B2C] text-white ring-4 ring-[#FF6B2C]/20 scale-105 shadow-xs'
-                        : 'bg-stone-200 text-stone-400 border border-stone-300'
-                    }`}>
+                {/* Segment */}
+                <div
+                  className={`relative flex flex-col items-center justify-center px-2 py-2 min-w-0 flex-1 transition-all duration-300
+                    ${ isActive    ? 'bg-[#FF6B2C]/8 border-b-2 border-[#FF6B2C]'
+                     : isCompleted ? 'bg-[#2FA66A]/6 border-b-2 border-[#2FA66A]'
+                     : 'border-b-2 border-stone-200' }`}
+                >
+                  {/* Number or check */}
+                  <div className={`w-5 h-5 rounded-sm flex items-center justify-center text-[9px] font-black mb-0.5 transition-all duration-300
+                    ${ isCompleted ? 'bg-[#2FA66A] text-white'
+                     : isActive    ? 'bg-[#FF6B2C] text-white'
+                     : 'bg-stone-200 text-stone-400' }`}
+                  >
                     {isCompleted ? '✓' : idx + 1}
                   </div>
-                  <span className={`text-[9px] font-extrabold uppercase tracking-wider ${isActive ? 'text-[#FF6B2C]' : isCompleted ? 'text-[#2FA66A]' : 'text-stone-400'
-                    }`}>
+                  <span className={`text-[8px] font-mono font-bold uppercase tracking-widest transition-colors duration-300
+                    ${ isActive    ? 'text-[#FF6B2C]'
+                     : isCompleted ? 'text-[#2FA66A]'
+                     : 'text-stone-400' }`}
+                  >
                     {s.label}
                   </span>
+
+                  {/* Active fill bar animation */}
+                  {isActive && (
+                    <span className="absolute bottom-[-2px] left-0 h-0.5 bg-[#FF6B2C] w-1/2 animate-pulse rounded-full" />
+                  )}
                 </div>
+
+                {/* Dashed notch divider between segments */}
                 {idx < 3 && (
-                  <div className="flex-1 h-0.5 mx-2 bg-stone-200 -mt-4 relative overflow-hidden rounded-full shrink-0">
-                    <div className={`h-full bg-[#2FA66A] ${isCompleted
-                        ? 'w-full'
-                        : isActive
-                          ? 'w-1/2 animate-pulse'
-                          : 'w-0'
-                      } transition-all duration-500`} />
-                  </div>
+                  <div className="flex items-center self-stretch border-b-2 border-dashed border-stone-200/80 w-2 shrink-0" />
                 )}
               </React.Fragment>
             );
@@ -1354,18 +1606,25 @@ export default function PlannerSidebar({
         {/* STATE 0: Prompt Input Setup Page */}
         {step === 'input' && (
           <div className="space-y-8 animate-fade-in">
-            {/* Input Block */}
+            {/* ── Prompt Textarea ── */}
             <div className="space-y-6">
-              <textarea
-                value={userPromptInput}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setUserPromptInput(val);
-                  if (onPromptChange) onPromptChange(val);
-                }}
-                placeholder="e.g., 5 days in Kyoto during cherry blossom season... love historic temples, hidden gardens, authentic ramen shops, and boutique stays."
-                className="w-full h-36 p-4 md:p-5 rounded-2xl bg-white border border-stone-300 focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 text-sm md:text-base text-stone-900 placeholder:text-stone-400 focus:outline-none shadow-sm transition-all duration-150 resize-none font-medium"
-              />
+              <div className="relative">
+                <textarea
+                  value={userPromptInput}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setUserPromptInput(val);
+                    if (onPromptChange) onPromptChange(val);
+                  }}
+                  placeholder="e.g., 5 days in Kyoto during cherry blossom season… love historic temples, hidden gardens, authentic ramen shops, and boutique stays."
+                  maxLength={400}
+                  className="w-full h-36 pt-4 pb-8 px-4 md:px-5 rounded-xl bg-white border border-stone-200 border-l-[3px] border-l-[#FF6B2C] focus:border-stone-300 focus:border-l-[#FF6B2C] focus:ring-0 text-sm md:text-base text-stone-900 placeholder:text-stone-400/80 focus:outline-none shadow-sm transition-all duration-200 resize-none font-sans leading-relaxed"
+                />
+                {/* Character counter */}
+                <span className="absolute bottom-2.5 right-3 font-mono text-[9px] text-stone-400 tabular-nums pointer-events-none">
+                  {userPromptInput.length}/400
+                </span>
+              </div>
 
               {/* Basecamp Input (Secondary, Mode-Branching Detail) */}
               <div className="relative">
@@ -1443,79 +1702,76 @@ export default function PlannerSidebar({
                 </AnimatePresence>
               </div>
 
-              {/* Vibe Enhancers */}
+              {/* ── Vibe Enhancer Chips ── */}
               <div className="space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#FF6B2C] flex items-center gap-1.5">
-                    <span>⚡ One-Click Vibe Enhancers</span>
-                  </span>
-                  <span className="text-[11px] text-stone-500 font-normal">Click to toggle</span>
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-stone-400">Vibe Add-ons</span>
+                  <div className="flex-1 h-px bg-stone-200" />
                 </div>
                 <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {[
-                    "➕ Hidden Local Gems",
-                    "➕ Michelin & Street Food",
-                    "➕ Scenic Photography Spots",
-                    "➕ Budget Friendly & Hostels",
-                    "➕ Luxury Boutique Stays",
-                    "➕ Fast-Paced Nightlife"
-                  ].map((tag, idx) => {
+                    "Hidden Local Gems",
+                    "Michelin & Street Food",
+                    "Scenic Photography",
+                    "Budget & Hostels",
+                    "Luxury Boutique",
+                    "Fast-Paced Nightlife"
+                  ].map((rawLabel, idx) => {
+                    const tag = `➕ ${rawLabel}`;
                     const active = isTagActive(tag);
-                    const label = active ? `✓ ${tag.replace('➕ ', '')}` : tag;
                     return (
                       <button
                         key={idx}
                         type="button"
                         onClick={() => toggleVibeEnhancer(tag)}
-                        className={`px-3 py-1 rounded-full text-xs font-bold border transition-all duration-150 cursor-pointer active:scale-95 flex items-center gap-1 ${active
-                            ? 'bg-[#FF6B2C] text-white border-[#FF6B2C] shadow-xs ring-2 ring-[#FF6B2C]/30 scale-102 font-extrabold'
-                            : 'bg-white hover:bg-[#FF6B2C]/10 hover:text-[#FF6B2C] text-stone-700 border-stone-200/80 shadow-2xs'
-                          }`}
+                        style={{
+                          transform: active ? 'rotate(1deg) scale(1.03)' : 'rotate(0deg) scale(1)',
+                          transition: 'transform 0.2s cubic-bezier(0.16,1,0.3,1), background 0.15s ease, color 0.15s ease',
+                        }}
+                        className={`px-3 py-1.5 rounded-sm text-[11px] font-mono font-bold border cursor-pointer active:scale-95 ${
+                          active
+                            ? 'bg-[#FF6B2C] text-white border-[#FF6B2C] shadow-sm'
+                            : 'bg-white hover:bg-[#FF6B2C]/8 hover:text-[#FF6B2C] hover:border-[#FF6B2C]/40 text-stone-600 border-stone-200'
+                        }`}
                       >
-                        {label}
+                        {active ? `✓ ${rawLabel}` : `+ ${rawLabel}`}
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Example Prompts styled as links list */}
-              <div className="space-y-2.5 pt-4 border-t border-stone-200/60">
-                <span className="text-xs font-bold uppercase tracking-wider text-stone-500 block">
-                  💡 Quick Start Ideas (Text Templates):
-                </span>
-                <div className="flex flex-col gap-2">
+              {/* ── Quick Start Routes ── */}
+              <div className="pt-4 border-t border-stone-200/60">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-stone-400">Routes</span>
+                  <div className="flex-1 h-px bg-stone-200" />
+                </div>
+                <div className="flex flex-col gap-1.5">
                   {[
-                    { text: "5 days in Kyoto: temples, gardens & street food", emoji: "🌸" },
-                    { text: "3 budget days in Rome: hidden gems & local pasta", emoji: "🍕" },
-                    { text: "7 fast-paced days in Tokyo: cyberpunk nightlife & tech", emoji: "⚡" }
+                    { dest: "Kyoto",  detail: "5 days · temples, gardens & street food",    prompt: "🌸 5 days in Kyoto: temples, gardens & street food" },
+                    { dest: "Rome",   detail: "3 days · hidden gems & local pasta",           prompt: "🍕 3 budget days in Rome: hidden gems & local pasta" },
+                    { dest: "Tokyo",  detail: "7 days · cyberpunk nightlife & tech",          prompt: "⚡ 7 fast-paced days in Tokyo: cyberpunk nightlife & tech" }
                   ].map((ex, idx) => (
-                    <button
+                    <RouteRow
                       key={idx}
-                      type="button"
+                      idx={idx}
+                      dest={ex.dest}
+                      detail={ex.detail}
                       onClick={() => {
-                        setUserPromptInput(`${ex.emoji} ${ex.text}`);
-                        if (onPromptChange) onPromptChange(`${ex.emoji} ${ex.text}`);
+                        setUserPromptInput(ex.prompt);
+                        if (onPromptChange) onPromptChange(ex.prompt);
                         setStep('parsing');
                       }}
-                      className="w-full flex items-center justify-between text-left text-xs sm:text-sm text-[#1F1F1F] hover:text-[#FF6B2C] transition-all bg-white hover:bg-stone-50 border border-stone-200/60 rounded-xl p-3 shadow-2xs group cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <span className="text-sm shrink-0">{ex.emoji}</span>
-                        <span className="font-semibold truncate text-stone-700 group-hover:text-stone-900">{ex.text}</span>
-                      </div>
-                      <span className="text-[#FF6B2C] opacity-0 group-hover:opacity-100 transition-all font-bold text-xs shrink-0 -translate-x-1 group-hover:translate-x-0">
-                        Try it →
-                      </span>
-                    </button>
+                    />
                   ))}
                 </div>
               </div>
             </div>
 
+            {/* ── CTA Button ── */}
             <div className="pt-2">
-              <button
-                type="button"
+              <PlanButton
                 disabled={!userPromptInput.trim()}
                 onClick={() => {
                   if (userPromptInput.trim()) {
@@ -1527,21 +1783,7 @@ export default function PlannerSidebar({
                     setStep('parsing');
                   }
                 }}
-                className={`group relative w-full py-4 px-6 rounded-2xl font-extrabold text-base transition-all duration-300 flex items-center justify-center gap-2.5 overflow-hidden ${userPromptInput.trim()
-                    ? 'bg-linear-to-r from-[#FF6B2C] to-[#E55A20] text-white shadow-[0_8px_20px_rgba(255,107,44,0.4)] hover:shadow-[0_12px_30px_rgba(255,107,44,0.6)] hover:-translate-y-1 active:scale-[0.98] active:translate-y-0 cursor-pointer border border-[#FF854F]/30'
-                    : 'bg-stone-200 text-stone-400 cursor-not-allowed opacity-60 border border-stone-300/40'
-                  }`}
-              >
-                {/* Hover Shine Effect */}
-                {userPromptInput.trim() && (
-                  <div className="absolute inset-0 w-full h-full bg-linear-to-r from-transparent via-white/30 to-transparent -skew-x-12 translate-x-[-150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out" />
-                )}
-
-                <span className="relative z-10 tracking-wide drop-shadow-sm text-lg">Plan My Trip</span>
-                <div className="relative z-10 transition-transform duration-300 group-hover:translate-x-2">
-                  <ArrowRightIcon />
-                </div>
-              </button>
+              />
             </div>
           </div>
         )}
@@ -1566,32 +1808,60 @@ export default function PlannerSidebar({
 
         {/* STATE 2: Confirmation */}
         {step === 'confirming' && (
-          <div className="flex flex-col gap-6 animate-fade-in pb-16">
-            <h2 className="text-lg md:text-xl font-semibold text-(--foreground) leading-snug">
-              Got it, {destinationName}. A couple quick things:
-            </h2>
+          <div className="flex flex-col gap-5 animate-fade-in pb-16">
 
-            {/* Editable Prompt */}
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-secondary-text mb-2.5">
-                Your Prompt
-              </label>
-              <textarea
-                value={userPromptInput}
-                onChange={handlePromptTextChange}
-                rows={3}
-                className="w-full p-3 rounded-xl border border-[rgba(28,27,27,0.1)] bg-bg-white text-(--foreground) text-sm shadow-2xs focus:outline-none focus:ring-2 focus:ring-accent-orange/40 focus:border-accent-orange transition-all resize-none"
-                placeholder="E.g., 5 days in Tokyo focusing on street food and neon lights..."
-              />
+            {/* ── Heading ── */}
+            <div className="flex flex-col gap-1">
+              <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-[#FF6B2C]">
+                ✦ a couple quick things
+              </span>
+              <h2 className="text-xl font-black text-[#1C1B1B] leading-snug">
+                Got it,{' '}
+                <span style={{
+                  background: 'linear-gradient(135deg,#FF6B2C,#E55A20)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}>
+                  {destinationName}
+                </span>
+              </h2>
             </div>
 
-
-            {/* Tune your vibe */}
+            {/* ── Editable Prompt ── */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-secondary-text mb-2.5">
-                Tune your vibe
+              <label className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-stone-400 mb-2">
+                <span>Your Prompt</span>
               </label>
-              <div className="flex flex-wrap gap-2">
+              <div style={{
+                position: 'relative',
+                background: '#fff',
+                borderRadius: 12,
+                border: '1.5px solid rgba(28,27,27,0.09)',
+                overflow: 'hidden',
+              }}>
+                {/* Left accent bar */}
+                <span style={{
+                  position: 'absolute', left: 0, top: 0, bottom: 0, width: 3,
+                  background: 'linear-gradient(180deg,#FF6B2C,#E55A20)',
+                  borderRadius: '12px 0 0 12px',
+                }} />
+                <textarea
+                  value={userPromptInput}
+                  onChange={handlePromptTextChange}
+                  rows={2}
+                  style={{ fontFamily: 'monospace', paddingLeft: 16 }}
+                  className="w-full pl-4 pr-3 py-3 bg-transparent text-[13px] text-[#1C1B1B] placeholder-stone-300 focus:outline-none resize-none"
+                  placeholder="E.g., 5 days in Tokyo — street food & neon lights..."
+                />
+              </div>
+            </div>
+
+            {/* ── Tune Your Vibe ── */}
+            <div>
+              <label className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-stone-400 mb-2.5">
+                Tune Your Vibe
+              </label>
+              <div className="flex flex-wrap gap-1.5">
                 {INTEREST_OPTIONS.map((item) => {
                   const isActive = selectedInterests.includes(item.id);
                   return (
@@ -1599,68 +1869,24 @@ export default function PlannerSidebar({
                       key={item.id}
                       type="button"
                       onClick={() => toggleInterest(item.id)}
-                      className={`flex items-center gap-2 px-3.5 py-2 rounded-full text-xs md:text-sm font-semibold transition-all duration-150 cursor-pointer shadow-2xs hover:scale-[1.01] active:scale-98 ${isActive
-                          ? 'bg-[#FF6B2C]/10 border-2 border-[#FF6B2C] text-stone-900 font-extrabold shadow-sm'
-                          : 'bg-white border border-stone-200 text-stone-650 hover:border-stone-400 font-medium'
-                        }`}
+                      style={{
+                        padding: '6px 13px',
+                        borderRadius: 99,
+                        fontSize: 12,
+                        fontWeight: isActive ? 700 : 500,
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        cursor: 'pointer',
+                        transition: 'all 0.18s cubic-bezier(0.16,1,0.3,1)',
+                        transform: isActive ? 'scale(1.03)' : 'scale(1)',
+                        background: isActive ? '#FF6B2C' : '#fff',
+                        color: isActive ? '#fff' : '#4b4541',
+                        border: isActive ? '1.5px solid #FF6B2C' : '1.5px solid rgba(28,27,27,0.12)',
+                        boxShadow: isActive ? '0 4px 12px rgba(255,107,44,0.25)' : '0 1px 3px rgba(0,0,0,0.05)',
+                      }}
                     >
-                      <span className={isActive ? 'text-[#FF6B2C]' : 'text-stone-400'}>
+                      <span style={{ opacity: isActive ? 1 : 0.6, filter: isActive ? 'brightness(10)' : 'none' }}>
                         {item.icon}
                       </span>
-                      <span>{item.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Set your budget */}
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-secondary-text mb-2.5">
-                Set your budget
-              </label>
-              <div className="flex flex-col gap-2.5">
-                {BUDGET_OPTIONS.map((item) => {
-                  const isSelected = selectedBudget === item.id;
-                  return (
-                    <div
-                      key={item.id}
-                      onClick={() => setSelectedBudget(item.id)}
-                      className={`w-full p-3.5 rounded-xl cursor-pointer transition-all duration-150 text-left flex flex-col shadow-2xs ${isSelected
-                          ? 'bg-(--accent-orange-tint)/30 border-2 border-accent-orange'
-                          : 'bg-bg-white border border-[rgba(28,27,27,0.1)] hover:bg-[#FFFDFB]'
-                        }`}
-                    >
-                      <span className="text-sm md:text-base font-semibold text-(--foreground)">
-                        {item.title}
-                      </span>
-                      <span className="text-xs md:text-sm text-secondary-text mt-0.5">
-                        {item.desc}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Choose your pace */}
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-secondary-text mb-2.5">
-                Choose your pace
-              </label>
-              <div className="grid grid-cols-3 p-1 gap-1 rounded-xl bg-bg-white border border-[rgba(28,27,27,0.1)] shadow-2xs">
-                {PACE_OPTIONS.map((item) => {
-                  const isActive = selectedPace === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setSelectedPace(item.id)}
-                      className={`py-2 px-2 rounded-lg text-xs md:text-sm transition-all duration-150 cursor-pointer text-center ${isActive
-                          ? 'bg-accent-orange-tint text-text-primary font-semibold shadow-2xs'
-                          : 'bg-transparent text-secondary-text hover:text-(--foreground) font-medium'
-                        }`}
-                    >
                       {item.label}
                     </button>
                   );
@@ -1668,37 +1894,145 @@ export default function PlannerSidebar({
               </div>
             </div>
 
-            {/* Trip duration */}
+            {/* ── Set Your Budget ── */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-secondary-text mb-2.5">
-                Trip duration (days)
+              <label className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-stone-400 mb-2.5">
+                Set Your Budget
               </label>
-              <div className="flex items-center justify-between p-1.5 rounded-xl bg-bg-white border border-[rgba(28,27,27,0.1)] shadow-2xs mb-4">
+              <div className="flex flex-col gap-2">
+                {BUDGET_OPTIONS.map((item, idx) => {
+                  const isSelected = selectedBudget === item.id;
+                  const icons = ['🎒', '🏨', '💎'];
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={() => setSelectedBudget(item.id)}
+                      style={{
+                        padding: '11px 14px',
+                        borderRadius: 12,
+                        cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        transition: 'all 0.2s cubic-bezier(0.16,1,0.3,1)',
+                        background: isSelected ? 'rgba(255,107,44,0.06)' : '#fff',
+                        border: isSelected ? '1.5px solid #FF6B2C' : '1.5px solid rgba(28,27,27,0.09)',
+                        transform: isSelected ? 'scale(1.01)' : 'scale(1)',
+                        boxShadow: isSelected ? '0 4px 16px rgba(255,107,44,0.12)' : '0 1px 3px rgba(0,0,0,0.04)',
+                      }}
+                    >
+                      <span style={{ fontSize: 20, lineHeight: 1 }}>{icons[idx]}</span>
+                      <div className="flex-1 min-w-0">
+                        <div style={{
+                          fontSize: 13, fontWeight: 700,
+                          color: isSelected ? '#FF6B2C' : '#1C1B1B',
+                          transition: 'color 0.2s ease',
+                        }}>
+                          {item.title}
+                        </div>
+                        <div style={{ fontSize: 11, color: '#9a9189', marginTop: 1 }}>
+                          {item.desc}
+                        </div>
+                      </div>
+                      {isSelected && (
+                        <span style={{
+                          width: 18, height: 18, borderRadius: '50%',
+                          background: '#FF6B2C', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          flexShrink: 0,
+                        }}>
+                          <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
+                            <path d="M1 3.5L3.5 6L8 1" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* ── Choose Your Pace ── */}
+            <div>
+              <label className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-stone-400 mb-2.5">
+                Choose Your Pace
+              </label>
+              <div style={{
+                display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
+                gap: 6, padding: 5,
+                background: '#fff', borderRadius: 14,
+                border: '1.5px solid rgba(28,27,27,0.09)',
+              }}>
+                {PACE_OPTIONS.map((item) => {
+                  const isActive = selectedPace === item.id;
+                  const paceEmoji = { Relaxed: '🌿', Balanced: '⚡', 'Fast-paced': '🚀' };
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setSelectedPace(item.id)}
+                      style={{
+                        padding: '8px 4px',
+                        borderRadius: 10,
+                        fontSize: 11,
+                        fontWeight: isActive ? 700 : 500,
+                        cursor: 'pointer',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                        transition: 'all 0.2s cubic-bezier(0.16,1,0.3,1)',
+                        background: isActive ? 'rgba(255,107,44,0.08)' : 'transparent',
+                        color: isActive ? '#FF6B2C' : '#7a7268',
+                        border: isActive ? '1px solid rgba(255,107,44,0.2)' : '1px solid transparent',
+                      }}
+                    >
+                      <span style={{ fontSize: 14 }}>{paceEmoji[item.label] || '⚡'}</span>
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* ── Trip Duration ── */}
+            <div>
+              <label className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-stone-400 mb-2.5">
+                Trip Duration (Days)
+              </label>
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '6px 6px', borderRadius: 12,
+                background: '#fff', border: '1.5px solid rgba(28,27,27,0.09)',
+              }}>
                 <button
                   type="button"
                   onClick={() => handleDaysCounterChange(Math.max(1, selectedDays - 1))}
-                  className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-stone-100 text-stone-500 font-bold transition-colors cursor-pointer"
+                  style={{
+                    width: 36, height: 36, borderRadius: 9, border: '1px solid rgba(28,27,27,0.1)',
+                    background: '#FAF6F0', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 18, fontWeight: 300, color: '#7a7268', cursor: 'pointer',
+                  }}
                 >
-                  –
+                  −
                 </button>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-lg font-bold text-[#1F1F1F]">{selectedDays}</span>
-                  <span className="text-xs font-medium text-stone-400">days</span>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                  <span style={{ fontSize: 22, fontWeight: 900, color: '#FF6B2C' }}>{selectedDays}</span>
+                  <span style={{ fontSize: 11, fontWeight: 500, color: '#b0a89e' }}>days</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => handleDaysCounterChange(Math.min(30, selectedDays + 1))}
-                  className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-stone-100 text-stone-500 font-bold transition-colors cursor-pointer"
+                  style={{
+                    width: 36, height: 36, borderRadius: 9, border: '1px solid rgba(28,27,27,0.1)',
+                    background: '#FAF6F0', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 18, fontWeight: 300, color: '#7a7268', cursor: 'pointer',
+                  }}
                 >
                   +
                 </button>
               </div>
+            </div>
 
-              <div className="flex items-center justify-between mb-2.5">
-                <label className="block text-xs font-semibold uppercase tracking-wider text-secondary-text">
-                  Travel Dates (Optional)
-                </label>
-              </div>
+            {/* ── Travel Dates ── */}
+            <div>
+              <label className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-stone-400 mb-2.5">
+                Travel Dates <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+              </label>
               <div className="flex gap-2 relative z-50">
                 <div className="flex-1">
                   <CustomDatePicker
@@ -1707,7 +2041,7 @@ export default function PlannerSidebar({
                     placeholder="Start date"
                   />
                 </div>
-                <div className="flex items-center text-stone-400">
+                <div className="flex items-center text-stone-300">
                   <ArrowRightIcon />
                 </div>
                 <div className="flex-1">
@@ -1718,58 +2052,100 @@ export default function PlannerSidebar({
                   />
                 </div>
               </div>
-
-              {/* Price Tracking Opt-In */}
-              <div className="mt-4 p-4 rounded-xl bg-[#FAF6F0] border border-[#E6DFD5]">
-                <label className="flex items-start justify-between cursor-pointer group">
-                  <div className="flex flex-col gap-0.5 max-w-50">
-                    <span className="text-sm font-bold text-[#1E1C1A] group-hover:text-[#FF6B2C] transition-colors">Track Prices</span>
-                    <span className="text-xs text-[#7A7268]">Monitor flight & hotel prices for drops</span>
-                  </div>
-                  <div className={`mt-1 w-10 h-6 rounded-full transition-colors relative shrink-0 ${trackPrices ? 'bg-[#FF6B2C]' : 'bg-[#E6DFD5]'}`}>
-                    <input type="checkbox" className="sr-only" checked={trackPrices} onChange={() => setTrackPrices(!trackPrices)} />
-                    <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${trackPrices ? 'translate-x-4' : 'translate-x-0'}`} />
-                  </div>
-                </label>
-
-                <AnimatePresence>
-                  {trackPrices && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                      animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
-                      exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                      className="overflow-hidden"
-                    >
-                      <label className="block text-[10px] font-bold text-[#7A7268] uppercase tracking-wider mb-1">Origin Airport</label>
-                      <input
-                        type="text"
-                        value={trackOrigin}
-                        onChange={(e) => setTrackOrigin(e.target.value.toUpperCase())}
-                        maxLength={3}
-                        className="w-full bg-white border border-[#E6DFD5] py-2 px-3 rounded-lg text-sm font-mono font-bold focus:outline-none focus:border-[#FF6B2C] transition-colors"
-                        placeholder="JFK"
-                      />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
             </div>
 
-            {/* Actions */}
-            <div className="mt-2 flex flex-col gap-2">
+            {/* ── Track Prices ── */}
+            <div style={{
+              padding: '12px 14px', borderRadius: 12,
+              background: '#FAF6F0', border: '1.5px solid #EDE5D8',
+            }}>
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 18 }}>📈</span>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#1E1C1A' }}>Track Prices</div>
+                    <div style={{ fontSize: 10, color: '#9a9189', marginTop: 1 }}>Monitor flight & hotel prices for drops</div>
+                  </div>
+                </div>
+                <div
+                  style={{
+                    width: 40, height: 22, borderRadius: 99, position: 'relative', flexShrink: 0,
+                    background: trackPrices ? '#FF6B2C' : '#DDD5C8',
+                    transition: 'background 0.25s ease',
+                  }}
+                >
+                  <input type="checkbox" className="sr-only" checked={trackPrices} onChange={() => setTrackPrices(!trackPrices)} />
+                  <div style={{
+                    position: 'absolute', top: 3, left: trackPrices ? 21 : 3,
+                    width: 16, height: 16, borderRadius: '50%', background: '#fff',
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
+                    transition: 'left 0.25s cubic-bezier(0.16,1,0.3,1)',
+                  }} />
+                </div>
+              </label>
+              <AnimatePresence>
+                {trackPrices && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                    animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
+                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <label className="block text-[9px] font-bold text-[#7A7268] uppercase tracking-wider mb-1">Origin Airport</label>
+                    <input
+                      type="text"
+                      value={trackOrigin}
+                      onChange={(e) => setTrackOrigin(e.target.value.toUpperCase())}
+                      maxLength={3}
+                      className="w-full bg-white border border-[#E6DFD5] py-2 px-3 rounded-lg text-sm font-mono font-bold focus:outline-none focus:border-[#FF6B2C] transition-colors"
+                      placeholder="JFK"
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* ── Actions ── */}
+            <div className="flex flex-col gap-2 mt-1">
               <button
                 type="button"
                 onClick={handleGenerateClick}
-                className="w-full py-3.5 px-6 rounded-xl font-semibold bg-accent-orange text-bg-white hover:opacity-90 active:scale-[0.99] transition-all duration-150 cursor-pointer flex items-center justify-center gap-2 text-sm md:text-base shadow-md shadow-(--accent-orange)/20"
+                style={{
+                  width: '100%', padding: '13px 20px', borderRadius: 14,
+                  background: 'linear-gradient(110deg,#FF6B2C,#E55A20)',
+                  color: '#fff', fontWeight: 900, fontSize: 14,
+                  letterSpacing: '0.08em', textTransform: 'uppercase',
+                  border: 'none', cursor: 'pointer',
+                  boxShadow: '0 6px 20px rgba(255,107,44,0.32)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = '0 10px 28px rgba(255,107,44,0.4)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(255,107,44,0.32)';
+                }}
               >
-                <span>Generate my trip</span>
+                <Plane style={{ width: 15, height: 15, fill: '#fff', color: '#fff' }} />
+                Generate My Trip
               </button>
               <button
                 type="button"
                 onClick={handleSkipClick}
-                className="w-full py-2 text-center text-xs md:text-sm font-medium text-secondary-text hover:text-(--foreground) transition-colors cursor-pointer bg-transparent border-none"
+                style={{
+                  width: '100%', padding: '9px', border: 'none',
+                  background: 'transparent', cursor: 'pointer',
+                  fontSize: 11, fontWeight: 600, color: '#a89f91',
+                  letterSpacing: '0.06em',
+                  transition: 'color 0.2s ease',
+                }}
+                onMouseEnter={e => e.currentTarget.style.color = '#FF6B2C'}
+                onMouseLeave={e => e.currentTarget.style.color = '#a89f91'}
               >
-                Skip, just generate
+                Skip, just generate →
               </button>
             </div>
           </div>
