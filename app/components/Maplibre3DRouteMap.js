@@ -265,6 +265,52 @@ export default function Maplibre3DRouteMap({ activities, coordinates, onClose, d
     }
   };
 
+  const [isFlyoverActive, setIsFlyoverActive] = useState(false);
+  const [flyoverStopIndex, setFlyoverStopIndex] = useState(0);
+  const flyoverTimerRef = useRef(null);
+
+  const startFlyover = () => {
+    if (!mapRef.current || !activities || activities.length === 0) return;
+    setIsFlyoverActive(true);
+    let idx = 0;
+
+    const nextStop = () => {
+      if (idx >= activities.length) {
+        setIsFlyoverActive(false);
+        setFlyoverStopIndex(0);
+        // Reset to overview angle
+        mapRef.current?.easeTo({ pitch: 55, bearing: -12, zoom: 14.2, duration: 1500 });
+        return;
+      }
+
+      const act = activities[idx];
+      setFlyoverStopIndex(idx);
+      const lat = act.coordinates?.lat || (coordinates ? coordinates.lat : 41.9028);
+      const lng = act.coordinates?.lng || (coordinates ? coordinates.lng : 12.4964);
+
+      mapRef.current?.flyTo({
+        center: [lng, lat],
+        zoom: 16.2,
+        pitch: 65,
+        bearing: (idx * 45) % 360,
+        duration: 2400,
+        essential: true
+      });
+
+      idx++;
+      flyoverTimerRef.current = setTimeout(nextStop, 3500);
+    };
+
+    nextStop();
+  };
+
+  const stopFlyover = () => {
+    if (flyoverTimerRef.current) clearTimeout(flyoverTimerRef.current);
+    setIsFlyoverActive(false);
+    setFlyoverStopIndex(0);
+    mapRef.current?.easeTo({ pitch: 55, bearing: -12, zoom: 14.2, duration: 1000 });
+  };
+
   return (
     <div className="absolute inset-0 flex flex-col bg-[#FAF6F0] h-full w-full">
       {/* Overlay Header */}
@@ -278,14 +324,30 @@ export default function Maplibre3DRouteMap({ activities, coordinates, onClose, d
           </h3>
         </div>
 
-        <button
-          type="button"
-          onClick={handleClose}
-          className="px-4 py-2 rounded-full border border-[#E6DFD5] bg-[#FAF6F0] hover:bg-[#1E1C1A] hover:text-white text-xs font-sans font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
-        >
-          <X className="w-4 h-4" />
-          <span>Close Map Overlay</span>
-        </button>
+        <div className="flex items-center gap-3">
+          {activities && activities.length > 0 && (
+            <button
+              type="button"
+              onClick={isFlyoverActive ? stopFlyover : startFlyover}
+              className={`px-4 py-2 rounded-full text-xs font-sans font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                isFlyoverActive
+                  ? 'bg-[#BA5536] text-white shadow-md animate-pulse'
+                  : 'bg-white border border-[#BA5536] text-[#BA5536] hover:bg-[#BA5536]/10'
+              }`}
+            >
+              <span>{isFlyoverActive ? '⏹ Stop Flyover' : '🛸 3D Flyover Mode'}</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={handleClose}
+            className="px-4 py-2 rounded-full border border-[#E6DFD5] bg-[#FAF6F0] hover:bg-[#1E1C1A] hover:text-white text-xs font-sans font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+          >
+            <X className="w-4 h-4" />
+            <span>Close Map Overlay</span>
+          </button>
+        </div>
       </div>
 
       {/* Mapbox container */}
