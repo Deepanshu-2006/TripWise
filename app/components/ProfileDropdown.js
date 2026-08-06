@@ -118,7 +118,7 @@ export default function ProfileDropdown({ isLightPage, isScrolled }) {
                                     animate={{ opacity: 0, z: startZ - 20 }}
                                     exit={{ opacity: 0, transition: { duration: 0 } }}
                                     transition={{ duration: 0.3, ease: "easeOut", delay: i * 0.03 }}
-                                    className="absolute top-[calc(100%+12px)] right-0 w-64 h-63.75 bg-[#0a0a0a]/98 ring-1 ring-white/10 rounded-2xl z-99 pointer-events-none will-change-transform"
+                                    className="absolute top-[calc(100%+12px)] right-0 w-64 h-63.75 bg-[#0a0a0a]/98 ring-1 ring-white/10 rounded-2xl z-[9999] pointer-events-none will-change-transform"
                                 />
                             );
                         })}
@@ -157,7 +157,7 @@ export default function ProfileDropdown({ isLightPage, isScrolled }) {
                                 }
                             }}
                             style={{ transformOrigin: "top right" }}
-                            className="absolute top-[calc(100%+12px)] right-0 w-64 bg-[#0a0a0a]/98 ring-1 ring-white/10 rounded-2xl py-1.5 z-100 overflow-hidden backdrop-blur-3xl will-change-transform shadow-[0_30px_80px_rgba(0,0,0,0.8)]"
+                            className="absolute top-[calc(100%+12px)] right-0 w-64 bg-[#0a0a0a]/98 ring-1 ring-white/10 rounded-2xl py-1.5 z-[10000] overflow-hidden backdrop-blur-3xl will-change-transform shadow-[0_30px_80px_rgba(0,0,0,0.8)]"
                         >
                             
                             {/* Staggered Inner Content Wrapper */}
