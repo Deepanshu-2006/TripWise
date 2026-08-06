@@ -3,7 +3,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import CustomDatePicker from './CustomDatePicker';
-import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw, Check, Map, Compass, ThumbsUp, ThumbsDown, Users, UserPlus, Landmark, Utensils, Zap, Gem, Star, Lightbulb, Smile, TreePine, Coffee, Palmtree, Banknote, Sun, Footprints, Coins, Plane, Building2, TrendingDown } from 'lucide-react';
+import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw, Check, Map, Compass, ThumbsUp, ThumbsDown, Users, UserPlus, Landmark, Utensils, Zap, Gem, Star, Lightbulb, Smile, TreePine, Coffee, Palmtree, Banknote, Sun, Footprints, Coins, Plane, Building2, TrendingDown, Mic, MicOff, Flag, AlertTriangle, ShieldCheck, ShieldAlert } from 'lucide-react';
+import FlagModal from './FlagModal';
+import FlaggingAdminModal from './FlaggingAdminModal';
+import { getPlaceAccuracyStatus } from '../../lib/flaggingStore';
+import { getDestinationOvertourismInfo, getAttractionOvertourismInfo } from '../../lib/overtourismData';
 
 const renderPremiumIcon = (emojiStr, size = 12) => {
   if (!emojiStr) return <Star size={size} strokeWidth={2.5} />;
@@ -653,6 +657,19 @@ export default function PlannerSidebar({
     setRefineExplanation(null);
   };
 
+  const handleSwapActivity = (dayIdx, actIdx, newActivity) => {
+    if (!itinerary || !itinerary.days) return;
+    const updatedDays = [...itinerary.days];
+    if (updatedDays[dayIdx] && updatedDays[dayIdx].activities) {
+      const updatedActs = [...updatedDays[dayIdx].activities];
+      updatedActs[actIdx] = { ...updatedActs[actIdx], ...newActivity };
+      updatedDays[dayIdx] = { ...updatedDays[dayIdx], activities: updatedActs };
+      if (typeof onUpdateItinerary === 'function') {
+        onUpdateItinerary({ ...itinerary, days: updatedDays });
+      }
+    }
+  };
+
   const [internalHoveredStopIdx, setInternalHoveredStopIdx] = useState(null);
   const hoveredStopIdx = propHoveredStopIdx !== undefined ? propHoveredStopIdx : internalHoveredStopIdx;
   const handleHoverStop = (idx) => {
@@ -940,7 +957,195 @@ export default function PlannerSidebar({
   const [basecampSuggestions, setBasecampSuggestions] = useState([]);
   const [isSearchingBasecamp, setIsSearchingBasecamp] = useState(false);
   const [showBasecampDropdown, setShowBasecampDropdown] = useState(false);
+  const [isListeningVoice, setIsListeningVoice] = useState(false);
+  const [isTranscribingCloud, setIsTranscribingCloud] = useState(false);
+  const [voiceInterimText, setVoiceInterimText] = useState('');
+  const [voiceError, setVoiceError] = useState('');
+  const initialPromptRef = useRef('');
+  const recognitionRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
   const basecampSearchTimeoutRef = useRef(null);
+
+  const [activeFlagTarget, setActiveFlagTarget] = useState(null); // { placeId, placeTitle }
+  const [isAdminQueueOpen, setIsAdminQueueOpen] = useState(false);
+  const [flagsUpdateTrigger, setFlagsUpdateTrigger] = useState(0);
+
+  useEffect(() => {
+    const handleFlagsUpdate = () => setFlagsUpdateTrigger(prev => prev + 1);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('tw_flags_updated', handleFlagsUpdate);
+      return () => window.removeEventListener('tw_flags_updated', handleFlagsUpdate);
+    }
+  }, []);
+
+  const processCloudTranscription = async (blob) => {
+    if (!blob || blob.size < 300) {
+      console.warn('Recorded audio blob is empty or too short:', blob?.size);
+      setIsTranscribingCloud(false);
+      setIsListeningVoice(false);
+      setVoiceInterimText('');
+      setVoiceError('No speech detected in recording. Please try speaking into your mic again.');
+      return;
+    }
+
+    try {
+      setIsTranscribingCloud(true);
+      setVoiceInterimText('Transcribing audio via Cloud AI...');
+
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = async () => {
+        const base64data = reader.result;
+        const res = await fetch('/api/transcribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ audioBase64: base64data, mimeType: blob.type || 'audio/webm' })
+        });
+        const data = await res.json();
+
+        setIsTranscribingCloud(false);
+        setIsListeningVoice(false);
+        setVoiceInterimText('');
+
+        if (data.success && data.transcript) {
+          const trimmed = data.transcript.trim();
+          if (trimmed) {
+            const combined = initialPromptRef.current
+              ? `${initialPromptRef.current} ${trimmed}`
+              : trimmed;
+            const formatted = combined.slice(0, 400);
+            setUserPromptInput(formatted);
+            if (onPromptChange) onPromptChange(formatted);
+          }
+        } else if (data.error) {
+          console.warn('Cloud transcription error:', data.error);
+          setVoiceError(data.error);
+        }
+      };
+    } catch (err) {
+      console.error('Failed to process cloud transcription:', err);
+      setIsTranscribingCloud(false);
+      setIsListeningVoice(false);
+    }
+  };
+
+  const toggleVoiceRecognition = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (isListeningVoice) {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch {}
+      }
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        try { mediaRecorderRef.current.stop(); } catch {}
+      }
+      setIsListeningVoice(false);
+      setVoiceInterimText('');
+      return;
+    }
+
+    setVoiceError('');
+    initialPromptRef.current = userPromptInput ? userPromptInput.trim() : '';
+
+    // Approach A: Browser Native SpeechRecognition (Zero Key Needed, Instant Realtime Streaming)
+    if (SpeechRecognition) {
+      try {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = (typeof navigator !== 'undefined' && navigator.language) || 'en-US';
+
+        recognition.onstart = () => {
+          setIsListeningVoice(true);
+          setVoiceInterimText('Listening... Speak clearly');
+        };
+
+        recognition.onresult = (event) => {
+          let fullSpoken = '';
+          for (let i = 0; i < event.results.length; i++) {
+            fullSpoken += event.results[i][0].transcript;
+          }
+          const trimmed = fullSpoken.trim();
+          if (trimmed) {
+            setVoiceInterimText(trimmed);
+            const combined = initialPromptRef.current
+              ? `${initialPromptRef.current} ${trimmed}`
+              : trimmed;
+            const formatted = combined.slice(0, 400);
+            setUserPromptInput(formatted);
+            if (onPromptChange) onPromptChange(formatted);
+          }
+        };
+
+        recognition.onerror = (err) => {
+          console.warn('Browser SpeechRecognition error:', err.error);
+          if (err.error === 'not-allowed' || err.error === 'service-not-allowed') {
+            setVoiceError('Microphone permission denied. Click the lock icon in your address bar to allow microphone.');
+            setIsListeningVoice(false);
+          }
+        };
+
+        recognition.onend = () => {
+          setIsListeningVoice(false);
+          setVoiceInterimText('');
+        };
+
+        recognitionRef.current = recognition;
+        recognition.start();
+        return;
+      } catch (err) {
+        console.warn('WebSpeech API failed to start:', err);
+      }
+    }
+
+    // Approach B: MediaRecorder + Cloud API fallback if WebSpeech is missing
+    let stream = null;
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
+    } catch (err) {
+      console.warn('Microphone permission denied:', err);
+      setVoiceError('Microphone permission denied. Click the lock icon in your address bar to allow microphone.');
+      return;
+    }
+
+    if (!stream) {
+      setVoiceError('Microphone not available on this device.');
+      return;
+    }
+
+    try {
+      audioChunksRef.current = [];
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          audioChunksRef.current.push(e.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        setTimeout(() => {
+          const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType || 'audio/webm' });
+          stream.getTracks().forEach(t => t.stop());
+          processCloudTranscription(audioBlob);
+        }, 50);
+      };
+
+      mediaRecorder.start(100);
+      setIsListeningVoice(true);
+      setVoiceInterimText('Listening... Speak your prompt clearly');
+    } catch (err) {
+      console.warn('MediaRecorder setup failed:', err);
+      setVoiceError('Failed to start voice recorder. Please check microphone settings.');
+      setIsListeningVoice(false);
+    }
+  }, [isListeningVoice, userPromptInput, onPromptChange]);
 
   useEffect(() => {
     if (itinerary?.prompt && !userPromptInput) {
@@ -1733,7 +1938,7 @@ export default function PlannerSidebar({
         {/* STATE 0: Prompt Input Setup Page */}
         {step === 'input' && (
           <div className="space-y-8 animate-fade-in">
-            {/* ── Prompt Textarea ── */}
+            {/* ── Prompt Textarea & Minimal Voice UI ── */}
             <div className="space-y-6">
               <div className="relative">
                 <textarea
@@ -1745,13 +1950,78 @@ export default function PlannerSidebar({
                   }}
                   placeholder="e.g., 5 days in Kyoto during cherry blossom season… love historic temples, hidden gardens, authentic ramen shops, and boutique stays."
                   maxLength={400}
-                  className="w-full h-36 pt-4 pb-8 px-4 md:px-5 rounded-xl bg-white border border-stone-200 border-l-[3px] border-l-[#FF6B2C] focus:border-stone-300 focus:border-l-[#FF6B2C] focus:ring-0 text-sm md:text-base text-stone-900 placeholder:text-stone-400/80 focus:outline-none shadow-sm transition-all duration-200 resize-none font-sans leading-relaxed"
+                  className={`w-full h-36 pt-4 pb-10 px-4 md:px-5 rounded-xl bg-white border transition-all duration-300 resize-none font-sans leading-relaxed text-sm md:text-base text-stone-900 placeholder:text-stone-400/80 focus:outline-none shadow-xs ${
+                    isListeningVoice
+                      ? 'border-[#FF6B2C]/60 ring-2 ring-[#FF6B2C]/15 bg-[#FFF8F5]/20 border-l-[3px] border-l-[#FF6B2C]'
+                      : 'border-stone-200 border-l-[3px] border-l-[#FF6B2C] focus:border-stone-300 focus:border-l-[#FF6B2C] focus:ring-0'
+                  }`}
                 />
-                {/* Character counter */}
-                <span className="absolute bottom-2.5 right-3 font-mono text-[9px] text-stone-400 tabular-nums pointer-events-none">
-                  {userPromptInput.length}/400
-                </span>
+
+                {/* Minimalist Live Listening / Transcribing Status Indicator */}
+                <AnimatePresence>
+                  {(isListeningVoice || isTranscribingCloud) && (
+                    <motion.div
+                      initial={{ opacity: 0, x: -6 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -6 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute bottom-2.5 left-3.5 flex items-center gap-2 pointer-events-none"
+                    >
+                      {isTranscribingCloud ? (
+                        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#FFF2EA] border border-[#FF6B2C]/30 text-[#FF6B2C] text-[11px] font-bold shadow-2xs">
+                          <div className="w-3 h-3 border-2 border-[#FF6B2C] border-t-transparent rounded-full animate-spin" />
+                          <span>AI Transcribing...</span>
+                        </div>
+                      ) : (
+                        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#FFF2EA] border border-[#FF6B2C]/30 text-[#FF6B2C] text-[11px] font-bold shadow-2xs">
+                          <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF6B2C] opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF6B2C]"></span>
+                          </span>
+                          <span>Listening...</span>
+                          {/* Minimalist 3-bar audio wave */}
+                          <div className="flex items-end gap-0.5 h-3 ml-0.5">
+                            <span className="w-0.5 h-2.5 bg-[#FF6B2C] rounded-full animate-pulse" />
+                            <span className="w-0.5 h-3 bg-[#FF6B2C] rounded-full animate-pulse [animation-delay:150ms]" />
+                            <span className="w-0.5 h-1.5 bg-[#FF6B2C] rounded-full animate-pulse [animation-delay:300ms]" />
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Voice Mic Action Button & Character Counter */}
+                <div className="absolute bottom-2.5 right-3 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={toggleVoiceRecognition}
+                    disabled={isTranscribingCloud}
+                    title={isListeningVoice ? "Tap to stop listening & transcribe" : "Tap to speak your prompt"}
+                    className={`p-1.5 rounded-full transition-all cursor-pointer flex items-center justify-center ${
+                      isListeningVoice || isTranscribingCloud
+                        ? 'bg-[#FF6B2C] text-white shadow-xs scale-105'
+                        : 'bg-stone-100 text-stone-500 hover:text-[#FF6B2C] hover:bg-stone-200'
+                    }`}
+                  >
+                    {isTranscribingCloud ? (
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : isListeningVoice ? (
+                      <MicOff className="w-3.5 h-3.5" />
+                    ) : (
+                      <Mic className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                </div>
               </div>
+
+              {/* Voice Error & Permission Troubleshooting Banner */}
+              {voiceError && (
+                <div className="text-[11px] font-medium text-amber-900 bg-amber-50 border border-amber-200 p-2.5 rounded-xl flex items-center justify-between gap-2 shadow-2xs animate-fade-in">
+                  <span>⚠️ {voiceError}</span>
+                  <button type="button" onClick={() => setVoiceError('')} className="text-amber-950 font-bold hover:underline shrink-0 cursor-pointer">Dismiss</button>
+                </div>
+              )}
 
               {/* Basecamp Input (Secondary, Mode-Branching Detail) */}
               <div className="relative">
@@ -2470,6 +2740,31 @@ export default function PlannerSidebar({
                   </button>
                 </div>
 
+                {/* Destination-Level Overtourism Warning Banner */}
+                {(() => {
+                  const destOvertourism = getDestinationOvertourismInfo(itinerary?.destinationName);
+                  if (!destOvertourism) return null;
+
+                  return (
+                    <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col gap-2 text-xs text-amber-950 shadow-2xs">
+                      <div className="flex items-center gap-2 font-bold">
+                        <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                        <span>⚠️ {destOvertourism.warningText}</span>
+                      </div>
+                      {destOvertourism.alternativeDestinations?.length > 0 && (
+                        <div className="text-[11px] text-amber-900/90 flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-amber-500/20">
+                          <span className="font-mono font-bold uppercase text-[9px] text-amber-800">Alternative Low-Strain Regions:</span>
+                          {destOvertourism.alternativeDestinations.map((alt, aIdx) => (
+                            <span key={aIdx} className="bg-white/90 px-2.5 py-0.5 rounded-full font-bold border border-amber-300/80 text-amber-950 shadow-2xs">
+                              {alt.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
                 {/* Merged Day Tabs + Compact Sticky Trip Summary Header (Apple Maps / Arc / Linear inspired) */}
                 <div className="sticky top-0 z-30 pt-4 pb-3 -mx-4 sm:-mx-6 md:-mx-8 px-4 sm:px-6 md:px-8 bg-[#FAF3EE] transition-all duration-300 flex flex-col gap-2.5">
                   {(() => {
@@ -2749,6 +3044,9 @@ export default function PlannerSidebar({
                         const iconBadges = getIconBadges(act, idx);
                         const aiInsightText = getAiInsight(act, idx);
                         const transport = getTransportBetweenStops(itinerary.days?.[selectedDayIndex]?.activities?.[idx - 1], act, idx);
+                        const stopKey = `${selectedDayIndex}-${idx}`;
+                        const accuracyData = getPlaceAccuracyStatus(stopKey, act.title);
+                        const overtourismInfo = getAttractionOvertourismInfo(act.title);
 
                         return (
                           <motion.div
@@ -2756,17 +3054,85 @@ export default function PlannerSidebar({
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0, transition: { duration: 0.26, delay: idx * 0.06, ease: [0.22, 1, 0.36, 1] } }}
                             exit={{ opacity: 0, y: -10, transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] } }}
-                            className="flex flex-col"
+                            className="flex flex-col gap-2"
                             data-day-idx={selectedDayIndex}
                             data-stop-idx={stopNum}
                           >
-                            {/* Point 1 & 10: Transport Connector Between Stops */}
+                            {/* Point 1 & 10: Transport Connector Between Stops with Uber Integration */}
                             {idx > 0 && transport && (
-                              <div className="relative pl-12 py-2 flex items-center z-10">
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFF8F5] hover:bg-[#FFF2EA] border border-[#ECE8E2] rounded-full text-[11px] font-extrabold text-[#5F5E5A] shadow-2xs transition-all">
+                              <div className="relative pl-12 py-2 flex items-center justify-between z-10 pr-1 gap-2">
+                                {/* Transport mode pill */}
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FFF8F5] border border-[#ECE8E2] rounded-full text-[11px] font-extrabold text-[#5F5E5A] shadow-2xs">
                                   <span className="text-xs">{transport.icon}</span>
                                   <span className="tracking-tight text-[#1C1B1B]">{transport.text}</span>
                                 </div>
+
+                                {/* Premium Uber Button — uses GPS for pickup, destination coords for dropoff */}
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const destLat = act.coordinates?.lat;
+                                    const destLng = act.coordinates?.lng;
+                                    const destName = act.title + ', ' + (itinerary.destinationName || '');
+
+                                    const buildAndOpen = (pickupLat, pickupLng) => {
+                                      let url = 'https://m.uber.com/ul/?action=setPickup';
+                                      if (pickupLat && pickupLng) {
+                                        url += `&pickup[latitude]=${pickupLat}&pickup[longitude]=${pickupLng}&pickup[nickname]=My%20Location`;
+                                      } else {
+                                        url += '&pickup=my_location';
+                                      }
+                                      url += `&dropoff[formatted_address]=${encodeURIComponent(destName)}`;
+                                      if (destLat) url += `&dropoff[latitude]=${destLat}`;
+                                      if (destLng) url += `&dropoff[longitude]=${destLng}`;
+                                      url += `&dropoff[nickname]=${encodeURIComponent(act.title)}`;
+                                      window.open(url, '_blank', 'noopener,noreferrer');
+                                    };
+
+                                    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+                                      navigator.geolocation.getCurrentPosition(
+                                        (pos) => buildAndOpen(pos.coords.latitude, pos.coords.longitude),
+                                        () => buildAndOpen(null, null),
+                                        { timeout: 4000, maximumAge: 60000 }
+                                      );
+                                    } else {
+                                      buildAndOpen(null, null);
+                                    }
+                                  }}
+                                  className="group relative inline-flex items-center gap-0 pl-[3px] pr-4 py-[3px] rounded-full overflow-hidden cursor-pointer select-none shrink-0 transition-all duration-200 hover:scale-[1.04] active:scale-[0.97]"
+                                  style={{ background: '#000', boxShadow: '0 2px 12px rgba(0,0,0,0.4)' }}
+                                  title={`Request Uber to ${act.title}`}
+                                >
+                                  {/* Shimmer sweep on hover */}
+                                  <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-500 ease-in-out bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+                                  {/* Uber "U" logo — white circle badge */}
+                                  <span className="relative flex items-center justify-center w-7 h-7 rounded-full bg-white shrink-0 mr-2.5">
+                                    <svg width="11" height="13" viewBox="0 0 11 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                      <path d="M0 0H2.64V7.392C2.64 8.6328 3.3792 9.372 4.62 9.372H6.38C7.6208 9.372 8.36 8.6328 8.36 7.392V0H11V7.392C11 10.1376 9.3104 11.88 6.38 11.88H4.62C1.6896 11.88 0 10.1376 0 7.392V0Z" fill="black"/>
+                                    </svg>
+                                  </span>
+
+                                  {/* Text */}
+                                  <span className="relative flex flex-col items-start leading-none">
+                                    <span className="text-white/40 text-[7.5px] font-bold tracking-[0.15em] uppercase">uber</span>
+                                    <span className="text-white text-[11px] font-extrabold leading-tight">Request Ride</span>
+                                  </span>
+                                </button>
+                              </div>
+                            )}
+
+                            {/* Public Accuracy Warning Banner */}
+                            {accuracyData.hasWarning && (
+                              <div className="w-full bg-amber-500/10 border border-amber-500/30 rounded-2xl px-3.5 py-2 flex items-center justify-between text-amber-800 text-[11px] font-bold shadow-2xs">
+                                <div className="flex items-center gap-1.5">
+                                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                  <span>⚠️ Recently reported as outdated — verify before visiting</span>
+                                </div>
+                                <span className="text-[9px] font-mono uppercase bg-amber-500/20 text-amber-900 px-1.5 py-0.5 rounded-md">
+                                  {accuracyData.topFlag?.reasonLabel || 'Flagged'}
+                                </span>
                               </div>
                             )}
 
@@ -2834,11 +3200,10 @@ export default function PlannerSidebar({
                                       </span>
                                     </div>
                                     
-                                    {/* Voting Actions (Top Right Pill) */}
+                                    {/* Voting & Flagging Actions (Top Right Pill) */}
                                     <div className="flex items-center shrink-0 bg-[#F7F5F2] rounded-full border border-[#ECE8E2] shadow-2xs overflow-hidden" onClick={(e) => e.stopPropagation()}>
 
                                       {(() => {
-                                        const stopKey = `${selectedDayIndex}-${idx}`;
                                         const voteData = mockVotes[stopKey] || { up: 0, down: 0, userVote: null };
                                         const displayUp = voteData.up + (voteData.userVote === 'up' ? 0 : (idx === 0 ? 1 : 0));
 
@@ -2859,6 +3224,14 @@ export default function PlannerSidebar({
                                               title="Downvote"
                                             >
                                               <ThumbsDown size={12} strokeWidth={2.5} className={voteData.userVote === 'down' ? 'fill-stone-400/30' : ''} />
+                                            </button>
+                                            <div className="w-px h-3.5 bg-[#ECE8E2]"></div>
+                                            <button
+                                              onClick={() => setActiveFlagTarget({ placeId: stopKey, placeTitle: act.title })}
+                                              className="px-2 py-1 hover:bg-amber-50 hover:text-amber-600 transition-colors text-stone-400 hover:text-amber-600"
+                                              title="Report outdated info on this place"
+                                            >
+                                              <Flag size={11} strokeWidth={2.5} />
                                             </button>
                                           </>
                                         );
@@ -2889,12 +3262,42 @@ export default function PlannerSidebar({
                                 <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#5F5E5A] bg-[#F7F5F2] px-2 py-1 rounded-full border border-[#ECE8E2]">
                                   <span className="text-stone-400"><Banknote size={10} strokeWidth={2.5} /></span> {costInfo.title.replace('💰 ', '')}
                                 </span>
+                                {overtourismInfo && (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-amber-900 bg-amber-500/15 px-2 py-1 rounded-full border border-amber-500/30">
+                                    <AlertTriangle className="w-3 h-3 text-amber-600" />
+                                    <span>⚠️ Peak crowds {overtourismInfo.peakHours}</span>
+                                  </span>
+                                )}
                                 {iconBadges.map((badge, bIdx) => (
                                   <span key={bIdx} className={`inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-1 rounded-full border ${badge.colorClass}`}>
                                     <span className="opacity-80">{renderPremiumIcon(badge.icon, 10)}</span> <span>{badge.text}</span>
                                   </span>
                                 ))}
+                                <span className="inline-flex items-center gap-1 text-[9px] font-mono font-extrabold text-[#7A7268] bg-[#F7F5F2] px-2 py-1 rounded-full border border-[#ECE8E2]">
+                                  <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                                  <span>Verified {accuracyData.lastVerifiedAt}</span>
+                                </span>
                               </div>
+
+                              {/* Less-Crowded Alternative Spot Swap Banner */}
+                              {overtourismInfo?.alternativeActivity && (
+                                <div className="ml-12 sm:ml-13 p-3 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-center justify-between gap-3 select-none" onClick={(e) => e.stopPropagation()}>
+                                  <div className="flex items-center gap-2 text-amber-950">
+                                    <Compass className="w-4 h-4 text-amber-600 shrink-0" />
+                                    <div>
+                                      <span className="text-[10px] font-mono font-bold uppercase text-amber-800 tracking-wider block">Less-Crowded Alternative</span>
+                                      <span className="text-xs font-bold text-amber-950 block">{overtourismInfo.alternativeActivity.title}</span>
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSwapActivity(selectedDayIndex, idx, overtourismInfo.alternativeActivity)}
+                                    className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-all shrink-0 cursor-pointer shadow-2xs"
+                                  >
+                                    Swap Spot
+                                  </button>
+                                </div>
+                              )}
 
                               {/* AI Insight Collapsible Footer */}
                               <div className="-mx-4 px-4 pt-3 mt-1 border-t border-[#ECE8E2]/70" onClick={(e) => e.stopPropagation()}>
@@ -3307,7 +3710,14 @@ export default function PlannerSidebar({
       {/* Footer / Subtle Info - Pinned to bottom */}
       <div className="pt-4 mt-auto border-t border-[rgba(28,27,27,0.06)] flex items-center justify-between text-[11px] text-secondary-text shrink-0">
         <span>Powered by TripWise AI</span>
-        <span>Real-Time Optimization Engine</span>
+        <button
+          type="button"
+          onClick={() => setIsAdminQueueOpen(true)}
+          className="hover:text-[#FF6B2C] underline decoration-dotted font-mono text-[10px] transition-colors cursor-pointer flex items-center gap-1"
+        >
+          <ShieldAlert className="w-3 h-3 text-amber-600" />
+          <span>Moderation Queue</span>
+        </button>
       </div>
 
       <InviteModal
@@ -3315,6 +3725,20 @@ export default function PlannerSidebar({
         onClose={() => setIsInviteModalOpen(false)}
         tripId={tripId}
         currentCollaborators={collaboratorsList}
+      />
+
+      <FlagModal
+        isOpen={!!activeFlagTarget}
+        onClose={() => setActiveFlagTarget(null)}
+        placeId={activeFlagTarget?.placeId}
+        placeTitle={activeFlagTarget?.placeTitle}
+        onSubmitted={() => setFlagsUpdateTrigger(prev => prev + 1)}
+      />
+
+      <FlaggingAdminModal
+        isOpen={isAdminQueueOpen}
+        onClose={() => setIsAdminQueueOpen(false)}
+        onUpdated={() => setFlagsUpdateTrigger(prev => prev + 1)}
       />
     </div>
   );
