@@ -138,7 +138,7 @@ function Header() {
                 backdropFilter: headerBlur,
                 WebkitBackdropFilter: headerBlur,
             }}
-            className={`fixed left-0 right-0 z-50 mx-auto border rounded-full w-[calc(100%-2rem)] transition-colors duration-300 ${
+            className={`fixed left-0 right-0 z-[9999] mx-auto border rounded-full w-[calc(100%-2rem)] transition-colors duration-300 ${
             isScrolled
                 ? isLightPage
                     ? "border-[#ECE8E2] hover:border-[#FF6B2C]/30"
