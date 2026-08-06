@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CloudRain, Users, Sun, Umbrella, ThermometerSun, Snowflake, AlertCircle, CalendarRange } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
+import { getDestinationOvertourismInfo } from '../../lib/overtourismData';
 
 // Static config for some common destinations, with a fallback
 const SEASONAL_DATA = {
@@ -216,33 +217,43 @@ export default function SeasonalCalendar({ destinationName = '', startDate, endD
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="flex flex-wrap items-center justify-start gap-4 md:gap-6 mt-2 pt-5 border-t border-[#E6DFD5]/60">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-sm bg-[#FF6B2C]" />
-          <span className="text-xs text-[#7A7268] font-semibold font-sans">Ideal</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-sm bg-[#FFB088]" />
-          <span className="text-xs text-[#7A7268] font-semibold font-sans">Good</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-sm bg-[#E6DFD5]" />
-          <span className="text-xs text-[#7A7268] font-semibold font-sans">Fair</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-sm bg-stone-700 flex items-center justify-center">
-            <AlertCircle className="w-2 h-2 text-stone-300" />
+      {/* Overtourism Strain Warning Banner & Alternative Destinations */}
+      {(() => {
+        const overtourism = getDestinationOvertourismInfo(destinationName);
+        if (!overtourism) return null;
+
+        return (
+          <div className="mt-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col gap-3">
+            <div className="flex items-center gap-2 text-amber-950 font-bold text-xs sm:text-sm">
+              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>⚠️ {overtourism.warningText}</span>
+            </div>
+
+            {overtourism.alternativeDestinations?.length > 0 && (
+              <div className="flex flex-col gap-2 pt-2 border-t border-amber-500/20">
+                <span className="text-[11px] font-mono font-bold uppercase text-amber-900 tracking-wider">
+                  Lower-Strain Alternative Destinations:
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {overtourism.alternativeDestinations.map((alt, idx) => (
+                    <div key={idx} className="p-3 rounded-xl bg-white border border-amber-300/80 flex flex-col gap-1 shadow-2xs">
+                      <div className="flex items-center justify-between text-xs font-bold text-[#1E1C1A]">
+                        <span>{alt.name}</span>
+                        <span className="text-[10px] font-mono text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                          {alt.vibe}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#7A7268] leading-normal font-sans">
+                        {alt.reason}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-          <span className="text-xs text-[#7A7268] font-semibold font-sans">Avoid/Peak</span>
-        </div>
-        {hasTripDates && (
-          <div className="flex items-center gap-2">
-            <span className="text-[11px]">✈️</span>
-            <span className="text-xs text-[#FF6B2C] font-semibold font-sans">Your Trip</span>
-          </div>
-        )}
-      </div>
+        );
+      })()}
     </div>
   );
 }
