@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ExternalLink, Ticket, Clock, AlertCircle, Check, Landmark, Sparkles, FileText, Utensils, MapPin, Trees, Bike, Camera, Compass } from 'lucide-react';
+import { X, ExternalLink, Ticket, Clock, AlertCircle, Check, Landmark, Sparkles, FileText, Utensils, MapPin, Trees, Bike, Camera, Compass, Printer, Download } from 'lucide-react';
 import { formatCost } from './itineraryHelpers';
 
 // Helper to ensure modal "Est. Rate" matches stop card and explicitly caveats if variable
@@ -231,6 +231,12 @@ export default function TicketPassModal({
         icon: <Ticket className="w-4 h-4 text-[#FF6B2C]" />,
         url: `https://www.tiqets.com/en/search/?q=${tiqetsQuery}`,
         desc: `Instant mobile delivery passes and multi-attraction city bundle combinations.`
+      },
+      {
+        name: 'Book Uber Ride to Destination',
+        icon: <Compass className="w-4 h-4 text-[#1E1C1A]" />,
+        url: `https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[formatted_address]=${encodeURIComponent(cleanName + ', ' + cleanDest)}`,
+        desc: `Open Uber app directly with your current location pickup and dropoff set to ${cleanName}.`
       }
     ];
   }
@@ -266,14 +272,28 @@ export default function TicketPassModal({
             transition={{ type: 'spring', damping: 26, stiffness: 320 }}
             className="relative w-full max-w-xl my-auto z-10 max-h-[90vh] flex flex-col drop-shadow-2xl"
           >
-            {/* Close Button Top Right */}
-            <button
-              onClick={onClose}
-              className="absolute -top-3 -right-3 z-50 w-8 h-8 rounded-full bg-white border border-[#E6DFD5] text-[#1E1C1A] flex items-center justify-center transition-all cursor-pointer shadow-sm hover:scale-105"
-              aria-label="Close ticket modal"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            {/* Action Bar Top Right */}
+            <div className="absolute -top-3 right-0 z-50 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== 'undefined') window.print();
+                }}
+                className="px-3 py-1.5 rounded-full bg-white border border-[#E6DFD5] text-[#1E1C1A] hover:text-[#FF6B2C] flex items-center gap-1.5 text-xs font-mono font-bold transition-all cursor-pointer shadow-sm hover:scale-105"
+                title="Save or print this ticket pass as PDF"
+              >
+                <Printer className="w-3.5 h-3.5 text-[#FF6B2C]" />
+                <span>Export PDF Pass</span>
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-8 h-8 rounded-full bg-white border border-[#E6DFD5] text-[#1E1C1A] flex items-center justify-center transition-all cursor-pointer shadow-sm hover:scale-105"
+                aria-label="Close ticket modal"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
             {/* ── EDITORIAL DOSSIER PASS CARD ── */}
             <div className="w-full text-[#1E1C1A] relative flex flex-col flex-1 min-h-0">
