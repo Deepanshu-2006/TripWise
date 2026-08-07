@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { 
@@ -440,6 +441,11 @@ export default function PriceTracker({
   // Hotel View Mode (List vs Map)
   const [hotelViewMode, setHotelViewMode] = useState('list'); // 'list' | 'map'
   const [isOffline, setIsOffline] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleOnlineStatus = () => {
@@ -750,21 +756,38 @@ export default function PriceTracker({
               </p>
             </div>
 
-            {/* Live Budget Impact Tally */}
-            <div className="flex items-center gap-4 bg-[#FAF6F0] px-4 py-2 rounded-xl border border-[#E6DFD5] justify-between md:justify-end">
-              <div className="text-right">
-                <div className="text-xs text-[#7A7268] font-bold">Selected so far</div>
-                <div className="text-base font-serif font-black text-[#1E1C1A]">
-                  ${totalSelectedPrice} <span className="text-xs font-normal text-[#7A7268]">of ${estBudget}</span>
+            {/* Live Budget Impact Tally & Instant Compare Trigger in Sticky Header */}
+            <div className="flex items-center gap-3">
+              {(flightShortlist.length > 0 || hotelShortlist.length > 0) && (
+                <motion.button
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => setIsCompareModalOpen(flightShortlist.length > 0 ? 'flight' : 'hotel')}
+                  className="bg-[#FF6B2C] hover:bg-[#ff7d45] text-white text-xs font-sans font-bold px-3.5 py-2 rounded-full transition-all shadow-md shadow-[#FF6B2C]/30 flex items-center gap-1.5 cursor-pointer shrink-0"
+                >
+                  <Scale className="w-3.5 h-3.5" />
+                  <span>Compare ({flightShortlist.length > 0 ? flightShortlist.length : hotelShortlist.length}) Side-by-Side</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </motion.button>
+              )}
+
+              <div className="flex items-center gap-4 bg-[#FAF6F0] px-4 py-2 rounded-xl border border-[#E6DFD5] justify-between md:justify-end">
+                <div className="text-right">
+                  <div className="text-xs text-[#7A7268] font-bold">Selected so far</div>
+                  <div className="text-base font-serif font-black text-[#1E1C1A]">
+                    ${totalSelectedPrice} <span className="text-xs font-normal text-[#7A7268]">of ${estBudget}</span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="h-8 w-px bg-[#E6DFD5]" />
+                <div className="h-8 w-px bg-[#E6DFD5]" />
 
-              <div className="text-right">
-                <div className="text-xs font-bold text-[#7A7268]">Remaining</div>
-                <div className={`text-sm font-bold ${remainingBudget >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
-                  {remainingBudget >= 0 ? `$${remainingBudget} left` : `$${Math.abs(remainingBudget)} over`}
+                <div className="text-right">
+                  <div className="text-xs font-bold text-[#7A7268]">Remaining</div>
+                  <div className={`text-sm font-bold ${remainingBudget >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
+                    {remainingBudget >= 0 ? `$${remainingBudget} left` : `$${Math.abs(remainingBudget)} over`}
+                  </div>
                 </div>
               </div>
             </div>
@@ -824,16 +847,42 @@ export default function PriceTracker({
           {/* FLIGHTS SECTION */}
           {(trackingState?.config?.trackFlights ?? true) && (
             <div className="bg-[#FAF6F0] rounded-3xl border border-[#E6DFD5] p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <Plane className="w-6 h-6 text-[#FF6B2C]" />
                   <h3 className="font-serif text-xl font-bold text-[#1E1C1A]">Flights</h3>
                 </div>
-                {trackingState.selectedFlight && (
-                  <button onClick={() => handleClearSelection('flight')} className="text-xs font-semibold text-[#7A7268] hover:text-[#1E1C1A] underline cursor-pointer">
-                    Change Selection
-                  </button>
-                )}
+
+                <div className="flex items-center gap-2">
+                  {flightShortlist.length > 0 && !trackingState.selectedFlight && (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="flex items-center gap-2"
+                    >
+                      <button 
+                        onClick={() => setIsCompareModalOpen('flight')}
+                        className="bg-[#FF6B2C] hover:bg-[#ff7d45] text-white text-xs font-sans font-bold px-3.5 py-1.5 rounded-full transition-all shadow-sm shadow-[#FF6B2C]/30 flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Scale className="w-3.5 h-3.5" />
+                        <span>Compare {flightShortlist.length} Flights</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                      <button 
+                        onClick={() => setFlightShortlist([])}
+                        className="text-xs text-[#7A7268] hover:text-[#1E1C1A] px-1.5 py-1 underline cursor-pointer"
+                      >
+                        Clear
+                      </button>
+                    </motion.div>
+                  )}
+
+                  {trackingState.selectedFlight && (
+                    <button onClick={() => handleClearSelection('flight')} className="text-xs font-semibold text-[#7A7268] hover:text-[#1E1C1A] underline cursor-pointer">
+                      Change Selection
+                    </button>
+                  )}
+                </div>
               </div>
 
               {trackingState.selectedFlight ? (() => {
@@ -896,11 +945,15 @@ export default function PriceTracker({
                 );
               })() : (
                 <>
-                  {/* Segmented Controls for Flights with Animated Sliding Pill */}
-                  <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-3 p-3 bg-white/70 rounded-2xl border border-[#E6DFD5]">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-xs font-bold text-[#7A7268] uppercase tracking-wider mr-1">Sort:</span>
-                      <div className="bg-[#F0EAE1]/80 p-0.5 rounded-full border border-[#E6DFD5] flex items-center gap-0.5 shadow-2xs">
+                  {/* Segmented Controls for Flights with Pure Rounded Pill Track & Indicator */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-3 p-2.5 bg-white/90 backdrop-blur-md rounded-2xl border border-[#E6DFD5] shadow-xs">
+                    {/* Sort Segment Pill Track */}
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-[#8C827A] uppercase tracking-wider pl-1">
+                        <SlidersHorizontal className="w-3 h-3 text-[#FF6B2C]" />
+                        <span>Sort:</span>
+                      </div>
+                      <div className="bg-[#F0EAE1]/90 p-1 rounded-full border border-[#E6DFD5] flex items-center gap-1 shadow-2xs">
                         {[
                           { id: 'price', label: 'Cheapest' },
                           { id: 'duration', label: 'Fastest' },
@@ -910,16 +963,18 @@ export default function PriceTracker({
                             key={tab.id}
                             type="button"
                             onClick={() => setFlightSort(tab.id)}
-                            className="relative px-3.5 py-1 rounded-full text-xs font-bold transition-colors cursor-pointer"
+                            className="relative px-4 py-1.5 rounded-full text-xs font-sans font-bold transition-all cursor-pointer"
                           >
                             {flightSort === tab.id && (
                               <motion.div
                                 layoutId="flightSortPill"
                                 transition={{ type: "spring", stiffness: 500, damping: 32 }}
-                                className="absolute inset-0 bg-[#1E1C1A] rounded-full shadow-xs"
+                                className="absolute inset-0 bg-[#1E1C1A] rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.18)]"
                               />
                             )}
-                            <span className={`relative z-10 transition-colors duration-200 ${flightSort === tab.id ? 'text-white' : 'text-[#5F5E5A] hover:text-[#1E1C1A]'}`}>
+                            <span className={`relative z-10 transition-colors duration-200 ${
+                              flightSort === tab.id ? 'text-white' : 'text-[#6B645C] hover:text-[#1E1C1A]'
+                            }`}>
                               {tab.label}
                             </span>
                           </button>
@@ -927,9 +982,13 @@ export default function PriceTracker({
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-xs font-bold text-[#7A7268] uppercase tracking-wider mr-1">Stops:</span>
-                      <div className="bg-[#F0EAE1]/80 p-0.5 rounded-full border border-[#E6DFD5] flex items-center gap-0.5 shadow-2xs">
+                    {/* Stops Segment Pill Track */}
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-[#8C827A] uppercase tracking-wider pl-1">
+                        <Plane className="w-3 h-3 text-[#FF6B2C]" />
+                        <span>Stops:</span>
+                      </div>
+                      <div className="bg-[#F0EAE1]/90 p-1 rounded-full border border-[#E6DFD5] flex items-center gap-1 shadow-2xs">
                         {[
                           { id: 'any', label: 'All' },
                           { id: 'nonstop', label: 'Nonstop' },
@@ -939,16 +998,18 @@ export default function PriceTracker({
                             key={tab.id}
                             type="button"
                             onClick={() => setFlightStops(tab.id)}
-                            className="relative px-3.5 py-1 rounded-full text-xs font-bold transition-colors cursor-pointer"
+                            className="relative px-4 py-1.5 rounded-full text-xs font-sans font-bold transition-all cursor-pointer"
                           >
                             {flightStops === tab.id && (
                               <motion.div
                                 layoutId="flightStopsPill"
                                 transition={{ type: "spring", stiffness: 500, damping: 32 }}
-                                className="absolute inset-0 bg-[#FF6B2C] rounded-full shadow-xs"
+                                className="absolute inset-0 bg-[#FF6B2C] rounded-full shadow-[0_2px_10px_rgba(255,107,44,0.35)]"
                               />
                             )}
-                            <span className={`relative z-10 transition-colors duration-200 ${flightStops === tab.id ? 'text-white' : 'text-[#5F5E5A] hover:text-[#1E1C1A]'}`}>
+                            <span className={`relative z-10 transition-colors duration-200 ${
+                              flightStops === tab.id ? 'text-white' : 'text-[#6B645C] hover:text-[#1E1C1A]'
+                            }`}>
                               {tab.label}
                             </span>
                           </button>
@@ -1220,6 +1281,29 @@ export default function PriceTracker({
                       </div>
                     )}
 
+                    {hotelShortlist.length > 0 && !trackingState.selectedHotel && (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="flex items-center gap-2"
+                      >
+                        <button 
+                          onClick={() => setIsCompareModalOpen('hotel')}
+                          className="bg-[#FF6B2C] hover:bg-[#ff7d45] text-white text-xs font-sans font-bold px-3.5 py-1.5 rounded-full transition-all shadow-sm shadow-[#FF6B2C]/30 flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Scale className="w-3.5 h-3.5" />
+                          <span>Compare {hotelShortlist.length} Hotels</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={() => setHotelShortlist([])}
+                          className="text-xs text-[#7A7268] hover:text-[#1E1C1A] px-1.5 py-1 underline cursor-pointer"
+                        >
+                          Clear
+                        </button>
+                      </motion.div>
+                    )}
+
                     {trackingState.selectedHotel && (
                       <button onClick={() => handleClearSelection('hotel')} className="text-xs font-semibold text-[#7A7268] hover:text-[#1E1C1A] underline cursor-pointer">
                         Change Selection
@@ -1327,11 +1411,15 @@ export default function PriceTracker({
                   );
                 })() : (
                   <>
-                    {/* Segmented Controls for Hotels with Animated Sliding Pill */}
-                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-3 p-3 bg-white/70 rounded-2xl border border-[#E6DFD5]">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="text-xs font-bold text-[#7A7268] uppercase tracking-wider mr-1">Sort:</span>
-                        <div className="bg-[#F0EAE1]/80 p-0.5 rounded-full border border-[#E6DFD5] flex items-center gap-0.5 shadow-2xs">
+                    {/* Segmented Controls for Hotels with Pure Rounded Pill Track & Indicator */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-3 p-2.5 bg-white/90 backdrop-blur-md rounded-2xl border border-[#E6DFD5] shadow-xs">
+                      {/* Sort Segment Pill Track */}
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-[#8C827A] uppercase tracking-wider pl-1">
+                          <SlidersHorizontal className="w-3 h-3 text-[#FF6B2C]" />
+                          <span>Sort:</span>
+                        </div>
+                        <div className="bg-[#F0EAE1]/90 p-1 rounded-full border border-[#E6DFD5] flex items-center gap-1 shadow-2xs">
                           {[
                             { id: 'price', label: 'Cheapest' },
                             { id: 'rating', label: 'Top Rated' },
@@ -1341,16 +1429,18 @@ export default function PriceTracker({
                               key={tab.id}
                               type="button"
                               onClick={() => setHotelSort(tab.id)}
-                              className="relative px-3.5 py-1 rounded-full text-xs font-bold transition-colors cursor-pointer"
+                              className="relative px-4 py-1.5 rounded-full text-xs font-sans font-bold transition-all cursor-pointer"
                             >
                               {hotelSort === tab.id && (
                                 <motion.div
                                   layoutId="hotelSortPill"
                                   transition={{ type: "spring", stiffness: 500, damping: 32 }}
-                                  className="absolute inset-0 bg-[#1E1C1A] rounded-full shadow-xs"
+                                  className="absolute inset-0 bg-[#1E1C1A] rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.18)]"
                                 />
                               )}
-                              <span className={`relative z-10 transition-colors duration-200 ${hotelSort === tab.id ? 'text-white' : 'text-[#5F5E5A] hover:text-[#1E1C1A]'}`}>
+                              <span className={`relative z-10 transition-colors duration-200 ${
+                                hotelSort === tab.id ? 'text-white' : 'text-[#6B645C] hover:text-[#1E1C1A]'
+                              }`}>
                                 {tab.label}
                               </span>
                             </button>
@@ -1358,9 +1448,13 @@ export default function PriceTracker({
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="text-xs font-bold text-[#7A7268] uppercase tracking-wider mr-1">Rating:</span>
-                        <div className="bg-[#F0EAE1]/80 p-0.5 rounded-full border border-[#E6DFD5] flex items-center gap-0.5 shadow-2xs">
+                      {/* Rating Segment Pill Track */}
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-[#8C827A] uppercase tracking-wider pl-1">
+                          <Star className="w-3 h-3 text-[#FF6B2C]" />
+                          <span>Rating:</span>
+                        </div>
+                        <div className="bg-[#F0EAE1]/90 p-1 rounded-full border border-[#E6DFD5] flex items-center gap-1 shadow-2xs">
                           {[
                             { id: 'any', label: 'All' },
                             { id: '4', label: '4.0+ ★' },
@@ -1370,16 +1464,18 @@ export default function PriceTracker({
                               key={tab.id}
                               type="button"
                               onClick={() => setHotelRating(tab.id)}
-                              className="relative px-3.5 py-1 rounded-full text-xs font-bold transition-colors cursor-pointer"
+                              className="relative px-4 py-1.5 rounded-full text-xs font-sans font-bold transition-all cursor-pointer"
                             >
                               {hotelRating === tab.id && (
                                 <motion.div
                                   layoutId="hotelRatingPill"
                                   transition={{ type: "spring", stiffness: 500, damping: 32 }}
-                                  className="absolute inset-0 bg-[#FF6B2C] rounded-full shadow-xs"
+                                  className="absolute inset-0 bg-[#FF6B2C] rounded-full shadow-[0_2px_10px_rgba(255,107,44,0.35)]"
                                 />
                               )}
-                              <span className={`relative z-10 transition-colors duration-200 ${hotelRating === tab.id ? 'text-white' : 'text-[#5F5E5A] hover:text-[#1E1C1A]'}`}>
+                              <span className={`relative z-10 transition-colors duration-200 ${
+                                hotelRating === tab.id ? 'text-white' : 'text-[#6B645C] hover:text-[#1E1C1A]'
+                              }`}>
                                 {tab.label}
                               </span>
                             </button>
@@ -1553,43 +1649,75 @@ export default function PriceTracker({
           })()}
         </div>
 
-        {/* Requirement 5: Floating Bottom Action Bar for Comparison */}
-        <AnimatePresence>
-          {(flightShortlist.length > 0 || hotelShortlist.length > 0) && (
-            <motion.div 
-              initial={{ y: 80, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 80, opacity: 0 }}
-              className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-[#1E1C1A] text-white px-5 py-3 rounded-full shadow-2xl border border-white/20 flex items-center gap-4 backdrop-blur-md"
-            >
-              <div className="flex items-center gap-2 text-xs font-bold">
-                <Scale className="w-4 h-4 text-[#FF6B2C]" />
-                <span>
-                  {flightShortlist.length > 0 
-                    ? `${flightShortlist.length} Flight${flightShortlist.length > 1 ? 's' : ''} Checked`
-                    : `${hotelShortlist.length} Hotel${hotelShortlist.length > 1 ? 's' : ''} Checked`}
-                </span>
-              </div>
-
-              <button 
-                onClick={() => setIsCompareModalOpen(flightShortlist.length > 0 ? 'flight' : 'hotel')}
-                className="bg-[#FF6B2C] hover:bg-[#e0591e] text-white text-xs font-extrabold px-4 py-1.5 rounded-full transition-all shadow-xs cursor-pointer"
+        {/* Requirement 5: Persistent Floating Viewport Action Dock for Comparison */}
+        {mounted && typeof document !== 'undefined' && createPortal(
+          <AnimatePresence>
+            {(flightShortlist.length >= 2 || hotelShortlist.length >= 2) && (
+              <motion.div 
+                initial={{ y: 120, x: "-50%", opacity: 0, scale: 0.9 }}
+                animate={{ y: 0, x: "-50%", opacity: 1, scale: 1 }}
+                exit={{ y: 120, x: "-50%", opacity: 0, scale: 0.9 }}
+                transition={{ type: "spring", stiffness: 450, damping: 28 }}
+                className="fixed bottom-8 left-1/2 z-[9999] pointer-events-auto"
               >
-                Compare Side-by-Side
-              </button>
+                <div className="relative group bg-[#1E1C1A]/95 text-white pl-5 pr-3 py-3 rounded-full shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.18)] border border-white/20 flex items-center gap-4 backdrop-blur-2xl">
+                  {/* Animated glow halo */}
+                  <div className="absolute -inset-1 bg-gradient-to-r from-[#FF6B2C]/40 via-amber-500/20 to-[#FF6B2C]/40 rounded-full blur-lg opacity-70 animate-pulse pointer-events-none" />
 
-              <button 
-                onClick={() => {
-                  setFlightShortlist([]);
-                  setHotelShortlist([]);
-                }}
-                className="text-xs text-white/70 hover:text-white underline cursor-pointer"
-              >
-                Clear
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                  {/* Left badge info */}
+                  <div className="relative flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-full bg-[#FF6B2C] text-white flex items-center justify-center shadow-[0_0_12px_rgba(255,107,44,0.6)]">
+                      <Scale className="w-4 h-4" />
+                    </div>
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        <span className="font-serif font-black text-sm text-white tracking-tight">
+                          {flightShortlist.length >= 2
+                            ? `${flightShortlist.length} Flights Selected`
+                            : `${hotelShortlist.length} Hotels Selected`}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold tracking-wide animate-pulse">
+                          READY
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-[#A89F91] font-sans font-medium">
+                        {flightShortlist.length >= 2 
+                          ? 'Side-by-side airfare & layover comparison' 
+                          : 'Side-by-side room rates & distance comparison'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="relative h-6 w-px bg-white/20" />
+
+                  {/* Compare Action Button */}
+                  <motion.button 
+                    whileHover={{ scale: 1.05, y: -1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setIsCompareModalOpen(flightShortlist.length >= 2 ? 'flight' : 'hotel')}
+                    className="relative bg-gradient-to-r from-[#FF6B2C] to-[#E55A1C] hover:from-[#ff7a3d] hover:to-[#f06525] text-white text-xs font-sans font-extrabold px-5 py-2.5 rounded-full transition-all shadow-[0_4px_15px_rgba(255,107,44,0.4)] flex items-center gap-2 cursor-pointer"
+                  >
+                    <span>Compare Now</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </motion.button>
+
+                  {/* Clear Button */}
+                  <button 
+                    onClick={() => {
+                      setFlightShortlist([]);
+                      setHotelShortlist([]);
+                    }}
+                    className="relative text-xs font-bold text-white/60 hover:text-white transition-colors cursor-pointer px-2 py-1.5 rounded-full hover:bg-white/10"
+                    title="Clear comparison selection"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
 
         {/* Side-by-Side Comparison Modal */}
         <ComparisonModal 
