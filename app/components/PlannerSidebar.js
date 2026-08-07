@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import CustomDatePicker from './CustomDatePicker';
-import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw, Check, Map, Compass, ThumbsUp, ThumbsDown, Users, UserPlus, Landmark, Utensils, Zap, Gem, Star, Lightbulb, Smile, TreePine, Coffee, Palmtree, Banknote, Sun, Footprints, Coins, Plane, Building2, TrendingDown, Mic, MicOff, Flag, AlertTriangle, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw, Check, Map, Compass, ThumbsUp, ThumbsDown, Users, UserPlus, Landmark, Utensils, Zap, Gem, Star, Lightbulb, Smile, TreePine, Coffee, Palmtree, Banknote, Sun, Footprints, Coins, Plane, Building2, TrendingDown, Mic, MicOff, Flag, AlertTriangle, ShieldCheck, ShieldAlert, CornerDownLeft, Send, ArrowRight, Square, StopCircle } from 'lucide-react';
 import FlagModal from './FlagModal';
 import FlaggingAdminModal from './FlaggingAdminModal';
 import { getPlaceAccuracyStatus } from '../../lib/flaggingStore';
@@ -1033,75 +1033,24 @@ export default function PlannerSidebar({
   const toggleVoiceRecognition = useCallback(async () => {
     if (typeof window === 'undefined') return;
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
     if (isListeningVoice) {
       if (recognitionRef.current) {
         try { recognitionRef.current.stop(); } catch {}
       }
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        try { mediaRecorderRef.current.requestData(); } catch {}
         try { mediaRecorderRef.current.stop(); } catch {}
+      } else {
+        setIsListeningVoice(false);
+        setVoiceInterimText('');
       }
-      setIsListeningVoice(false);
-      setVoiceInterimText('');
       return;
     }
 
     setVoiceError('');
     initialPromptRef.current = userPromptInput ? userPromptInput.trim() : '';
 
-    // Approach A: Browser Native SpeechRecognition (Zero Key Needed, Instant Realtime Streaming)
-    if (SpeechRecognition) {
-      try {
-        const recognition = new SpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.lang = (typeof navigator !== 'undefined' && navigator.language) || 'en-US';
-
-        recognition.onstart = () => {
-          setIsListeningVoice(true);
-          setVoiceInterimText('Listening... Speak clearly');
-        };
-
-        recognition.onresult = (event) => {
-          let fullSpoken = '';
-          for (let i = 0; i < event.results.length; i++) {
-            fullSpoken += event.results[i][0].transcript;
-          }
-          const trimmed = fullSpoken.trim();
-          if (trimmed) {
-            setVoiceInterimText(trimmed);
-            const combined = initialPromptRef.current
-              ? `${initialPromptRef.current} ${trimmed}`
-              : trimmed;
-            const formatted = combined.slice(0, 400);
-            setUserPromptInput(formatted);
-            if (onPromptChange) onPromptChange(formatted);
-          }
-        };
-
-        recognition.onerror = (err) => {
-          console.warn('Browser SpeechRecognition error:', err.error);
-          if (err.error === 'not-allowed' || err.error === 'service-not-allowed') {
-            setVoiceError('Microphone permission denied. Click the lock icon in your address bar to allow microphone.');
-            setIsListeningVoice(false);
-          }
-        };
-
-        recognition.onend = () => {
-          setIsListeningVoice(false);
-          setVoiceInterimText('');
-        };
-
-        recognitionRef.current = recognition;
-        recognition.start();
-        return;
-      } catch (err) {
-        console.warn('WebSpeech API failed to start:', err);
-      }
-    }
-
-    // Approach B: MediaRecorder + Cloud API fallback if WebSpeech is missing
+    // Step 1: Request Mic Stream
     let stream = null;
     try {
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -1118,6 +1067,47 @@ export default function PlannerSidebar({
       return;
     }
 
+    let webSpeechHasResult = false;
+
+    // Step 2: WebSpeech API for instant live interim typing feedback
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      try {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = (typeof navigator !== 'undefined' && navigator.language) || 'en-US';
+
+        recognition.onresult = (event) => {
+          let fullSpoken = '';
+          for (let i = 0; i < event.results.length; i++) {
+            fullSpoken += event.results[i][0].transcript;
+          }
+          const trimmed = fullSpoken.trim();
+          if (trimmed) {
+            webSpeechHasResult = true;
+            setVoiceInterimText(trimmed);
+            const combined = initialPromptRef.current
+              ? `${initialPromptRef.current} ${trimmed}`
+              : trimmed;
+            const formatted = combined.slice(0, 400);
+            setUserPromptInput(formatted);
+            if (onPromptChange) onPromptChange(formatted);
+          }
+        };
+
+        recognition.onerror = (err) => {
+          console.warn('Browser SpeechRecognition error:', err.error);
+        };
+
+        recognitionRef.current = recognition;
+        recognition.start();
+      } catch (err) {
+        console.warn('WebSpeech API start error:', err);
+      }
+    }
+
+    // Step 3: MediaRecorder + Gemini Cloud AI ASR Backup
     try {
       audioChunksRef.current = [];
       const mediaRecorder = new MediaRecorder(stream);
@@ -1133,13 +1123,20 @@ export default function PlannerSidebar({
         setTimeout(() => {
           const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType || 'audio/webm' });
           stream.getTracks().forEach(t => t.stop());
-          processCloudTranscription(audioBlob);
+
+          // Process recorded audio blob via Cloud Gemini AI ASR
+          if (audioBlob.size > 300) {
+            processCloudTranscription(audioBlob);
+          } else {
+            setIsListeningVoice(false);
+            setVoiceInterimText('');
+          }
         }, 50);
       };
 
       mediaRecorder.start(100);
       setIsListeningVoice(true);
-      setVoiceInterimText('Listening... Speak your prompt clearly');
+      setVoiceInterimText('Listening... Speak clearly');
     } catch (err) {
       console.warn('MediaRecorder setup failed:', err);
       setVoiceError('Failed to start voice recorder. Please check microphone settings.');
@@ -1948,42 +1945,52 @@ export default function PlannerSidebar({
                     setUserPromptInput(val);
                     if (onPromptChange) onPromptChange(val);
                   }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      if (userPromptInput.trim()) {
+                        setStep('confirming');
+                      }
+                    }
+                  }}
                   placeholder="e.g., 5 days in Kyoto during cherry blossom season… love historic temples, hidden gardens, authentic ramen shops, and boutique stays."
                   maxLength={400}
-                  className={`w-full h-36 pt-4 pb-10 px-4 md:px-5 rounded-xl bg-white border transition-all duration-300 resize-none font-sans leading-relaxed text-sm md:text-base text-stone-900 placeholder:text-stone-400/80 focus:outline-none shadow-xs ${
+                  className={`w-full h-36 pt-4 pb-12 px-4 md:px-5 rounded-xl bg-white border transition-all duration-300 resize-none font-sans leading-relaxed text-sm md:text-base text-stone-900 placeholder:text-stone-400/80 focus:outline-none shadow-xs ${
                     isListeningVoice
-                      ? 'border-[#FF6B2C]/60 ring-2 ring-[#FF6B2C]/15 bg-[#FFF8F5]/20 border-l-[3px] border-l-[#FF6B2C]'
-                      : 'border-stone-200 border-l-[3px] border-l-[#FF6B2C] focus:border-stone-300 focus:border-l-[#FF6B2C] focus:ring-0'
+                      ? 'border-[#FF6B2C] ring-4 ring-[#FF6B2C]/10 bg-[#FFF9F6] border-l-[4px] border-l-[#FF6B2C]'
+                      : 'border-stone-200 border-l-[3px] border-l-[#FF6B2C] focus:border-[#FF6B2C]/50 focus:border-l-[#FF6B2C] focus:ring-2 focus:ring-[#FF6B2C]/10'
                   }`}
                 />
 
-                {/* Minimalist Live Listening / Transcribing Status Indicator */}
+                {/* ── High-End Animated Listening / Transcribing Indicator ── */}
                 <AnimatePresence>
                   {(isListeningVoice || isTranscribingCloud) && (
                     <motion.div
-                      initial={{ opacity: 0, x: -6 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -6 }}
+                      initial={{ opacity: 0, y: 4, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 4, scale: 0.96 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute bottom-2.5 left-3.5 flex items-center gap-2 pointer-events-none"
+                      className="absolute bottom-3 left-3.5 flex items-center pointer-events-none z-10"
                     >
                       {isTranscribingCloud ? (
-                        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#FFF2EA] border border-[#FF6B2C]/30 text-[#FF6B2C] text-[11px] font-bold shadow-2xs">
-                          <div className="w-3 h-3 border-2 border-[#FF6B2C] border-t-transparent rounded-full animate-spin" />
-                          <span>AI Transcribing...</span>
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#FF6B2C]/10 border border-[#FF6B2C]/30 text-[#FF6B2C] text-[11px] font-bold shadow-xs backdrop-blur-md">
+                          <div className="w-3.5 h-3.5 border-2 border-[#FF6B2C] border-t-transparent rounded-full animate-spin" />
+                          <span>AI Transcribing Speech...</span>
                         </div>
                       ) : (
-                        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#FFF2EA] border border-[#FF6B2C]/30 text-[#FF6B2C] text-[11px] font-bold shadow-2xs">
-                          <span className="relative flex h-2 w-2">
+                        <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-[#FFF2EA] border border-[#FF6B2C]/40 text-[#FF6B2C] text-[11px] font-bold shadow-xs backdrop-blur-md">
+                          <span className="relative flex h-2.5 w-2.5">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF6B2C] opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF6B2C]"></span>
+                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#FF6B2C]"></span>
                           </span>
-                          <span>Listening...</span>
-                          {/* Minimalist 3-bar audio wave */}
+                          <span className="tracking-wide">Listening...</span>
+                          {/* Animated 5-bar soundwave equalizer */}
                           <div className="flex items-end gap-0.5 h-3 ml-0.5">
-                            <span className="w-0.5 h-2.5 bg-[#FF6B2C] rounded-full animate-pulse" />
-                            <span className="w-0.5 h-3 bg-[#FF6B2C] rounded-full animate-pulse [animation-delay:150ms]" />
-                            <span className="w-0.5 h-1.5 bg-[#FF6B2C] rounded-full animate-pulse [animation-delay:300ms]" />
+                            <span className="w-0.5 h-2 bg-[#FF6B2C] rounded-full animate-bounce [animation-delay:0ms]" />
+                            <span className="w-0.5 h-3.5 bg-[#FF6B2C] rounded-full animate-bounce [animation-delay:150ms]" />
+                            <span className="w-0.5 h-1.5 bg-[#FF6B2C] rounded-full animate-bounce [animation-delay:300ms]" />
+                            <span className="w-0.5 h-3 bg-[#FF6B2C] rounded-full animate-bounce [animation-delay:100ms]" />
+                            <span className="w-0.5 h-2 bg-[#FF6B2C] rounded-full animate-bounce [animation-delay:200ms]" />
                           </div>
                         </div>
                       )}
@@ -1991,27 +1998,61 @@ export default function PlannerSidebar({
                   )}
                 </AnimatePresence>
 
-                {/* Voice Mic Action Button & Character Counter */}
-                <div className="absolute bottom-2.5 right-3 flex items-center gap-2">
-                  <button
+                {/* ── Action Group: Microphone / Stop Button & Enter Submit Button ── */}
+                <div className="absolute bottom-2.5 right-3 flex items-center gap-2 z-10">
+                  {/* Premium Microphone / Stop Recording Button */}
+                  <div className="relative flex items-center justify-center">
+                    {isListeningVoice && (
+                      <>
+                        <span className="absolute -inset-2.5 rounded-full bg-[#FF6B2C]/20 animate-ping pointer-events-none" />
+                        <span className="absolute -inset-1 rounded-full bg-[#FF6B2C]/40 animate-pulse pointer-events-none" />
+                      </>
+                    )}
+                    <motion.button
+                      type="button"
+                      onClick={toggleVoiceRecognition}
+                      disabled={isTranscribingCloud}
+                      whileHover={{ scale: 1.08 }}
+                      whileTap={{ scale: 0.92 }}
+                      title={isListeningVoice ? "Tap to stop recording & transcribe" : "Tap to speak your prompt"}
+                      className={`p-2 rounded-full transition-all duration-300 cursor-pointer flex items-center justify-center relative z-10 shadow-sm ${
+                        isListeningVoice
+                          ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E0591F] text-white ring-2 ring-white/80 shadow-md shadow-[#FF6B2C]/30 scale-105'
+                          : isTranscribingCloud
+                          ? 'bg-stone-200 text-stone-400 cursor-not-allowed'
+                          : 'bg-stone-100/90 text-stone-600 hover:text-[#FF6B2C] hover:bg-[#FFF2EA] hover:shadow-xs active:scale-95'
+                      }`}
+                    >
+                      {isTranscribingCloud ? (
+                        <div className="w-4 h-4 border-2 border-stone-500 border-t-transparent rounded-full animate-spin" />
+                      ) : isListeningVoice ? (
+                        <Square className="w-3.5 h-3.5 fill-current stroke-none rounded-xs animate-pulse" />
+                      ) : (
+                        <Mic className="w-4 h-4" />
+                      )}
+                    </motion.button>
+                  </div>
+
+                  {/* Enter / Send Submit Button */}
+                  <motion.button
                     type="button"
-                    onClick={toggleVoiceRecognition}
-                    disabled={isTranscribingCloud}
-                    title={isListeningVoice ? "Tap to stop listening & transcribe" : "Tap to speak your prompt"}
-                    className={`p-1.5 rounded-full transition-all cursor-pointer flex items-center justify-center ${
-                      isListeningVoice || isTranscribingCloud
-                        ? 'bg-[#FF6B2C] text-white shadow-xs scale-105'
-                        : 'bg-stone-100 text-stone-500 hover:text-[#FF6B2C] hover:bg-stone-200'
+                    onClick={() => {
+                      if (userPromptInput.trim()) {
+                        setStep('confirming');
+                      }
+                    }}
+                    whileHover={{ scale: userPromptInput.trim() ? 1.08 : 1 }}
+                    whileTap={{ scale: userPromptInput.trim() ? 0.92 : 1 }}
+                    disabled={!userPromptInput.trim() || isListeningVoice || isTranscribingCloud}
+                    title="Send prompt (Press Enter)"
+                    className={`p-2 rounded-full transition-all duration-200 flex items-center justify-center shadow-xs ${
+                      userPromptInput.trim() && !isListeningVoice && !isTranscribingCloud
+                        ? 'bg-[#FF6B2C] text-white hover:bg-[#E0591F] cursor-pointer shadow-md'
+                        : 'bg-stone-100 text-stone-300 cursor-not-allowed'
                     }`}
                   >
-                    {isTranscribingCloud ? (
-                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : isListeningVoice ? (
-                      <MicOff className="w-3.5 h-3.5" />
-                    ) : (
-                      <Mic className="w-3.5 h-3.5" />
-                    )}
-                  </button>
+                    <CornerDownLeft className="w-4 h-4" />
+                  </motion.button>
                 </div>
               </div>
 
@@ -3599,72 +3640,104 @@ export default function PlannerSidebar({
                   </AnimatePresence>
                 </div>
 
-                {/* ── Plane Runway Animation ── */}
-                <div className="relative flex-1 flex flex-col justify-end overflow-hidden" style={{ minHeight: 90 }}>
-                  {/* Dashed runway strip */}
-                  <div className="absolute bottom-5 left-0 right-0 flex items-center gap-[6px] px-0 overflow-hidden">
-                    {Array.from({ length: 28 }).map((_, i) => (
-                      <motion.div
-                        key={i}
-                        className="h-[2px] rounded-full bg-[#E6DFD5] shrink-0"
-                        style={{ width: 10 }}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: i * 0.03, duration: 0.2 }}
-                      />
-                    ))}
+                {/* ── High-End Animated Plane Runway & Takeoff Experience ── */}
+                <div className="relative flex-1 flex flex-col justify-end overflow-hidden pt-4 pb-2" style={{ minHeight: 110 }}>
+                  
+                  {/* Glowing Tarmac Horizon Light Gradient */}
+                  <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-[#FF6B2C]/5 via-stone-100/30 to-transparent pointer-events-none" />
+
+                  {/* Dynamic Streaming Runway Dashes & Beacon Lights */}
+                  <div className="absolute bottom-6 left-0 right-0 h-3 flex items-center overflow-hidden pointer-events-none">
+                    {/* Streaming Dashed Runway Line */}
+                    <div className="w-full flex items-center gap-2 overflow-hidden px-1">
+                      {Array.from({ length: 32 }).map((_, i) => (
+                        <motion.div
+                          key={i}
+                          className="h-[2.5px] rounded-full bg-[#D8D0C5] shrink-0 shadow-2xs"
+                          style={{ width: 14 }}
+                          animate={{ x: [-22, 0] }}
+                          transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
+                        />
+                      ))}
+                    </div>
                   </div>
 
-                  {/* Plane */}
+                  {/* Pulsing Runway Edge Beacon LED Lights */}
+                  <div className="absolute bottom-5 left-2 right-2 flex justify-between items-center pointer-events-none">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B2C] animate-ping" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B2C] animate-ping [animation-delay:400ms]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B2C] animate-ping [animation-delay:800ms]" />
+                  </div>
+
+                  {/* Airplane & Engine Thrusters */}
                   <AnimatePresence mode="wait">
                     {!showFinalCTA ? (
-                      /* Idle — plane parked on runway with engine shimmer */
+                      /* Idle State — Plane Taxiing & Engine Shimmering on Tarmac */
                       <motion.div
                         key="plane-idle"
-                        className="absolute bottom-[18px] left-4"
-                        initial={{ opacity: 0, x: -10 }}
+                        className="absolute bottom-[22px] left-4 flex flex-col items-start"
+                        initial={{ opacity: 0, x: -15 }}
                         animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 10 }}
+                        exit={{ opacity: 0, x: 15 }}
                         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                       >
+                        {/* Plane Container with Engine Vibration & Thruster Flame */}
                         <div className="relative flex items-center">
-                          {/* Engine heat shimmer blur */}
+                          {/* Engine Afterburner Flame */}
                           <motion.div
-                            className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-3 rounded-full bg-[#FF6B2C]/20 blur-[6px]"
-                            animate={{ opacity: [0.4, 0.9, 0.4], scaleX: [0.8, 1.3, 0.8] }}
-                            transition={{ repeat: Infinity, duration: 0.8, ease: 'easeInOut' }}
+                            className="absolute -left-4 top-1/2 -translate-y-1/2 w-6 h-2 rounded-full bg-gradient-to-l from-[#FF6B2C] via-[#FF8C00] to-transparent blur-[2px]"
+                            animate={{ opacity: [0.5, 1, 0.5], scaleX: [0.8, 1.4, 0.8] }}
+                            transition={{ repeat: Infinity, duration: 0.5, ease: 'easeInOut' }}
                           />
-                          <Plane
-                            className="w-7 h-7 text-[#1E1C1A]"
-                            style={{ transform: 'rotate(0deg)' }}
-                          />
-                          {/* Idle vibration */}
+                          {/* Heat Distortion Glow */}
                           <motion.div
-                            className="absolute inset-0"
-                            animate={{ y: [0, -0.5, 0] }}
-                            transition={{ repeat: Infinity, duration: 0.4, ease: 'easeInOut' }}
+                            className="absolute -left-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-[#FF6B2C]/20 blur-[8px]"
+                            animate={{ scale: [0.9, 1.2, 0.9] }}
+                            transition={{ repeat: Infinity, duration: 0.7, ease: 'easeInOut' }}
                           />
+
+                          {/* Airplane Icon */}
+                          <motion.div
+                            animate={{ y: [0, -1, 0] }}
+                            transition={{ repeat: Infinity, duration: 0.35, ease: 'easeInOut' }}
+                          >
+                            <Plane className="w-7 h-7 text-[#1E1C1A] filter drop-shadow-xs" />
+                          </motion.div>
                         </div>
-                        <p className="text-[9px] font-mono text-[#A89F91] mt-1 tracking-widest uppercase">Preparing for takeoff…</p>
+
+                        {/* Animated Status Pill Badge */}
+                        <motion.div 
+                          initial={{ opacity: 0, y: 4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="mt-2.5 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFF2EA] border border-[#FF6B2C]/30 text-[#FF6B2C] text-[10px] font-bold tracking-widest uppercase shadow-2xs backdrop-blur-sm"
+                        >
+                          <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF6B2C] opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF6B2C]"></span>
+                          </span>
+                          <span>✦ Preparing for takeoff...</span>
+                        </motion.div>
                       </motion.div>
                     ) : (
-                      /* Complete — plane takes off diagonally */
+                      /* Complete State — Supersonic Takeoff Lift-Off Animation */
                       <motion.div
                         key="plane-takeoff"
-                        className="absolute bottom-[18px] left-4"
-                        initial={{ x: 0, y: 0, rotate: 0, opacity: 1 }}
-                        animate={{ x: 260, y: -70, rotate: -22, opacity: 0 }}
-                        transition={{ duration: 1.1, ease: [0.4, 0, 0.2, 1], delay: 0.15 }}
+                        className="absolute bottom-[22px] left-4 z-20"
+                        initial={{ x: 0, y: 0, rotate: 0, opacity: 1, scale: 1 }}
+                        animate={{ x: 320, y: -90, rotate: -24, opacity: 0, scale: 1.15 }}
+                        transition={{ duration: 1.2, ease: [0.4, 0, 0.2, 1], delay: 0.1 }}
                       >
-                        <Plane className="w-7 h-7 text-[#FF6B2C]" style={{ transform: 'rotate(0deg)' }} />
-                        {/* Jet contrail */}
-                        <motion.div
-                          className="absolute top-1/2 -left-3 h-[1.5px] rounded-full bg-gradient-to-l from-[#FF6B2C]/40 to-transparent"
-                          initial={{ width: 0 }}
-                          animate={{ width: 60 }}
-                          transition={{ duration: 0.9, ease: 'easeOut', delay: 0.2 }}
-                          style={{ translateY: '-50%' }}
-                        />
+                        <div className="relative flex items-center">
+                          {/* Supersonic Jet Contrail */}
+                          <motion.div
+                            className="absolute top-1/2 -left-12 h-[2.5px] rounded-full bg-gradient-to-l from-[#FF6B2C] via-[#FF8C00]/60 to-transparent shadow-[0_0_8px_#FF6B2C]"
+                            initial={{ width: 0 }}
+                            animate={{ width: 110 }}
+                            transition={{ duration: 0.9, ease: 'easeOut', delay: 0.15 }}
+                            style={{ translateY: '-50%' }}
+                          />
+                          <Plane className="w-8 h-8 text-[#FF6B2C] filter drop-shadow-md" />
+                        </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
