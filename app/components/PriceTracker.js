@@ -160,12 +160,12 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
           </button>
         </div>
 
-        {/* AI Travel Decision Insight Banner */}
+        {/* Smart Recommendation Banner with Live Intelligence Beacon - Fixed Single Line */}
         {items.length >= 2 && (
-          <div className="bg-[#FAF6F0] rounded-2xl border border-[#E6DFD5] p-4 mb-6 flex items-center justify-between flex-wrap gap-3 shadow-2xs">
-            <div className="flex items-center gap-3">
+          <div className="bg-[#FAF6F0] rounded-2xl border border-[#E6DFD5] p-3.5 sm:p-4 mb-6 flex items-center justify-between gap-3 shadow-2xs">
+            <div className="flex items-center gap-2.5 min-w-0">
               {/* Live Intelligence Indicator */}
-              <div className="flex items-center gap-2 bg-white px-2.5 py-1 rounded-full border border-[#E6DFD5] shadow-2xs">
+              <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-full border border-[#E6DFD5] shadow-2xs flex-shrink-0">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -173,9 +173,9 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#1E1C1A]">AI Verdict</span>
               </div>
 
-              <div>
-                <span className="text-xs font-bold text-[#1E1C1A]">Smart Recommendation: </span>
-                <span className="text-xs text-[#4A443E]">
+              <div className="text-xs text-[#4A443E] truncate">
+                <span className="font-bold text-[#1E1C1A]">Smart Recommendation: </span>
+                <span>
                   {type === 'flight' ? (
                     <>
                       <strong>{bestValueItem?.airline}</strong> offers the best rate at <strong>${lowestPrice}</strong>
@@ -192,7 +192,7 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
             </div>
 
             {priceDiff > 0 && (
-              <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-mono font-bold shadow-2xs">
+              <span className="px-3 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-300/80 text-[11px] font-sans font-bold shadow-2xs flex-shrink-0 whitespace-nowrap">
                 Save up to ${type === 'flight' ? priceDiff : priceDiff * (stayNights || 1)}
               </span>
             )}
@@ -200,7 +200,7 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
         )}
 
         {/* Comparison Grid with Hardware-Accelerated 120 FPS Transitions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {items.map((item, idx) => {
             const linkInfo = getBookingLinkInfo(destinationName, type, item, { startDate, endDate });
             const isLowest = item.price === lowestPrice;
@@ -208,7 +208,7 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
             return (
               <div 
                 key={item.id}
-                className={`group/card rounded-2xl border p-5.5 flex flex-col justify-between relative transition-all duration-150 ease-out hover:-translate-y-1.5 ${
+                className={`group/card rounded-2xl border p-4.5 sm:p-5 flex flex-col justify-between relative transition-all duration-150 ease-out hover:-translate-y-1.5 ${
                   isLowest 
                     ? 'bg-[#FFFDFB] border-[#FF6B2C]/50 ring-2 ring-[#FF6B2C]/15 shadow-[0_8px_25px_-5px_rgba(255,107,44,0.18)] hover:shadow-[0_15px_35px_-5px_rgba(255,107,44,0.25)]' 
                     : 'bg-[#FAF6F0]/80 border-[#E6DFD5] hover:border-[#FF6B2C]/40 hover:shadow-lg'
@@ -216,7 +216,7 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
               >
                 <div>
                   {/* Option Badge & Clean Luxury Status Tags */}
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-3">
                     <span className="text-[11px] font-sans font-bold uppercase tracking-wider bg-[#1E1C1A] text-white px-3 py-1 rounded-lg shadow-2xs">
                       Option {idx + 1}
                     </span>
@@ -238,11 +238,11 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                   {/* Header Title with Airline or Hotel Logo */}
                   {type === 'flight' ? (
                     <div>
-                      <div className="flex items-center gap-3 mb-4">
+                      <div className="flex items-center gap-3 mb-3.5">
                         <img 
                           src={item.logo} 
                           alt={item.airline} 
-                          className="w-11 h-11 object-contain rounded-xl bg-white border border-[#E6DFD5] p-1.5 shadow-2xs transition-transform duration-150 group-hover/card:scale-105" 
+                          className="w-10 h-10 object-contain rounded-xl bg-white border border-[#E6DFD5] p-1.5 shadow-2xs transition-transform duration-150 group-hover/card:scale-105" 
                         />
                         <div>
                           <h4 className="font-serif font-bold text-base text-[#1E1C1A] leading-tight">{item.airline}</h4>
@@ -251,10 +251,10 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                       </div>
 
                       {/* Price Hero Card */}
-                      <div className="bg-white rounded-2xl p-4 border border-[#E6DFD5] mb-4 shadow-2xs">
+                      <div className="bg-white rounded-2xl p-3.5 border border-[#E6DFD5] mb-3.5 shadow-2xs">
                         <div className="flex items-baseline justify-between mb-1">
                           <span className="text-xs font-bold text-[#7A7268]">Total Airfare</span>
-                          <span className="text-3xl font-serif font-black text-[#1E1C1A]">${item.price}</span>
+                          <span className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A]">${item.price}</span>
                         </div>
                         <div className="text-[11px] text-[#A89F91]">
                           {isLowest ? (
@@ -268,7 +268,7 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                       </div>
 
                       {/* Animated Flight Path Corridor & Schedule */}
-                      <div className="bg-white rounded-2xl p-4.5 border border-[#E6DFD5] mb-5 shadow-2xs relative overflow-hidden">
+                      <div className="bg-white rounded-2xl p-3.5 border border-[#E6DFD5] mb-4 shadow-2xs relative overflow-hidden">
                         <div className="flex items-center justify-between text-xs">
                           {/* Departure Node */}
                           <div className="flex flex-col">
@@ -279,7 +279,7 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                           {/* Center Animated Flight Radar Trajectory with Diagonal Cruising Jet */}
                           <div className="flex-1 px-4 flex flex-col items-center">
                             {/* Refined Duration Pill */}
-                            <div className="flex items-center gap-1.5 bg-[#FAF6F0] px-3 py-1 rounded-full border border-[#E6DFD5] text-xs font-sans font-bold text-[#1E1C1A] mb-2 shadow-2xs">
+                            <div className="flex items-center gap-1.5 bg-[#FAF6F0] px-3 py-0.5 rounded-full border border-[#E6DFD5] text-xs font-sans font-bold text-[#1E1C1A] mb-1.5 shadow-2xs">
                               <Clock className="w-3 h-3 text-[#7A7268]" />
                               <span>{item.duration}</span>
                             </div>
@@ -306,7 +306,7 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                             </div>
 
                             {/* Refined Stops Routing Badge */}
-                            <div className="flex items-center gap-1.5 text-[11px] font-sans font-medium mt-1.5">
+                            <div className="flex items-center gap-1.5 text-[11px] font-sans font-medium mt-1">
                               {item.stops === 0 ? (
                                 <>
                                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -331,20 +331,20 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                     </div>
                   ) : (
                     <div>
-                      <div className="relative h-32 rounded-xl overflow-hidden mb-3.5 border border-[#E6DFD5] shadow-2xs">
+                      <div className="relative h-24 sm:h-28 rounded-xl overflow-hidden mb-3 border border-[#E6DFD5] shadow-2xs">
                         <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-200 group-hover/card:scale-105" />
                         <div className="absolute top-2 right-2 bg-black/75 backdrop-blur-xs text-white text-[11px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
                           <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {item.rating}.0
                         </div>
                       </div>
 
-                      <h4 className="font-serif font-bold text-base text-[#1E1C1A] mb-3 leading-tight">{item.name}</h4>
+                      <h4 className="font-serif font-bold text-base text-[#1E1C1A] mb-2.5 leading-tight truncate">{item.name}</h4>
 
                       {/* Hotel Price Hero */}
-                      <div className="bg-white rounded-2xl p-4 border border-[#E6DFD5] mb-4 shadow-2xs">
-                        <div className="flex items-baseline justify-between mb-1">
+                      <div className="bg-white rounded-2xl p-3 border border-[#E6DFD5] mb-3 shadow-2xs">
+                        <div className="flex items-baseline justify-between mb-0.5">
                           <span className="text-xs font-bold text-[#7A7268]">Nightly Rate</span>
-                          <span className="text-3xl font-serif font-black text-[#1E1C1A]">${item.price}<span className="text-xs font-normal text-[#7A7268]">/night</span></span>
+                          <span className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A]">${item.price}<span className="text-xs font-normal text-[#7A7268]">/night</span></span>
                         </div>
                         <div className="text-[11px] text-[#A89F91]">
                           Total stay: <strong className="text-[#1E1C1A]">${item.price * (stayNights || 1)}</strong> ({stayNights || 1} nights)
@@ -352,8 +352,8 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                       </div>
 
                       {/* Hotel Details Breakdown */}
-                      <div className="space-y-2.5 text-xs text-[#4A443E] bg-white rounded-2xl p-4 border border-[#E6DFD5] mb-5 shadow-2xs">
-                        <div className="flex items-center justify-between border-b border-[#E6DFD5]/50 pb-2">
+                      <div className="space-y-2 text-xs text-[#4A443E] bg-white rounded-2xl p-3 border border-[#E6DFD5] mb-3.5 shadow-2xs">
+                        <div className="flex items-center justify-between border-b border-[#E6DFD5]/50 pb-1.5">
                           <span className="text-[#7A7268] font-medium">Distance / Location:</span>
                           <span className="font-bold text-[#1E1C1A] truncate max-w-[140px]">{item.distance}</span>
                         </div>
@@ -367,14 +367,14 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                 </div>
 
                 {/* Tactile Action Buttons with Luxury Hover Animations */}
-                <div className="space-y-2.5 pt-3.5 border-t border-[#E6DFD5]">
+                <div className="space-y-2 pt-2.5 border-t border-[#E6DFD5]">
                   {/* Primary Selection Button with Luxury Light Sweep & Halo Disc */}
                   <button 
                     onClick={() => {
                       onSelect(item);
                       onClose();
                     }}
-                    className="group/select-btn relative overflow-hidden w-full bg-gradient-to-r from-[#1E1C1A] via-[#2A2724] to-[#1E1C1A] text-white py-3.5 px-5 rounded-2xl text-xs font-bold transition-all duration-300 ease-out shadow-md hover:shadow-xl hover:shadow-black/30 hover:border-[#FF6B2C]/60 active:scale-[0.98] flex items-center justify-between cursor-pointer border border-white/10"
+                    className="group/select-btn relative overflow-hidden w-full bg-gradient-to-r from-[#1E1C1A] via-[#2A2724] to-[#1E1C1A] text-white py-3 px-4.5 rounded-xl text-xs font-bold transition-all duration-300 ease-out shadow-md hover:shadow-xl hover:shadow-black/30 hover:border-[#FF6B2C]/60 active:scale-[0.98] flex items-center justify-between cursor-pointer border border-white/10"
                   >
                     {/* Ambient Light Beam Sweep on Hover */}
                     <div className="absolute inset-0 -translate-x-full group-hover/select-btn:translate-x-full transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none" />
@@ -389,8 +389,8 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                     {/* Glowing Interactive Terracotta Disc */}
                     <div className="relative flex items-center justify-center z-10">
                       <div className="absolute inset-0 rounded-full bg-[#FF6B2C] opacity-0 group-hover/select-btn:opacity-75 blur-xs group-hover/select-btn:scale-130 transition-all duration-300 pointer-events-none" />
-                      <div className="relative w-7 h-7 rounded-full bg-[#FF6B2C] group-hover/select-btn:bg-[#ff7d45] flex items-center justify-center text-white shadow-[0_2px_10px_rgba(255,107,44,0.4)] group-hover/select-btn:shadow-[0_0_16px_rgba(255,107,44,0.8)] transition-all duration-300 group-hover/select-btn:scale-110">
-                        <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 ease-out group-hover/select-btn:translate-x-0.5" />
+                      <div className="relative w-6.5 h-6.5 rounded-full bg-[#FF6B2C] group-hover/select-btn:bg-[#ff7d45] flex items-center justify-center text-white shadow-[0_2px_8px_rgba(255,107,44,0.4)] group-hover/select-btn:shadow-[0_0_14px_rgba(255,107,44,0.8)] transition-all duration-300 group-hover/select-btn:scale-110">
+                        <ArrowRight className="w-3 h-3 transition-transform duration-300 ease-out group-hover/select-btn:translate-x-0.5" />
                       </div>
                     </div>
                   </button>
@@ -400,15 +400,15 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                     href={linkInfo.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group/book-btn relative w-full bg-white hover:bg-[#FAF6F0] active:scale-[0.98] border border-[#E6DFD5] hover:border-[#1E1C1A]/40 text-[#1E1C1A] py-3.5 px-5 rounded-2xl text-xs font-bold flex items-center justify-between transition-all duration-200 ease-out shadow-2xs hover:shadow-md cursor-pointer"
+                    className="group/book-btn relative w-full bg-white hover:bg-[#FAF6F0] active:scale-[0.98] border border-[#E6DFD5] hover:border-[#1E1C1A]/40 text-[#1E1C1A] py-2.5 px-4.5 rounded-xl text-xs font-bold flex items-center justify-between transition-all duration-200 ease-out shadow-2xs hover:shadow-sm cursor-pointer"
                   >
                     <span className="transition-transform duration-200 group-hover/book-btn:translate-x-1">
                       Book on {type === 'flight' ? (item.airline || 'Partner') : 'Booking Partner'}
                     </span>
                     
                     {/* Elevated Interactive Glyph Disc */}
-                    <div className="w-7 h-7 rounded-full bg-[#FAF6F0] group-hover/book-btn:bg-[#1E1C1A] flex items-center justify-center text-[#7A7268] group-hover/book-btn:text-white transition-all duration-200 group-hover/book-btn:scale-105 shadow-2xs">
-                      <ExternalLink className="w-3.5 h-3.5 transition-transform duration-200 group-hover/book-btn:translate-x-0.5 group-hover/book-btn:-translate-y-0.5" />
+                    <div className="w-6.5 h-6.5 rounded-full bg-[#FAF6F0] group-hover/book-btn:bg-[#1E1C1A] flex items-center justify-center text-[#7A7268] group-hover/book-btn:text-white transition-all duration-200 group-hover/book-btn:scale-105 shadow-2xs">
+                      <ExternalLink className="w-3 h-3 transition-transform duration-200 group-hover/book-btn:translate-x-0.5 group-hover/book-btn:-translate-y-0.5" />
                     </div>
                   </a>
                 </div>
@@ -1045,17 +1045,27 @@ export default function PriceTracker({
                         <button 
                           onClick={() => handleRedirect('flight', flightLinkInfo)}
                           disabled={redirectingType === 'flight'}
-                          className="bg-[#1E1C1A] hover:bg-black text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center gap-2 disabled:opacity-75 cursor-pointer"
+                          className="group/redirect-btn relative overflow-hidden bg-gradient-to-r from-[#1E1C1A] via-[#2A2724] to-[#1E1C1A] hover:bg-black text-white px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold border border-white/10 hover:border-[#FF6B2C]/60 transition-all duration-300 ease-out shadow-md hover:shadow-xl hover:shadow-black/30 active:scale-[0.98] flex items-center justify-between gap-3 disabled:opacity-75 cursor-pointer"
                         >
+                          {/* Ambient Light Beam Sweep on Hover */}
+                          <div className="absolute inset-0 -translate-x-full group-hover/redirect-btn:translate-x-full transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none" />
+
                           {redirectingType === 'flight' ? (
-                            <>
+                            <div className="flex items-center gap-2 relative z-10">
                               <Loader2 className="w-4 h-4 animate-spin text-[#FF6B2C]" />
                               <span>Refreshing price...</span>
-                            </>
+                            </div>
                           ) : (
                             <>
-                              <span>{flightLinkInfo.buttonText}</span>
-                              <ArrowRight className="w-4 h-4" />
+                              <span className="transition-transform duration-300 group-hover/redirect-btn:translate-x-0.5 relative z-10 font-bold tracking-tight text-white group-hover/redirect-btn:text-[#FAF6F0]">
+                                {flightLinkInfo.buttonText}
+                              </span>
+                              <div className="relative flex items-center justify-center shrink-0 z-10">
+                                <div className="absolute inset-0 rounded-full bg-[#FF6B2C] opacity-0 group-hover/redirect-btn:opacity-75 blur-xs group-hover/redirect-btn:scale-130 transition-all duration-300 pointer-events-none" />
+                                <div className="relative w-7 h-7 rounded-full bg-[#FF6B2C] group-hover/redirect-btn:bg-[#ff7d45] flex items-center justify-center text-white shadow-[0_2px_8px_rgba(255,107,44,0.4)] group-hover/redirect-btn:shadow-[0_0_14px_rgba(255,107,44,0.8)] transition-all duration-300 group-hover/redirect-btn:scale-110">
+                                  <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 ease-out group-hover/redirect-btn:translate-x-0.5" />
+                                </div>
+                              </div>
                             </>
                           )}
                         </button>
@@ -1269,12 +1279,17 @@ export default function PriceTracker({
                                 <div className="text-[10px] text-[#7A7268] uppercase font-bold tracking-wider">Round Trip</div>
                               </div>
                               {isSelected ? (
-                                <button onClick={() => handleClearSelection('flight')} className="bg-[#FF6B2C] text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-1.5 shadow-sm hover:bg-[#e0591e] transition-colors cursor-pointer">
+                                <button onClick={() => handleClearSelection('flight')} className="group/btn bg-[#FF6B2C] text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-1.5 shadow-sm hover:bg-[#e0591e] active:scale-[0.97] transition-all cursor-pointer">
                                   <CheckCircle2 className="w-4 h-4" /> Selected
                                 </button>
                               ) : (
-                                <button onClick={() => handleSelectFlight(flight)} className="bg-[#F5F0E8] hover:bg-[#E6DFD5] text-[#1E1C1A] px-4.5 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] cursor-pointer">
-                                  Select Flight
+                                <button 
+                                  onClick={() => handleSelectFlight(flight)} 
+                                  className="group/btn relative overflow-hidden bg-[#FAF6F0] hover:bg-[#1E1C1A] active:scale-[0.97] text-[#1E1C1A] hover:text-white px-4.5 py-2.5 rounded-xl text-sm font-bold border border-[#E6DFD5] hover:border-[#1E1C1A] transition-all duration-200 ease-out shadow-2xs hover:shadow-md flex items-center gap-2 cursor-pointer"
+                                >
+                                  <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-500 ease-out bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+                                  <span className="transition-transform duration-200 group-hover/btn:translate-x-0.5">Select Flight</span>
+                                  <ArrowRight className="w-3.5 h-3.5 text-[#FF6B2C] group-hover/btn:text-white transition-all duration-200 group-hover/btn:translate-x-1" />
                                 </button>
                               )}
                             </div>
@@ -1334,17 +1349,27 @@ export default function PriceTracker({
                       <button 
                         onClick={() => handleRedirect('hotel', basecampLinkInfo)}
                         disabled={redirectingType === 'hotel'}
-                        className="w-full md:w-auto bg-[#1E1C1A] hover:bg-black text-white px-5 py-3 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-2 shadow-sm disabled:opacity-75 cursor-pointer"
+                        className="group/redirect-btn relative overflow-hidden w-full md:w-auto bg-gradient-to-r from-[#1E1C1A] via-[#2A2724] to-[#1E1C1A] hover:bg-black text-white px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold border border-white/10 hover:border-[#FF6B2C]/60 transition-all duration-300 ease-out shadow-md hover:shadow-xl hover:shadow-black/30 active:scale-[0.98] flex items-center justify-between gap-3 disabled:opacity-75 cursor-pointer"
                       >
+                        {/* Ambient Light Beam Sweep on Hover */}
+                        <div className="absolute inset-0 -translate-x-full group-hover/redirect-btn:translate-x-full transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none" />
+
                         {redirectingType === 'hotel' ? (
-                          <>
+                          <div className="flex items-center gap-2 relative z-10">
                             <Loader2 className="w-4 h-4 animate-spin text-[#FF6B2C]" />
                             <span>Opening partner...</span>
-                          </>
+                          </div>
                         ) : (
                           <>
-                            <span>{basecampLinkInfo.buttonText}</span>
-                            <ExternalLink className="w-3.5 h-3.5" />
+                            <span className="transition-transform duration-300 group-hover/redirect-btn:translate-x-0.5 relative z-10 font-bold tracking-tight text-white group-hover/redirect-btn:text-[#FAF6F0]">
+                              {basecampLinkInfo.buttonText}
+                            </span>
+                            <div className="relative flex items-center justify-center shrink-0 z-10">
+                              <div className="absolute inset-0 rounded-full bg-[#FF6B2C] opacity-0 group-hover/redirect-btn:opacity-75 blur-xs group-hover/redirect-btn:scale-130 transition-all duration-300 pointer-events-none" />
+                              <div className="relative w-7 h-7 rounded-full bg-[#FF6B2C] group-hover/redirect-btn:bg-[#ff7d45] flex items-center justify-center text-white shadow-[0_2px_8px_rgba(255,107,44,0.4)] group-hover/redirect-btn:shadow-[0_0_14px_rgba(255,107,44,0.8)] transition-all duration-300 group-hover/redirect-btn:scale-110">
+                                <ExternalLink className="w-3.5 h-3.5 transition-transform duration-300 ease-out group-hover/redirect-btn:translate-x-0.5 group-hover/redirect-btn:-translate-y-0.5" />
+                              </div>
+                            </div>
                           </>
                         )}
                       </button>
@@ -1446,17 +1471,27 @@ export default function PriceTracker({
                             <button 
                               onClick={() => handleRedirect('hotel', hotelLinkInfo)}
                               disabled={redirectingType === 'hotel'}
-                              className="bg-[#1E1C1A] hover:bg-black text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center gap-2 disabled:opacity-75 cursor-pointer"
+                              className="group/redirect-btn relative overflow-hidden bg-gradient-to-r from-[#1E1C1A] via-[#2A2724] to-[#1E1C1A] hover:bg-black text-white px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold border border-white/10 hover:border-[#FF6B2C]/60 transition-all duration-300 ease-out shadow-md hover:shadow-xl hover:shadow-black/30 active:scale-[0.98] flex items-center justify-between gap-3 disabled:opacity-75 cursor-pointer"
                             >
+                              {/* Ambient Light Beam Sweep on Hover */}
+                              <div className="absolute inset-0 -translate-x-full group-hover/redirect-btn:translate-x-full transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none" />
+
                               {redirectingType === 'hotel' ? (
-                                <>
+                                <div className="flex items-center gap-2 relative z-10">
                                   <Loader2 className="w-4 h-4 animate-spin text-[#FF6B2C]" />
                                   <span>Refreshing price...</span>
-                                </>
+                                </div>
                               ) : (
                                 <>
-                                  <span>{hotelLinkInfo.buttonText}</span>
-                                  <ArrowRight className="w-4 h-4" />
+                                  <span className="transition-transform duration-300 group-hover/redirect-btn:translate-x-0.5 relative z-10 font-bold tracking-tight text-white group-hover/redirect-btn:text-[#FAF6F0]">
+                                    {hotelLinkInfo.buttonText}
+                                  </span>
+                                  <div className="relative flex items-center justify-center shrink-0 z-10">
+                                    <div className="absolute inset-0 rounded-full bg-[#FF6B2C] opacity-0 group-hover/redirect-btn:opacity-75 blur-xs group-hover/redirect-btn:scale-130 transition-all duration-300 pointer-events-none" />
+                                    <div className="relative w-7 h-7 rounded-full bg-[#FF6B2C] group-hover/redirect-btn:bg-[#ff7d45] flex items-center justify-center text-white shadow-[0_2px_8px_rgba(255,107,44,0.4)] group-hover/redirect-btn:shadow-[0_0_14px_rgba(255,107,44,0.8)] transition-all duration-300 group-hover/redirect-btn:scale-110">
+                                      <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 ease-out group-hover/redirect-btn:translate-x-0.5" />
+                                    </div>
+                                  </div>
                                 </>
                               )}
                             </button>
@@ -1727,12 +1762,17 @@ export default function PriceTracker({
                                       </div>
                                     </div>
                                     {isSelected ? (
-                                      <button onClick={() => handleClearSelection('hotel')} className="bg-[#FF6B2C] text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-1.5 shadow-sm hover:bg-[#e0591e] transition-colors cursor-pointer">
+                                      <button onClick={() => handleClearSelection('hotel')} className="group/btn bg-[#FF6B2C] text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-1.5 shadow-sm hover:bg-[#e0591e] active:scale-[0.97] transition-all cursor-pointer">
                                         <CheckCircle2 className="w-4 h-4" /> Selected
                                       </button>
                                     ) : (
-                                      <button onClick={() => handleSelectHotel(hotel)} className="bg-[#F5F0E8] hover:bg-[#E6DFD5] text-[#1E1C1A] px-4.5 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] cursor-pointer">
-                                        Select Hotel
+                                      <button 
+                                        onClick={() => handleSelectHotel(hotel)} 
+                                        className="group/btn relative overflow-hidden bg-[#FAF6F0] hover:bg-[#1E1C1A] active:scale-[0.97] text-[#1E1C1A] hover:text-white px-4.5 py-2.5 rounded-xl text-sm font-bold border border-[#E6DFD5] hover:border-[#1E1C1A] transition-all duration-200 ease-out shadow-2xs hover:shadow-md flex items-center gap-2 cursor-pointer"
+                                      >
+                                        <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-500 ease-out bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+                                        <span className="transition-transform duration-200 group-hover/btn:translate-x-0.5">Select Hotel</span>
+                                        <ArrowRight className="w-3.5 h-3.5 text-[#FF6B2C] group-hover/btn:text-white transition-all duration-200 group-hover/btn:translate-x-1" />
                                       </button>
                                     )}
                                   </div>
