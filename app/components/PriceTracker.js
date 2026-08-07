@@ -117,57 +117,19 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
   return createPortal(
     <div 
       onClick={onClose}
-      className="fixed inset-0 z-[10000] flex items-center justify-center p-4 md:p-6 bg-[#0E0D0C]/80 backdrop-blur-xl overflow-y-auto"
+      className="fixed inset-0 z-[10000] flex items-center justify-center p-4 md:p-6 bg-black/75 backdrop-blur-md overflow-y-auto"
     >
-      {/* Animated Aurora Ambient Glow Background Orbs */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {/* Soft Terracotta Glow Orb */}
-        <motion.div
-          animate={{
-            x: [-80, 80, -80],
-            y: [-50, 50, -50],
-            scale: [1, 1.3, 1],
-            opacity: [0.35, 0.6, 0.35]
-          }}
-          transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/4 left-1/5 w-[520px] h-[520px] rounded-full bg-gradient-to-br from-[#FF6B2C]/40 to-[#E55A1C]/20 blur-[130px]"
-        />
-
-        {/* Champagne Amber Radiance Orb */}
-        <motion.div
-          animate={{
-            x: [70, -70, 70],
-            y: [50, -50, 50],
-            scale: [1.2, 0.9, 1.2],
-            opacity: [0.25, 0.5, 0.25]
-          }}
-          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          className="absolute bottom-1/5 right-1/5 w-[480px] h-[480px] rounded-full bg-gradient-to-tr from-amber-500/25 to-[#FF6B2C]/15 blur-[120px]"
-        />
-
-        {/* Deep Emerald Travel Light Orb */}
-        <motion.div
-          animate={{
-            x: [40, -40, 40],
-            y: [-40, 40, -40],
-            opacity: [0.2, 0.45, 0.2]
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[650px] rounded-full bg-emerald-600/15 blur-[150px]"
-        />
-
-        {/* Subtle Atmospheric Radar Dots Grid */}
-        <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.12)_1px,transparent_1px)] [background-size:28px_28px] opacity-40" />
-      </div>
+      {/* Lightweight Ambient Radial Gradient */}
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(255,107,44,0.18)_0%,transparent_60%)] pointer-events-none" />
 
       {/* Main Luxury Modal Card */}
       <motion.div 
         onClick={(e) => e.stopPropagation()}
-        initial={{ opacity: 0, scale: 0.93, y: 20 }}
+        initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.93, y: 20 }}
+        exit={{ opacity: 0, scale: 0.95, y: 15 }}
         transition={{ type: "spring", stiffness: 450, damping: 28 }}
-        className="bg-white/95 backdrop-blur-2xl rounded-3xl border border-[#E6DFD5] max-w-4xl w-full max-h-[92vh] overflow-y-auto shadow-[0_35px_100px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.8)] p-6 md:p-8 my-auto relative z-10"
+        className="bg-white rounded-3xl border border-[#E6DFD5] max-w-4xl w-full max-h-[92vh] overflow-y-auto shadow-[0_30px_90px_rgba(0,0,0,0.5)] p-6 md:p-8 my-auto relative z-10"
       >
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-[#E6DFD5] pb-5 mb-5">
@@ -191,34 +153,28 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
           </div>
           <button 
             onClick={onClose}
-            className="w-9 h-9 rounded-full bg-[#FAF6F0] hover:bg-red-600 hover:text-white text-[#7A7268] flex items-center justify-center transition-all duration-200 cursor-pointer shadow-xs"
+            className="w-9 h-9 rounded-full bg-[#FAF6F0] hover:bg-red-600 hover:text-white text-[#7A7268] flex items-center justify-center transition-colors duration-150 cursor-pointer shadow-2xs"
             title="Close comparison"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* AI Travel Decision Insight Banner with Shimmer Effect */}
+        {/* AI Travel Decision Insight Banner */}
         {items.length >= 2 && (
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="relative overflow-hidden bg-gradient-to-r from-[#FAF6F0] via-[#FFF9F5] to-[#FAF6F0] rounded-2xl border border-[#FF6B2C]/25 p-4 mb-6 flex items-center justify-between flex-wrap gap-3 shadow-xs"
-          >
-            {/* Shimmer Light Reflection */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full animate-[shimmer_3.5s_infinite] pointer-events-none" />
+          <div className="bg-[#FAF6F0] rounded-2xl border border-[#E6DFD5] p-4 mb-6 flex items-center justify-between flex-wrap gap-3 shadow-2xs">
+            <div className="flex items-center gap-3">
+              {/* Live Intelligence Indicator */}
+              <div className="flex items-center gap-2 bg-white px-2.5 py-1 rounded-full border border-[#E6DFD5] shadow-2xs">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#1E1C1A]">AI Verdict</span>
+              </div>
 
-            <div className="relative z-10 flex items-center gap-2.5">
-              <motion.div 
-                animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="w-8 h-8 rounded-full bg-[#FF6B2C]/15 flex items-center justify-center text-[#FF6B2C] shrink-0 shadow-xs"
-              >
-                <Sparkles className="w-4 h-4" />
-              </motion.div>
               <div>
-                <span className="text-xs font-bold text-[#1E1C1A]">Smart Decision Recommendation: </span>
+                <span className="text-xs font-bold text-[#1E1C1A]">Smart Recommendation: </span>
                 <span className="text-xs text-[#4A443E]">
                   {type === 'flight' ? (
                     <>
@@ -236,56 +192,44 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
             </div>
 
             {priceDiff > 0 && (
-              <motion.span 
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                className="relative z-10 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-mono font-bold shadow-xs"
-              >
+              <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-mono font-bold shadow-2xs">
                 Save up to ${type === 'flight' ? priceDiff : priceDiff * (stayNights || 1)}
-              </motion.span>
+              </span>
             )}
-          </motion.div>
+          </div>
         )}
 
-        {/* Comparison Grid */}
+        {/* Comparison Grid with Hardware-Accelerated 120 FPS Transitions */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {items.map((item, idx) => {
             const linkInfo = getBookingLinkInfo(destinationName, type, item, { startDate, endDate });
             const isLowest = item.price === lowestPrice;
 
             return (
-              <motion.div 
+              <div 
                 key={item.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1, type: "spring", stiffness: 350, damping: 25 }}
-                whileHover={{ y: -5, scale: 1.01 }}
-                className={`group/card rounded-2xl border p-5.5 flex flex-col justify-between relative transition-all duration-300 ${
+                className={`group/card rounded-2xl border p-5.5 flex flex-col justify-between relative transition-all duration-150 ease-out hover:-translate-y-1.5 ${
                   isLowest 
-                    ? 'bg-[#FFFDFB] border-[#FF6B2C]/50 ring-2 ring-[#FF6B2C]/15 shadow-[0_15px_35px_-8px_rgba(255,107,44,0.18)]' 
+                    ? 'bg-[#FFFDFB] border-[#FF6B2C]/50 ring-2 ring-[#FF6B2C]/15 shadow-[0_8px_25px_-5px_rgba(255,107,44,0.18)] hover:shadow-[0_15px_35px_-5px_rgba(255,107,44,0.25)]' 
                     : 'bg-[#FAF6F0]/80 border-[#E6DFD5] hover:border-[#FF6B2C]/40 hover:shadow-lg'
                 }`}
               >
                 <div>
-                  {/* Option Badge & Best Value Pill */}
-                  <div className="flex items-center justify-between mb-3.5">
-                    <span className="text-[10px] font-mono font-black uppercase bg-[#1E1C1A] text-white px-2.5 py-1 rounded-full tracking-wider shadow-xs">
+                  {/* Option Badge & Clean Luxury Status Tags */}
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-[11px] font-sans font-bold uppercase tracking-wider bg-[#1E1C1A] text-white px-3 py-1 rounded-lg shadow-2xs">
                       Option {idx + 1}
                     </span>
                     
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2">
                       {isLowest && (
-                        <motion.span 
-                          animate={{ scale: [1, 1.03, 1] }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                          className="text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200/80 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-xs"
-                        >
-                          <CheckCircle2 className="w-3 h-3 text-emerald-600" /> BEST VALUE
-                        </motion.span>
+                        <span className="text-[10px] font-sans font-bold uppercase tracking-wider bg-[#FAF6F0] text-emerald-800 border border-emerald-300/80 px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-2xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> BEST VALUE
+                        </span>
                       )}
                       {type === 'flight' && item.stops === 0 && (
-                        <span className="text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200/80 px-2 py-0.5 rounded-full flex items-center gap-1">
-                          ⚡ NONSTOP
+                        <span className="text-[10px] font-sans font-bold uppercase tracking-wider bg-[#FAF6F0] text-[#1E1C1A] border border-[#E6DFD5] px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-2xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B2C]" /> NONSTOP
                         </span>
                       )}
                     </div>
@@ -295,20 +239,19 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                   {type === 'flight' ? (
                     <div>
                       <div className="flex items-center gap-3 mb-4">
-                        <motion.img 
-                          whileHover={{ rotate: [0, -5, 5, 0] }}
+                        <img 
                           src={item.logo} 
                           alt={item.airline} 
-                          className="w-11 h-11 object-contain rounded-xl bg-white border border-[#E6DFD5] p-1.5 shadow-xs" 
+                          className="w-11 h-11 object-contain rounded-xl bg-white border border-[#E6DFD5] p-1.5 shadow-2xs transition-transform duration-150 group-hover/card:scale-105" 
                         />
                         <div>
                           <h4 className="font-serif font-bold text-base text-[#1E1C1A] leading-tight">{item.airline}</h4>
-                          <span className="text-xs font-mono font-semibold text-[#7A7268]">{item.flightNumber}</span>
+                          <span className="text-xs font-mono font-medium text-[#7A7268]">{item.flightNumber}</span>
                         </div>
                       </div>
 
                       {/* Price Hero Card */}
-                      <div className="bg-white rounded-2xl p-4 border border-[#E6DFD5] mb-4 shadow-xs">
+                      <div className="bg-white rounded-2xl p-4 border border-[#E6DFD5] mb-4 shadow-2xs">
                         <div className="flex items-baseline justify-between mb-1">
                           <span className="text-xs font-bold text-[#7A7268]">Total Airfare</span>
                           <span className="text-3xl font-serif font-black text-[#1E1C1A]">${item.price}</span>
@@ -316,7 +259,7 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                         <div className="text-[11px] text-[#A89F91]">
                           {isLowest ? (
                             <span className="text-emerald-700 font-bold flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3" /> Lowest fare available on this route
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Lowest fare available on this route
                             </span>
                           ) : (
                             <span>+${item.price - lowestPrice} higher than Option {items.findIndex(i => i.price === lowestPrice) + 1}</span>
@@ -325,7 +268,7 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                       </div>
 
                       {/* Animated Flight Path Corridor & Schedule */}
-                      <div className="bg-white rounded-2xl p-4.5 border border-[#E6DFD5] mb-5 shadow-xs relative overflow-hidden">
+                      <div className="bg-white rounded-2xl p-4.5 border border-[#E6DFD5] mb-5 shadow-2xs relative overflow-hidden">
                         <div className="flex items-center justify-between text-xs">
                           {/* Departure Node */}
                           <div className="flex flex-col">
@@ -335,9 +278,9 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                           
                           {/* Center Animated Flight Radar Trajectory with Diagonal Cruising Jet */}
                           <div className="flex-1 px-4 flex flex-col items-center">
-                            {/* Duration Pill */}
-                            <div className="flex items-center gap-1 bg-[#FAF6F0] px-2.5 py-0.5 rounded-full border border-[#E6DFD5] text-[10px] font-mono font-bold text-[#FF6B2C] mb-2 shadow-2xs">
-                              <Clock className="w-3 h-3 text-[#FF6B2C]" />
+                            {/* Refined Duration Pill */}
+                            <div className="flex items-center gap-1.5 bg-[#FAF6F0] px-3 py-1 rounded-full border border-[#E6DFD5] text-xs font-sans font-bold text-[#1E1C1A] mb-2 shadow-2xs">
+                              <Clock className="w-3 h-3 text-[#7A7268]" />
                               <span>{item.duration}</span>
                             </div>
 
@@ -358,18 +301,24 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                                 }}
                                 className="absolute top-0 w-7 h-7 rounded-full bg-white border border-[#FF6B2C]/70 shadow-[0_2px_10px_rgba(255,107,44,0.3)] flex items-center justify-center text-[#FF6B2C] z-10 -ml-3.5"
                               >
-                                <Plane className="w-3.5 h-3.5 fill-[#FF6B2C] text-[#FF6B2C] " />
+                                <Plane className="w-3.5 h-3.5 fill-[#FF6B2C] text-[#FF6B2C]" />
                               </motion.div>
                             </div>
 
-                            {/* Stops Routing Badge */}
-                            <span className={`text-[10px] font-bold mt-2 px-2 py-0.5 rounded-md ${
-                              item.stops === 0 
-                                ? 'text-emerald-700 bg-emerald-50 border border-emerald-200/80 font-mono' 
-                                : 'text-[#7A7268] bg-[#FAF6F0]'
-                            }`}>
-                              {item.stops === 0 ? '✓ Direct Nonstop' : `1 Stop (${item.via})`}
-                            </span>
+                            {/* Refined Stops Routing Badge */}
+                            <div className="flex items-center gap-1.5 text-[11px] font-sans font-medium mt-1.5">
+                              {item.stops === 0 ? (
+                                <>
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                  <span className="font-bold text-[#1E1C1A]">Direct Nonstop</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span className="w-1.5 h-1.5 rounded-full bg-[#A89F91]" />
+                                  <span className="text-[#7A7268]">1 Stop via {item.via}</span>
+                                </>
+                              )}
+                            </div>
                           </div>
 
                           {/* Arrival Node */}
@@ -382,8 +331,8 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                     </div>
                   ) : (
                     <div>
-                      <div className="relative h-32 rounded-xl overflow-hidden mb-3.5 border border-[#E6DFD5] shadow-xs">
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500" />
+                      <div className="relative h-32 rounded-xl overflow-hidden mb-3.5 border border-[#E6DFD5] shadow-2xs">
+                        <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-200 group-hover/card:scale-105" />
                         <div className="absolute top-2 right-2 bg-black/75 backdrop-blur-xs text-white text-[11px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
                           <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {item.rating}.0
                         </div>
@@ -392,7 +341,7 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                       <h4 className="font-serif font-bold text-base text-[#1E1C1A] mb-3 leading-tight">{item.name}</h4>
 
                       {/* Hotel Price Hero */}
-                      <div className="bg-white rounded-2xl p-4 border border-[#E6DFD5] mb-4 shadow-xs">
+                      <div className="bg-white rounded-2xl p-4 border border-[#E6DFD5] mb-4 shadow-2xs">
                         <div className="flex items-baseline justify-between mb-1">
                           <span className="text-xs font-bold text-[#7A7268]">Nightly Rate</span>
                           <span className="text-3xl font-serif font-black text-[#1E1C1A]">${item.price}<span className="text-xs font-normal text-[#7A7268]">/night</span></span>
@@ -403,7 +352,7 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                       </div>
 
                       {/* Hotel Details Breakdown */}
-                      <div className="space-y-2.5 text-xs text-[#4A443E] bg-white rounded-2xl p-4 border border-[#E6DFD5] mb-5 shadow-xs">
+                      <div className="space-y-2.5 text-xs text-[#4A443E] bg-white rounded-2xl p-4 border border-[#E6DFD5] mb-5 shadow-2xs">
                         <div className="flex items-center justify-between border-b border-[#E6DFD5]/50 pb-2">
                           <span className="text-[#7A7268] font-medium">Distance / Location:</span>
                           <span className="font-bold text-[#1E1C1A] truncate max-w-[140px]">{item.distance}</span>
@@ -417,32 +366,53 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                   )}
                 </div>
 
-                {/* Tactile Action Buttons */}
-                <div className="space-y-2 pt-3 border-t border-[#E6DFD5]">
-                  <motion.button 
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                {/* Tactile Action Buttons with Luxury Hover Animations */}
+                <div className="space-y-2.5 pt-3.5 border-t border-[#E6DFD5]">
+                  {/* Primary Selection Button with Luxury Light Sweep & Halo Disc */}
+                  <button 
                     onClick={() => {
                       onSelect(item);
                       onClose();
                     }}
-                    className="w-full bg-[#FF6B2C] hover:bg-[#e0591e] text-white py-3 rounded-xl text-xs font-bold transition-all shadow-md shadow-[#FF6B2C]/20 flex items-center justify-center gap-2 cursor-pointer"
+                    className="group/select-btn relative overflow-hidden w-full bg-gradient-to-r from-[#1E1C1A] via-[#2A2724] to-[#1E1C1A] text-white py-3.5 px-5 rounded-2xl text-xs font-bold transition-all duration-300 ease-out shadow-md hover:shadow-xl hover:shadow-black/30 hover:border-[#FF6B2C]/60 active:scale-[0.98] flex items-center justify-between cursor-pointer border border-white/10"
                   >
-                    <span>Select Option {idx + 1} ({type === 'flight' ? item.airline : item.name})</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </motion.button>
+                    {/* Ambient Light Beam Sweep on Hover */}
+                    <div className="absolute inset-0 -translate-x-full group-hover/select-btn:translate-x-full transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none" />
 
+                    <div className="flex items-center gap-2 relative z-10 transition-transform duration-300 group-hover/select-btn:translate-x-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B2C] group-hover/select-btn:bg-white group-hover/select-btn:scale-125 transition-all duration-300 shadow-[0_0_8px_rgba(255,107,44,0.9)]" />
+                      <span className="font-bold tracking-tight text-white group-hover/select-btn:text-[#FAF6F0]">
+                        Select Option {idx + 1} ({type === 'flight' ? item.airline : item.name})
+                      </span>
+                    </div>
+                    
+                    {/* Glowing Interactive Terracotta Disc */}
+                    <div className="relative flex items-center justify-center z-10">
+                      <div className="absolute inset-0 rounded-full bg-[#FF6B2C] opacity-0 group-hover/select-btn:opacity-75 blur-xs group-hover/select-btn:scale-130 transition-all duration-300 pointer-events-none" />
+                      <div className="relative w-7 h-7 rounded-full bg-[#FF6B2C] group-hover/select-btn:bg-[#ff7d45] flex items-center justify-center text-white shadow-[0_2px_10px_rgba(255,107,44,0.4)] group-hover/select-btn:shadow-[0_0_16px_rgba(255,107,44,0.8)] transition-all duration-300 group-hover/select-btn:scale-110">
+                        <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 ease-out group-hover/select-btn:translate-x-0.5" />
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Secondary Partner Booking Link with Luxury Hover Interaction */}
                   <a 
                     href={linkInfo.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full bg-white hover:bg-[#F5F0E8] border border-[#E6DFD5] text-[#1E1C1A] py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    className="group/book-btn relative w-full bg-white hover:bg-[#FAF6F0] active:scale-[0.98] border border-[#E6DFD5] hover:border-[#1E1C1A]/40 text-[#1E1C1A] py-3.5 px-5 rounded-2xl text-xs font-bold flex items-center justify-between transition-all duration-200 ease-out shadow-2xs hover:shadow-md cursor-pointer"
                   >
-                    <span>Book on {type === 'flight' ? (item.airline || 'Partner') : 'Booking Partner'}</span>
-                    <ExternalLink className="w-3.5 h-3.5 text-[#7A7268]" />
+                    <span className="transition-transform duration-200 group-hover/book-btn:translate-x-1">
+                      Book on {type === 'flight' ? (item.airline || 'Partner') : 'Booking Partner'}
+                    </span>
+                    
+                    {/* Elevated Interactive Glyph Disc */}
+                    <div className="w-7 h-7 rounded-full bg-[#FAF6F0] group-hover/book-btn:bg-[#1E1C1A] flex items-center justify-center text-[#7A7268] group-hover/book-btn:text-white transition-all duration-200 group-hover/book-btn:scale-105 shadow-2xs">
+                      <ExternalLink className="w-3.5 h-3.5 transition-transform duration-200 group-hover/book-btn:translate-x-0.5 group-hover/book-btn:-translate-y-0.5" />
+                    </div>
                   </a>
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>
