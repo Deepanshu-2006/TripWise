@@ -1564,105 +1564,168 @@ export default function PriceTracker({
     );
   }
 
-  // Unactivated Prompt View — Authentic Animated Aviation & Hospitality Experience
+  // Unactivated Prompt View — Spacious Luxury Aviation & Hospitality Suite
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 22, scale: 0.97 }}
+      initial={{ opacity: 0, y: 22, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ y: -2 }}
-      className="relative w-full max-w-xl mx-auto bg-[#FFFFFF] rounded-3xl border border-[#E6DFD5] p-7 sm:p-9 text-center shadow-[0_20px_60px_-15px_rgba(0,0,0,0.08)] overflow-hidden transition-shadow duration-300"
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className="relative w-full max-w-3xl mx-auto bg-[#FFFFFF] rounded-3xl border border-[#E6DFD5] p-8 sm:p-10 text-center shadow-[0_25px_70px_-15px_rgba(0,0,0,0.08)] overflow-hidden"
     >
       {/* ── 1. Animated Aviation & Hotel Atmosphere Background (No AI Gradients) ── */}
       <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden select-none">
         {/* Soft Micro-Dot Matrix Pattern */}
         <div 
-          className="absolute inset-0 opacity-[0.35]"
+          className="absolute inset-0 opacity-[0.3]"
           style={{
             backgroundImage: 'radial-gradient(#D5CBBF 1.2px, transparent 1.2px)',
-            backgroundSize: '24px 24px'
+            backgroundSize: '22px 22px'
           }}
         />
 
-        {/* Animated Drifting Contrail Sky Layer (Double Pass) */}
+        {/* ── Flight Corridor 1 (High Altitude Eastbound Jet) ── */}
         <motion.div 
-          className="absolute -top-10 -left-40 w-[600px] h-32 opacity-25"
-          animate={{ x: [-40, 200, -40] }}
-          transition={{ repeat: Infinity, duration: 28, ease: "linear" }}
+          className="absolute top-4 -left-48 w-[800px] h-28 opacity-30"
+          animate={{ x: [-80, 260, -80] }}
+          transition={{ repeat: Infinity, duration: 26, ease: "linear" }}
         >
-          <svg viewBox="0 0 500 100" className="w-full h-full stroke-[#C8BEB2] fill-none" strokeWidth="1.5" strokeDasharray="6 8">
-            <path d="M 0,30 Q 150,70 300,20 T 500,50" />
-            <path d="M 0,60 Q 200,10 350,70 T 500,30" />
+          <svg viewBox="0 0 700 90" className="w-full h-full stroke-[#B8ACA0] fill-none" strokeWidth="1.2">
+            <path d="M 0,25 Q 180,65 350,20 T 700,50" strokeDasharray="5 7" />
+          </svg>
+          <motion.div 
+            className="absolute top-5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 text-[#FF6B2C]"
+            animate={{ y: [-1, 1, -1] }}
+            transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+          >
+            <Plane className="w-3.5 h-3.5" style={{ transform: 'rotate(50deg)' }} />
+            <span className="w-1 h-1 rounded-full bg-[#FF6B2C] animate-ping" />
+          </motion.div>
+        </motion.div>
+
+        {/* ── Flight Corridor 2 (Mid Altitude Westbound Jet) ── */}
+        <motion.div 
+          className="absolute top-28 -right-48 w-[800px] h-28 opacity-20"
+          animate={{ x: [80, -260, 80] }}
+          transition={{ repeat: Infinity, duration: 32, ease: "linear" }}
+        >
+          <svg viewBox="0 0 700 90" className="w-full h-full stroke-[#C8BEB2] fill-none" strokeWidth="1">
+            <path d="M 700,60 Q 500,15 350,55 T 0,25" strokeDasharray="4 8" />
+          </svg>
+          <motion.div 
+            className="absolute top-6 left-1/3 text-[#8C827A]"
+            animate={{ y: [1, -1, 1] }}
+            transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+          >
+            <Plane className="w-3 h-3" style={{ transform: 'rotate(-130deg)' }} />
+          </motion.div>
+        </motion.div>
+
+        {/* ── Drifting Cloud Air Currents ── */}
+        <motion.div 
+          className="absolute top-12 left-10 w-44 h-16 opacity-15 text-[#8C827A]"
+          animate={{ x: [-15, 35, -15] }}
+          transition={{ repeat: Infinity, duration: 18, ease: "easeInOut" }}
+        >
+          <svg viewBox="0 0 160 60" className="w-full h-full stroke-current fill-none" strokeWidth="1">
+            <path d="M 10,40 Q 25,20 45,25 Q 65,10 90,20 Q 115,15 135,30 Q 150,35 145,45 Z" strokeDasharray="2 3" />
           </svg>
         </motion.div>
 
-        {/* Subtle Architectural Hotel with Evening Window Glows (Top-Right) */}
-        <div className="absolute -top-6 -right-6 w-36 h-36 opacity-35 text-[#8C827A]">
-          <svg viewBox="0 0 100 100" className="w-full h-full stroke-current fill-none" strokeWidth="1">
-            <rect x="20" y="20" width="60" height="70" rx="3" strokeDasharray="3 3" />
-            <line x1="20" y1="40" x2="80" y2="40" />
-            <line x1="20" y1="60" x2="80" y2="60" />
+        {/* ── Architectural Boutique Hotel Skyline with Evening Dusk Windows (Lower-Right) ── */}
+        <div className="absolute -bottom-4 -right-4 w-60 h-44 opacity-40 text-[#8C827A]">
+          <svg viewBox="0 0 160 120" className="w-full h-full stroke-current fill-none" strokeWidth="1">
+            {/* Main Hotel Grand Tower */}
+            <rect x="50" y="20" width="60" height="95" rx="3" strokeDasharray="3 3" />
+            <line x1="50" y1="45" x2="110" y2="45" />
+            <line x1="50" y1="70" x2="110" y2="70" />
+            <line x1="50" y1="95" x2="110" y2="95" />
             
-            {/* Animated Dusk Window Lights */}
+            {/* Side Boutique Villa Wing */}
+            <rect x="15" y="50" width="35" height="65" rx="2" strokeDasharray="2 3" />
+            <line x1="15" y1="75" x2="50" y2="75" />
+            
+            {/* Rooftop Turret & Flag */}
+            <polygon points="80,5 65,20 95,20" />
+            <line x1="80" y1="5" x2="80" y2="0" />
+
+            {/* Warm Animated Dusk Window Lights */}
             <motion.rect 
-              x="30" y="26" width="10" height="9" rx="1" 
+              x="58" y="27" width="10" height="11" rx="1" 
               className="fill-[#FF6B2C]"
-              animate={{ opacity: [0.15, 0.75, 0.2] }}
+              animate={{ opacity: [0.15, 0.85, 0.2] }}
               transition={{ repeat: Infinity, duration: 3.6, ease: "easeInOut" }}
             />
             <motion.rect 
-              x="60" y="26" width="10" height="9" rx="1" 
+              x="92" y="27" width="10" height="11" rx="1" 
               className="fill-[#FF6B2C]"
-              animate={{ opacity: [0.3, 0.1, 0.65] }}
+              animate={{ opacity: [0.35, 0.1, 0.75] }}
               transition={{ repeat: Infinity, duration: 4.2, delay: 0.5, ease: "easeInOut" }}
             />
             <motion.rect 
-              x="30" y="46" width="10" height="9" rx="1" 
+              x="58" y="52" width="10" height="11" rx="1" 
               className="fill-[#FF6B2C]"
-              animate={{ opacity: [0.5, 0.2, 0.8] }}
+              animate={{ opacity: [0.6, 0.2, 0.9] }}
               transition={{ repeat: Infinity, duration: 3.2, delay: 1, ease: "easeInOut" }}
             />
             <motion.rect 
-              x="60" y="46" width="10" height="9" rx="1" 
+              x="92" y="52" width="10" height="11" rx="1" 
               className="fill-[#FF6B2C]"
-              animate={{ opacity: [0.2, 0.7, 0.15] }}
+              animate={{ opacity: [0.2, 0.8, 0.15] }}
               transition={{ repeat: Infinity, duration: 4.8, delay: 0.8, ease: "easeInOut" }}
             />
-            <circle cx="50" cy="50" r="38" strokeDasharray="2 4" />
+            <motion.rect 
+              x="23" y="57" width="8" height="10" rx="1" 
+              className="fill-[#FF6B2C]"
+              animate={{ opacity: [0.7, 0.15, 0.6] }}
+              transition={{ repeat: Infinity, duration: 3.9, delay: 1.2, ease: "easeInOut" }}
+            />
+            <motion.rect 
+              x="36" y="57" width="8" height="10" rx="1" 
+              className="fill-[#FF6B2C]"
+              animate={{ opacity: [0.25, 0.7, 0.3] }}
+              transition={{ repeat: Infinity, duration: 4.5, delay: 0.3, ease: "easeInOut" }}
+            />
           </svg>
         </div>
 
-        {/* Animated Rotating Radar Sweep (Bottom-Left) */}
-        <div className="absolute -bottom-12 -left-12 w-48 h-48 opacity-25">
+        {/* ── Aviation Radar Range Rings with Rotating Sweep (Upper-Left) ── */}
+        <div className="absolute -top-12 -left-12 w-48 h-48 opacity-25">
           <div className="absolute inset-0 rounded-full border border-dashed border-[#8C827A]" />
           <div className="absolute inset-8 rounded-full border border-[#D5CBBF]" />
           <div className="absolute inset-16 rounded-full border border-[#D5CBBF]" />
           <motion.div 
             animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 16, ease: "linear" }}
+            transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
             className="absolute inset-0"
           >
-            <div className="absolute top-0 bottom-0 left-1/2 w-[1px] bg-[#FF6B2C]/40 -translate-x-1/2" />
+            <div className="absolute top-0 bottom-0 left-1/2 w-[1px] bg-[#FF6B2C]/45 -translate-x-1/2" />
           </motion.div>
+        </div>
+
+        {/* ── Vintage Cartography Corner Stamps ── */}
+        <div className="absolute top-3.5 left-4 text-[9px] font-mono text-[#A89F91] tracking-wider select-none">
+          + LAT 41°54&apos;N &middot; LON 12°29&apos;E
+        </div>
+        <div className="absolute top-3.5 right-4 text-[9px] font-mono text-[#A89F91] tracking-wider select-none">
+          RADAR 24/7 ACTIVE +
         </div>
       </div>
 
-      {/* ── 2. Animated Live Flight Route & Hotel Badge Ribbon ── */}
-      <div className="relative z-10 w-full max-w-sm mx-auto mb-6 px-3.5 py-2 bg-[#FAF6F0] border border-[#E6DFD5] rounded-full flex items-center justify-between shadow-xs">
-        {/* Origin Airport Badge with Animated Takeoff Pulse */}
+      {/* ── 2. Top Luxury Aviation Route & Hotel Status HUD ── */}
+      <div className="relative z-10 w-full max-w-lg mx-auto mb-6 px-4 py-2.5 bg-[#FAF6F0] border border-[#E6DFD5] rounded-full flex items-center justify-between shadow-xs">
+        {/* Origin Airport Badge */}
         <motion.div 
           key={config.origin}
-          initial={{ scale: 0.9, opacity: 0.7 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-md border border-[#E6DFD5] shadow-2xs"
+          initial={{ scale: 0.9 }}
+          animate={{ scale: 1 }}
+          className="flex items-center gap-1.5 bg-white px-3 py-1 rounded-md border border-[#E6DFD5] shadow-2xs"
         >
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
-          <span className="font-mono text-[10px] font-black text-[#1E1C1A]">
-            {config.origin || 'JFK'}
+          <span className="font-mono text-[11px] font-black text-[#1E1C1A]">
+            {config.origin || 'JFK'} &middot; ORIGIN
           </span>
         </motion.div>
 
@@ -1683,7 +1746,7 @@ export default function PriceTracker({
           <motion.div
             key={config.origin}
             animate={{ 
-              x: [-12, 12, -12], 
+              x: [-14, 14, -14], 
               y: [-1.5, 1.5, -1.5],
               rotate: [42, 48, 42]
             }}
@@ -1695,16 +1758,16 @@ export default function PriceTracker({
         </div>
 
         {/* Destination & Boutique Stay Badge */}
-        <div className="flex items-center gap-1.5 bg-[#FFF2EA] px-2.5 py-1 rounded-md border border-[#FF6B2C]/30 shadow-2xs">
+        <div className="flex items-center gap-1.5 bg-[#FFF2EA] px-3 py-1 rounded-md border border-[#FF6B2C]/30 shadow-2xs">
           <Hotel className="w-3.5 h-3.5 text-[#FF6B2C]" />
-          <span className="font-mono text-[10px] font-black text-[#FF6B2C]">
-            {destinationName?.slice(0, 4).toUpperCase() || 'DEST'}
+          <span className="font-mono text-[11px] font-black text-[#FF6B2C]">
+            {destinationName?.slice(0, 8).toUpperCase() || 'DESTINATION'}
           </span>
         </div>
       </div>
 
       {/* ── 3. Notification Bell with Double Expanding Soundwaves ── */}
-      <div className="relative z-10 w-14 h-14 mx-auto mb-4 flex items-center justify-center">
+      <div className="relative z-10 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
         <motion.div 
           className="absolute inset-0 rounded-full bg-[#FF6B2C]/15"
           animate={{ scale: [1, 1.5, 1], opacity: [0.7, 0, 0.7] }}
@@ -1715,140 +1778,189 @@ export default function PriceTracker({
           animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }}
           transition={{ repeat: Infinity, duration: 3.2, delay: 0.4, ease: "easeInOut" }}
         />
-        <div className="relative z-10 w-12 h-12 bg-[#FFF9F5] border border-[#FF6B2C]/25 rounded-full flex items-center justify-center shadow-xs">
+        <div className="relative z-10 w-14 h-14 bg-[#FFF9F5] border border-[#FF6B2C]/25 rounded-full flex items-center justify-center shadow-xs">
           <motion.div
             animate={{ rotate: [-7, 7, -5, 5, 0] }}
             transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
           >
-            <Bell className="w-5 h-5 text-[#FF6B2C]" />
+            <Bell className="w-6 h-6 text-[#FF6B2C]" />
           </motion.div>
         </div>
       </div>
       
-      {/* ── 4. Editorial Title & Subtitle ── */}
-      <div className="relative z-10">
-        <h2 className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A] tracking-tight mb-2">
+      {/* ── 4. Grand Editorial Title & Subtitle ── */}
+      <div className="relative z-10 mb-7">
+        <h2 className="text-3xl sm:text-4xl font-serif font-black text-[#1E1C1A] tracking-tight mb-2.5">
           Search & Track Prices
         </h2>
-        <p className="text-[#6B645C] text-xs sm:text-sm leading-relaxed font-sans max-w-md mx-auto mb-7">
-          Activate price tracking to browse live airfare and hotel rates for <strong className="font-semibold text-[#1E1C1A]">{destinationName}</strong>. We&apos;ll monitor rates around the clock and notify you when prices drop.
-        </p>
+        <div className="max-w-xl mx-auto space-y-1">
+          <p className="text-[#3F3A34] text-sm sm:text-base font-serif font-medium leading-relaxed">
+            Continuous 24/7 radar scanning nonstop airfares and boutique stays for{' '}
+            <strong className="font-bold text-[#1E1C1A] underline decoration-[#FF6B2C]/40 decoration-2 underline-offset-4">
+              {destinationName?.replace(/\s*\(Demo Mode\)/i, '') || 'Rome, Italy'}
+            </strong>.
+          </p>
+          <p className="text-[#7A7268] text-xs sm:text-[13px] font-sans font-normal tracking-wide">
+            Instant price drop alerts delivered the moment rates fall below historical baselines.
+          </p>
+        </div>
       </div>
 
-      {/* ── 5. Main Airport & Categories Control Card ── */}
-      <div className="relative z-10 text-left space-y-4 mb-6 bg-[#FAF6F0] border border-[#E6DFD5] rounded-2xl p-4.5 shadow-2xs">
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-[10px] font-mono font-bold text-[#5F5E5A] uppercase tracking-wider">
-              Departure Airport
-            </label>
-            <span className="text-[10px] font-mono text-[#8C827A]">3-Letter Code</span>
+      {/* ── 5. Main Spacious 2-Column Control Suite ── */}
+      <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-5 text-left mb-8 bg-[#FAF6F0] border border-[#E6DFD5] rounded-2xl p-6 shadow-2xs">
+        {/* Left Column: Airport Selector & Quick Pick */}
+        <div className="flex flex-col justify-between space-y-4">
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-[11px] font-mono font-bold text-[#5F5E5A] uppercase tracking-wider flex items-center gap-1.5">
+                <Plane className="w-3.5 h-3.5 text-[#FF6B2C]" />
+                <span>Departure Hub (IATA)</span>
+              </label>
+              <span className="text-[10px] font-mono text-[#8C827A] bg-white px-2 py-0.5 rounded border border-[#E6DFD5]">
+                {config.origin === 'JFK' ? '🗽 New York, USA' : 
+                 config.origin === 'LHR' ? '🇬🇧 London, UK' : 
+                 config.origin === 'SFO' ? '🌁 San Francisco, USA' : 
+                 config.origin === 'DXB' ? '🇦🇪 Dubai, UAE' : 
+                 config.origin === 'CDG' ? '🇫🇷 Paris, France' : 
+                 config.origin === 'HND' ? '🇯🇵 Tokyo, Japan' : '📍 Global Route'}
+              </span>
+            </div>
+
+            <div className="relative group">
+              <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8C827A] group-focus-within:text-[#FF6B2C] group-focus-within:scale-110 transition-all" />
+              <input 
+                type="text" 
+                value={config.origin}
+                onChange={(e) => setConfig({ ...config, origin: e.target.value.toUpperCase() })}
+                maxLength={3}
+                className="w-full pl-10 pr-4 py-3 bg-white border border-[#E6DFD5] rounded-xl text-base font-mono font-black text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C] focus:ring-2 focus:ring-[#FF6B2C]/15 transition-all uppercase tracking-wider placeholder:text-[#A89F91] shadow-inner"
+                placeholder="JFK"
+              />
+            </div>
           </div>
 
-          <div className="relative group">
-            <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8C827A] group-focus-within:text-[#FF6B2C] group-focus-within:scale-110 transition-all" />
-            <input 
-              type="text" 
-              value={config.origin}
-              onChange={(e) => setConfig({ ...config, origin: e.target.value.toUpperCase() })}
-              maxLength={3}
-              className="w-full pl-9.5 pr-4 py-2.5 bg-white border border-[#E6DFD5] rounded-xl text-sm font-mono font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C] focus:ring-2 focus:ring-[#FF6B2C]/15 transition-all uppercase tracking-wider placeholder:text-[#A89F91]"
-              placeholder="JFK"
-            />
+          {/* Quick Airport Selector Chips in a Clean Single-Row Grid */}
+          <div>
+            <span className="block text-[10px] font-mono font-bold text-[#8C827A] mb-1.5 uppercase tracking-wider">
+              POPULAR DEPARTURE HUBS:
+            </span>
+            <div className="grid grid-cols-6 gap-1.5">
+              {[
+                { code: 'JFK', city: 'NYC' },
+                { code: 'LHR', city: 'LON' },
+                { code: 'SFO', city: 'SFO' },
+                { code: 'DXB', city: 'DXB' },
+                { code: 'CDG', city: 'PAR' },
+                { code: 'HND', city: 'TYO' }
+              ].map((hub) => (
+                <motion.button
+                  key={hub.code}
+                  type="button"
+                  whileHover={{ scale: 1.06 }}
+                  whileTap={{ scale: 0.94 }}
+                  onClick={() => setConfig({ ...config, origin: hub.code })}
+                  className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-lg border font-mono transition-all cursor-pointer ${
+                    config.origin === hub.code 
+                      ? 'bg-[#FF6B2C] border-[#FF6B2C] text-white shadow-2xs' 
+                      : 'bg-white border-[#E6DFD5] text-[#5F5E5A] hover:border-[#FF6B2C]/40 hover:bg-[#FFF9F5]'
+                  }`}
+                >
+                  <span className="text-[11px] font-black">{hub.code}</span>
+                  <span className={`text-[8px] font-sans font-medium opacity-75 ${config.origin === hub.code ? 'text-white' : 'text-[#8C827A]'}`}>
+                    {hub.city}
+                  </span>
+                </motion.button>
+              ))}
+            </div>
           </div>
 
-          {/* Quick Airport Selector Pills with Interactive Spring */}
-          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-            <span className="text-[9px] font-mono text-[#8C827A] mr-0.5">QUICK SELECT:</span>
-            {['JFK', 'LHR', 'SFO', 'DXB', 'CDG', 'HND'].map((code) => (
-              <motion.button
-                key={code}
-                type="button"
-                whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.92 }}
-                onClick={() => setConfig({ ...config, origin: code })}
-                className={`px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold transition-all cursor-pointer ${
-                  config.origin === code 
-                    ? 'bg-[#FF6B2C] text-white shadow-2xs' 
-                    : 'bg-white border border-[#E6DFD5] text-[#5F5E5A] hover:bg-[#F0EAE1]'
-                }`}
-              >
-                {code}
-              </motion.button>
-            ))}
+          {/* Route Intelligence Benchmark Card */}
+          <div className="p-3 bg-white/90 border border-[#E6DFD5] rounded-xl flex items-center justify-between shadow-2xs">
+            <div className="flex flex-col text-left">
+              <span className="text-[9px] font-mono text-[#8C827A] uppercase tracking-wider">Estimated Nonstop Rate</span>
+              <span className="text-xs font-mono font-black text-[#1E1C1A]">$480 – $690 avg</span>
+            </div>
+            <div className="h-6 w-[1px] bg-[#E6DFD5]" />
+            <div className="flex flex-col text-right">
+              <span className="text-[9px] font-mono text-[#8C827A] uppercase tracking-wider">Historical 90-Day Low</span>
+              <span className="text-xs font-mono font-black text-emerald-600 flex items-center gap-1 justify-end">
+                <TrendingDown className="w-3.5 h-3.5" />
+                <span>$410</span>
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Tracking Categories (Flights & Hotels) */}
-        <div className="space-y-2.5 pt-2.5 border-t border-[#E6DFD5]">
-          {/* Flights Row with Barrel-Roll Spring on Toggle */}
+        {/* Right Column: Tracking Categories (Flights & Hotels) */}
+        <div className="space-y-3 flex flex-col justify-center">
+          {/* Flights Watchdog Card */}
           <motion.div 
-            whileHover={{ scale: 1.01 }}
+            whileHover={{ scale: 1.015 }}
             whileTap={{ scale: 0.985 }}
             onClick={() => setConfig({ ...config, trackFlights: !config.trackFlights })}
-            className={`flex items-center justify-between p-3 rounded-xl border transition-all duration-200 cursor-pointer ${
+            className={`flex items-center justify-between p-3.5 rounded-xl border transition-all duration-200 cursor-pointer ${
               config.trackFlights 
                 ? 'bg-white border-[#FF6B2C]/50 shadow-2xs' 
                 : 'bg-white/60 border-[#E6DFD5] opacity-70 hover:opacity-100'
             }`}
           >
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-3">
               <motion.div 
                 animate={config.trackFlights ? { rotate: [0, 360], scale: [1, 1.2, 1] } : {}}
                 transition={{ duration: 0.5, ease: "easeOut" }}
-                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
                   config.trackFlights ? 'bg-[#FF6B2C] text-white shadow-2xs' : 'bg-[#E6DFD5] text-[#7A7268]'
                 }`}
               >
-                <Plane className="w-4 h-4" />
+                <Plane className="w-4.5 h-4.5" />
               </motion.div>
               <div>
                 <p className="text-xs font-bold text-[#1E1C1A]">Flights & Airfare</p>
-                <p className="text-[10px] text-[#7A7268]">Track routes, seat sales & fare drops</p>
+                <p className="text-[10px] text-[#7A7268]">Monitors nonstop routes & fare drops</p>
               </div>
             </div>
             {/* iOS Style Spring Switch */}
-            <div className={`w-10 h-6 rounded-full transition-colors duration-200 relative ${config.trackFlights ? 'bg-[#FF6B2C]' : 'bg-[#D8D0C5]'}`}>
+            <div className={`w-11 h-6 rounded-full transition-colors duration-200 relative ${config.trackFlights ? 'bg-[#FF6B2C]' : 'bg-[#D8D0C5]'}`}>
               <motion.div 
                 layout
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                className={`absolute top-0.5 left-0.5 bg-white w-5 h-5 rounded-full shadow-sm ${config.trackFlights ? 'translate-x-4' : 'translate-x-0'}`} 
+                className={`absolute top-0.5 left-0.5 bg-white w-5 h-5 rounded-full shadow-sm ${config.trackFlights ? 'translate-x-5' : 'translate-x-0'}`} 
               />
             </div>
           </motion.div>
 
-          {/* Hotels Row with Chime-Bounce Spring on Toggle */}
+          {/* Hotels Watchdog Card */}
           <motion.div 
-            whileHover={{ scale: 1.01 }}
+            whileHover={{ scale: 1.015 }}
             whileTap={{ scale: 0.985 }}
             onClick={() => setConfig({ ...config, trackHotels: !config.trackHotels })}
-            className={`flex items-center justify-between p-3 rounded-xl border transition-all duration-200 cursor-pointer ${
+            className={`flex items-center justify-between p-3.5 rounded-xl border transition-all duration-200 cursor-pointer ${
               config.trackHotels 
                 ? 'bg-white border-[#FF6B2C]/50 shadow-2xs' 
                 : 'bg-white/60 border-[#E6DFD5] opacity-70 hover:opacity-100'
             }`}
           >
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-3">
               <motion.div 
                 animate={config.trackHotels ? { scale: [1, 1.25, 0.95, 1], y: [-2, 0] } : {}}
                 transition={{ duration: 0.45, ease: "easeOut" }}
-                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
                   config.trackHotels ? 'bg-[#FF6B2C] text-white shadow-2xs' : 'bg-[#E6DFD5] text-[#7A7268]'
                 }`}
               >
-                <Hotel className="w-3.5 h-3.5" />
+                <Hotel className="w-4.5 h-4.5" />
               </motion.div>
               <div>
-                <p className="text-xs font-bold text-[#1E1C1A]">Hotels & Stays</p>
-                <p className="text-[10px] text-[#7A7268]">Track boutique rooms & nightly rates</p>
+                <p className="text-xs font-bold text-[#1E1C1A]">Hotels & Boutique Stays</p>
+                <p className="text-[10px] text-[#7A7268]">Monitors suites & nightly rates</p>
               </div>
             </div>
             {/* iOS Style Spring Switch */}
-            <div className={`w-10 h-6 rounded-full transition-colors duration-200 relative ${config.trackHotels ? 'bg-[#FF6B2C]' : 'bg-[#D8D0C5]'}`}>
+            <div className={`w-11 h-6 rounded-full transition-colors duration-200 relative ${config.trackHotels ? 'bg-[#FF6B2C]' : 'bg-[#D8D0C5]'}`}>
               <motion.div 
                 layout
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                className={`absolute top-0.5 left-0.5 bg-white w-5 h-5 rounded-full shadow-sm ${config.trackHotels ? 'translate-x-4' : 'translate-x-0'}`} 
+                className={`absolute top-0.5 left-0.5 bg-white w-5 h-5 rounded-full shadow-sm ${config.trackHotels ? 'translate-x-5' : 'translate-x-0'}`} 
               />
             </div>
           </motion.div>
@@ -1859,23 +1971,22 @@ export default function PriceTracker({
         <motion.div 
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative z-10 flex items-center justify-center gap-1.5 text-red-600 text-xs font-medium mb-4 bg-red-50 py-2 px-3 rounded-xl border border-red-200"
+          className="relative z-10 flex items-center justify-center gap-1.5 text-red-600 text-xs font-medium mb-4 bg-red-50 py-2 px-3 rounded-xl border border-red-200 max-w-md mx-auto"
         >
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </motion.div>
       )}
 
-      {/* ── 6. Tactile Obsidian Black Action Button ── */}
+      {/* ── 6. Grand Obsidian Black Action Button ── */}
       <motion.button 
         type="button"
         whileHover={{ scale: 1.015, y: -1 }}
         whileTap={{ scale: 0.985 }}
         onClick={handleStartTracking}
         disabled={isActivating || (!config.trackFlights && !config.trackHotels)}
-        className="group/btn relative z-20 w-full bg-[#1E1C1A] hover:bg-black text-white font-bold py-3.5 px-6 rounded-xl shadow-md hover:shadow-xl transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer text-sm font-sans tracking-wide border-t border-white/15 overflow-hidden"
+        className="group/btn relative z-20 w-full max-w-md mx-auto bg-[#1E1C1A] hover:bg-black text-white font-bold py-3.5 px-8 rounded-xl shadow-md hover:shadow-xl transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2.5 cursor-pointer text-sm font-sans tracking-wide border-t border-white/15 overflow-hidden"
       >
-        {/* Subtle sliding light shimmer on hover */}
         <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
         
         {isActivating ? (
@@ -1892,12 +2003,12 @@ export default function PriceTracker({
       </motion.button>
 
       {/* ── 7. Live Trust Micro-Metrics Footer ── */}
-      <div className="relative z-10 flex items-center justify-center gap-4 text-[10px] font-mono text-[#8C827A] mt-4 pt-3 border-t border-[#E6DFD5]/60">
-        <span>✦ 24/7 Radar</span>
+      <div className="relative z-10 flex items-center justify-center gap-5 text-[11px] font-mono text-[#8C827A] mt-4 pt-3.5 border-t border-[#E6DFD5]/60">
+        <span>✦ 24/7 Autonomous Radar</span>
         <span>&middot;</span>
-        <span>Instant Drop Alerts</span>
+        <span>Instant Price Drop Alerts</span>
         <span>&middot;</span>
-        <span>100% Free</span>
+        <span>100% Free Monitoring</span>
       </div>
     </motion.div>
   );
