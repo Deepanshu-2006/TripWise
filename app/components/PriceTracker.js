@@ -1978,33 +1978,53 @@ export default function PriceTracker({
         </motion.div>
       )}
 
-      {/* ── 6. Grand Obsidian Black Action Button ── */}
-      <motion.button 
-        type="button"
-        whileHover={{ scale: 1.015, y: -1 }}
-        whileTap={{ scale: 0.985 }}
-        onClick={handleStartTracking}
-        disabled={isActivating || (!config.trackFlights && !config.trackHotels)}
-        className="group/btn relative z-20 w-full max-w-md mx-auto bg-[#1E1C1A] hover:bg-black text-white font-bold py-3.5 px-8 rounded-xl shadow-md hover:shadow-xl transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2.5 cursor-pointer text-sm font-sans tracking-wide border-t border-white/15 overflow-hidden"
-      >
-        <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-        
-        {isActivating ? (
-          <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span>Searching live prices...</span>
-          </>
-        ) : (
-          <>
-            <span>Search & Track Prices</span>
-            <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-          </>
-        )}
-      </motion.button>
+      {/* ── 6. Bespoke Tactile Obsidian Action Button ── */}
+      <div className="relative z-20 w-full max-w-md mx-auto">
+        <motion.button 
+          type="button"
+          whileHover={{ scale: 1.015, y: -1 }}
+          whileTap={{ scale: 0.985, y: 1 }}
+          onClick={handleStartTracking}
+          disabled={isActivating || (!config.trackFlights && !config.trackHotels)}
+          className="group/btn relative w-full bg-[#1E1C1A] hover:bg-[#121110] text-white py-3.5 px-7 rounded-xl shadow-[0_10px_25px_-5px_rgba(30,28,26,0.3)] hover:shadow-[0_14px_32px_-4px_rgba(255,107,44,0.2)] transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-3 cursor-pointer border-t border-white/18 border-x border-[#332E29] border-b border-black/80 overflow-hidden font-sans font-bold text-sm tracking-wide"
+        >
+          {/* Subtle warm hover sheen */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.06] to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 ease-out" />
+
+          {isActivating ? (
+            <div className="flex items-center gap-2.5">
+              <Loader2 className="w-4 h-4 animate-spin text-[#FF6B2C]" />
+              <span className="text-[#FAF6F0]">Searching live prices...</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <span>Search & Track Prices</span>
+              <div className="flex items-center gap-1.5">
+                <motion.div
+                  animate={{ 
+                    x: [-1.5, 3.5, -1.5],
+                    y: [-1, 1, -1],
+                    rotate: [0, 8, 0]
+                  }}
+                  transition={{ 
+                    repeat: Infinity, 
+                    duration: 2.2, 
+                    ease: "easeInOut" 
+                  }}
+                  className="text-[#FF6B2C] group-hover/btn:translate-x-1.5 group-hover/btn:-rotate-6 transition-transform duration-300"
+                >
+                  <Plane className="w-4 h-4" />
+                </motion.div>
+                <ArrowRight className="w-4 h-4 text-[#A89F91] group-hover/btn:text-white group-hover/btn:translate-x-1 transition-all duration-200" />
+              </div>
+            </div>
+          )}
+        </motion.button>
+      </div>
 
       {/* ── 7. Live Trust Micro-Metrics Footer ── */}
       <div className="relative z-10 flex items-center justify-center gap-5 text-[11px] font-mono text-[#8C827A] mt-4 pt-3.5 border-t border-[#E6DFD5]/60">
-        <span>✦ 24/7 Autonomous Radar</span>
+        <span>✦ 24/7 Radar</span>
         <span>&middot;</span>
         <span>Instant Price Drop Alerts</span>
         <span>&middot;</span>
