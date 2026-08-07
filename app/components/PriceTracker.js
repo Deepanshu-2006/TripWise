@@ -7,7 +7,7 @@ import {
   Bell, Plane, Hotel, AlertCircle, TrendingDown, TrendingUp, Minus, Clock, MapPin, 
   Loader2, ArrowRight, CheckCircle2, Star, SlidersHorizontal, ExternalLink, Info, 
   Sparkles, Map, List, CheckSquare, Square, X, Layers, Scale, DollarSign, Compass,
-  WifiOff
+  WifiOff, Power
 } from 'lucide-react';
 import { activateTracking, getTrackingState, clearUnreadDrops, searchFlights, searchHotels, saveTrackingSelection, saveTrackingState } from '../../lib/priceTrackingApi';
 import { getBookingLinkInfo } from '../../lib/bookingPartners';
@@ -773,17 +773,51 @@ export default function PriceTracker({
 
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-serif font-black text-[#1E1C1A] tracking-tight">Active Price Tracking</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-serif font-black text-[#1E1C1A] tracking-tight">Active Price Tracking</h2>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                </span>
+                LIVE 24/7
+              </span>
+            </div>
             <p className="text-sm font-sans text-[#7A7268] mt-0.5">
               Live updates & smart booking comparison tools
             </p>
           </div>
-          <button 
+          
+          {/* Animated Luxury Frosted Stop Radar Capsule */}
+          <motion.button 
+            type="button"
+            whileHover={{ scale: 1.04, y: -1.5 }}
+            whileTap={{ scale: 0.96, y: 1 }}
+            transition={{ type: "spring", stiffness: 450, damping: 25 }}
             onClick={handleStopTracking}
-            className="px-4 py-2 text-xs font-bold font-sans text-red-600 bg-red-50 hover:bg-red-100 rounded-full transition-colors border border-red-100 cursor-pointer"
+            className="group/stop relative px-4 py-2 rounded-full bg-white/95 hover:bg-white text-[#5F5E5A] hover:text-red-600 border border-[#E6DFD5] hover:border-red-200/90 shadow-[0_2px_8px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_8px_24px_-4px_rgba(239,68,68,0.22)] transition-all duration-200 cursor-pointer flex items-center gap-2.5 font-sans text-xs font-bold overflow-hidden"
           >
-            Stop Tracking
-          </button>
+            {/* Soft ambient red wash on hover */}
+            <div className="absolute inset-0 bg-red-500/[0.05] opacity-0 group-hover/stop:opacity-100 transition-opacity duration-200" />
+            
+            {/* Sliding light sheen reflection on hover */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover/stop:translate-x-full transition-transform duration-600 ease-out" />
+
+            {/* Live radar beacon core that transitions to pulsing red on hover */}
+            <div className="relative flex h-2.5 w-2.5 items-center justify-center">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-0 group-hover/stop:opacity-85 transition-opacity duration-200" />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#8C827A] group-hover/stop:bg-red-500 group-hover/stop:shadow-[0_0_8px_#ef4444] transition-all duration-200" />
+            </div>
+
+            <span className="relative z-10 tracking-tight transition-colors">Stop Tracking</span>
+
+            {/* Smooth rotating power/stop glyph on hover */}
+            <motion.div 
+              className="relative z-10 text-[#A89F91] group-hover/stop:text-red-500 transition-colors duration-200 pl-0.5"
+            >
+              <Power className="w-3.5 h-3.5 group-hover/stop:rotate-90 group-hover/stop:scale-110 transition-all duration-300 ease-out" />
+            </motion.div>
+          </motion.button>
         </div>
 
         <div className="space-y-6">
@@ -862,50 +896,64 @@ export default function PriceTracker({
                 );
               })() : (
                 <>
-                  {/* Segmented Controls for Flights */}
+                  {/* Segmented Controls for Flights with Animated Sliding Pill */}
                   <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-3 p-3 bg-white/70 rounded-2xl border border-[#E6DFD5]">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span className="text-xs font-bold text-[#7A7268] uppercase tracking-wider mr-1">Sort:</span>
-                      <button 
-                        onClick={() => setFlightSort('price')} 
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${flightSort === 'price' ? 'bg-[#1E1C1A] text-white shadow-xs' : 'bg-white text-[#4A443E] hover:bg-[#F5F0E8] border border-[#E6DFD5]'}`}
-                      >
-                        Cheapest
-                      </button>
-                      <button 
-                        onClick={() => setFlightSort('duration')} 
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${flightSort === 'duration' ? 'bg-[#1E1C1A] text-white shadow-xs' : 'bg-white text-[#4A443E] hover:bg-[#F5F0E8] border border-[#E6DFD5]'}`}
-                      >
-                        Fastest
-                      </button>
-                      <button 
-                        onClick={() => setFlightSort('best')} 
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${flightSort === 'best' ? 'bg-[#1E1C1A] text-white shadow-xs' : 'bg-white text-[#4A443E] hover:bg-[#F5F0E8] border border-[#E6DFD5]'}`}
-                      >
-                        Best Value
-                      </button>
+                      <div className="bg-[#F0EAE1]/80 p-0.5 rounded-full border border-[#E6DFD5] flex items-center gap-0.5 shadow-2xs">
+                        {[
+                          { id: 'price', label: 'Cheapest' },
+                          { id: 'duration', label: 'Fastest' },
+                          { id: 'best', label: 'Best Value' }
+                        ].map((tab) => (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => setFlightSort(tab.id)}
+                            className="relative px-3.5 py-1 rounded-full text-xs font-bold transition-colors cursor-pointer"
+                          >
+                            {flightSort === tab.id && (
+                              <motion.div
+                                layoutId="flightSortPill"
+                                transition={{ type: "spring", stiffness: 500, damping: 32 }}
+                                className="absolute inset-0 bg-[#1E1C1A] rounded-full shadow-xs"
+                              />
+                            )}
+                            <span className={`relative z-10 transition-colors duration-200 ${flightSort === tab.id ? 'text-white' : 'text-[#5F5E5A] hover:text-[#1E1C1A]'}`}>
+                              {tab.label}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span className="text-xs font-bold text-[#7A7268] uppercase tracking-wider mr-1">Stops:</span>
-                      <button 
-                        onClick={() => setFlightStops('any')} 
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${flightStops === 'any' ? 'bg-[#FF6B2C] text-white shadow-xs' : 'bg-white text-[#4A443E] hover:bg-[#F5F0E8] border border-[#E6DFD5]'}`}
-                      >
-                        All
-                      </button>
-                      <button 
-                        onClick={() => setFlightStops('nonstop')} 
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${flightStops === 'nonstop' ? 'bg-[#FF6B2C] text-white shadow-xs' : 'bg-white text-[#4A443E] hover:bg-[#F5F0E8] border border-[#E6DFD5]'}`}
-                      >
-                        Nonstop
-                      </button>
-                      <button 
-                        onClick={() => setFlightStops('1stop')} 
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${flightStops === '1stop' ? 'bg-[#FF6B2C] text-white shadow-xs' : 'bg-white text-[#4A443E] hover:bg-[#F5F0E8] border border-[#E6DFD5]'}`}
-                      >
-                        1 Stop
-                      </button>
+                      <div className="bg-[#F0EAE1]/80 p-0.5 rounded-full border border-[#E6DFD5] flex items-center gap-0.5 shadow-2xs">
+                        {[
+                          { id: 'any', label: 'All' },
+                          { id: 'nonstop', label: 'Nonstop' },
+                          { id: '1stop', label: '1 Stop' }
+                        ].map((tab) => (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => setFlightStops(tab.id)}
+                            className="relative px-3.5 py-1 rounded-full text-xs font-bold transition-colors cursor-pointer"
+                          >
+                            {flightStops === tab.id && (
+                              <motion.div
+                                layoutId="flightStopsPill"
+                                transition={{ type: "spring", stiffness: 500, damping: 32 }}
+                                className="absolute inset-0 bg-[#FF6B2C] rounded-full shadow-xs"
+                              />
+                            )}
+                            <span className={`relative z-10 transition-colors duration-200 ${flightStops === tab.id ? 'text-white' : 'text-[#5F5E5A] hover:text-[#1E1C1A]'}`}>
+                              {tab.label}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
@@ -1279,50 +1327,64 @@ export default function PriceTracker({
                   );
                 })() : (
                   <>
-                    {/* Segmented Controls for Hotels */}
+                    {/* Segmented Controls for Hotels with Animated Sliding Pill */}
                     <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-3 p-3 bg-white/70 rounded-2xl border border-[#E6DFD5]">
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className="text-xs font-bold text-[#7A7268] uppercase tracking-wider mr-1">Sort:</span>
-                        <button 
-                          onClick={() => setHotelSort('price')} 
-                          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${hotelSort === 'price' ? 'bg-[#1E1C1A] text-white shadow-xs' : 'bg-white text-[#4A443E] hover:bg-[#F5F0E8] border border-[#E6DFD5]'}`}
-                        >
-                          Cheapest
-                        </button>
-                        <button 
-                          onClick={() => setHotelSort('rating')} 
-                          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${hotelSort === 'rating' ? 'bg-[#1E1C1A] text-white shadow-xs' : 'bg-white text-[#4A443E] hover:bg-[#F5F0E8] border border-[#E6DFD5]'}`}
-                        >
-                          Top Rated
-                        </button>
-                        <button 
-                          onClick={() => setHotelSort('best')} 
-                          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${hotelSort === 'best' ? 'bg-[#1E1C1A] text-white shadow-xs' : 'bg-white text-[#4A443E] hover:bg-[#F5F0E8] border border-[#E6DFD5]'}`}
-                        >
-                          Best Value
-                        </button>
+                        <div className="bg-[#F0EAE1]/80 p-0.5 rounded-full border border-[#E6DFD5] flex items-center gap-0.5 shadow-2xs">
+                          {[
+                            { id: 'price', label: 'Cheapest' },
+                            { id: 'rating', label: 'Top Rated' },
+                            { id: 'best', label: 'Best Value' }
+                          ].map((tab) => (
+                            <button
+                              key={tab.id}
+                              type="button"
+                              onClick={() => setHotelSort(tab.id)}
+                              className="relative px-3.5 py-1 rounded-full text-xs font-bold transition-colors cursor-pointer"
+                            >
+                              {hotelSort === tab.id && (
+                                <motion.div
+                                  layoutId="hotelSortPill"
+                                  transition={{ type: "spring", stiffness: 500, damping: 32 }}
+                                  className="absolute inset-0 bg-[#1E1C1A] rounded-full shadow-xs"
+                                />
+                              )}
+                              <span className={`relative z-10 transition-colors duration-200 ${hotelSort === tab.id ? 'text-white' : 'text-[#5F5E5A] hover:text-[#1E1C1A]'}`}>
+                                {tab.label}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
                       </div>
 
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className="text-xs font-bold text-[#7A7268] uppercase tracking-wider mr-1">Rating:</span>
-                        <button 
-                          onClick={() => setHotelRating('any')} 
-                          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${hotelRating === 'any' ? 'bg-[#FF6B2C] text-white shadow-xs' : 'bg-white text-[#4A443E] hover:bg-[#F5F0E8] border border-[#E6DFD5]'}`}
-                        >
-                          All
-                        </button>
-                        <button 
-                          onClick={() => setHotelRating('4')} 
-                          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${hotelRating === '4' ? 'bg-[#FF6B2C] text-white shadow-xs' : 'bg-white text-[#4A443E] hover:bg-[#F5F0E8] border border-[#E6DFD5]'}`}
-                        >
-                          4+ Stars
-                        </button>
-                        <button 
-                          onClick={() => setHotelRating('5')} 
-                          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${hotelRating === '5' ? 'bg-[#FF6B2C] text-white shadow-xs' : 'bg-white text-[#4A443E] hover:bg-[#F5F0E8] border border-[#E6DFD5]'}`}
-                        >
-                          5 Stars
-                        </button>
+                        <div className="bg-[#F0EAE1]/80 p-0.5 rounded-full border border-[#E6DFD5] flex items-center gap-0.5 shadow-2xs">
+                          {[
+                            { id: 'any', label: 'All' },
+                            { id: '4', label: '4.0+ ★' },
+                            { id: '4.5', label: '4.5+ ★' }
+                          ].map((tab) => (
+                            <button
+                              key={tab.id}
+                              type="button"
+                              onClick={() => setHotelRating(tab.id)}
+                              className="relative px-3.5 py-1 rounded-full text-xs font-bold transition-colors cursor-pointer"
+                            >
+                              {hotelRating === tab.id && (
+                                <motion.div
+                                  layoutId="hotelRatingPill"
+                                  transition={{ type: "spring", stiffness: 500, damping: 32 }}
+                                  className="absolute inset-0 bg-[#FF6B2C] rounded-full shadow-xs"
+                                />
+                              )}
+                              <span className={`relative z-10 transition-colors duration-200 ${hotelRating === tab.id ? 'text-white' : 'text-[#5F5E5A] hover:text-[#1E1C1A]'}`}>
+                                {tab.label}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
 
