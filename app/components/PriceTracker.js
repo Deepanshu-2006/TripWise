@@ -1564,77 +1564,246 @@ export default function PriceTracker({
     );
   }
 
-  // Unactivated Prompt View
+  // Unactivated Prompt View — Authentic Animated Aviation & Cartography Experience
   return (
-    <div className="w-full max-w-2xl mx-auto bg-white rounded-2xl border border-[#E6DFD5] p-8 text-center shadow-xs">
-      <div className="w-16 h-16 bg-[#FAF6F0] border border-[#FF6B2C]/20 rounded-full flex items-center justify-center mx-auto mb-5">
-        <Bell className="w-8 h-8 text-[#FF6B2C]" />
+    <motion.div 
+      initial={{ opacity: 0, y: 18, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className="relative w-full max-w-xl mx-auto bg-[#FFFFFF] rounded-3xl border border-[#E6DFD5] p-7 sm:p-9 text-center shadow-[0_20px_50px_-15px_rgba(0,0,0,0.06)] overflow-hidden"
+    >
+      {/* ── 1. Animated Aviation Coordinate Grid (No AI Gradients) ── */}
+      <div 
+        aria-hidden 
+        className="absolute inset-0 pointer-events-none opacity-[0.45]"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, #E6DFD5 1px, transparent 1px),
+            linear-gradient(to bottom, #E6DFD5 1px, transparent 1px)
+          `,
+          backgroundSize: '32px 32px'
+        }}
+      />
+
+      {/* ── 2. Animated Rotating Nautical Compass & Radar Sweep ── */}
+      <div className="absolute -top-16 -right-16 w-56 h-56 pointer-events-none opacity-40">
+        {/* Concentric Radar Rings */}
+        <div className="absolute inset-0 rounded-full border border-dashed border-[#D5CBBF]" />
+        <div className="absolute inset-8 rounded-full border border-[#E6DFD5]" />
+        <div className="absolute inset-16 rounded-full border border-[#E6DFD5]" />
+        
+        {/* Rotating Radar Crosshairs */}
+        <motion.div 
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 24, ease: "linear" }}
+          className="absolute inset-0"
+        >
+          <div className="absolute top-0 bottom-0 left-1/2 w-[1px] bg-[#D5CBBF]/70 -translate-x-1/2" />
+          <div className="absolute left-0 right-0 top-1/2 h-[1px] bg-[#D5CBBF]/70 -translate-y-1/2" />
+        </motion.div>
+      </div>
+
+      {/* ── 3. Subtle Corner Drafting Crosshairs ── */}
+      <div className="absolute top-3 left-3 text-[9px] font-mono font-bold text-[#A89F91] pointer-events-none select-none">
+        + 41°54&apos;N
+      </div>
+      <div className="absolute top-3 right-3 text-[9px] font-mono font-bold text-[#A89F91] pointer-events-none select-none">
+        12°29&apos;E +
+      </div>
+      <div className="absolute bottom-3 left-3 text-[9px] font-mono text-[#A89F91] pointer-events-none select-none">
+        RADAR ACTIVE
+      </div>
+      <div className="absolute bottom-3 right-3 text-[9px] font-mono text-[#A89F91] pointer-events-none select-none">
+        24/7 AIRFARE
+      </div>
+
+      {/* ── 4. Animated Flight Trajectory Streamer ── */}
+      <div className="relative w-full max-w-sm mx-auto mb-6 px-4 py-2 bg-[#FAF6F0] border border-[#E6DFD5] rounded-full flex items-center justify-between shadow-2xs">
+        <span className="font-mono text-[10px] font-extrabold text-[#1E1C1A] bg-white px-2 py-0.5 rounded border border-[#E6DFD5]">
+          {config.origin || 'JFK'}
+        </span>
+
+        {/* Animated Flight Path Line */}
+        <div className="relative flex-1 mx-3 h-[2px] bg-[#E6DFD5] overflow-hidden">
+          <motion.div 
+            className="absolute inset-0 h-full w-full"
+            style={{
+              backgroundImage: 'repeating-linear-gradient(90deg, #FF6B2C 0, #FF6B2C 6px, transparent 6px, transparent 12px)',
+            }}
+            animate={{ x: [-24, 0] }}
+            transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
+          />
+        </div>
+
+        {/* Animated Airplane */}
+        <motion.div
+          animate={{ y: [-1, 1, -1] }}
+          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+          className="text-[#FF6B2C]"
+        >
+          <Plane className="w-3.5 h-3.5" style={{ transform: 'rotate(45deg)' }} />
+        </motion.div>
+
+        <span className="font-mono text-[10px] font-extrabold text-[#FF6B2C] bg-white px-2 py-0.5 rounded border border-[#FF6B2C]/30 ml-3">
+          {destinationName?.slice(0, 4).toUpperCase() || 'DEST'}
+        </span>
+      </div>
+
+      {/* Bell Notification Icon with Subtle Concentric Pulse */}
+      <div className="relative w-14 h-14 mx-auto mb-4 flex items-center justify-center">
+        <motion.div 
+          className="absolute inset-0 rounded-full border border-[#FF6B2C]/30"
+          animate={{ scale: [1, 1.4, 1], opacity: [0.6, 0, 0.6] }}
+          transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+        />
+        <div className="relative z-10 w-12 h-12 bg-[#FFF9F5] border border-[#FF6B2C]/25 rounded-full flex items-center justify-center shadow-xs">
+          <motion.div
+            animate={{ rotate: [-6, 6, -6] }}
+            transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
+          >
+            <Bell className="w-5 h-5 text-[#FF6B2C]" />
+          </motion.div>
+        </div>
       </div>
       
-      <h2 className="text-2xl font-serif font-black text-[#1E1C1A] mb-3">Search & Track Prices</h2>
-      <p className="text-[#7A7268] mb-8 font-sans max-w-md mx-auto">
-        Activate price tracking to browse flights and hotels for {destinationName}. Select your preferred options and we'll notify you when their prices drop.
+      {/* Editorial Title & Subtitle */}
+      <h2 className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A] tracking-tight mb-2">
+        Search & Track Prices
+      </h2>
+      <p className="text-[#6B645C] text-xs sm:text-sm leading-relaxed font-sans max-w-md mx-auto mb-7">
+        Activate price tracking to browse live airfare and hotel rates for <strong className="font-semibold text-[#1E1C1A]">{destinationName}</strong>. We&apos;ll monitor rates around the clock and notify you when prices drop.
       </p>
 
-      <div className="max-w-xs mx-auto text-left space-y-4 mb-8">
+      {/* Main Configuration Card */}
+      <div className="text-left space-y-4 mb-7 bg-[#FAF6F0] border border-[#E6DFD5] rounded-2xl p-4.5 relative z-10">
         <div>
-          <label className="block text-xs font-bold text-[#4A443E] uppercase tracking-wider mb-1.5">Origin Airport</label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7A7268]" />
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-[10px] font-mono font-bold text-[#5F5E5A] uppercase tracking-wider">
+              Departure Airport
+            </label>
+            <span className="text-[10px] font-mono text-[#8C827A]">3-Letter Code</span>
+          </div>
+
+          <div className="relative group">
+            <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8C827A] group-focus-within:text-[#FF6B2C] transition-colors" />
             <input 
               type="text" 
               value={config.origin}
               onChange={(e) => setConfig({ ...config, origin: e.target.value.toUpperCase() })}
               maxLength={3}
-              className="w-full pl-9 pr-3 py-2.5 bg-[#F5F0E8] border border-[#E6DFD5] rounded-xl text-sm font-mono font-bold focus:outline-none focus:border-[#FF6B2C] transition-colors"
+              className="w-full pl-9.5 pr-4 py-2.5 bg-white border border-[#E6DFD5] rounded-xl text-sm font-mono font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C] focus:ring-2 focus:ring-[#FF6B2C]/15 transition-all uppercase tracking-wider placeholder:text-[#A89F91]"
               placeholder="JFK"
             />
           </div>
+
+          {/* Quick Airport Selector Pills */}
+          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+            <span className="text-[9px] font-mono text-[#8C827A] mr-0.5">QUICK SELECT:</span>
+            {['JFK', 'LHR', 'SFO', 'DXB', 'CDG'].map((code) => (
+              <button
+                key={code}
+                type="button"
+                onClick={() => setConfig({ ...config, origin: code })}
+                className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold transition-all cursor-pointer ${
+                  config.origin === code 
+                    ? 'bg-[#FF6B2C] text-white shadow-2xs' 
+                    : 'bg-white border border-[#E6DFD5] text-[#5F5E5A] hover:bg-[#F0EAE1]'
+                }`}
+              >
+                {code}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="space-y-3 pt-2">
-          <label className="flex items-center justify-between cursor-pointer group">
-            <div className="flex items-center gap-2 text-[#4A443E] group-hover:text-[#1E1C1A] transition-colors">
-              <Plane className="w-4 h-4" />
-              <span className="text-sm font-semibold">Flights</span>
+        {/* Tracking Categories (Flights & Hotels) */}
+        <div className="space-y-2 pt-2.5 border-t border-[#E6DFD5]">
+          <motion.div 
+            whileTap={{ scale: 0.985 }}
+            onClick={() => setConfig({ ...config, trackFlights: !config.trackFlights })}
+            className={`flex items-center justify-between p-3 rounded-xl border transition-all duration-200 cursor-pointer ${
+              config.trackFlights 
+                ? 'bg-white border-[#FF6B2C]/50 shadow-2xs' 
+                : 'bg-white/60 border-[#E6DFD5] opacity-70 hover:opacity-100'
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
+                config.trackFlights ? 'bg-[#FF6B2C] text-white' : 'bg-[#E6DFD5] text-[#7A7268]'
+              }`}>
+                <Plane className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-[#1E1C1A]">Flights & Airfare</p>
+                <p className="text-[10px] text-[#7A7268]">Track routes & fare drops</p>
+              </div>
             </div>
-            <div className={`w-10 h-6 rounded-full transition-colors relative ${config.trackFlights ? 'bg-[#FF6B2C]' : 'bg-[#E6DFD5]'}`}>
-              <input type="checkbox" className="sr-only" checked={config.trackFlights} onChange={() => setConfig({ ...config, trackFlights: !config.trackFlights })} />
-              <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${config.trackFlights ? 'translate-x-4' : 'translate-x-0'}`} />
+            {/* iOS Style Switch */}
+            <div className={`w-10 h-6 rounded-full transition-colors relative ${config.trackFlights ? 'bg-[#FF6B2C]' : 'bg-[#D8D0C5]'}`}>
+              <div className={`absolute top-0.5 left-0.5 bg-white w-5 h-5 rounded-full transition-transform duration-200 shadow-sm ${config.trackFlights ? 'translate-x-4' : 'translate-x-0'}`} />
             </div>
-          </label>
+          </motion.div>
 
-          <label className="flex items-center justify-between cursor-pointer group">
-            <div className="flex items-center gap-2 text-[#4A443E] group-hover:text-[#1E1C1A] transition-colors">
-              <Hotel className="w-4 h-4" />
-              <span className="text-sm font-semibold">Hotels</span>
+          <motion.div 
+            whileTap={{ scale: 0.985 }}
+            onClick={() => setConfig({ ...config, trackHotels: !config.trackHotels })}
+            className={`flex items-center justify-between p-3 rounded-xl border transition-all duration-200 cursor-pointer ${
+              config.trackHotels 
+                ? 'bg-white border-[#FF6B2C]/50 shadow-2xs' 
+                : 'bg-white/60 border-[#E6DFD5] opacity-70 hover:opacity-100'
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
+                config.trackHotels ? 'bg-[#FF6B2C] text-white' : 'bg-[#E6DFD5] text-[#7A7268]'
+              }`}>
+                <Hotel className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-[#1E1C1A]">Hotels & Stays</p>
+                <p className="text-[10px] text-[#7A7268]">Track boutique rooms & rates</p>
+              </div>
             </div>
-            <div className={`w-10 h-6 rounded-full transition-colors relative ${config.trackHotels ? 'bg-[#FF6B2C]' : 'bg-[#E6DFD5]'}`}>
-              <input type="checkbox" className="sr-only" checked={config.trackHotels} onChange={() => setConfig({ ...config, trackHotels: !config.trackHotels })} />
-              <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${config.trackHotels ? 'translate-x-4' : 'translate-x-0'}`} />
+            {/* iOS Style Switch */}
+            <div className={`w-10 h-6 rounded-full transition-colors relative ${config.trackHotels ? 'bg-[#FF6B2C]' : 'bg-[#D8D0C5]'}`}>
+              <div className={`absolute top-0.5 left-0.5 bg-white w-5 h-5 rounded-full transition-transform duration-200 shadow-sm ${config.trackHotels ? 'translate-x-4' : 'translate-x-0'}`} />
             </div>
-          </label>
+          </motion.div>
         </div>
       </div>
 
       {error && (
-        <div className="flex items-center justify-center gap-1.5 text-red-600 text-xs mb-4">
-          <AlertCircle className="w-4 h-4" />
+        <motion.div 
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-center gap-1.5 text-red-600 text-xs font-medium mb-4 bg-red-50 py-2 px-3 rounded-xl border border-red-200"
+        >
+          <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
-        </div>
+        </motion.div>
       )}
 
-      <button 
+      {/* Tactile Obsidian Black Action Button */}
+      <motion.button 
+        type="button"
+        whileHover={{ scale: 1.015 }}
+        whileTap={{ scale: 0.985 }}
         onClick={handleStartTracking}
         disabled={isActivating || (!config.trackFlights && !config.trackHotels)}
-        className="w-full max-w-xs mx-auto bg-[#1E1C1A] text-white font-bold py-3 px-6 rounded-xl hover:bg-black transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+        className="w-full bg-[#1E1C1A] hover:bg-black text-white font-bold py-3.5 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer text-sm font-sans tracking-wide border-t border-white/15"
       >
         {isActivating ? (
-          <><Loader2 className="w-4 h-4 animate-spin" /> Starting...</>
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Searching live prices...</span>
+          </>
         ) : (
-          'Search & Track'
+          <>
+            <span>Search & Track Prices</span>
+            <ArrowRight className="w-4 h-4" />
+          </>
         )}
-      </button>
-    </div>
+      </motion.button>
+    </motion.div>
   );
 }
