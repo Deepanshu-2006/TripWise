@@ -1978,18 +1978,21 @@ export default function PriceTracker({
         </motion.div>
       )}
 
-      {/* ── 6. Bespoke Tactile Obsidian Action Button ── */}
+      {/* ── 6. Bespoke Tactile Obsidian Action Button with Dynamic Hover ── */}
       <div className="relative z-20 w-full max-w-md mx-auto">
         <motion.button 
           type="button"
-          whileHover={{ scale: 1.015, y: -1 }}
-          whileTap={{ scale: 0.985, y: 1 }}
+          whileHover={{ scale: 1.02, y: -2 }}
+          whileTap={{ scale: 0.98, y: 1 }}
           onClick={handleStartTracking}
           disabled={isActivating || (!config.trackFlights && !config.trackHotels)}
-          className="group/btn relative w-full bg-[#1E1C1A] hover:bg-[#121110] text-white py-3.5 px-7 rounded-xl shadow-[0_10px_25px_-5px_rgba(30,28,26,0.3)] hover:shadow-[0_14px_32px_-4px_rgba(255,107,44,0.2)] transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-3 cursor-pointer border-t border-white/18 border-x border-[#332E29] border-b border-black/80 overflow-hidden font-sans font-bold text-sm tracking-wide"
+          className="group/btn relative w-full bg-[#181614] hover:bg-[#0D0C0B] text-white py-4 px-8 rounded-2xl shadow-[0_10px_25px_-5px_rgba(24,22,20,0.35)] hover:shadow-[0_16px_36px_-6px_rgba(255,107,44,0.3),0_4px_12px_rgba(0,0,0,0.5)] transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-3 cursor-pointer border-t border-white/22 border-x border-[#2E2A26] border-b border-black overflow-hidden font-sans font-bold text-sm tracking-wide"
         >
-          {/* Subtle warm hover sheen */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.06] to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 ease-out" />
+          {/* Subtle light sweep reflection across obsidian surface on hover */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.12] to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 ease-out" />
+
+          {/* Warm coral bottom ambient edge line on hover */}
+          <div className="absolute bottom-0 inset-x-8 h-[1.5px] bg-gradient-to-r from-transparent via-[#FF6B2C] to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
 
           {isActivating ? (
             <div className="flex items-center gap-2.5">
@@ -1998,24 +2001,43 @@ export default function PriceTracker({
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <span>Search & Track Prices</span>
-              <div className="flex items-center gap-1.5">
-                <motion.div
-                  animate={{ 
-                    x: [-1.5, 3.5, -1.5],
-                    y: [-1, 1, -1],
-                    rotate: [0, 8, 0]
-                  }}
-                  transition={{ 
-                    repeat: Infinity, 
-                    duration: 2.2, 
-                    ease: "easeInOut" 
-                  }}
-                  className="text-[#FF6B2C] group-hover/btn:translate-x-1.5 group-hover/btn:-rotate-6 transition-transform duration-300"
-                >
-                  <Plane className="w-4 h-4" />
-                </motion.div>
-                <ArrowRight className="w-4 h-4 text-[#A89F91] group-hover/btn:text-white group-hover/btn:translate-x-1 transition-all duration-200" />
+              <span className="group-hover/btn:text-[#FFF5EE] transition-colors duration-200">
+                Search & Track Prices
+              </span>
+              <div className="flex items-center gap-2">
+                {/* Dynamic Flight Jetstream & Ascending Airplane with Hover Acceleration */}
+                <div className="relative flex items-center">
+                  {/* Expanding animated contrail behind airplane tail on hover */}
+                  <div className="w-3.5 group-hover/btn:w-6 h-[1.5px] bg-gradient-to-r from-transparent to-[#FF6B2C] relative overflow-hidden transition-all duration-300 ease-out mr-0.5">
+                    <motion.div 
+                      className="absolute inset-0 w-full h-full"
+                      style={{
+                        backgroundImage: 'repeating-linear-gradient(90deg, #FF6B2C 0, #FF6B2C 2px, transparent 2px, transparent 4px)'
+                      }}
+                      animate={{ x: [-8, 0] }}
+                      transition={{ repeat: Infinity, duration: 0.4, ease: "linear" }}
+                    />
+                  </div>
+
+                  {/* True Diagonal (45° Top-Right) Airplane with Fluid Flight Cruise & Hover */}
+                  <motion.div
+                    animate={{ 
+                      y: [-0.8, 0.8, -0.8], 
+                      x: [-0.5, 1, -0.5],
+                      rotate: [0, 2.5, 0]
+                    }}
+                    transition={{ 
+                      repeat: Infinity, 
+                      duration: 2.4, 
+                      ease: "easeInOut" 
+                    }}
+                    className="text-[#FF6B2C] drop-shadow-[0_0_10px_rgba(255,107,44,0.75)] group-hover/btn:translate-x-2 group-hover/btn:-translate-y-1 group-hover/btn:scale-115 group-hover/btn:rotate-[4deg] transition-all duration-300 ease-out flex items-center justify-center"
+                  >
+                    <Plane className="w-4 h-4" />
+                  </motion.div>
+                </div>
+
+                <ArrowRight className="w-4 h-4 text-[#A89F91] group-hover/btn:text-white group-hover/btn:translate-x-1.5 transition-all duration-300 ease-out" />
               </div>
             </div>
           )}
