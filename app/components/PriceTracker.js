@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { 
-  Bell, Plane, Hotel, AlertCircle, TrendingDown, TrendingUp, Minus, Clock, MapPin, 
+  Bell, Plane, Hotel, Building2, Bed, BedDouble, AlertCircle, TrendingDown, TrendingUp, Minus, Clock, MapPin, 
   Loader2, ArrowRight, CheckCircle2, Star, SlidersHorizontal, ExternalLink, Info, 
   Sparkles, Map, List, CheckSquare, Square, X, Layers, Scale, DollarSign, Compass,
   WifiOff, Power
@@ -107,154 +107,348 @@ function PriceDistributionBar({ items = [], type = 'flight', selectedId = null, 
 
 // Side-by-Side Comparison Modal Component
 function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelect, destinationName, startDate, endDate, stayNights }) {
-  if (!isOpen || items.length === 0) return null;
+  if (!isOpen || items.length === 0 || typeof document === 'undefined') return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+  const lowestPrice = Math.min(...items.map(i => i.price));
+  const highestPrice = Math.max(...items.map(i => i.price));
+  const priceDiff = highestPrice - lowestPrice;
+  const bestValueItem = items.find(i => i.price === lowestPrice);
+
+  return createPortal(
+    <div 
+      onClick={onClose}
+      className="fixed inset-0 z-[10000] flex items-center justify-center p-4 md:p-6 bg-[#0E0D0C]/80 backdrop-blur-xl overflow-y-auto"
+    >
+      {/* Animated Aurora Ambient Glow Background Orbs */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        {/* Soft Terracotta Glow Orb */}
+        <motion.div
+          animate={{
+            x: [-80, 80, -80],
+            y: [-50, 50, -50],
+            scale: [1, 1.3, 1],
+            opacity: [0.35, 0.6, 0.35]
+          }}
+          transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-1/4 left-1/5 w-[520px] h-[520px] rounded-full bg-gradient-to-br from-[#FF6B2C]/40 to-[#E55A1C]/20 blur-[130px]"
+        />
+
+        {/* Champagne Amber Radiance Orb */}
+        <motion.div
+          animate={{
+            x: [70, -70, 70],
+            y: [50, -50, 50],
+            scale: [1.2, 0.9, 1.2],
+            opacity: [0.25, 0.5, 0.25]
+          }}
+          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          className="absolute bottom-1/5 right-1/5 w-[480px] h-[480px] rounded-full bg-gradient-to-tr from-amber-500/25 to-[#FF6B2C]/15 blur-[120px]"
+        />
+
+        {/* Deep Emerald Travel Light Orb */}
+        <motion.div
+          animate={{
+            x: [40, -40, 40],
+            y: [-40, 40, -40],
+            opacity: [0.2, 0.45, 0.2]
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[650px] rounded-full bg-emerald-600/15 blur-[150px]"
+        />
+
+        {/* Subtle Atmospheric Radar Dots Grid */}
+        <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.12)_1px,transparent_1px)] [background-size:28px_28px] opacity-40" />
+      </div>
+
+      {/* Main Luxury Modal Card */}
       <motion.div 
-        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        onClick={(e) => e.stopPropagation()}
+        initial={{ opacity: 0, scale: 0.93, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 10 }}
-        className="bg-white rounded-3xl border border-[#E6DFD5] max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl p-6"
+        exit={{ opacity: 0, scale: 0.93, y: 20 }}
+        transition={{ type: "spring", stiffness: 450, damping: 28 }}
+        className="bg-white/95 backdrop-blur-2xl rounded-3xl border border-[#E6DFD5] max-w-4xl w-full max-h-[92vh] overflow-y-auto shadow-[0_35px_100px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.8)] p-6 md:p-8 my-auto relative z-10"
       >
-        <div className="flex items-center justify-between border-b border-[#E6DFD5] pb-4 mb-6">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-[#FFF9F5] border border-[#FF6B2C]/20 rounded-xl text-[#FF6B2C]">
-              <Scale className="w-5 h-5" />
+        {/* Modal Header */}
+        <div className="flex items-center justify-between border-b border-[#E6DFD5] pb-5 mb-5">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#1E1C1A] to-black text-white flex items-center justify-center shadow-md">
+              <Scale className="w-5 h-5 text-[#FF6B2C]" />
             </div>
             <div>
-              <h3 className="font-serif text-xl font-bold text-[#1E1C1A]">
-                Compare {type === 'flight' ? 'Flights' : 'Hotels'}
-              </h3>
-              <p className="text-xs text-[#7A7268]">
-                Side-by-side comparison for {destinationName}
+              <div className="flex items-center gap-2">
+                <h3 className="font-serif text-2xl font-black text-[#1E1C1A] tracking-tight">
+                  Compare {type === 'flight' ? 'Flights' : 'Hotels'} Side-by-Side
+                </h3>
+                <span className="px-2.5 py-0.5 rounded-full bg-[#FAF6F0] text-[#FF6B2C] border border-[#FF6B2C]/30 text-[10px] font-mono font-bold uppercase tracking-wide">
+                  {items.length} Options
+                </span>
+              </div>
+              <p className="text-xs text-[#7A7268] mt-0.5">
+                Head-to-head rate breakdown and schedule comparison for {destinationName}
               </p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="p-2 hover:bg-[#F5F0E8] rounded-full text-[#7A7268] hover:text-[#1E1C1A] transition-colors"
+            className="w-9 h-9 rounded-full bg-[#FAF6F0] hover:bg-red-600 hover:text-white text-[#7A7268] flex items-center justify-center transition-all duration-200 cursor-pointer shadow-xs"
+            title="Close comparison"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
+        {/* AI Travel Decision Insight Banner with Shimmer Effect */}
+        {items.length >= 2 && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="relative overflow-hidden bg-gradient-to-r from-[#FAF6F0] via-[#FFF9F5] to-[#FAF6F0] rounded-2xl border border-[#FF6B2C]/25 p-4 mb-6 flex items-center justify-between flex-wrap gap-3 shadow-xs"
+          >
+            {/* Shimmer Light Reflection */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full animate-[shimmer_3.5s_infinite] pointer-events-none" />
+
+            <div className="relative z-10 flex items-center gap-2.5">
+              <motion.div 
+                animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="w-8 h-8 rounded-full bg-[#FF6B2C]/15 flex items-center justify-center text-[#FF6B2C] shrink-0 shadow-xs"
+              >
+                <Sparkles className="w-4 h-4" />
+              </motion.div>
+              <div>
+                <span className="text-xs font-bold text-[#1E1C1A]">Smart Decision Recommendation: </span>
+                <span className="text-xs text-[#4A443E]">
+                  {type === 'flight' ? (
+                    <>
+                      <strong>{bestValueItem?.airline}</strong> offers the best rate at <strong>${lowestPrice}</strong>
+                      {priceDiff > 0 && ` (saves you $${priceDiff})`}
+                    </>
+                  ) : (
+                    <>
+                      <strong>{bestValueItem?.name}</strong> provides the lowest total stay rate at <strong>${lowestPrice * (stayNights || 1)}</strong>
+                      {priceDiff > 0 && ` (saves $${priceDiff * (stayNights || 1)})`}
+                    </>
+                  )}
+                </span>
+              </div>
+            </div>
+
+            {priceDiff > 0 && (
+              <motion.span 
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                className="relative z-10 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-mono font-bold shadow-xs"
+              >
+                Save up to ${type === 'flight' ? priceDiff : priceDiff * (stayNights || 1)}
+              </motion.span>
+            )}
+          </motion.div>
+        )}
+
         {/* Comparison Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {items.map((item, idx) => {
             const linkInfo = getBookingLinkInfo(destinationName, type, item, { startDate, endDate });
+            const isLowest = item.price === lowestPrice;
 
             return (
-              <div 
-                key={item.id} 
-                className="bg-[#FAF6F0] rounded-2xl border border-[#E6DFD5] p-5 flex flex-col justify-between relative shadow-xs"
+              <motion.div 
+                key={item.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1, type: "spring", stiffness: 350, damping: 25 }}
+                whileHover={{ y: -5, scale: 1.01 }}
+                className={`group/card rounded-2xl border p-5.5 flex flex-col justify-between relative transition-all duration-300 ${
+                  isLowest 
+                    ? 'bg-[#FFFDFB] border-[#FF6B2C]/50 ring-2 ring-[#FF6B2C]/15 shadow-[0_15px_35px_-8px_rgba(255,107,44,0.18)]' 
+                    : 'bg-[#FAF6F0]/80 border-[#E6DFD5] hover:border-[#FF6B2C]/40 hover:shadow-lg'
+                }`}
               >
-                {/* Option Badge Header */}
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-mono font-extrabold uppercase bg-[#1E1C1A] text-white px-2 py-0.5 rounded">
-                    Option {idx + 1}
-                  </span>
-                  {item.isExactDeeplink ? (
-                    <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" /> Exact Listing
+                <div>
+                  {/* Option Badge & Best Value Pill */}
+                  <div className="flex items-center justify-between mb-3.5">
+                    <span className="text-[10px] font-mono font-black uppercase bg-[#1E1C1A] text-white px-2.5 py-1 rounded-full tracking-wider shadow-xs">
+                      Option {idx + 1}
                     </span>
+                    
+                    <div className="flex items-center gap-1.5">
+                      {isLowest && (
+                        <motion.span 
+                          animate={{ scale: [1, 1.03, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                          className="text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200/80 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-xs"
+                        >
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" /> BEST VALUE
+                        </motion.span>
+                      )}
+                      {type === 'flight' && item.stops === 0 && (
+                        <span className="text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200/80 px-2 py-0.5 rounded-full flex items-center gap-1">
+                          ⚡ NONSTOP
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Header Title with Airline or Hotel Logo */}
+                  {type === 'flight' ? (
+                    <div>
+                      <div className="flex items-center gap-3 mb-4">
+                        <motion.img 
+                          whileHover={{ rotate: [0, -5, 5, 0] }}
+                          src={item.logo} 
+                          alt={item.airline} 
+                          className="w-11 h-11 object-contain rounded-xl bg-white border border-[#E6DFD5] p-1.5 shadow-xs" 
+                        />
+                        <div>
+                          <h4 className="font-serif font-bold text-base text-[#1E1C1A] leading-tight">{item.airline}</h4>
+                          <span className="text-xs font-mono font-semibold text-[#7A7268]">{item.flightNumber}</span>
+                        </div>
+                      </div>
+
+                      {/* Price Hero Card */}
+                      <div className="bg-white rounded-2xl p-4 border border-[#E6DFD5] mb-4 shadow-xs">
+                        <div className="flex items-baseline justify-between mb-1">
+                          <span className="text-xs font-bold text-[#7A7268]">Total Airfare</span>
+                          <span className="text-3xl font-serif font-black text-[#1E1C1A]">${item.price}</span>
+                        </div>
+                        <div className="text-[11px] text-[#A89F91]">
+                          {isLowest ? (
+                            <span className="text-emerald-700 font-bold flex items-center gap-1">
+                              <CheckCircle2 className="w-3 h-3" /> Lowest fare available on this route
+                            </span>
+                          ) : (
+                            <span>+${item.price - lowestPrice} higher than Option {items.findIndex(i => i.price === lowestPrice) + 1}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Animated Flight Path Corridor & Schedule */}
+                      <div className="bg-white rounded-2xl p-4.5 border border-[#E6DFD5] mb-5 shadow-xs relative overflow-hidden">
+                        <div className="flex items-center justify-between text-xs">
+                          {/* Departure Node */}
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-mono font-bold text-[#7A7268] uppercase tracking-wider mb-0.5">Departure</span>
+                            <span className="text-sm font-bold text-[#1E1C1A]">{item.departureTime}</span>
+                          </div>
+                          
+                          {/* Center Animated Flight Radar Trajectory with Diagonal Cruising Jet */}
+                          <div className="flex-1 px-4 flex flex-col items-center">
+                            {/* Duration Pill */}
+                            <div className="flex items-center gap-1 bg-[#FAF6F0] px-2.5 py-0.5 rounded-full border border-[#E6DFD5] text-[10px] font-mono font-bold text-[#FF6B2C] mb-2 shadow-2xs">
+                              <Clock className="w-3 h-3 text-[#FF6B2C]" />
+                              <span>{item.duration}</span>
+                            </div>
+
+                            {/* Flight Corridor Track with Full Start-to-End Flight Animation */}
+                            <div className="w-full relative flex items-center my-1.5 h-7 overflow-hidden">
+                              <div className="w-full h-px border-t-2 border-dashed border-[#FF6B2C]/40" />
+                              <motion.div
+                                initial={{ left: "2%", opacity: 0 }}
+                                animate={{ 
+                                  left: ["2%", "92%"],
+                                  opacity: [0, 1, 1, 0.9, 0]
+                                }}
+                                transition={{ 
+                                  duration: 3.6, 
+                                  repeat: Infinity, 
+                                  ease: "easeInOut",
+                                  repeatDelay: 0.5
+                                }}
+                                className="absolute top-0 w-7 h-7 rounded-full bg-white border border-[#FF6B2C]/70 shadow-[0_2px_10px_rgba(255,107,44,0.3)] flex items-center justify-center text-[#FF6B2C] z-10 -ml-3.5"
+                              >
+                                <Plane className="w-3.5 h-3.5 fill-[#FF6B2C] text-[#FF6B2C] " />
+                              </motion.div>
+                            </div>
+
+                            {/* Stops Routing Badge */}
+                            <span className={`text-[10px] font-bold mt-2 px-2 py-0.5 rounded-md ${
+                              item.stops === 0 
+                                ? 'text-emerald-700 bg-emerald-50 border border-emerald-200/80 font-mono' 
+                                : 'text-[#7A7268] bg-[#FAF6F0]'
+                            }`}>
+                              {item.stops === 0 ? '✓ Direct Nonstop' : `1 Stop (${item.via})`}
+                            </span>
+                          </div>
+
+                          {/* Arrival Node */}
+                          <div className="flex flex-col text-right">
+                            <span className="text-[10px] font-mono font-bold text-[#7A7268] uppercase tracking-wider mb-0.5">Arrival</span>
+                            <span className="text-sm font-bold text-[#1E1C1A]">{item.arrivalTime}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   ) : (
-                    <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200/80 px-2 py-0.5 rounded">
-                      Pre-filled Search
-                    </span>
+                    <div>
+                      <div className="relative h-32 rounded-xl overflow-hidden mb-3.5 border border-[#E6DFD5] shadow-xs">
+                        <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500" />
+                        <div className="absolute top-2 right-2 bg-black/75 backdrop-blur-xs text-white text-[11px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
+                          <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {item.rating}.0
+                        </div>
+                      </div>
+
+                      <h4 className="font-serif font-bold text-base text-[#1E1C1A] mb-3 leading-tight">{item.name}</h4>
+
+                      {/* Hotel Price Hero */}
+                      <div className="bg-white rounded-2xl p-4 border border-[#E6DFD5] mb-4 shadow-xs">
+                        <div className="flex items-baseline justify-between mb-1">
+                          <span className="text-xs font-bold text-[#7A7268]">Nightly Rate</span>
+                          <span className="text-3xl font-serif font-black text-[#1E1C1A]">${item.price}<span className="text-xs font-normal text-[#7A7268]">/night</span></span>
+                        </div>
+                        <div className="text-[11px] text-[#A89F91]">
+                          Total stay: <strong className="text-[#1E1C1A]">${item.price * (stayNights || 1)}</strong> ({stayNights || 1} nights)
+                        </div>
+                      </div>
+
+                      {/* Hotel Details Breakdown */}
+                      <div className="space-y-2.5 text-xs text-[#4A443E] bg-white rounded-2xl p-4 border border-[#E6DFD5] mb-5 shadow-xs">
+                        <div className="flex items-center justify-between border-b border-[#E6DFD5]/50 pb-2">
+                          <span className="text-[#7A7268] font-medium">Distance / Location:</span>
+                          <span className="font-bold text-[#1E1C1A] truncate max-w-[140px]">{item.distance}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[#7A7268] font-medium">Included Amenities:</span>
+                          <span className="font-medium text-[#1E1C1A] truncate max-w-[140px]">{item.amenities?.slice(0, 2).join(', ')}</span>
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
 
-                {type === 'flight' ? (
-                  <div>
-                    <div className="flex items-center gap-3 mb-3">
-                      <img src={item.logo} alt={item.airline} className="w-8 h-8 object-contain rounded-lg bg-white border border-[#E6DFD5] p-1" />
-                      <div>
-                        <h4 className="font-bold text-sm text-[#1E1C1A]">{item.airline}</h4>
-                        <span className="text-xs font-mono text-[#7A7268]">{item.flightNumber}</span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2 text-xs text-[#4A443E] bg-white rounded-xl p-3 border border-[#E6DFD5] mb-4">
-                      <div className="flex justify-between border-b border-[#E6DFD5]/40 pb-1.5">
-                        <span className="text-[#7A7268]">Price:</span>
-                        <span className="font-bold text-[#1E1C1A] text-sm">${item.price}</span>
-                      </div>
-                      <div className="flex justify-between border-b border-[#E6DFD5]/40 pb-1.5">
-                        <span className="text-[#7A7268]">Schedule:</span>
-                        <span className="font-semibold text-[#1E1C1A]">{item.departureTime} – {item.arrivalTime}</span>
-                      </div>
-                      <div className="flex justify-between border-b border-[#E6DFD5]/40 pb-1.5">
-                        <span className="text-[#7A7268]">Duration:</span>
-                        <span className="font-semibold">{item.duration}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-[#7A7268]">Stops:</span>
-                        <span className={item.stops === 0 ? 'text-emerald-700 font-bold' : 'font-semibold'}>
-                          {item.stops === 0 ? 'Nonstop' : `1 Stop (${item.via})`}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="relative h-28 rounded-xl overflow-hidden mb-3 border border-[#E6DFD5]">
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                      <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-xs text-white text-[11px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
-                        <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {item.rating}.0
-                      </div>
-                    </div>
-
-                    <h4 className="font-bold text-sm text-[#1E1C1A] mb-2">{item.name}</h4>
-
-                    <div className="space-y-2 text-xs text-[#4A443E] bg-white rounded-xl p-3 border border-[#E6DFD5] mb-4">
-                      <div className="flex justify-between border-b border-[#E6DFD5]/40 pb-1.5">
-                        <span className="text-[#7A7268]">Nightly Rate:</span>
-                        <span className="font-bold text-[#1E1C1A]">${item.price}/night</span>
-                      </div>
-                      <div className="flex justify-between border-b border-[#E6DFD5]/40 pb-1.5">
-                        <span className="text-[#7A7268]">Stay Total ({stayNights}n):</span>
-                        <span className="font-bold text-[#FF6B2C] text-sm">${item.price * stayNights}</span>
-                      </div>
-                      <div className="flex justify-between border-b border-[#E6DFD5]/40 pb-1.5">
-                        <span className="text-[#7A7268]">Location:</span>
-                        <span className="font-medium text-[#1E1C1A] text-right truncate max-w-[120px]">{item.distance}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-[#7A7268]">Amenities:</span>
-                        <span className="font-medium text-[#1E1C1A]">{item.amenities?.slice(0, 2).join(', ')}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="space-y-2 pt-2 border-t border-[#E6DFD5]">
-                  <button 
+                {/* Tactile Action Buttons */}
+                <div className="space-y-2 pt-3 border-t border-[#E6DFD5]">
+                  <motion.button 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => {
                       onSelect(item);
                       onClose();
                     }}
-                    className="w-full bg-[#FF6B2C] hover:bg-[#e0591e] text-white py-2.5 rounded-xl text-xs font-bold transition-colors shadow-xs"
+                    className="w-full bg-[#FF6B2C] hover:bg-[#e0591e] text-white py-3 rounded-xl text-xs font-bold transition-all shadow-md shadow-[#FF6B2C]/20 flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    Select Selection
-                  </button>
+                    <span>Select Option {idx + 1} ({type === 'flight' ? item.airline : item.name})</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </motion.button>
 
                   <a 
                     href={linkInfo.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full bg-white hover:bg-[#F5F0E8] border border-[#E6DFD5] text-[#1E1C1A] py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+                    className="w-full bg-white hover:bg-[#F5F0E8] border border-[#E6DFD5] text-[#1E1C1A] py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                   >
-                    <span>Partner Link</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Book on {type === 'flight' ? (item.airline || 'Partner') : 'Booking Partner'}</span>
+                    <ExternalLink className="w-3.5 h-3.5 text-[#7A7268]" />
                   </a>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
       </motion.div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -1588,10 +1782,10 @@ export default function PriceTracker({
           })()}
         </div>
 
-        {/* Requirement 5: Authentic Aviation Floating Flight Comparison Dock (TripWise Theme) */}
+        {/* Requirement 5: Luxury Obsidian Flight Radar Capsule (Hidden when modal is open) */}
         {mounted && typeof document !== 'undefined' && createPortal(
           <AnimatePresence>
-            {(flightShortlist.length >= 2 || hotelShortlist.length >= 2) && (() => {
+            {!isCompareModalOpen && (flightShortlist.length >= 2 || hotelShortlist.length >= 2) && (() => {
               const isFlight = flightShortlist.length >= 2;
               const compareItems = isFlight
                 ? flights.filter(f => flightShortlist.includes(f.id))
@@ -1620,26 +1814,27 @@ export default function PriceTracker({
                             className="absolute inset-0.75 rounded-full border-[1.5px] border-dashed border-[#FF6B2C]/80 group-hover/dock:border-white/90 transition-colors duration-300"
                           />
                           
-                          {/* Animated Airplane (Orange -> Crisp White on Hover) */}
+                          {/* Animated Coral Center Airplane or Hotel */}
                           <motion.div
                             animate={{ 
                               y: [-0.6, 0.6, -0.6], 
-                              x: [-0.4, 0.4, -0.4],
-                              rotate: [0, 3, 0] 
+                              x: isFlight ? [-0.4, 0.4, -0.4] : [0, 0, 0],
+                              scale: isFlight ? [1, 1, 1] : [0.98, 1.04, 0.98],
+                              rotate: isFlight ? [0, 3, 0] : [0, 0, 0] 
                             }}
                             transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
                             className="relative z-10 text-[#FF6B2C] group-hover/dock:text-white flex items-center justify-center transition-colors duration-300"
                           >
                             {isFlight ? (
-                              <Plane className="w-3.5 h-3.5 fill-[#FF6B2C] group-hover/dock:fill-white text-[#FF6B2C] group-hover/dock:text-white transition-colors duration-300" />
+                              <Plane className="w-3.5 h-3.5 fill-current text-[#FF6B2C] group-hover/dock:text-white transition-colors duration-300" />
                             ) : (
-                              <Hotel className="w-3.5 h-3.5 fill-[#FF6B2C] group-hover/dock:fill-white text-[#FF6B2C] group-hover/dock:text-white transition-colors duration-300" />
+                              <Hotel className="w-4 h-4 text-[#FF6B2C] group-hover/dock:text-white stroke-[2.2] transition-colors duration-300" />
                             )}
                           </motion.div>
                         </div>
                       </div>
 
-                      {/* Flight Route Matchup Preview */}
+                      {/* Matchup Preview Chips */}
                       <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/10 shadow-inner">
                         {compareItems.slice(0, 2).map((item, idx) => (
                           <React.Fragment key={item.id}>
@@ -1651,10 +1846,12 @@ export default function PriceTracker({
                               </div>
                             )}
                             <div className="flex items-center gap-1.5 text-xs font-bold text-white">
-                              {isFlight && (
+                              {isFlight ? (
                                 <span className="text-[10px] font-mono text-[#A89F91]">
                                   {item.airline?.split(' ')[0] || 'FL'}
                                 </span>
+                              ) : (
+                                <Hotel className="w-3 h-3 text-[#A89F91] stroke-[2]" />
                               )}
                               <span className="truncate max-w-[95px] text-[#FAF6F0]">
                                 {isFlight ? (item.flightNumber || item.airline) : item.name}
@@ -1675,7 +1872,7 @@ export default function PriceTracker({
 
                     <div className="h-5 w-px bg-white/15" />
 
-                    {/* Flight Compare Action Button */}
+                    {/* Flight/Hotel Compare Action Button */}
                     <motion.button 
                       whileHover={{ scale: 1.04, y: -0.5 }}
                       whileTap={{ scale: 0.96 }}
@@ -1689,8 +1886,8 @@ export default function PriceTracker({
                         </>
                       ) : (
                         <>
-                          <Scale className="w-3.5 h-3.5 text-white group-hover/btn:rotate-12 transition-transform duration-300" />
-                          <span>Compare Stays</span>
+                          <Building2 className="w-3.5 h-3.5 text-white group-hover/btn:scale-110 transition-transform duration-300" />
+                          <span>Compare Hotel Stays</span>
                         </>
                       )}
                       <ArrowRight className="w-3.5 h-3.5 text-white/80 group-hover/btn:text-white group-hover/btn:translate-x-0.5 transition-all duration-300" />
