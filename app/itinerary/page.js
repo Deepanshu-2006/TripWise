@@ -531,6 +531,7 @@ import HiddenGemsWall from '../components/HiddenGemsWall';
 import FeaturesSelection from '../components/FeaturesSelection';
 import SavedPlacesModal from '../components/SavedPlacesModal';
 import NoDossierState from '../components/NoDossierState';
+import { supabase } from '../../lib/supabase';
 
 const getDayDateString = (startDateStr, dayIndex) => {
   if (!startDateStr) return null;
@@ -1097,19 +1098,38 @@ export default function ItineraryPage() {
 
   const [isHeroHovered, setIsHeroHovered] = useState(false);
 
-  // Fetch itinerary from URL param or localStorage
+  // Fetch itinerary from URL param, trip_id, or localStorage
   useEffect(() => {
-    const timer = setTimeout(() => {
+    let isMounted = true;
+    async function loadData() {
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
         const dossierParam = params.get('dossier');
+        const tripIdParam = params.get('trip_id');
         let loadedFromUrl = false;
 
-        if (dossierParam) {
+        if (tripIdParam) {
           try {
-            // URLSearchParams.get() automatically decodes the query parameter once.
-            // When single URL-encoding is used via searchParams.set('dossier', jsonStr), dossierParam is already raw JSON string (`{"days":...}`).
-            // If a legacy double-encoded link (`%2522...`) was opened, dossierParam will still contain `%22` or `%7B`, so we decode once more if needed.
+            const { data: tripRow, error } = await supabase
+              .from('trips')
+              .select('*')
+              .eq('id', tripIdParam)
+              .maybeSingle();
+
+            if (!error && tripRow && tripRow.itinerary_data && isMounted) {
+              setItinerary(tripRow.itinerary_data);
+              setActiveTripId(tripIdParam);
+              localStorage.setItem('tripwise_itinerary', JSON.stringify(tripRow.itinerary_data));
+              localStorage.setItem('tripwise_trip_id', tripIdParam);
+              loadedFromUrl = true;
+            }
+          } catch (e) {
+            console.warn("Failed to fetch trip by trip_id:", e);
+          }
+        }
+
+        if (!loadedFromUrl && dossierParam) {
+          try {
             let rawJsonStr = dossierParam;
             if (rawJsonStr.startsWith('%') || rawJsonStr.includes('%22') || rawJsonStr.includes('%7B')) {
               try {
@@ -1117,7 +1137,7 @@ export default function ItineraryPage() {
               } catch (e) { }
             }
             const parsed = JSON.parse(rawJsonStr);
-            if (parsed && parsed.days) {
+            if (parsed && parsed.days && isMounted) {
               setItinerary(parsed);
               localStorage.setItem('tripwise_itinerary', JSON.stringify(parsed));
               loadedFromUrl = true;
@@ -1129,7 +1149,7 @@ export default function ItineraryPage() {
 
         if (!loadedFromUrl) {
           const stored = localStorage.getItem('tripwise_itinerary');
-          if (stored) {
+          if (stored && isMounted) {
             try {
               const parsed = JSON.parse(stored);
               setItinerary(parsed);
@@ -1140,7 +1160,7 @@ export default function ItineraryPage() {
         }
 
         const tabParam = params.get('tab');
-        if (tabParam) {
+        if (tabParam && isMounted) {
           if (!isNaN(parseInt(tabParam))) {
             setActiveDay(parseInt(tabParam));
           } else {
@@ -1148,10 +1168,12 @@ export default function ItineraryPage() {
           }
         }
 
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
-    }, 0);
-    return () => clearTimeout(timer);
+    }
+
+    loadData();
+    return () => { isMounted = false; };
   }, []);
 
   const toggleExpandStop = (stopKey) => {
@@ -1433,30 +1455,45 @@ export default function ItineraryPage() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
-            className="flex items-center flex-wrap gap-2"
+            className="flex items-center flex-wrap gap-2.5"
           >
-            <span className="px-2.5 py-1 rounded bg-[#FF6B2C] text-white font-mono text-[9px] font-extrabold tracking-wider uppercase shadow-xs">
-              Curated Travel Guide
+            {/* Primary Brand Dossier Pill */}
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-[#FF6B2C] to-[#E0591F] text-white font-mono text-[10px] font-bold tracking-widest uppercase shadow-md shadow-[#FF6B2C]/25 border border-white/20">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
+              </span>
+              <span>Curated Travel Guide</span>
             </span>
+
+            {/* Demo Mode / Official Edition Pill */}
             {hasDemo && (
-              <span className="px-2.5 py-1 rounded bg-white/10 border border-white/15 text-white/90 font-mono text-[9px] font-extrabold tracking-wider uppercase backdrop-blur-xs shadow-xs">
-                Demo Mode
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 border border-white/20 text-white/90 font-mono text-[10px] font-bold tracking-widest uppercase backdrop-blur-md shadow-xs">
+                <span>Demo Mode</span>
               </span>
             )}
-            <span className="text-[10px] font-serif italic text-white/70 ml-2 self-center">
-              Refined by TripWise Private Concierge
+
+            {/* Concierge Badge Pill */}
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 text-white/90 font-serif italic text-[11px] backdrop-blur-md shadow-xs">
+              <Sparkles size={11} className="text-[#FF6B2C]" />
+              <span>Refined by TripWise Private Concierge</span>
             </span>
-            {/* Basecamp Badge Indicator */}
+
+            {/* Basecamp Badge Indicator / CTA Pill */}
             {itinerary?.hotelMode === 'basecamp' || (itinerary?.basecampHotel || itinerary?.preferences?.basecamp) ? (
-              <span className="px-2.5 py-1 rounded bg-emerald-500/25 border border-emerald-400/50 text-emerald-100 font-mono text-[9px] font-extrabold tracking-wider uppercase backdrop-blur-xs shadow-xs flex items-center gap-1">
-                📍 Basecamp: {itinerary?.basecampHotel || itinerary?.preferences?.basecamp}
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-100 font-mono text-[10px] font-bold tracking-wider uppercase backdrop-blur-md shadow-xs">
+                <span className="text-emerald-400">📍</span>
+                <span>Basecamp: {itinerary?.basecampHotel || itinerary?.preferences?.basecamp}</span>
               </span>
             ) : (
               <button
+                type="button"
                 onClick={() => setActiveDay('tracking')}
-                className="px-2.5 py-1 rounded bg-[#FF6B2C]/20 border border-[#FF6B2C]/40 hover:bg-[#FF6B2C]/30 text-[#FFDCD0] font-mono text-[9px] font-extrabold tracking-wider uppercase backdrop-blur-xs shadow-xs flex items-center gap-1 transition-colors cursor-pointer"
+                className="group/basecamp inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-[#FF6B2C]/25 border border-white/20 hover:border-[#FF6B2C]/50 text-white hover:text-[#FFDCD0] font-mono text-[10px] font-bold tracking-wider uppercase backdrop-blur-md shadow-xs transition-all duration-300 cursor-pointer"
               >
-                📍 Basecamp: Not yet selected (Click to choose & route) &rarr;
+                <span className="text-[#FF6B2C] group-hover/basecamp:scale-110 transition-transform">📍</span>
+                <span>Basecamp: Choose Hotel</span>
+                <ArrowRight size={11} className="text-white/60 group-hover/basecamp:text-white group-hover/basecamp:translate-x-0.5 transition-all" />
               </button>
             )}
           </motion.div>
@@ -2866,10 +2903,10 @@ export default function ItineraryPage() {
               ) : (
                 /* ACTIVE CHAPTER VIEW */
                 (() => {
-                  const dayIdx = activeDay - 1;
-                  const day = days[dayIdx] || days[0];
-                  const summary = getDaySummary(day, dayIdx, days);
-                  const activities = day.activities || [];
+                  const dayIdx = typeof activeDay === 'number' ? Math.max(0, activeDay - 1) : 0;
+                  const day = (days && days.length > 0) ? (days[dayIdx] || days[0] || { activities: [] }) : { activities: [] };
+                  const summary = day ? getDaySummary(day, dayIdx, days) : { stats: {} };
+                  const activities = day?.activities || [];
                   const dayDiningRollup = computeDiningRollup(activeDay);
 
                   return (
