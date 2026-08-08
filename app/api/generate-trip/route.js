@@ -260,7 +260,7 @@ CRITICAL RULES FOR SPEED & QUALITY:
 7. Fill out the \`preferenceReasoning\` field for every activity.
 8. Accurately tag EVERY activity as "Indoor" or "Outdoor" in the \`indoorOutdoor\` field.`;
 
-    const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
+    const modelsToTry = ['gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
     let response = null;
     let lastError = null;
 
@@ -273,7 +273,7 @@ CRITICAL RULES FOR SPEED & QUALITY:
             responseMimeType: 'application/json',
             responseSchema: itinerarySchema,
             temperature: 0.6,
-            maxOutputTokens: 3000,
+            maxOutputTokens: 8192,
           },
         });
         if (response && response.text) {
@@ -282,6 +282,9 @@ CRITICAL RULES FOR SPEED & QUALITY:
       } catch (err) {
         console.warn(`Model ${modelName} failed:`, err.message || err);
         lastError = err;
+        try {
+          require('fs').appendFileSync('error_log.txt', `\nModel ${modelName} failed: ${err.message || err}\n`);
+        } catch(e) {}
       }
     }
 
@@ -301,6 +304,9 @@ CRITICAL RULES FOR SPEED & QUALITY:
     });
   } catch (error) {
     console.error('Gemini API Error:', error);
+    try {
+      require('fs').appendFileSync('outer_error.txt', `\nAPI Error: ${error.message || error}\nStack: ${error.stack}\n`);
+    } catch(e) {}
     let body = {};
     try { body = await req.json(); } catch (e) {}
     const mockPayload = getDynamicMockItinerary(body.prompt, body.destination);

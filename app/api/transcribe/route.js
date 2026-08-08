@@ -27,7 +27,7 @@ export async function POST(request) {
     let response;
     try {
       response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.5-flash',
         config: {
           systemInstruction: 'You are an accurate automatic speech recognition (ASR) engine. Transcribe the audio verbatim. Output ONLY the exact transcribed words spoken in the audio. Do not repeat instructions, do not add commentary, quotes, or markdown.'
         },
@@ -49,9 +49,9 @@ export async function POST(request) {
         ]
       });
     } catch (modelErr) {
-      console.warn('[Transcribe API] Fallback to gemini-1.5-flash:', modelErr.message);
+      console.warn('[Transcribe API] Fallback to gemini-3.5-flash:', modelErr.message);
       response = await ai.models.generateContent({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-3.5-flash',
         contents: [
           {
             role: 'user',

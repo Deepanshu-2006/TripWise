@@ -67,15 +67,32 @@ Return a valid JSON object matching this schema:
   "explanation": "A concise 1-sentence summary of the exact change made (e.g. Added a 3-course Michelin-star dinner at Pergola after Stop #3)."
 }`;
 
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: systemInstruction,
-          config: {
-            responseMimeType: 'application/json',
-            temperature: 0.7,
-          }
-        });
+        const modelsToTry = ['gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
+        let response = null;
+        let lastError = null;
 
+        for (const modelName of modelsToTry) {
+          try {
+            response = await ai.models.generateContent({
+              model: modelName,
+              contents: systemInstruction,
+              config: {
+                responseMimeType: 'application/json',
+                temperature: 0.7,
+              }
+            });
+            if (response && response.text) break;
+          } catch (err) {
+            console.warn(`Model ${modelName} failed in refine-day:`, err.message || err);
+            lastError = err;
+          }
+        }
+
+        if (!response || !response.text) {
+          console.error("All AI models failed in refine-day.", lastError);
+          return NextResponse.json({ success: false, error: "Failed to generate dynamic refinement. Rate limit or quota issue." }, { status: 500 });
+        }
+        
         const text = response.text || '';
         const parsed = JSON.parse(text);
         if (parsed && parsed.activities && Array.isArray(parsed.activities)) {

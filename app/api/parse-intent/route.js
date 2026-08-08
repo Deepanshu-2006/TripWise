@@ -171,7 +171,7 @@ Extract the following fields from the user input:
 Analyze the following user input and return the JSON object:
 ${prompt}`;
 
-    const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
+    const modelsToTry = ['gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
     let response = null;
 
     for (const modelName of modelsToTry) {
