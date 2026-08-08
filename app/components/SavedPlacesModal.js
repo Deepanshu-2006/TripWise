@@ -63,13 +63,74 @@ export default function SavedPlacesModal({ isOpen, onClose, savedStops, itinerar
         {/* Scrollable Content */}
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-6 space-y-4">
           {savedActivities.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <Bookmark className="w-12 h-12 text-[#E6DFD5] mb-4" />
-              <h4 className="text-lg font-serif font-black text-[#1E1C1A] mb-2">No bookmarks yet</h4>
-              <p className="text-sm font-sans text-[#7A7268] max-w-[280px]">
-                Click the Bookmark button on any activity in your itinerary to save it here for quick access.
-              </p>
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="flex flex-col items-center justify-center py-20 text-center relative overflow-hidden rounded-3xl"
+            >
+              {/* Decorative background elements */}
+              <div className="absolute inset-0 bg-gradient-to-b from-[#FAF6F0] to-[#FFF0E8]/30 z-0" />
+              
+              <div className="relative z-10 mb-8">
+                <motion.div 
+                  animate={{ 
+                    scale: [1, 1.15, 1],
+                    opacity: [0.2, 0.4, 0.2],
+                  }}
+                  transition={{ 
+                    duration: 4, 
+                    repeat: Infinity,
+                    ease: "easeInOut" 
+                  }}
+                  className="absolute inset-0 bg-[#FF6B2C] rounded-full blur-2xl"
+                />
+                
+                <motion.div
+                  animate={{ 
+                    y: [0, -12, 0],
+                    rotate: [0, -5, 5, 0]
+                  }}
+                  transition={{ 
+                    y: { duration: 3, repeat: Infinity, ease: "easeInOut" },
+                    rotate: { duration: 6, repeat: Infinity, ease: "easeInOut" }
+                  }}
+                  className="relative bg-white w-24 h-24 rounded-3xl shadow-lg shadow-[#FF6B2C]/10 border border-[#FFF0E8] flex items-center justify-center"
+                >
+                  <Bookmark className="w-10 h-10 text-[#FF6B2C] fill-[#FF6B2C]/10" />
+                  
+                  {/* Floating sparkles */}
+                  <motion.div
+                    animate={{ opacity: [0, 1, 0], scale: [0, 1, 0], y: [-10, -20], x: [10, 20] }}
+                    transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+                    className="absolute top-2 right-2 w-2 h-2 bg-[#FFB088] rounded-full"
+                  />
+                  <motion.div
+                    animate={{ opacity: [0, 1, 0], scale: [0, 1, 0], y: [10, 20], x: [-10, -20] }}
+                    transition={{ duration: 2.5, repeat: Infinity, delay: 1 }}
+                    className="absolute bottom-2 left-2 w-1.5 h-1.5 bg-[#FF6B2C] rounded-full"
+                  />
+                </motion.div>
+              </div>
+
+              <motion.h4 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.4 }}
+                className="text-2xl font-serif font-black text-[#1E1C1A] mb-3 relative z-10"
+              >
+                No bookmarks yet
+              </motion.h4>
+              
+              <motion.p 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.4 }}
+                className="text-sm font-sans text-[#7A7268] max-w-[280px] leading-relaxed relative z-10"
+              >
+                Click the <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-[#F5F0E8] mx-1"><Bookmark className="w-3 h-3 text-[#7A7268]" /></span> button on any activity to save it here for quick access.
+              </motion.p>
+            </motion.div>
           ) : (
             savedActivities.map(act => (
               <div key={act.key} className="bg-white rounded-2xl p-4 border border-[#E6DFD5] shadow-sm flex flex-col sm:flex-row gap-4 group hover:border-[#FF6B2C]/40 transition-colors">
