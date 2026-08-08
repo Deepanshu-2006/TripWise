@@ -585,6 +585,8 @@ export default function PriceTracker({
   const [config, setConfig] = useState({ trackFlights: true, trackHotels: true, origin: 'JFK' });
   const [airportSearchInput, setAirportSearchInput] = useState('JFK');
   const [isAirportDropdownOpen, setIsAirportDropdownOpen] = useState(false);
+  const [airportActiveIndex, setAirportActiveIndex] = useState(-1);
+  const [airportRegionFilter, setAirportRegionFilter] = useState('all'); // 'all', 'India', 'Americas', 'Europe', 'Middle East', 'Asia'
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -593,22 +595,54 @@ export default function PriceTracker({
     }
   }, [config.origin]);
 
+  const currentAirportMatches = lookupAirports(airportSearchInput, 8, airportRegionFilter);
+
   const handleAirportInputChange = (val) => {
     setAirportSearchInput(val);
     setIsAirportDropdownOpen(true);
+    setAirportActiveIndex(-1);
     
-    const resolved = getAirportDetails(val);
-    if (resolved) {
-      setConfig(prev => ({ ...prev, origin: resolved.code }));
-    } else if (val.trim().length === 3) {
-      setConfig(prev => ({ ...prev, origin: val.trim().toUpperCase() }));
+    // Only auto-resolve if the user types an exact 3-letter valid IATA code or exact alias
+    const exact = getAirportDetails(val);
+    if (exact && val.trim().length >= 3 && val.trim().toUpperCase() === exact.code) {
+      setConfig(prev => ({ ...prev, origin: exact.code }));
     }
   };
 
   const handleSelectAirport = (airport) => {
-    setConfig(prev => ({ ...prev, origin: airport.code }));
-    setAirportSearchInput(airport.code);
+    const code = typeof airport === 'string' ? airport.toUpperCase() : airport.code;
+    setConfig(prev => ({ ...prev, origin: code }));
+    setAirportSearchInput(code);
     setIsAirportDropdownOpen(false);
+    setAirportActiveIndex(-1);
+  };
+
+  const handleAirportKeyDown = (e) => {
+    if (!isAirportDropdownOpen) {
+      if (e.key === 'ArrowDown') {
+        setIsAirportDropdownOpen(true);
+      }
+      return;
+    }
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setAirportActiveIndex(prev => (prev + 1) % (currentAirportMatches.length || 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setAirportActiveIndex(prev => (prev - 1 + currentAirportMatches.length) % (currentAirportMatches.length || 1));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (airportActiveIndex >= 0 && currentAirportMatches[airportActiveIndex]) {
+        handleSelectAirport(currentAirportMatches[airportActiveIndex]);
+      } else if (airportSearchInput.trim().length >= 2) {
+        const resolved = getAirportDetails(airportSearchInput) || { code: airportSearchInput.trim().toUpperCase() };
+        handleSelectAirport(resolved);
+      }
+    } else if (e.key === 'Escape') {
+      setIsAirportDropdownOpen(false);
+      setAirportActiveIndex(-1);
+    }
   };
 
   // Search Results & Selection State
@@ -2231,27 +2265,24 @@ export default function PriceTracker({
 
       {/* ── 5. Main Spacious 2-Column Control Suite ── */}
       <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-5 text-left mb-8 bg-[#FAF6F0] border border-[#E6DFD5] rounded-2xl p-6 shadow-2xs">
-        {/* Left Column: Universal Airport Selector & Quick Pick */}
+        {/* Left Column: Pure Typographic Luxury Departure Hub */}
         <div className="flex flex-col justify-between space-y-4">
           <div className="relative">
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-[11px] font-mono font-bold text-[#5F5E5A] uppercase tracking-wider flex items-center gap-1.5">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-mono font-bold text-[#5F5E5A] uppercase tracking-wider flex items-center gap-1.5">
                 <Plane className="w-3.5 h-3.5 text-[#FF6B2C]" />
-                <span>Departure Hub (Universal)</span>
+                <span>Departure Hub</span>
               </label>
               
-              {/* Dynamic Country & City Origin Indicator */}
+              {/* Confirmed Selected Origin City & Country */}
               {(() => {
-                const activeAirport = getAirportDetails(config.origin || airportSearchInput);
+                const confirmedAirport = getAirportDetails(config.origin);
                 return (
-                  <span className="text-[10px] font-sans font-bold text-[#1E1C1A] bg-white px-2.5 py-0.5 rounded-md border border-[#E6DFD5] shadow-2xs flex items-center gap-1.5 transition-all">
-                    {activeAirport ? (
-                      <>
-                        <span className="text-sm leading-none">{activeAirport.flag}</span>
-                        <span className="font-semibold">{activeAirport.city}, {activeAirport.country}</span>
-                      </>
+                  <span className="text-[11px] font-sans font-medium text-[#7A7268] bg-white px-2.5 py-0.5 rounded-md border border-[#E6DFD5] shadow-2xs">
+                    {confirmedAirport ? (
+                      <span>{confirmedAirport.city}, {confirmedAirport.country}</span>
                     ) : (
-                      <span>📍 Global Route ({config.origin || 'JFK'})</span>
+                      <span>Route: {config.origin || 'JFK'}</span>
                     )}
                   </span>
                 );
@@ -2259,135 +2290,153 @@ export default function PriceTracker({
             </div>
 
             <div className="relative group">
-              <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8C827A] group-focus-within:text-[#FF6B2C] group-focus-within:scale-110 transition-all z-10 pointer-events-none" />
+              <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8C827A] group-focus-within:text-[#FF6B2C] transition-colors z-10 pointer-events-none" />
               <input 
                 type="text" 
                 value={airportSearchInput}
                 onFocus={() => setIsAirportDropdownOpen(true)}
-                onBlur={() => setTimeout(() => setIsAirportDropdownOpen(false), 220)}
+                onBlur={() => setTimeout(() => setIsAirportDropdownOpen(false), 240)}
+                onKeyDown={handleAirportKeyDown}
                 onChange={(e) => handleAirportInputChange(e.target.value)}
-                className="w-full pl-10 pr-24 py-3 bg-white border border-[#E6DFD5] rounded-xl text-base font-mono font-black text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C] focus:ring-2 focus:ring-[#FF6B2C]/15 transition-all uppercase tracking-wider placeholder:text-[#A89F91] shadow-inner"
-                placeholder="Search IGI, DEL, LHR, JFK, Dubai..."
+                className="w-full pl-10 pr-20 py-3 bg-white border border-[#E6DFD5] rounded-xl text-sm font-sans font-semibold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C] focus:ring-2 focus:ring-[#FF6B2C]/15 transition-all placeholder:text-[#A89F91] placeholder:font-normal placeholder:text-xs sm:placeholder:text-sm shadow-2xs"
+                placeholder="Search city or airport code (e.g. Delhi, London, JFK)..."
               />
-              {(() => {
-                const activeAirport = getAirportDetails(config.origin || airportSearchInput);
-                if (!activeAirport) return null;
-                return (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-[#FAF6F0] px-2 py-0.5 rounded-md border border-[#E6DFD5] text-[10px] font-sans font-bold text-[#7A7268] pointer-events-none">
-                    <span>{activeAirport.flag}</span>
-                    <span className="font-mono text-[#1E1C1A]">{activeAirport.code}</span>
+              
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 z-10">
+                {airportSearchInput && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setAirportSearchInput('');
+                      setIsAirportDropdownOpen(true);
+                    }}
+                    className="p-1 rounded-full text-[#8C827A] hover:text-[#1E1C1A] hover:bg-[#FAF6F0] transition-colors cursor-pointer"
+                    title="Clear"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {config.origin && (
+                  <div className="bg-[#FAF6F0] px-2 py-0.5 rounded border border-[#E6DFD5] text-[11px] font-mono font-bold text-[#FF6B2C] pointer-events-none shadow-2xs">
+                    {config.origin}
                   </div>
-                );
-              })()}
+                )}
+              </div>
 
-              {/* Interactive Universal Autocomplete Dropdown */}
+              {/* Pure Minimalist Search Popover */}
               <AnimatePresence>
                 {isAirportDropdownOpen && (
                   <motion.div 
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -4 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-[#E6DFD5] rounded-2xl shadow-xl z-50 overflow-hidden p-1.5 max-h-60 overflow-y-auto"
+                    initial={{ opacity: 0, y: -4, scale: 0.99 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -4, scale: 0.99 }}
+                    transition={{ duration: 0.12 }}
+                    className="absolute top-full left-0 w-full mt-1.5 bg-white/98 backdrop-blur-2xl border border-[#E6DFD5] rounded-xl shadow-xl z-[100] overflow-hidden p-1 max-h-56 overflow-y-auto"
                   >
-                    <div className="px-3 py-1.5 text-[9px] font-mono font-bold text-[#8C827A] uppercase tracking-wider border-b border-[#E6DFD5]/60 mb-1 flex items-center justify-between">
-                      <span>Recognized Global Airports</span>
-                      <span>{lookupAirports(airportSearchInput, 8).length} Hubs</span>
-                    </div>
-                    {lookupAirports(airportSearchInput, 8).map((a) => {
-                      const isCurrent = config.origin === a.code;
-                      return (
+                    <div className="space-y-0.5">
+                      {currentAirportMatches.length > 0 ? (
+                        currentAirportMatches.slice(0, 5).map((a, idx) => {
+                          const isCurrent = config.origin === a.code;
+                          const isKeyboardActive = airportActiveIndex === idx;
+                          return (
+                            <button
+                              key={a.code}
+                              type="button"
+                              onMouseEnter={() => setAirportActiveIndex(idx)}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleSelectAirport(a);
+                              }}
+                              className={`w-full text-left py-2 px-3 rounded-lg text-xs flex items-center justify-between gap-3 transition-all cursor-pointer ${
+                                isCurrent 
+                                  ? 'bg-[#FF6B2C] text-white shadow-2xs' 
+                                  : isKeyboardActive
+                                  ? 'bg-[#FFF2EB] text-[#1E1C1A]'
+                                  : 'hover:bg-[#FAF6F0] text-[#1E1C1A]'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3 min-w-0 flex-1">
+                                <span className={`font-mono font-black text-xs shrink-0 ${isCurrent ? 'text-white' : 'text-[#FF6B2C]'}`}>
+                                  {a.code}
+                                </span>
+                                <div className="min-w-0 flex-1 truncate">
+                                  <span className={`font-semibold ${isCurrent ? 'text-white' : 'text-[#1E1C1A]'}`}>
+                                    {a.city}
+                                  </span>
+                                  <span className={`ml-1.5 text-[11px] ${isCurrent ? 'text-white/80' : 'text-[#8C827A]'}`}>
+                                    &middot; {a.name}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="shrink-0 flex items-center">
+                                {isCurrent ? (
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                                ) : (
+                                  <span className={`text-[10px] font-mono uppercase ${isCurrent ? 'text-white/80' : 'text-[#8C827A]'}`}>
+                                    {a.country}
+                                  </span>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })
+                      ) : (
                         <button
-                          key={a.code}
                           type="button"
                           onMouseDown={(e) => {
                             e.preventDefault();
-                            handleSelectAirport(a);
+                            handleSelectAirport(airportSearchInput.trim().toUpperCase());
                           }}
-                          className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors cursor-pointer ${
-                            isCurrent 
-                              ? 'bg-[#FF6B2C] text-white' 
-                              : 'hover:bg-[#FAF6F0] text-[#1E1C1A]'
-                          }`}
+                          className="w-full text-left p-2.5 rounded-lg text-xs bg-[#FAF6F0] hover:bg-[#F5EDE1] text-[#1E1C1A] flex items-center justify-between cursor-pointer border border-[#E6DFD5]"
                         >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <span className="text-base leading-none shrink-0">{a.flag}</span>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-1.5">
-                                <span className={`font-mono font-black text-xs ${isCurrent ? 'text-white' : 'text-[#FF6B2C]'}`}>
-                                  {a.code}
-                                </span>
-                                <span className="font-bold truncate">{a.name}</span>
-                              </div>
-                              <div className={`text-[10px] truncate ${isCurrent ? 'text-white/85' : 'text-[#7A7268]'}`}>
-                                {a.city}, {a.country} {a.aliases?.length ? `(${a.aliases[0].toUpperCase()})` : ''}
-                              </div>
-                            </div>
-                          </div>
-                          <span className={`text-[10px] font-mono uppercase px-1.5 py-0.5 rounded ml-2 shrink-0 ${
-                            isCurrent ? 'bg-white/25 text-white font-bold' : 'bg-[#FAF6F0] text-[#7A7268] border border-[#E6DFD5]'
-                          }`}>
-                            {a.city}
+                          <span className="font-medium text-xs">
+                            Select route code <strong className="font-mono text-[#FF6B2C]">"{airportSearchInput.toUpperCase()}"</strong>
+                          </span>
+                          <span className="text-xs font-bold text-[#FF6B2C] flex items-center gap-1">
+                            Set &rarr;
                           </span>
                         </button>
-                      );
-                    })}
+                      )}
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
           </div>
 
-          {/* Quick Airport Selector Chips in a Clean Single-Row Grid */}
-          <div>
-            <span className="block text-[10px] font-mono font-bold text-[#8C827A] mb-1.5 uppercase tracking-wider">
-              POPULAR GLOBAL HUBS:
+          {/* Clean Monochrome Hub Selector */}
+          <div className="flex items-center justify-between gap-1.5 flex-wrap">
+            <span className="text-[10px] font-mono font-bold text-[#8C827A] uppercase tracking-wider shrink-0">
+              POPULAR:
             </span>
-            <div className="grid grid-cols-6 gap-1.5">
-              {[
-                { code: 'DEL', city: 'DEL', flag: '🇮🇳' },
-                { code: 'JFK', city: 'NYC', flag: '🇺🇸' },
-                { code: 'LHR', city: 'LON', flag: '🇬🇧' },
-                { code: 'DXB', city: 'DXB', flag: '🇦🇪' },
-                { code: 'SIN', city: 'SIN', flag: '🇸🇬' },
-                { code: 'HND', city: 'TYO', flag: '🇯🇵' }
-              ].map((hub) => (
-                <motion.button
-                  key={hub.code}
+            <div className="flex items-center gap-1.5 flex-1 justify-end flex-wrap">
+              {['DEL', 'JFK', 'LHR', 'DXB', 'SIN', 'HND'].map((code) => (
+                <button
+                  key={code}
                   type="button"
-                  whileHover={{ scale: 1.06 }}
-                  whileTap={{ scale: 0.94 }}
-                  onClick={() => handleSelectAirport({ code: hub.code })}
-                  className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-lg border font-mono transition-all cursor-pointer ${
-                    config.origin === hub.code 
+                  onClick={() => handleSelectAirport({ code })}
+                  className={`py-1 px-2.5 rounded-lg border text-xs font-mono font-bold transition-all cursor-pointer ${
+                    config.origin === code 
                       ? 'bg-[#FF6B2C] border-[#FF6B2C] text-white shadow-2xs' 
-                      : 'bg-white border-[#E6DFD5] text-[#5F5E5A] hover:border-[#FF6B2C]/40 hover:bg-[#FFF9F5]'
+                      : 'bg-white border-[#E6DFD5] text-[#5F5E5A] hover:border-[#FF6B2C]/50 hover:bg-[#FFF9F5]'
                   }`}
                 >
-                  <span className="text-[10px] leading-none mb-0.5">{hub.flag}</span>
-                  <span className="text-[11px] font-black">{hub.code}</span>
-                  <span className={`text-[8px] font-sans font-medium opacity-75 ${config.origin === hub.code ? 'text-white' : 'text-[#8C827A]'}`}>
-                    {hub.city}
-                  </span>
-                </motion.button>
+                  {code}
+                </button>
               ))}
             </div>
           </div>
 
-          {/* Route Intelligence Benchmark Card */}
-          <div className="p-3 bg-white/90 border border-[#E6DFD5] rounded-xl flex items-center justify-between shadow-2xs">
-            <div className="flex flex-col text-left">
-              <span className="text-[9px] font-mono text-[#8C827A] uppercase tracking-wider">Estimated Nonstop Rate</span>
-              <span className="text-xs font-mono font-black text-[#1E1C1A]">$480 – $690 avg</span>
-            </div>
-            <div className="h-6 w-[1px] bg-[#E6DFD5]" />
-            <div className="flex flex-col text-right">
-              <span className="text-[9px] font-mono text-[#8C827A] uppercase tracking-wider">Historical 90-Day Low</span>
-              <span className="text-xs font-mono font-black text-emerald-600 flex items-center gap-1 justify-end">
-                <TrendingDown className="w-3.5 h-3.5" />
-                <span>$410</span>
-              </span>
-            </div>
+          {/* Minimalist Route Benchmark Info */}
+          <div className="py-2 px-3 bg-white/80 border border-[#E6DFD5] rounded-xl flex items-center justify-between text-xs">
+            <span className="text-[11px] text-[#7A7268]">
+              Typical fare: <strong className="font-mono font-bold text-[#1E1C1A]">$480–$690</strong>
+            </span>
+            <span className="text-[11px] text-emerald-700 font-medium flex items-center gap-1">
+              <TrendingDown className="w-3.5 h-3.5" /> Low: <strong className="font-mono font-bold">$410</strong>
+            </span>
           </div>
         </div>
 
@@ -2479,7 +2528,7 @@ export default function PriceTracker({
       )}
 
       {/* ── 6. Bespoke Tactile Obsidian Action Button with Dynamic Hover ── */}
-      <div className="relative z-20 w-full max-w-md mx-auto">
+      <div className="relative z-10 w-full max-w-md mx-auto mt-7">
         <motion.button 
           type="button"
           whileHover={{ scale: 1.02, y: -2 }}
