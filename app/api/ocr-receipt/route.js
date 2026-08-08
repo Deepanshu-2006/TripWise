@@ -25,7 +25,7 @@ export async function POST(request) {
     const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.5-flash',
       contents: [
         {
           role: 'user',
@@ -60,7 +60,14 @@ Return JSON only in this exact schema:
       }
     });
 
-    const text = response.text;
+    let text = response.text;
+    if (typeof text === 'function') text = text(); // handle old and new SDKs just in case
+    
+    // Strip markdown formatting if the model unexpectedly wraps the JSON
+    if (text.startsWith('```')) {
+      text = text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
+    }
+    
     const parsed = JSON.parse(text);
 
     return NextResponse.json({

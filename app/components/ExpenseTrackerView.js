@@ -23,15 +23,20 @@ async function extractReceiptData(imageDataUrl) {
     });
     if (res.ok) {
       const data = await res.json();
-      if (data && (data.merchant || data.amount)) {
+      if (data && data.success && data.data) {
+        const payload = data.data;
         return {
-          merchant: data.merchant || 'Scanned Receipt',
-          amount: data.amount || '41.29',
-          currency: data.currency || 'EUR',
-          category: data.category || 'Food & Dining',
-          isConfident: true
+          merchant: payload.merchant || 'Scanned Receipt',
+          amount: payload.amount || '41.29',
+          currency: payload.currency || 'EUR',
+          category: payload.category || 'Food & Dining',
+          isConfident: payload.isConfident || true
         };
+      } else {
+        console.error("OCR API returned success: false", JSON.stringify(data));
       }
+    } else {
+      console.error("OCR API HTTP error:", res.status, res.statusText);
     }
   } catch (e) {
     console.warn("OCR API call failed, using client fallback:", e);
