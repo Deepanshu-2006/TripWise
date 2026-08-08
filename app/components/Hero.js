@@ -295,7 +295,7 @@ const Hero = () => {
 
         // Cinematic Circle Wipe Transition
         tl.to(wipeOverlayRef.current, {
-            scale: 150, // Massive scale to cover any screen
+            scale: 250, // Massive scale to cover any screen
             opacity: 1,
             duration: 1.0,
             ease: "power3.inOut"
@@ -303,7 +303,7 @@ const Hero = () => {
 
         // Wait for the transition to finish
         setTimeout(() => {
-            window.location.href = isSignedIn ? '/ai-planner' : '/sign-in';
+            window.location.href = isSignedIn ? '/ai-planner/new' : '/sign-in';
         }, 1300);
     };
 

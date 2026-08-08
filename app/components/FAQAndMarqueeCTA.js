@@ -93,7 +93,7 @@ export default function FAQAndMarqueeCTA() {
 
     // Wait for the transition to finish
     setTimeout(() => {
-        window.location.href = isSignedIn ? '/ai-planner' : '/sign-in';
+        window.location.href = isSignedIn ? '/ai-planner/new' : '/sign-in';
     }, 1300);
   };
 

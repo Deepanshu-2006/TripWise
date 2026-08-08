@@ -1481,20 +1481,47 @@ export default function ItineraryPage() {
 
             {/* Basecamp Badge Indicator / CTA Pill */}
             {itinerary?.hotelMode === 'basecamp' || (itinerary?.basecampHotel || itinerary?.preferences?.basecamp) ? (
-              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-100 font-mono text-[10px] font-bold tracking-wider uppercase backdrop-blur-md shadow-xs">
-                <span className="text-emerald-400">📍</span>
-                <span>Basecamp: {itinerary?.basecampHotel || itinerary?.preferences?.basecamp}</span>
-              </span>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="relative inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-400/30 text-emerald-100 font-mono text-[10px] font-bold tracking-wider uppercase backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/0 via-emerald-400/10 to-emerald-400/0 opacity-50 rounded-full" />
+                <span className="relative z-10 text-emerald-400 animate-pulse">🏡</span>
+                <span className="relative z-10 text-emerald-50">Basecamp: {itinerary?.basecampHotel || itinerary?.preferences?.basecamp}</span>
+              </motion.div>
             ) : (
-              <button
+              <motion.button
                 type="button"
                 onClick={() => setActiveDay('tracking')}
-                className="group/basecamp inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-[#FF6B2C]/25 border border-white/20 hover:border-[#FF6B2C]/50 text-white hover:text-[#FFDCD0] font-mono text-[10px] font-bold tracking-wider uppercase backdrop-blur-md shadow-xs transition-all duration-300 cursor-pointer"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="group/basecamp relative inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/20 hover:border-white/40 text-white/90 hover:text-white font-mono text-[10px] font-bold tracking-wider uppercase backdrop-blur-xl shadow-lg transition-all duration-300 cursor-pointer overflow-visible"
               >
-                <span className="text-[#FF6B2C] group-hover/basecamp:scale-110 transition-transform">📍</span>
-                <span>Basecamp: Choose Hotel</span>
-                <ArrowRight size={11} className="text-white/60 group-hover/basecamp:text-white group-hover/basecamp:translate-x-0.5 transition-all" />
-              </button>
+                {/* Animated gradient border glow effect on hover */}
+                <div className="absolute inset-[-1px] rounded-full opacity-0 group-hover/basecamp:opacity-100 transition-opacity duration-500 z-0">
+                   <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#FF6B2C] via-orange-400 to-[#FF6B2C] opacity-40 blur-[4px] animate-pulse" />
+                </div>
+                
+                {/* Inner glass layer */}
+                <div className="absolute inset-0 rounded-full bg-black/20 group-hover/basecamp:bg-black/40 transition-colors duration-300 z-0 border border-white/20 group-hover/basecamp:border-white/40" />
+                
+                <motion.div 
+                  className="relative z-10 flex items-center justify-center text-[#FF6B2C] drop-shadow-[0_0_8px_rgba(255,107,44,0.6)] text-xs"
+                  animate={{ y: [0, -2, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  📍
+                </motion.div>
+                
+                <span className="relative z-10 drop-shadow-sm tracking-widest">BASECAMP: CHOOSE HOTEL</span>
+                
+                <ArrowRight 
+                  size={12} 
+                  strokeWidth={2.5}
+                  className="relative z-10 text-white/40 group-hover/basecamp:text-[#FF6B2C] group-hover/basecamp:translate-x-1 transition-all duration-300" 
+                />
+              </motion.button>
             )}
           </motion.div>
 

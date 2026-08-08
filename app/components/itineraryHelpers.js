@@ -28,25 +28,16 @@ export function getActivityThumbnail(act, idx = 0) {
   if (act?.thumbnail || act?.imageUrl || act?.image) {
     return act.thumbnail || act.imageUrl || act.image;
   }
-  const text = ((act?.title || '') + ' ' + (act?.category || '') + ' ' + (act?.description || '')).toLowerCase();
-  if (text.includes('colosseum') || text.includes('arena') || text.includes('amphitheater')) return ACTIVITY_THUMBNAILS.colosseum;
-  if (text.includes('pantheon') || text.includes('temple')) return ACTIVITY_THUMBNAILS.pantheon;
-  if (text.includes('vatican') || text.includes('peters') || text.includes('sistine')) return ACTIVITY_THUMBNAILS.vatican;
-  if (text.includes('trevi') || text.includes('fountain')) return ACTIVITY_THUMBNAILS.trevi;
-  if (text.includes('forum') || text.includes('palatine')) return ACTIVITY_THUMBNAILS.forum;
-  if (text.includes('spanish steps') || text.includes('piazza di spagna')) return ACTIVITY_THUMBNAILS.spanish;
-  if (text.includes('trastevere') || text.includes('cobblestone') || text.includes('alley')) return ACTIVITY_THUMBNAILS.trastevere;
-  if (text.includes('pasta') || text.includes('trattoria') || text.includes('dinner') || text.includes('lunch') || text.includes('restaurant') || text.includes('food')) return ACTIVITY_THUMBNAILS.pasta;
-  if (text.includes('pizza') || text.includes('pizzeria')) return ACTIVITY_THUMBNAILS.pizza;
-  if (text.includes('cafe') || text.includes('café') || text.includes('coffee') || text.includes('espresso') || text.includes('breakfast')) return ACTIVITY_THUMBNAILS.cafe;
-  if (text.includes('gelato') || text.includes('ice cream') || text.includes('dessert')) return ACTIVITY_THUMBNAILS.gelato;
-  if (text.includes('sunset') || text.includes('viewpoint') || text.includes('terrace') || text.includes('rooftop') || text.includes('gianicolo')) return ACTIVITY_THUMBNAILS.sunset;
-  if (text.includes('hotel') || text.includes('check-in') || text.includes('resort') || text.includes('stay')) return ACTIVITY_THUMBNAILS.hotel;
-  if (text.includes('museum') || text.includes('gallery') || text.includes('art') || text.includes('sculpture')) return ACTIVITY_THUMBNAILS.museum;
-  if (text.includes('shopping') || text.includes('market') || text.includes('boutique') || text.includes('fashion')) return ACTIVITY_THUMBNAILS.shopping;
-
-  const defaults = [ACTIVITY_THUMBNAILS.default1, ACTIVITY_THUMBNAILS.default2, ACTIVITY_THUMBNAILS.default3, ACTIVITY_THUMBNAILS.default4];
-  return defaults[idx % defaults.length];
+  
+  // Use dynamic image search route instead of hardcoded fallbacks
+  const title = act?.title || '';
+  let category = (act?.category || '').replace(/foodie/i, 'Restaurant');
+  
+  // To avoid Unsplash returning literal dogs for restaurant names like "Frenchie",
+  // we add some contextual keywords for better photography results.
+  const query = encodeURIComponent(`${title} ${category} landmark interior`.trim() || 'beautiful travel destination');
+  
+  return `/api/image?q=${query}`;
 }
 
 // 2. Get Transport Between Stops (Point 1 & Point 10)
