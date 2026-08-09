@@ -13,7 +13,7 @@ import LiveAssistantNudge from '../components/LiveAssistantNudge';
 import WeatherNudge from '../components/WeatherNudge';
 import LiveAssistantProposalModal from '../components/LiveAssistantProposalModal';
 import { usePreferenceEngine } from '../hooks/usePreferenceEngine';
-import { getTripExpenses, convertCurrency } from '../../lib/expenseApi';
+import { getTripExpenses, convertCurrency, getUserDisplayCurrency, formatCurrency } from '../../lib/expenseApi';
 import Link from 'next/link';
 import {
   Download,
@@ -547,8 +547,10 @@ export default function ItineraryPage() {
   const [loading, setLoading] = useState(true);
   const [activeTripId, setActiveTripId] = useState(null);
   const [itinerary, setItinerary] = useState(null);
+  const [userCurrency, setUserCurrency] = useState('USD');
 
   useEffect(() => {
+    setUserCurrency(getUserDisplayCurrency());
     if (typeof window !== 'undefined') {
       const storedId = localStorage.getItem('tripwise_trip_id');
       if (storedId) setActiveTripId(storedId);
@@ -1572,11 +1574,12 @@ export default function ItineraryPage() {
               <span className="text-2xl sm:text-3xl font-serif font-black text-[#FF6B2C] mt-1.5">
                 {(() => {
                   if (typeof window === 'undefined') return itinerary.estimatedCost || '$1,450';
+                  // const userCurrency = getUserDisplayCurrency(); handled by state
                   const currentExp = getTripExpenses(itinerary?.id || activeTripId || 'default_trip');
-                  if (currentExp.length === 0) return itinerary.estimatedCost || '$1,450';
-                  const spentUSD = currentExp.reduce((acc, e) => acc + convertCurrency(e.amount, e.currency, 'USD'), 0);
-                  const budgetNum = parseFloat((itinerary.estimatedCost || '$1,450').replace(/[^0-9.]/g, '')) || 1450;
-                  return `$${Math.round(spentUSD)} of $${budgetNum.toLocaleString()}`;
+                  if (currentExp.length === 0) return formatCurrency(convertCurrency(parseFloat(itinerary.estimatedCost?.replace(/[^0-9.]/g, '')) || 1450, 'USD', userCurrency), userCurrency);
+                  const spentTotal = currentExp.reduce((acc, e) => acc + convertCurrency(e.amount, e.currency, userCurrency), 0);
+                  const budgetNum = parseFloat((itinerary.estimatedCost || '1450').replace(/[^0-9.]/g, '')) || 1450;
+                  return `${formatCurrency(spentTotal, userCurrency)} of ${formatCurrency(convertCurrency(budgetNum, 'USD', userCurrency), userCurrency)}`;
                 })()}
               </span>
             </div>
@@ -4201,6 +4204,7 @@ export default function ItineraryPage() {
         isOpen={isRecapModalOpen}
         onClose={() => setIsRecapModalOpen(false)}
         itinerary={itinerary}
+        estBudget={itinerary?.estimatedCost}
       />
 
       {/* PERSISTENT FLOATING EMERGENCY (SOS) BUTTON - ACCESSIBLE FROM ANY TAB */}

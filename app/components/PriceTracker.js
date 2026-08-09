@@ -11,11 +11,22 @@ import {
   WifiOff, Power
 } from 'lucide-react';
 import { activateTracking, getTrackingState, clearUnreadDrops, searchFlights, searchHotels, saveTrackingSelection, saveTrackingState } from '../../lib/priceTrackingApi';
+import { getUserDisplayCurrency, formatCurrency, convertCurrency } from '../../lib/expenseApi';
 import { getBookingLinkInfo } from '../../lib/bookingPartners';
 import { lookupAirports, getAirportDetails, GLOBAL_AIRPORTS } from '../../lib/iataCodes';
 
+
+function useDisplayCurrency() {
+  const [currency, setCurrency] = useState('USD');
+  useEffect(() => {
+    setCurrency(getUserDisplayCurrency());
+  }, []);
+  return currency;
+}
+
 // Price Distribution Histogram Component
 function PriceDistributionBar({ items = [], type = 'flight', selectedId = null, isLoading = false }) {
+  const displayCurrency = useDisplayCurrency();
   if (isLoading) {
     return (
       <div className="bg-white/60 border border-[#E6DFD5] rounded-2xl p-3.5 mb-5 animate-pulse">
@@ -56,9 +67,9 @@ function PriceDistributionBar({ items = [], type = 'flight', selectedId = null, 
           <span>Price Distribution ({items.length} {type}s)</span>
         </span>
         <div className="flex items-center gap-3 text-[11px] font-medium text-[#7A7268]">
-          <span>Min: <strong className="text-[#1E1C1A]">${minPrice}</strong></span>
-          <span>Avg: <strong className="text-[#1E1C1A]">${avgPrice}</strong></span>
-          <span>Max: <strong className="text-[#1E1C1A]">${maxPrice}</strong></span>
+          <span>Min: <strong className="text-[#1E1C1A]">{formatCurrency(convertCurrency(minPrice, 'USD', displayCurrency), displayCurrency)}</strong></span>
+          <span>Avg: <strong className="text-[#1E1C1A]">{formatCurrency(convertCurrency(avgPrice, 'USD', displayCurrency), displayCurrency)}</strong></span>
+          <span>Max: <strong className="text-[#1E1C1A]">{formatCurrency(convertCurrency(maxPrice, 'USD', displayCurrency), displayCurrency)}</strong></span>
         </div>
       </div>
 
@@ -108,6 +119,7 @@ function PriceDistributionBar({ items = [], type = 'flight', selectedId = null, 
 
 // Side-by-Side Comparison Modal Component
 function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelect, destinationName, startDate, endDate, stayNights }) {
+  const displayCurrency = useDisplayCurrency();
   if (!isOpen || items.length === 0 || typeof document === 'undefined') return null;
 
   const lowestPrice = Math.min(...items.map(i => i.price));
@@ -179,13 +191,13 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                 <span>
                   {type === 'flight' ? (
                     <>
-                      <strong>{bestValueItem?.airline}</strong> offers the best rate at <strong>${lowestPrice}</strong>
-                      {priceDiff > 0 && ` (saves you $${priceDiff})`}
+                      <strong>{bestValueItem?.airline}</strong> offers the best rate at <strong>{formatCurrency(convertCurrency(lowestPrice, 'USD', displayCurrency), displayCurrency)}</strong>
+                      {priceDiff > 0 && ` (saves you ${formatCurrency(convertCurrency(priceDiff, 'USD', displayCurrency), displayCurrency)})`}
                     </>
                   ) : (
                     <>
-                      <strong>{bestValueItem?.name}</strong> provides the lowest total stay rate at <strong>${lowestPrice * (stayNights || 1)}</strong>
-                      {priceDiff > 0 && ` (saves $${priceDiff * (stayNights || 1)})`}
+                      <strong>{bestValueItem?.name}</strong> provides the lowest total stay rate at <strong>{formatCurrency(convertCurrency(lowestPrice * (stayNights || 1), 'USD', displayCurrency), displayCurrency)}</strong>
+                      {priceDiff > 0 && ` (saves ${formatCurrency(convertCurrency(priceDiff * (stayNights || 1), 'USD', displayCurrency), displayCurrency)})`}
                     </>
                   )}
                 </span>
@@ -194,7 +206,7 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
 
             {priceDiff > 0 && (
               <span className="px-3 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-300/80 text-[11px] font-sans font-bold shadow-2xs flex-shrink-0 whitespace-nowrap">
-                Save up to ${type === 'flight' ? priceDiff : priceDiff * (stayNights || 1)}
+                Save up to ${formatCurrency(convertCurrency(type === "flight" ? priceDiff : priceDiff * (stayNights || 1), 'USD', displayCurrency), displayCurrency)}
               </span>
             )}
           </div>
@@ -255,7 +267,7 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                       <div className="bg-white rounded-2xl p-3.5 border border-[#E6DFD5] mb-3.5 shadow-2xs">
                         <div className="flex items-baseline justify-between mb-1">
                           <span className="text-xs font-bold text-[#7A7268]">Total Airfare</span>
-                          <span className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A]">${item.price}</span>
+                          <span className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A]">{formatCurrency(convertCurrency(item.price, 'USD', displayCurrency), displayCurrency)}</span>
                         </div>
                         <div className="text-[11px] text-[#A89F91]">
                           {isLowest ? (
@@ -263,7 +275,7 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                               <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Lowest fare available on this route
                             </span>
                           ) : (
-                            <span>+${item.price - lowestPrice} higher than Option {items.findIndex(i => i.price === lowestPrice) + 1}</span>
+                            <span>+${formatCurrency(convertCurrency(item.price - lowestPrice, 'USD', displayCurrency), displayCurrency)} higher than Option {items.findIndex(i => i.price === lowestPrice) + 1}</span>
                           )}
                         </div>
                       </div>
@@ -345,10 +357,10 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                       <div className="bg-white rounded-2xl p-3 border border-[#E6DFD5] mb-3 shadow-2xs">
                         <div className="flex items-baseline justify-between mb-0.5">
                           <span className="text-xs font-bold text-[#7A7268]">Nightly Rate</span>
-                          <span className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A]">${item.price}<span className="text-xs font-normal text-[#7A7268]">/night</span></span>
+                          <span className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A]">{formatCurrency(convertCurrency(item.price, 'USD', displayCurrency), displayCurrency)}<span className="text-xs font-normal text-[#7A7268]">/night</span></span>
                         </div>
                         <div className="text-[11px] text-[#A89F91]">
-                          Total stay: <strong className="text-[#1E1C1A]">${item.price * (stayNights || 1)}</strong> ({stayNights || 1} nights)
+                          Total stay: <strong className="text-[#1E1C1A]">{formatCurrency(convertCurrency(item.price * (stayNights || 1), 'USD', displayCurrency), displayCurrency)}</strong> ({stayNights || 1} nights)
                         </div>
                       </div>
 
@@ -425,6 +437,7 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
 
 // Hotel Interactive Map View Component
 function HotelMapView({ hotels = [], itinerary, selectedHotel, onSelectHotel, stayNights }) {
+  const displayCurrency = useDisplayCurrency();
   const [activeMapHotel, setActiveMapHotel] = useState(hotels[0] || null);
 
   // Extract activity stops from itinerary
@@ -545,8 +558,8 @@ function HotelMapView({ hotels = [], itinerary, selectedHotel, onSelectHotel, st
 
           <div className="flex items-center justify-between md:justify-end gap-4 border-t md:border-t-0 border-[#E6DFD5] pt-3 md:pt-0">
             <div className="text-right">
-              <span className="text-xl font-serif font-black text-[#1E1C1A]">${activeMapHotel.price}</span>
-              <span className="text-[10px] text-[#7A7268] block">/night (${activeMapHotel.price * stayNights} total)</span>
+              <span className="text-xl font-serif font-black text-[#1E1C1A]">{formatCurrency(convertCurrency(activeMapHotel.price, 'USD', displayCurrency), displayCurrency)}</span>
+              <span className="text-[10px] text-[#7A7268] block">/night ({formatCurrency(convertCurrency(activeMapHotel.price * stayNights, 'USD', displayCurrency), displayCurrency)} total)</span>
             </div>
             
             {selectedHotel?.id === activeMapHotel.id ? (
@@ -579,6 +592,7 @@ export default function PriceTracker({
   onToast,
   itinerary 
 }) {
+  const displayCurrency = useDisplayCurrency();
   const [trackingState, setTrackingState] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isActivating, setIsActivating] = useState(false);
@@ -805,7 +819,7 @@ export default function PriceTracker({
   const handleSelectFlight = (flight) => {
     saveTrackingSelection(tripId, 'flight', flight);
     setTrackingState(getTrackingState(tripId));
-    if (onToast) onToast(`Selected flight: ${flight.airline} ($${flight.price})`, 'success');
+    if (onToast) onToast(`Selected flight: ${flight.airline} (${formatCurrency(convertCurrency(flight.price, 'USD', displayCurrency), displayCurrency)})`, 'success');
   };
 
   const handleSelectHotel = (hotel) => {
@@ -1022,7 +1036,7 @@ export default function PriceTracker({
                 </span>
               </div>
               <p className="text-xs text-[#7A7268] mt-0.5">
-                Tracking <strong className="text-[#1E1C1A]">{trackingState?.config?.origin || 'JFK'} → {destShort}</strong> &middot; Target Est. Budget: <strong className="text-[#1E1C1A]">${estBudget}</strong>
+                Tracking <strong className="text-[#1E1C1A]">{trackingState?.config?.origin || 'JFK'} → {destShort}</strong> &middot; Target Est. Budget: <strong className="text-[#1E1C1A]">{formatCurrency(convertCurrency(estBudget, 'USD', displayCurrency), displayCurrency)}</strong>
               </p>
             </div>
 
@@ -1032,7 +1046,7 @@ export default function PriceTracker({
                 <div className="text-right">
                   <div className="text-xs text-[#7A7268] font-bold">Selected so far</div>
                   <div className="text-base font-serif font-black text-[#1E1C1A]">
-                    ${totalSelectedPrice} <span className="text-xs font-normal text-[#7A7268]">of ${estBudget}</span>
+                    {formatCurrency(convertCurrency(totalSelectedPrice, 'USD', displayCurrency), displayCurrency)} <span className="text-xs font-normal text-[#7A7268]">of {formatCurrency(convertCurrency(parseFloat(estBudget.toString().replace(/[^0-9.]/g, '')) || 1450, 'USD', displayCurrency), displayCurrency)}</span>
                   </div>
                 </div>
 
@@ -1041,7 +1055,7 @@ export default function PriceTracker({
                 <div className="text-right">
                   <div className="text-xs font-bold text-[#7A7268]">Remaining</div>
                   <div className={`text-sm font-bold ${remainingBudget >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
-                    {remainingBudget >= 0 ? `$${remainingBudget} left` : `$${Math.abs(remainingBudget)} over`}
+                    {remainingBudget >= 0 ? `${formatCurrency(convertCurrency(remainingBudget, 'USD', displayCurrency), displayCurrency)} left` : `${formatCurrency(convertCurrency(Math.abs(remainingBudget), 'USD', displayCurrency), displayCurrency)} over`}
                   </div>
                 </div>
               </div>
@@ -1145,7 +1159,7 @@ export default function PriceTracker({
                     <div className="flex flex-col items-end gap-1.5 w-full md:w-auto">
                       <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
                         <div className="text-right">
-                          <div className="text-2xl font-serif font-black text-[#1E1C1A]">${trackingState.selectedFlight.price}</div>
+                          <div className="text-2xl font-serif font-black text-[#1E1C1A]">{formatCurrency(convertCurrency(trackingState.selectedFlight.price, 'USD', displayCurrency), displayCurrency)}</div>
                           <div className="text-[10px] text-[#7A7268] uppercase font-bold tracking-wider">Round Trip</div>
                         </div>
                         <button 
@@ -1381,7 +1395,7 @@ export default function PriceTracker({
 
                             <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 border-[#E6DFD5]/60 pt-3 md:pt-0">
                               <div className="text-right">
-                                <div className="text-2xl font-serif font-black text-[#1E1C1A]">${flight.price}</div>
+                                <div className="text-2xl font-serif font-black text-[#1E1C1A]">{formatCurrency(convertCurrency(flight.price, 'USD', displayCurrency), displayCurrency)}</div>
                                 <div className="text-[10px] text-[#7A7268] uppercase font-bold tracking-wider">Round Trip</div>
                               </div>
                               {isSelected ? (
@@ -1571,7 +1585,7 @@ export default function PriceTracker({
                         <div className="flex flex-col items-end gap-1.5 w-full md:w-auto">
                           <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
                             <div className="text-right">
-                              <div className="text-2xl font-serif font-black text-[#1E1C1A]">${trackingState.selectedHotel.price}</div>
+                              <div className="text-2xl font-serif font-black text-[#1E1C1A]">{formatCurrency(convertCurrency(trackingState.selectedHotel.price, 'USD', displayCurrency), displayCurrency)}</div>
                               <div className="text-[10px] text-[#7A7268] uppercase font-bold tracking-wider">Per Night</div>
                             </div>
                             <button 
@@ -1860,11 +1874,11 @@ export default function PriceTracker({
                                   <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 border-[#E6DFD5]/60 pt-3 md:pt-0">
                                     <div className="text-right">
                                       <div className="flex items-baseline justify-end gap-1">
-                                        <span className="text-2xl font-serif font-black text-[#1E1C1A]">${hotel.price}</span>
+                                        <span className="text-2xl font-serif font-black text-[#1E1C1A]">{formatCurrency(convertCurrency(hotel.price, 'USD', displayCurrency), displayCurrency)}</span>
                                         <span className="text-xs text-[#7A7268] font-bold">/night</span>
                                       </div>
                                       <div className="text-xs font-medium text-[#7A7268] mt-0.5">
-                                        <span className="font-bold text-[#1E1C1A]">${hotel.price * stayNights}</span> total ({stayNights} nights)
+                                        <span className="font-bold text-[#1E1C1A]">{formatCurrency(convertCurrency(hotel.price * stayNights, 'USD', displayCurrency), displayCurrency)}</span> total ({stayNights} nights)
                                       </div>
                                     </div>
                                     {isSelected ? (
@@ -1973,7 +1987,7 @@ export default function PriceTracker({
                                 {isFlight ? (item.flightNumber || item.airline) : item.name}
                               </span>
                               <span className="font-serif font-black text-[#FF6B2C] drop-shadow-[0_0_6px_rgba(255,107,44,0.4)]">
-                                ${item.price}
+                                {formatCurrency(convertCurrency(item.price, 'USD', displayCurrency), displayCurrency)}
                               </span>
                             </div>
                           </React.Fragment>
@@ -2531,13 +2545,13 @@ export default function PriceTracker({
 
             <div className="flex items-center gap-4 text-xs font-sans text-[#7A7268] w-full sm:w-auto justify-between sm:justify-end shrink-0">
               <span className="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
-                Typical: <strong className="font-mono font-bold text-[#1E1C1A]">$480–$690</strong>
+                Typical: <strong className="font-mono font-bold text-[#1E1C1A]">{formatCurrency(convertCurrency(480, 'USD', displayCurrency), displayCurrency)}–{formatCurrency(convertCurrency(690, 'USD', displayCurrency), displayCurrency)}</strong>
               </span>
               <motion.span 
                 whileHover={{ scale: 1.05 }}
                 className="text-emerald-700 font-semibold flex items-center gap-1.5 bg-emerald-50/80 border border-emerald-200/50 px-2.5 py-1 rounded-md cursor-default shadow-xs shrink-0 whitespace-nowrap"
               >
-                <TrendingDown className="w-3.5 h-3.5" /> Low: <strong className="font-mono font-bold">$410</strong>
+                <TrendingDown className="w-3.5 h-3.5" /> Low: <strong className="font-mono font-bold">{formatCurrency(convertCurrency(410, 'USD', displayCurrency), displayCurrency)}</strong>
               </motion.span>
             </div>
           </div>

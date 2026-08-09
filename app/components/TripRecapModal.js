@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Share, Download, MapPin, Map, Star, Calendar, Camera } from 'lucide-react';
 import { getTripJournalEntries } from '../../lib/journalApi';
-import { getTripExpenses, convertCurrency } from '../../lib/expenseApi';
+import { getTripExpenses, convertCurrency, getUserDisplayCurrency, formatCurrency } from '../../lib/expenseApi';
 import { toPng } from 'html-to-image';
 
 // --- Card Components ---
@@ -103,8 +103,8 @@ const StatsCard = ({ stats }) => (
         transition={{ delay: 0.6 }}
         className="bg-white/10 rounded-3xl p-6 text-center border border-white/10"
       >
-        <div className="text-3xl font-black text-white font-serif mb-2">${Math.round(stats.spent)}</div>
-        <div className="text-[10px] font-mono uppercase tracking-widest text-white/60 font-bold">Spent (USD)</div>
+        <div className="text-3xl font-serif font-black text-[#FFF2B2]">{formatCurrency(stats.spent, getUserDisplayCurrency())}</div>
+        <div className="text-[10px] font-mono uppercase tracking-widest text-white/60 font-bold">Spent</div>
       </motion.div>
     </div>
   </div>
@@ -192,7 +192,7 @@ const OutroCard = ({ itinerary, heroPhoto, onDownload, isDownloading }) => (
 );
 
 
-export default function TripRecapModal({ isOpen, onClose, itinerary }) {
+export default function TripRecapModal({ isOpen, onClose, itinerary, estBudget }) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slides, setSlides] = useState([]);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -210,12 +210,14 @@ export default function TripRecapModal({ isOpen, onClose, itinerary }) {
 
       // Compute stats
       const totalStops = itinerary.days?.reduce((acc, day) => acc + (day.activities?.length || 0), 0) || 0;
-      const totalSpentUSD = expenses.reduce((acc, exp) => acc + convertCurrency(exp.amount, exp.currency, 'USD'), 0);
+      const userCurr = getUserDisplayCurrency();
+      const totalSpentBase = expenses.reduce((acc, exp) => acc + convertCurrency(exp.amount, exp.currency, userCurr), 0);
+      const budgetNum = parseFloat(estBudget?.toString().replace(/[^0-9.]/g, '')) || 1450;
       
       const stats = {
         duration: itinerary.days?.length || 0,
         stops: totalStops,
-        spent: totalSpentUSD
+        spent: totalSpentBase
       };
 
       // Determine Hero Photo (highest rated journal photo with an image, or fallback)

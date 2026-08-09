@@ -17,6 +17,11 @@ const NATIONALITIES = [
   { code: 'ZA', name: 'South Africa' },
   { code: 'SG', name: 'Singapore' },
   { code: 'AE', name: 'United Arab Emirates' },
+  { code: 'FR', name: 'France' },
+  { code: 'DE', name: 'Germany' },
+  { code: 'IT', name: 'Italy' },
+  { code: 'ES', name: 'Spain' },
+  { code: 'NL', name: 'Netherlands' },
 ];
 
 export default function SettingsPage() {
@@ -40,11 +45,28 @@ export default function SettingsPage() {
     }
   }, []);
 
+  const mapNationalityToCurrency = (code) => {
+    switch(code) {
+      case 'US': return 'USD';
+      case 'GB': return 'GBP';
+      case 'CA': return 'CAD';
+      case 'AU': return 'AUD';
+      case 'IN': return 'INR';
+      case 'FR':
+      case 'DE':
+      case 'IT':
+      case 'ES':
+      case 'NL': return 'EUR';
+      default: return 'USD';
+    }
+  };
+
   const handleSave = () => {
     setIsSaving(true);
     // Simulate a network request to save to a database
     setTimeout(() => {
       localStorage.setItem('tripwise_passport_nationality', nationality);
+      localStorage.setItem('tripwise_display_currency', mapNationalityToCurrency(nationality));
       setIsSaving(false);
       setShowSuccess(true);
       setTimeout(() => {
