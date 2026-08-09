@@ -11,7 +11,7 @@ import { useUser } from '@clerk/nextjs';
 import { getTripCollaborators } from '../actions/trips';
 import { 
   getTripExpenses, saveTripExpenses, syncPendingExpenses, 
-  SUPPORTED_CURRENCIES, convertCurrency, fetchExchangeRates, calculateDailyPace 
+  SUPPORTED_CURRENCIES, convertCurrency, fetchExchangeRates, calculateDailyPace, getUserDisplayCurrency 
 } from '../../lib/expenseApi';
 // OCR Receipt Extraction Helper
 async function extractReceiptData(imageDataUrl) {
@@ -78,6 +78,12 @@ const formatCurrency = (val, code = 'USD') => {
 };
 
 // Animated Spring Currency Ticker
+const formatCurrencyRounded = (val, code = 'USD') => {
+  const curr = SUPPORTED_CURRENCIES.find(c => c.code === code) || SUPPORTED_CURRENCIES[0];
+  const num = parseFloat(val) || 0;
+  return `${curr.symbol}${num.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+};
+
 function AnimatedCurrency({ value, currency = 'USD' }) {
   const [displayVal, setDisplayVal] = useState(value);
   const prevVal = useRef(value);
@@ -118,6 +124,7 @@ export default function ExpenseTrackerView({
 }) {
   const [expenses, setExpenses] = useState([]);
   const [homeCurrency, setHomeCurrency] = useState('USD');
+  useEffect(() => { setHomeCurrency(getUserDisplayCurrency()); }, []);
   const [localCurrency, setLocalCurrency] = useState('EUR');
   const [isOffline, setIsOffline] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -311,31 +318,26 @@ export default function ExpenseTrackerView({
   }, [tripId]);
 
   // Derived Calculations
-  const budgetGoalUSD = parseFloat(estBudget) || 1450;
   
   // Memoize conversions so they never shift mid-session when the async rate
   // fetch resolves — ratesReady flips once, recalculating everything cleanly.
-  const totalSpentUSD = useMemo(() => {
+  const totalSpentBase = useMemo(() => {
     return expenses.reduce((acc, exp) => {
-      return acc + convertCurrency(exp.amount, exp.currency || 'USD', 'USD');
+      return acc + convertCurrency(exp.amount, exp.currency || 'USD', homeCurrency);
     }, 0);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expenses, ratesReady]);
-
-  const remainingBudgetUSD = Math.max(0, budgetGoalUSD - totalSpentUSD);
-  const percentSpent = Math.min(100, (totalSpentUSD / budgetGoalUSD) * 100);
-
-  // Calculate Daily Pace & Budget Projection
+  const budgetGoalBase = convertCurrency(parseFloat(estBudget.toString().replace(/[^0-9.]/g, '')) || 1450, 'USD', homeCurrency);
   const elapsedDays = 1; // Current active trip day
-  const dailyPaceUSD = totalSpentUSD / Math.max(1, elapsedDays);
-  const projectedTotalUSD = dailyPaceUSD * (parseInt(daysCount) || 3);
-  const paceDiffUSD = projectedTotalUSD - budgetGoalUSD;
+  const dailyPaceBase = totalSpentBase / Math.max(1, elapsedDays);
+  const projectedTotalBase = dailyPaceBase * (parseInt(daysCount) || 3);
+  const paceDiffBase = projectedTotalBase - budgetGoalBase;
 
   // Category Totals & Count
-  const categoryTotalsUSD = useMemo(() => {
+  const categoryTotalsBase = useMemo(() => {
     return EXPENSE_CATEGORIES.map(cat => {
       const catExpenses = expenses.filter(e => e.category === cat.id);
-      const total = catExpenses.reduce((acc, e) => acc + convertCurrency(e.amount, e.currency || 'USD', 'USD'), 0);
+      const total = catExpenses.reduce((acc, e) => acc + convertCurrency(e.amount, e.currency || 'USD', homeCurrency), 0);
       return { ...cat, total, count: catExpenses.length };
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -591,12 +593,12 @@ export default function ExpenseTrackerView({
               Total Spent
             </span>
             <div className="flex items-baseline gap-2.5">
-              <span className="text-4xl font-serif font-black text-[#1E1C1A] tracking-tight">
-                <AnimatedCurrency value={totalSpentUSD} currency="USD" />
-              </span>
-              <span className="text-base font-serif text-[#7A7268]">
-                of {formatCurrency(budgetGoalUSD, 'USD')} Budget
-              </span>
+              <div className="text-3xl font-black text-gray-900 mt-2">
+                <AnimatedCurrency value={totalSpentBase} currency={homeCurrency} />
+              </div>
+              <div className="text-sm text-gray-500 mt-1 font-medium">
+                of {formatCurrency(budgetGoalBase, homeCurrency)} Budget
+              </div>
             </div>
           </div>
 
@@ -607,10 +609,10 @@ export default function ExpenseTrackerView({
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
               className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-800 text-xs font-mono font-bold inline-block mb-1 shadow-2xs"
             >
-              <AnimatedCurrency value={remainingBudgetUSD} currency="USD" /> Remaining
+              <AnimatedCurrency value={Math.max(0, budgetGoalBase - totalSpentBase)} currency={homeCurrency} /> Remaining
             </motion.span>
             <span className="text-[11px] font-mono text-[#7A7268] block">
-              {percentSpent.toFixed(0)}% of budget used
+              {Math.min(100, (totalSpentBase / budgetGoalBase) * 100).toFixed(0)}% of budget used
             </span>
           </div>
         </div>
@@ -619,45 +621,49 @@ export default function ExpenseTrackerView({
         <div className="w-full h-2 rounded-full bg-[#E6DFD5]/70 overflow-hidden">
           <motion.div 
             initial={{ width: 0 }}
-            animate={{ width: `${percentSpent}%` }}
+            animate={{ width: `${Math.min(100, (totalSpentBase / budgetGoalBase) * 100)}%` }}
             transition={{ duration: 0.8, ease: "easeOut" }}
             className={`h-full rounded-full ${
-              percentSpent > 90 ? 'bg-red-500' : percentSpent > 70 ? 'bg-amber-500' : 'bg-[#FF6B2C]'
+              Math.min(100, (totalSpentBase / budgetGoalBase) * 100) > 90 ? 'bg-red-500' : Math.min(100, (totalSpentBase / budgetGoalBase) * 100) > 70 ? 'bg-amber-500' : 'bg-[#FF6B2C]'
             }`}
           />
         </div>
 
         {/* SPENDING PACE INDICATOR NOTE */}
-        {paceDiffUSD > 0 ? (
-          <div className="px-3.5 py-2 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs font-sans font-medium flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-            <span>
-              <strong>⚠️ Spending Pace Warning:</strong> At current pace (~${Math.round(dailyPaceUSD)}/day), projected total is <strong>${Math.round(projectedTotalUSD).toLocaleString()}</strong> (${Math.round(paceDiffUSD).toLocaleString()} over ${formatCurrency(budgetGoalUSD, 'USD')} budget).
-            </span>
-          </div>
-        ) : (
-          <div className="px-3.5 py-2 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-900 text-xs font-sans font-medium flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>
-              <strong>✓ Spending Pace On Track:</strong> Current pace (~${Math.round(dailyPaceUSD)}/day) is on track to stay within your ${formatCurrency(budgetGoalUSD, 'USD')} budget.
-            </span>
-          </div>
-        )}
+        {projectedTotalBase > budgetGoalBase ? (
+            <div className="mt-6 flex items-start gap-3 p-4 bg-orange-50 border border-orange-200 rounded-xl">
+              <div className="p-2 bg-orange-100 rounded-full shrink-0 mt-0.5">
+                <TrendingUp className="w-5 h-5 text-orange-600" />
+              </div>
+              <p className="text-sm text-orange-800 leading-relaxed">
+                <strong>⚠️ Spending Pace Warning:</strong> At current pace (~{formatCurrency(dailyPaceBase, homeCurrency)}/day), projected total is <strong>{formatCurrency(projectedTotalBase, homeCurrency)}</strong> ({formatCurrency(paceDiffBase, homeCurrency)} over {formatCurrency(budgetGoalBase, homeCurrency)} budget).
+              </p>
+            </div>
+          ) : (
+            <div className="mt-6 flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+              <div className="p-2 bg-emerald-100 rounded-full shrink-0 mt-0.5">
+                <TrendingDown className="w-5 h-5 text-emerald-600" />
+              </div>
+              <p className="text-sm text-emerald-800 leading-relaxed">
+                <strong>✓ Spending Pace On Track:</strong> Current pace (~{formatCurrency(dailyPaceBase, homeCurrency)}/day) is on track to stay within your {formatCurrency(budgetGoalBase, homeCurrency)} budget.
+              </p>
+            </div>
+          )}
       </motion.div>
 
       {/* REAL COLLABORATOR IDENTITY IN GROUP EXPENSE SETTLEMENT CARD */}
       {(() => {
         const paidByPartnerUSD = expenses
           .filter(e => e.paidBy === primaryCollaborator.name || e.paidBy === 'Partner / Friend')
-          .reduce((acc, e) => acc + convertCurrency(e.amount, e.currency, 'USD'), 0);
+          .reduce((acc, e) => acc + convertCurrency(e.amount, e.currency, homeCurrency), 0);
 
         const shared50USD = expenses
           .filter(e => e.paidBy === 'Shared 50/50')
-          .reduce((acc, e) => acc + convertCurrency(e.amount, e.currency, 'USD'), 0);
+          .reduce((acc, e) => acc + convertCurrency(e.amount, e.currency, homeCurrency), 0);
 
         const myDirectUSD = expenses
           .filter(e => !e.paidBy || e.paidBy === 'Me')
-          .reduce((acc, e) => acc + convertCurrency(e.amount, e.currency, 'USD'), 0);
+          .reduce((acc, e) => acc + convertCurrency(e.amount, e.currency, homeCurrency), 0);
 
         const netOwed = (paidByPartnerUSD / 2) - (myDirectUSD / 2);
 
@@ -689,7 +695,7 @@ export default function ExpenseTrackerView({
                   Group Settlement with {primaryCollaborator.name}
                 </span>
                 <span className="text-xs font-sans text-[#7A7268]">
-                  You paid: ${Math.round(myDirectUSD)} • {collaboratorFirstName} paid: ${Math.round(paidByPartnerUSD)} • Shared 50/50: ${Math.round(shared50USD)}
+                  You paid: {formatCurrencyRounded(myDirectUSD, homeCurrency)} • {collaboratorFirstName} paid: {formatCurrencyRounded(paidByPartnerUSD, homeCurrency)} • Shared 50/50: {formatCurrencyRounded(shared50USD, homeCurrency)}
                 </span>
               </div>
             </div>
@@ -701,14 +707,14 @@ export default function ExpenseTrackerView({
             >
               {netOwed > 0 ? (
                 <>
-                  <span>You owe {collaboratorFirstName} ${Math.abs(Math.round(netOwed))}</span>
+                  <span>You owe {collaboratorFirstName} {formatCurrencyRounded(Math.abs(netOwed), homeCurrency)}</span>
                 </>
               ) : netOwed < 0 ? (
                 <>
-                  <span className="text-emerald-700">{collaboratorFirstName} owes You ${Math.abs(Math.round(netOwed))}</span>
+                  <span className="text-emerald-700">{collaboratorFirstName} owes You {formatCurrencyRounded(Math.abs(netOwed), homeCurrency)}</span>
                 </>
               ) : (
-                <span>Settled Up ($0.00 balance)</span>
+                <span>Settled Up ({formatCurrency(0, homeCurrency)} balance)</span>
               )}
             </motion.div>
           </motion.div>
@@ -716,7 +722,7 @@ export default function ExpenseTrackerView({
       })()}
 
       {/* VISUAL CATEGORY BREAKDOWN STACKED BAR CHART */}
-      {totalSpentUSD > 0 && (
+      {totalSpentBase > 0 && (
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -729,15 +735,15 @@ export default function ExpenseTrackerView({
               <span>Category Breakdown</span>
             </span>
             <span className="text-[#7A7268] text-[11px] font-mono">
-              {categoryTotalsUSD.filter(c => c.total > 0).length} Active Categories
+              {categoryTotalsBase.filter(c => c.total > 0).length} Active Categories
             </span>
           </div>
 
           {/* Multi-segment stacked bar */}
           <div className="w-full h-3.5 rounded-full bg-[#FAF6F0] overflow-hidden flex p-0.5 border border-[#E6DFD5]/70 gap-0.5">
-            {categoryTotalsUSD.map(cat => {
+            {categoryTotalsBase.map(cat => {
               if (cat.total <= 0) return null;
-              const pct = (cat.total / totalSpentUSD) * 100;
+              const pct = (cat.total / totalSpentBase) * 100;
               const catConfig = CATEGORY_ICONS[cat.id] || CATEGORY_ICONS['Other'];
               return (
                 <motion.div
@@ -747,7 +753,7 @@ export default function ExpenseTrackerView({
                   transition={{ duration: 0.6, ease: "easeOut" }}
                   style={{ backgroundColor: catConfig.color }}
                   className="h-full rounded-xs first:rounded-l-full last:rounded-r-full relative group cursor-pointer"
-                  title={`${cat.label}: $${Math.round(cat.total)} (${pct.toFixed(0)}%)`}
+                  title={`${cat.label}: ${formatCurrencyRounded(cat.total, homeCurrency)} (${pct.toFixed(0)}%)`}
                 />
               );
             })}
@@ -755,15 +761,15 @@ export default function ExpenseTrackerView({
 
           {/* Legend chips */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-sans pt-1">
-            {categoryTotalsUSD.map(cat => {
+            {categoryTotalsBase.map(cat => {
               if (cat.total <= 0) return null;
-              const pct = (cat.total / totalSpentUSD) * 100;
+              const pct = (cat.total / totalSpentBase) * 100;
               const catConfig = CATEGORY_ICONS[cat.id] || CATEGORY_ICONS['Other'];
               return (
                 <div key={`legend-${cat.id}`} className="flex items-center gap-1.5 text-[#1E1C1A]">
                   <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: catConfig.color }} />
                   <span className="font-medium text-gray-700">{cat.label}:</span>
-                  <span className="font-bold font-mono text-[#1E1C1A]">${Math.round(cat.total)}</span>
+                  <span className="font-bold font-mono text-[#1E1C1A]">{formatCurrencyRounded(cat.total, homeCurrency)}</span>
                   <span className="text-[10px] text-gray-500 font-mono">({pct.toFixed(0)}%)</span>
                 </div>
               );
@@ -779,7 +785,7 @@ export default function ExpenseTrackerView({
         transition={{ duration: 0.4, delay: 0.25 }}
         className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5"
       >
-        {categoryTotalsUSD.map((cat, idx) => {
+        {categoryTotalsBase.map((cat, idx) => {
           const isSelected = selectedCategoryFilter === cat.id;
           const catConfig = CATEGORY_ICONS[cat.id] || CATEGORY_ICONS['Other'];
           const IconComp = catConfig.icon;
@@ -834,7 +840,7 @@ export default function ExpenseTrackerView({
               <span className={`text-xs font-serif font-black block mt-0.5 ${
                 isSelected ? 'text-[#FF6B2C]' : isZeroSpend ? 'text-gray-400 font-normal' : 'text-[#1E1C1A]'
               }`}>
-                ${Math.round(cat.total)}
+                {formatCurrencyRounded(cat.total, homeCurrency)}
               </span>
             </motion.button>
           );
@@ -883,11 +889,10 @@ export default function ExpenseTrackerView({
               {filteredExpenses.map((exp) => {
                 const catConfig = CATEGORY_ICONS[exp.category] || CATEGORY_ICONS['Other'];
                 const IconComp = catConfig.icon;
-                const usdEquiv = convertCurrency(exp.amount, exp.currency, 'USD');
+                const usdEquiv = convertCurrency(exp.amount, exp.currency, homeCurrency);
                 const isForeign = exp.currency && exp.currency !== 'USD';
                 const currObj = SUPPORTED_CURRENCIES.find(c => c.code === exp.currency);
-                const symbol = currObj ? currObj.symbol : '$';
-
+                const symbol = currObj ? currObj.symbol : (homeCurrency === 'EUR' ? '€' : homeCurrency === 'INR' ? '₹' : homeCurrency === 'GBP' ? '£' : '$');
                 return (
                   <motion.div
                     key={exp.id}
@@ -959,7 +964,7 @@ export default function ExpenseTrackerView({
                         </span>
                         {isForeign && (
                           <span className="text-[11px] font-mono font-bold text-gray-500 block">
-                            (~${usdEquiv.toFixed(2)})
+                            (~{formatCurrency(usdEquiv, homeCurrency)})
                           </span>
                         )}
                       </div>
