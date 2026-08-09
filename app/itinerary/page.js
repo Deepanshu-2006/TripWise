@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useSpring, useTransform, useMotionValue } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import Header from '../components/Header';
+import ImageCarousel from '../components/ImageCarousel';
 import { generatePackingList } from '../../lib/packingListLogic';
 import { fetchVisaRequirements } from '../../lib/visaApi';
 import ExpenseTrackerView from '../components/ExpenseTrackerView';
@@ -74,7 +75,8 @@ import {
   getAiInsight,
   formatCost,
   getDaySummary,
-  formatReviewCount
+  formatReviewCount,
+  getGooglePlacesQuery
 } from '../components/itineraryHelpers';
 
 // Dynamically import map components to avoid SSR/window issues
@@ -1425,7 +1427,7 @@ export default function ItineraryPage() {
                   : { scale: 1.25, filter: "saturate(1) brightness(1)" }
             }
             transition={{ duration: 1.5, ease: "easeOut" }}
-            src={itinerary.heroImage || "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=2000&q=85"}
+            src={itinerary.heroImage || `/api/image?q=${encodeURIComponent(destinationNameClean || 'beautiful travel destination')}`}
             alt={destinationNameClean}
             className="w-full h-full object-cover object-[center_30%] pointer-events-none"
           />
@@ -3152,13 +3154,11 @@ export default function ItineraryPage() {
                                 {/* Image Side Spread with subtle hover scale drift + Secondary detail box on wide viewports below image (Requirement 6) */}
                                 <div className="w-full lg:w-1/2 flex flex-col gap-4 shrink-0">
                                   <div className="w-full h-80 sm:h-100 rounded-3xl overflow-hidden border border-[#E6DFD5] shadow-md relative group">
-                                    <motion.img
-                                      src={getActivityThumbnail(act, idx)}
-                                      alt={act.title}
-                                      className="w-full h-full object-cover object-center"
-                                      whileHover={{ scale: 1.04 }}
-                                      transition={{ duration: 0.6, ease: 'easeOut' }}
-                                    />
+                                    <ImageCarousel
+                                        query={getGooglePlacesQuery(act.title, destinationNameClean)}
+                                        initialImage={getActivityThumbnail(act, idx)}
+                                        alt={act.title}
+                                      />
 
                                     {/* Daylight time tag with Planned vs Booked check (Requirement 4) */}
                                     <div className="absolute top-4 left-4 px-3.5 py-1.5 rounded-full bg-[#1E1C1A]/85 backdrop-blur-sm text-white font-mono text-xs font-bold tracking-wider shadow-sm">

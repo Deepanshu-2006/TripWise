@@ -1,42 +1,20 @@
 // Shared AI Travel Planner Itinerary Helpers & Smart Data Enrichers
 // Powers the rich timeline, thumbnails, AI insights, transport connectors, and category styling across TripWise.
 
-export const ACTIVITY_THUMBNAILS = {
-  colosseum: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=400&auto=format&fit=crop&q=80',
-  pantheon: 'https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?w=400&auto=format&fit=crop&q=80',
-  vatican: 'https://images.unsplash.com/photo-1531572753322-ad063cecc140?w=400&auto=format&fit=crop&q=80',
-  trevi: 'https://images.unsplash.com/photo-1588614959060-4d144f28b207?w=400&auto=format&fit=crop&q=80',
-  forum: 'https://images.unsplash.com/photo-1515542622106-78bda8ba0e5b?w=400&auto=format&fit=crop&q=80',
-  spanish: 'https://images.unsplash.com/photo-1555992828-ca4dbe41d294?w=400&auto=format&fit=crop&q=80',
-  trastevere: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=400&auto=format&fit=crop&q=80',
-  pasta: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=400&auto=format&fit=crop&q=80',
-  pizza: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&auto=format&fit=crop&q=80',
-  cafe: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400&auto=format&fit=crop&q=80',
-  gelato: 'https://images.unsplash.com/photo-1567206563064-6f60f40a2b57?w=400&auto=format&fit=crop&q=80',
-  sunset: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=400&auto=format&fit=crop&q=80',
-  hotel: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&auto=format&fit=crop&q=80',
-  museum: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=400&auto=format&fit=crop&q=80',
-  shopping: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&auto=format&fit=crop&q=80',
-  default1: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&auto=format&fit=crop&q=80',
-  default2: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&auto=format&fit=crop&q=80',
-  default3: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=400&auto=format&fit=crop&q=80',
-  default4: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400&auto=format&fit=crop&q=80'
-};
+// Helper to strip conversational AI words so Google Places finds the actual landmark
+export function getGooglePlacesQuery(title, destination = '') {
+  let cleanTitle = (title || '').replace(/(photo walk|stroll|tour|explore|visit|experience|day trip|dinner at|lunch at|breakfast at|afternoon at|morning at)/gi, '').trim();
+  if (!cleanTitle) cleanTitle = title; // fallback if we stripped everything
+  return `${cleanTitle} ${destination}`.trim();
+}
 
 // 1. Get Activity Thumbnail (Point 2)
-export function getActivityThumbnail(act, idx = 0) {
+export function getActivityThumbnail(act, destinationNameClean = '', idx = 0) {
   if (act?.thumbnail || act?.imageUrl || act?.image) {
     return act.thumbnail || act.imageUrl || act.image;
   }
   
-  // Use dynamic image search route instead of hardcoded fallbacks
-  const title = act?.title || '';
-  let category = (act?.category || '').replace(/foodie/i, 'Restaurant');
-  
-  // To avoid Unsplash returning literal dogs for restaurant names like "Frenchie",
-  // we add some contextual keywords for better photography results.
-  const query = encodeURIComponent(`${title} ${category} landmark interior`.trim() || 'beautiful travel destination');
-  
+  const query = encodeURIComponent(getGooglePlacesQuery(act?.title, destinationNameClean) || 'beautiful travel destination');
   return `/api/image?q=${query}`;
 }
 
