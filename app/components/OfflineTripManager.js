@@ -198,10 +198,10 @@ export default function OfflineTripManager({
             <div className="absolute inset-0 rounded-full border border-white/20 pointer-events-none" />
             
             <div className="relative flex items-center justify-center">
-               <CloudOff className="w-4 h-4 relative z-10 group-hover/offline:-translate-y-0.5 group-hover/offline:scale-110 group-hover/offline:drop-shadow-[0_2px_4px_rgba(255,255,255,0.5)] transition-all duration-300 mr-0.5" />
+               <CloudOff className="w-4 h-4 relative z-10 group-hover/offline:-translate-y-0.5 group-hover/offline:scale-110 group-hover/offline:drop-shadow-[0_2px_4px_rgba(255,255,255,0.5)] transition-all duration-300 xl:mr-0.5" />
             </div>
             
-            <span className="relative z-10 tracking-wide drop-shadow-sm group-hover/offline:text-white">Make Available Offline</span>
+            <span className="hidden xl:inline relative z-10 tracking-wide drop-shadow-sm group-hover/offline:text-white">Make Available Offline</span>
             
             <style dangerouslySetInnerHTML={{ __html: `
               @keyframes bg-shift {

@@ -64,7 +64,8 @@ import {
   PenLine,
   BookOpen,
   Save,
-  FastForward
+  FastForward,
+  ChevronRight
 } from 'lucide-react';
 import {
   getActivityThumbnail,
@@ -1600,106 +1601,115 @@ export default function ItineraryPage() {
       {/* STICKY JUMP BAR & UTILITY STRIP (Light-themed to blend cleanly with the page body background) */}
       <div className="sticky top-16 sm:top-18 z-40 bg-[#FAF6F0]/95 backdrop-blur-md border-b border-[#E6DFD5] pt-4 pb-0 px-6 shadow-2xs transition-all print:hidden">
         <div className="max-w-6xl mx-auto w-full flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          
           {/* Chapter Tabs Link System - Single Horizontally Scrollable Row */}
-          <div className="flex items-center gap-0.5 sm:gap-1.5 overflow-x-auto flex-1 min-w-0 no-scrollbar pr-4 pb-0">
-            {days.map((day, dIdx) => {
-              const dayNum = day.dayNumber || dIdx + 1;
-              const isSelected = activeDay === dayNum;
-              const dateStr = getDayDateString(itinerary.startDate, dIdx);
-              return (
-                <button
-                  key={dayNum}
-                  onClick={() => setActiveDay(dayNum)}
-                  className={`group relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif font-bold transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap flex flex-col items-center justify-center ${isSelected ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
-                    }`}
-                >
-                  <span>Day {toRomanNumeral(dayNum)}</span>
-                  {dateStr && (
-                    <span className="text-[9px] font-sans text-stone-400 font-bold -mt-0.5 tracking-wide">{dateStr}</span>
-                  )}
-                  {/* Hover Underline */}
-                  {!isSelected && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#E6DFD5] rounded-t-full opacity-0 scale-x-50 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-300 ease-out origin-center" />
-                  )}
-                  {isSelected && (
-                    <motion.div
-                      layoutId="activeTabUnderline"
-                      className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#FF6B2C] rounded-t-full"
-                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                    />
-                  )}
-                </button>
-              );
-            })}
+          <div className="relative flex-1 min-w-0">
+            {/* Scrollable Container */}
+            <div className="flex items-center gap-0.5 sm:gap-1.5 overflow-x-auto w-full no-scrollbar pb-0 pr-12">
+              {days.map((day, dIdx) => {
+                const dayNum = day.dayNumber || dIdx + 1;
+                const isSelected = activeDay === dayNum;
+                const dateStr = getDayDateString(itinerary.startDate, dIdx);
+                return (
+                  <button
+                    key={dayNum}
+                    onClick={() => setActiveDay(dayNum)}
+                    className={`group relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif font-bold transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap flex flex-col items-center justify-center ${isSelected ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+                      }`}
+                  >
+                    <span>Day {toRomanNumeral(dayNum)}</span>
+                    {dateStr && (
+                      <span className="text-[9px] font-sans text-stone-400 font-bold -mt-0.5 tracking-wide">{dateStr}</span>
+                    )}
+                    {/* Hover Underline */}
+                    {!isSelected && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#E6DFD5] rounded-t-full opacity-0 scale-x-50 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-300 ease-out origin-center" />
+                    )}
+                    {isSelected && (
+                      <motion.div
+                        layoutId="activeTabUnderline"
+                        className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#FF6B2C] rounded-t-full"
+                        transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
 
-            {/* Epilogue Tab */}
-            <button
-              onClick={() => setActiveDay('epilogue')}
-              className={`group relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'epilogue' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
-                }`}
-            >
-              <span>Epilogue</span>
-              {/* Hover Underline */}
-              {activeDay !== 'epilogue' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#E6DFD5] rounded-t-full opacity-0 scale-x-50 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-300 ease-out origin-center" />
-              )}
-              {activeDay === 'epilogue' && (
-                <motion.div
-                  layoutId="activeTabUnderline"
-                  className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#FF6B2C] rounded-t-full"
-                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                />
-              )}
-            </button>
+              {/* Epilogue Tab */}
+              <button
+                onClick={() => setActiveDay('epilogue')}
+                className={`group relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'epilogue' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+                  }`}
+              >
+                <span>Epilogue</span>
+                {/* Hover Underline */}
+                {activeDay !== 'epilogue' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#E6DFD5] rounded-t-full opacity-0 scale-x-50 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-300 ease-out origin-center" />
+                )}
+                {activeDay === 'epilogue' && (
+                  <motion.div
+                    layoutId="activeTabUnderline"
+                    className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#FF6B2C] rounded-t-full"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+              </button>
 
-            {/* Journal Tab */}
-            <button
-              onClick={() => setActiveDay('journal')}
-              className={`group relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'journal' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
-                }`}
-            >
-              <span>Journal</span>
-              {/* Hover Underline */}
-              {activeDay !== 'journal' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#E6DFD5] rounded-t-full opacity-0 scale-x-50 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-300 ease-out origin-center" />
-              )}
-              {activeDay === 'journal' && (
-                <motion.div
-                  layoutId="activeTabUnderline"
-                  className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#FF6B2C] rounded-t-full"
-                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                />
-              )}
-            </button>
+              {/* Journal Tab */}
+              <button
+                onClick={() => setActiveDay('journal')}
+                className={`group relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'journal' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+                  }`}
+              >
+                <span>Journal</span>
+                {/* Hover Underline */}
+                {activeDay !== 'journal' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#E6DFD5] rounded-t-full opacity-0 scale-x-50 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-300 ease-out origin-center" />
+                )}
+                {activeDay === 'journal' && (
+                  <motion.div
+                    layoutId="activeTabUnderline"
+                    className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#FF6B2C] rounded-t-full"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+              </button>
 
-            {/* Price Tracking Tab */}
-            <button
-              onClick={() => setActiveDay('tracking')}
-              className={`group relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'tracking' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
-                }`}
-            >
-              <span>Price Tracking</span>
-              {/* Hover Underline */}
-              {activeDay !== 'tracking' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#E6DFD5] rounded-t-full opacity-0 scale-x-50 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-300 ease-out origin-center" />
-              )}
-              {activeDay === 'tracking' && (
-                <motion.div
-                  layoutId="activeTabUnderline"
-                  className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#FF6B2C] rounded-t-full"
-                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                />
-              )}
-            </button>
+              {/* Price Tracking Tab */}
+              <button
+                onClick={() => setActiveDay('tracking')}
+                className={`group relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'tracking' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+                  }`}
+              >
+                <span>Price Tracking</span>
+                {/* Hover Underline */}
+                {activeDay !== 'tracking' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#E6DFD5] rounded-t-full opacity-0 scale-x-50 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-300 ease-out origin-center" />
+                )}
+                {activeDay === 'tracking' && (
+                  <motion.div
+                    layoutId="activeTabUnderline"
+                    className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#FF6B2C] rounded-t-full"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+              </button>
+            </div>
+            
+            {/* Premium Scroll Indicator (Gradient Fade + Arrow) */}
+            <div className="absolute right-0 top-0 bottom-[3px] w-14 bg-gradient-to-l from-[#FAF6F0] via-[#FAF6F0]/80 to-transparent pointer-events-none flex items-center justify-end z-10">
+              <ChevronRight className="w-4 h-4 text-[#FF6B2C] opacity-70 animate-pulse mr-1 mt-1" />
+            </div>
           </div>
 
-          {/* Actions Set (Aligned with bottom spacing) */}
-          <div className="flex items-center gap-2 shrink-0 pb-3.5 self-end sm:self-auto flex-wrap justify-end">
+          {/* Actions Set (Compact Icons on small screens, Full Text on XL) */}
+          <div className="flex items-center gap-2 shrink-0 pb-3.5 self-end sm:self-auto flex-nowrap justify-end">
             <div className="relative group/print">
               <button
                 type="button"
                 onClick={handlePrintOrDownload}
-                className="group/btn relative overflow-hidden inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] text-xs font-sans font-bold text-[#1E1C1A] hover:border-[#FF6B2C]/60 hover:shadow-[0_8px_20px_-6px_rgba(255,107,44,0.4)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer active:scale-95"
+                className="group/btn relative overflow-hidden inline-flex items-center gap-0 xl:gap-1.5 px-3 xl:px-4 py-1.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] text-xs font-sans font-bold text-[#1E1C1A] hover:border-[#FF6B2C]/60 hover:shadow-[0_8px_20px_-6px_rgba(255,107,44,0.4)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer active:scale-95"
               >
                 {/* 1. Shimmer Gloss Sweep */}
                 <div className="absolute top-0 left-[-100%] w-[120%] h-full bg-gradient-to-r from-transparent via-white/90 to-transparent skew-x-[-25deg] group-hover/btn:left-[100%] transition-all duration-700 ease-out z-0 pointer-events-none" />
@@ -1707,7 +1717,7 @@ export default function ItineraryPage() {
                 {/* 2. Intense Icon Glow */}
                 <div className="absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 bg-[#FF6B2C]/30 rounded-full blur-md opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500 z-0 pointer-events-none" />
                 
-                <div className="relative flex items-center justify-center w-4 h-4 z-10 mr-0.5">
+                <div className="relative flex items-center justify-center w-4 h-4 z-10">
                   {/* Animated paper sliding up out of the printer */}
                   <div className="absolute top-1 w-2.5 h-2 bg-white border border-[#1E1C1A] rounded-[1px] opacity-0 group-hover/btn:opacity-100 group-hover/btn:-translate-y-2.5 transition-all duration-500 ease-out flex flex-col justify-evenly px-[1px] py-[1px] shadow-sm">
                      <div className="w-full h-[0.5px] bg-[#1E1C1A]/40" />
@@ -1718,7 +1728,7 @@ export default function ItineraryPage() {
                     <Printer className="w-4 h-4 text-[#FF6B2C] group-hover/btn:scale-110 transition-transform duration-300" />
                   </div>
                 </div>
-                <span className="relative z-10 group-hover/btn:text-[#FF6B2C] transition-colors duration-300">Download PDF</span>
+                <span className="hidden xl:inline relative z-10 group-hover/btn:text-[#FF6B2C] transition-colors duration-300 ml-1.5">Download PDF</span>
               </button>
               <div className="absolute right-0 top-full mt-2.5 opacity-0 translate-y-1 pointer-events-none group-hover/print:opacity-100 group-hover/print:translate-y-0 transition-all duration-300 ease-out z-50 bg-[#1E1C1A] text-white text-[10px] font-sans py-1.5 px-2.5 rounded-lg shadow-lg whitespace-nowrap border border-[#FF6B2C]/40">
                 💡 Tip: Uncheck "Headers and footers" in print dialog
@@ -1728,7 +1738,7 @@ export default function ItineraryPage() {
             <button
               type="button"
               onClick={handleShareDossier}
-              className="group/btn relative overflow-hidden inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] text-xs font-sans font-bold text-[#1E1C1A] hover:border-[#FF6B2C]/60 hover:shadow-[0_8px_20px_-6px_rgba(255,107,44,0.4)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer active:scale-95"
+              className="group/btn relative overflow-hidden inline-flex items-center gap-0 xl:gap-1.5 px-3 xl:px-4 py-1.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] text-xs font-sans font-bold text-[#1E1C1A] hover:border-[#FF6B2C]/60 hover:shadow-[0_8px_20px_-6px_rgba(255,107,44,0.4)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer active:scale-95"
             >
               {/* 1. Shimmer Gloss Sweep */}
               <div className="absolute top-0 left-[-100%] w-[120%] h-full bg-gradient-to-r from-transparent via-white/90 to-transparent skew-x-[-25deg] group-hover/btn:left-[100%] transition-all duration-700 ease-out z-0 pointer-events-none" />
@@ -1738,13 +1748,13 @@ export default function ItineraryPage() {
               
               {shareCopied ? (
                 <>
-                  <Check className="w-4 h-4 text-emerald-600 relative z-10 group-hover/btn:scale-110 transition-transform duration-300 mr-0.5" />
-                  <span className="text-emerald-700 relative z-10 transition-colors duration-300">Copied!</span>
+                  <Check className="w-4 h-4 text-emerald-600 relative z-10 group-hover/btn:scale-110 transition-transform duration-300" />
+                  <span className="hidden xl:inline text-emerald-700 relative z-10 transition-colors duration-300 ml-1.5">Copied!</span>
                 </>
               ) : (
                 <>
-                  <Share2 className="w-4 h-4 text-[#FF6B2C] relative z-10 group-hover/btn:scale-110 group-hover/btn:rotate-[15deg] transition-transform duration-300 ease-out mr-0.5" />
-                  <span className="relative z-10 group-hover/btn:text-[#FF6B2C] transition-colors duration-300">Share Link</span>
+                  <Share2 className="w-4 h-4 text-[#FF6B2C] relative z-10 group-hover/btn:scale-110 group-hover/btn:rotate-[15deg] transition-transform duration-300 ease-out" />
+                  <span className="hidden xl:inline relative z-10 group-hover/btn:text-[#FF6B2C] transition-colors duration-300 ml-1.5">Share Link</span>
                 </>
               )}
             </button>
@@ -1761,15 +1771,15 @@ export default function ItineraryPage() {
 
             <a
               href={itinerary?.id || itinerary?.db_id || activeTripId ? `/ai-planner/new?action=view&trip_id=${itinerary?.id || itinerary?.db_id || activeTripId}` : '/ai-planner'}
-              className="group/edit relative overflow-hidden inline-flex items-center gap-1.5 px-5 py-1.5 rounded-full border border-[#FF6B2C] bg-white text-xs font-sans font-bold text-[#FF6B2C] hover:text-white hover:shadow-[0_8px_20px_-6px_rgba(255,107,44,0.6)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer active:scale-95 ml-1"
+              className="group/edit relative overflow-hidden inline-flex items-center gap-0 xl:gap-1.5 px-3 xl:px-5 py-1.5 rounded-full border border-[#FF6B2C] bg-white text-xs font-sans font-bold text-[#FF6B2C] hover:text-white hover:shadow-[0_8px_20px_-6px_rgba(255,107,44,0.6)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer active:scale-95 ml-0 xl:ml-1"
             >
               {/* Premium Left-to-Right Ink Fill */}
               <div className="absolute inset-0 bg-[#FF6B2C] origin-left scale-x-0 group-hover/edit:scale-x-100 transition-transform duration-500 ease-[cubic-bezier(0.19,1,0.22,1)] z-0 pointer-events-none" />
               
               {/* Writing marker pop & tilt */}
-              <Edit3 className="w-4 h-4 relative z-10 group-hover/edit:-translate-y-0.5 group-hover/edit:translate-x-0.5 group-hover/edit:rotate-12 group-hover/edit:scale-110 group-hover/edit:drop-shadow-[0_2px_2px_rgba(0,0,0,0.15)] transition-all duration-300 mr-0.5" />
+              <Edit3 className="w-4 h-4 relative z-10 group-hover/edit:-translate-y-0.5 group-hover/edit:translate-x-0.5 group-hover/edit:rotate-12 group-hover/edit:scale-110 group-hover/edit:drop-shadow-[0_2px_2px_rgba(0,0,0,0.15)] transition-all duration-300" />
               
-              <span className="relative z-10">Edit in Planner</span>
+              <span className="hidden xl:inline relative z-10 ml-1.5">Edit in Planner</span>
             </a>
           </div>
         </div>
