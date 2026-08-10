@@ -82,7 +82,7 @@ export function getTransportBetweenStops(prevStop, nextStop, idx = 0) {
 
 // 3. Get Activity Rating (Point 3)
 export function getActivityRating(act, idx = 0) {
-  const rawRev = act?.reviewsCount ?? act?.reviews ?? '';
+  const rawRev = act?.reviewsCount ?? act?.reviews ?? act?.reviewCount ?? '';
   if (act?.rating && rawRev) {
     const cleanRev = String(rawRev).replace(/[\s\(\)]*reviews?[\s\(\)]*/ig, '').trim();
     return { rating: act.rating, reviews: cleanRev || '12k' };

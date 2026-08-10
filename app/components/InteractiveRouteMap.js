@@ -534,14 +534,19 @@ export default function InteractiveRouteMap({
     };
   }, [basecampLat, basecampLng, destinationName]);
 
+  const basecampDetails = typeof basecampHotel === 'object' && basecampHotel !== null ? basecampHotel : {};
   const basecampStop = {
+    ...basecampDetails, // Spread real hotel details first so they can be overridden by required UI fields
     isBasecamp: true,
-    title: derivedBasecampTitle,
-    description: `Your central lodging hub at ${derivedBasecampTitle}. Start your morning itinerary here and complete the loop to return refreshed in the evening.`,
+    title: basecampDetails.title || basecampDetails.name || derivedBasecampTitle,
+    description: basecampDetails.description || `Your central lodging hub at ${basecampDetails.title || basecampDetails.name || derivedBasecampTitle}. Start your morning itinerary here and complete the loop to return refreshed in the evening.`,
     badge: 'Basecamp Hotel',
     category: 'hotel',
     time: 'Departure & Return Hub',
-    coordinates: { lat: basecampLat, lng: basecampLng }
+    coordinates: basecampDetails.coordinates || { lat: basecampLat, lng: basecampLng },
+    image: basecampDetails.image || basecampDetails.photoUrl || basecampDetails.thumbnail,
+    rating: basecampDetails.rating || 4.8,
+    reviewCount: basecampDetails.reviewCount || 12000
   };
 
   const loopedStops = validActivities.length > 0 ? [basecampStop, ...validActivities] : [];
@@ -1866,7 +1871,7 @@ export default function InteractiveRouteMap({
       {saveToastName && (
         <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-3 z-[6000] animate-[popIn_0.3s_ease-out]">
           <Heart size={16} fill="currentColor" className="text-red-400" />
-          <span className="font-semibold text-sm">Saved "{saveToastName}" to your itinerary</span>
+          <span className="font-semibold text-sm">Saved &quot;{saveToastName}&quot; to your itinerary</span>
         </div>
       )}
 
@@ -2006,6 +2011,7 @@ export default function InteractiveRouteMap({
       </div>
 
       {/* Premium Floating Destination Details Panel (Apple Maps / Airbnb / Google Travel / Arc / Notion inspired) */}
+      <AnimatePresence>
       {(() => {
         const currentTarget = activeDestination || (selectedStopIdx !== null && loopedStops[selectedStopIdx] ? {
           act: loopedStops[selectedStopIdx],
@@ -2154,7 +2160,15 @@ export default function InteractiveRouteMap({
         };
 
         return (
-          <div data-lenis-prevent="true" className="absolute bottom-4 sm:bottom-auto sm:top-16 right-3 left-3 sm:left-auto sm:right-6 sm:w-110 max-w-[95vw] sm:max-h-[calc(100%-85px)] max-h-[82vh] z-850 bg-[#FFFFFF] rounded-3xl border border-[#ECE8E2] shadow-[0_24px_64px_rgba(0,0,0,0.16),0_8px_24px_rgba(0,0,0,0.06)] overflow-y-auto pointer-events-auto flex flex-col transition-all duration-300 animate-in fade-in zoom-in-95 sm:slide-in-from-right-6 ease-out transform-gpu text-[#1F1F1F]">
+          <motion.div
+            key="details-panel"
+            initial={{ opacity: 0, scale: 0.95, x: 20, y: 10 }}
+            animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, x: 20, y: 10, transition: { duration: 0.2 } }}
+            transition={{ type: 'spring', stiffness: 350, damping: 25, bounce: 0.4 }}
+            data-lenis-prevent="true" 
+            className="absolute bottom-4 sm:bottom-auto sm:top-16 right-3 left-3 sm:left-auto sm:right-6 sm:w-110 max-w-[95vw] sm:max-h-[calc(100%-85px)] max-h-[82vh] z-850 bg-[#FFFFFF] rounded-3xl border border-[#ECE8E2] shadow-[0_24px_64px_rgba(0,0,0,0.16),0_8px_24px_rgba(0,0,0,0.06)] overflow-y-auto pointer-events-auto flex flex-col transform-gpu text-[#1F1F1F]"
+          >
             {/* Subtle pointer triangle connecting visually toward the marker on the map */}
             <div className="hidden sm:block absolute -left-2.5 top-28 w-5 h-5 bg-[#FFFFFF] border-l border-b border-[#ECE8E2] transform rotate-45 pointer-events-none shadow-[-3px_3px_8px_rgba(0,0,0,0.04)] z-50" />
 
@@ -2201,7 +2215,7 @@ export default function InteractiveRouteMap({
               {/* Photo count floating badge with semi-transparent glass background */}
               <div className="absolute bottom-2.5 right-3 px-2 py-0.5 rounded-full bg-black/45 backdrop-blur-md text-white border border-white/20 text-[10px] font-bold shadow-xs flex items-center gap-1 z-10">
                 <span>📷</span>
-                <span>14 Photos</span>
+                <span>{act?.photos?.length || act?.images?.length || act?.photoCount || (isBasecamp ? 14 : 8)} Photos</span>
               </div>
 
               {/* 2. Destination Title overlay at bottom of hero image */}
@@ -2287,27 +2301,49 @@ export default function InteractiveRouteMap({
               </div>
 
               {/* 7. ✨ TripWise Insight (AI Recommendation) */}
-              <div className="bg-linear-to-br from-[#FFF8F3] via-[#FFF3EC]/70 to-[#FFECE2]/40 border border-[#FF6B2C]/25 rounded-2xl p-4 shadow-[0_4px_16px_rgba(255,107,44,0.05)] relative overflow-hidden transition-all duration-200 hover:shadow-md hover:border-[#FF6B2C]/40 group">
-                <div className="flex items-center gap-2 mb-2.5">
-                  <div className="w-5 h-5 rounded-lg bg-[#FF6B2C] text-white flex items-center justify-center text-[11px] shadow-2xs font-bold shrink-0 animate-pulse">
-                    ✨
+              <motion.div
+                whileHover={{ scale: 1.02, y: -2 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                className="bg-linear-to-br from-[#FFF8F3] via-[#FFF3EC]/80 to-[#FFECE2]/60 border border-[#FF6B2C]/30 rounded-2xl p-4 shadow-[0_8px_24px_rgba(255,107,44,0.12)] relative overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_rgba(255,107,44,0.18)] hover:border-[#FF6B2C]/50 group cursor-default"
+              >
+                {/* Glossy overlay effect */}
+                <div className="absolute inset-0 bg-linear-to-b from-white/40 to-transparent pointer-events-none rounded-2xl opacity-50" />
+                
+                <div className="flex items-center gap-2 mb-2.5 relative z-10">
+                  <div className="w-5 h-5 rounded-lg bg-linear-to-r from-[#FF6B2C] to-[#E65D20] text-white flex items-center justify-center text-[11px] shadow-sm font-bold shrink-0">
+                    <motion.div
+                      animate={{ rotate: [0, -10, 10, -10, 10, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
+                    >
+                      ✨
+                    </motion.div>
                   </div>
                   <span className="text-[11px] font-extrabold text-[#D94E14] uppercase tracking-wider">
                     TripWise Insight
                   </span>
                 </div>
-                <div className="flex flex-col gap-1.5 pl-1">
+                <div className="flex flex-col gap-1.5 pl-1 relative z-10">
                   {insightBullets.map((bullet, idx) => (
-                    <div key={idx} className="flex items-start gap-2 text-xs font-semibold text-[#1F1F1F] leading-relaxed">
+                    <motion.div 
+                      key={idx}
+                      initial={{ opacity: 0, x: -5 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 + (idx * 0.1) }}
+                      className="flex items-start gap-2 text-xs font-semibold text-[#1F1F1F] leading-relaxed"
+                    >
                       <span className="text-[#FF6B2C] font-black mt-0.5">•</span>
                       <span>{bullet}</span>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
-              </div>
+              </motion.div>
 
               {/* 8. 🤖 Why TripWise Chose This Stop section */}
-              <div className="bg-[#FAF8F5] border border-[#ECE8E2] rounded-2xl p-3.5 transition-all duration-200 hover:border-[#ECE8E2]/90 hover:shadow-2xs">
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                className="bg-[#FAF8F5] border border-[#ECE8E2] rounded-2xl p-3.5 transition-all duration-300 hover:border-[#ECE8E2]/90 hover:shadow-sm hover:bg-white cursor-default"
+              >
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="text-sm">🤖</span>
                   <span className="text-[11px] font-extrabold text-[#1F1F1F] uppercase tracking-wider">
@@ -2315,9 +2351,9 @@ export default function InteractiveRouteMap({
                   </span>
                 </div>
                 <p className="text-xs font-medium text-[#6B6B6B] leading-relaxed italic">
-                  "{whyChosenText}"
+                  &quot;{whyChosenText}&quot;
                 </p>
-              </div>
+              </motion.div>
 
               {/* 9. Nearby AI Suggestions (Optional recommendations below AI section) */}
               <div className="flex flex-col gap-2.5 pt-1">
@@ -2354,44 +2390,50 @@ export default function InteractiveRouteMap({
                 {/* Premium Compact Sticky Action Bar (always 1 click away on scroll) */}
                 <div className="flex items-center justify-between gap-1.5 sm:gap-2 w-full">
                   {/* Primary CTA: Tickets */}
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.04, y: -2 }}
+                    whileTap={{ scale: 0.96 }}
                     type="button"
                     onClick={() => setActivePassModal({ activity: act, dayNum: selectedDayIndex + 1, stopNum: (selectedStopIdx !== null ? selectedStopIdx + 1 : 1) })}
-                    className="group/ticket flex-[1.4] min-w-0 bg-linear-to-r from-[#FF6B2C] to-[#E65D20] hover:from-[#E65D20] hover:to-[#D95524] text-white font-bold rounded-xl px-2 sm:px-3 h-10 flex items-center justify-center gap-1.5 shadow-[0_4px_16px_rgba(255,107,44,0.3)] hover:shadow-[0_6px_20px_rgba(255,107,44,0.4)] hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out cursor-pointer"
+                    className="group/ticket flex-[1.4] min-w-0 bg-linear-to-r from-[#FF6B2C] to-[#E65D20] text-white font-bold rounded-xl px-2 sm:px-3 h-10 flex items-center justify-center gap-1.5 shadow-[0_4px_16px_rgba(255,107,44,0.3)] hover:shadow-[0_8px_24px_rgba(255,107,44,0.45)] transition-shadow duration-300 ease-out cursor-pointer"
                   >
                     <Ticket size={15} strokeWidth={2.5} className="shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover/ticket:-rotate-[15deg] group-hover/ticket:scale-110" />
                     <span className="tracking-tight whitespace-nowrap text-[13px] sm:text-sm">Tickets</span>
                     <ArrowRight size={15} strokeWidth={2.5} className="shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover/ticket:translate-x-1" />
-                  </button>
+                  </motion.button>
 
-                  {/* Secondary CTA: Start Route (with Upright Arrow instead of diagonal icon) */}
-                  <a
+                  {/* Secondary CTA: Start Route */}
+                  <motion.a
+                    whileHover={{ scale: 1.04, y: -2 }}
+                    whileTap={{ scale: 0.96 }}
                     href={googleMapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-[1.2] min-w-0 bg-white hover:bg-[#FAF8F5] text-[#1F1F1F] border border-black/6 hover:border-black/12 font-semibold rounded-xl px-2 h-10 flex items-center justify-center gap-1 sm:gap-1.5 shadow-2xs hover:shadow-sm hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out text-center group cursor-pointer"
+                    className="flex-[1.2] min-w-0 bg-white text-[#1F1F1F] border border-black/10 hover:border-black/20 font-semibold rounded-xl px-2 h-10 flex items-center justify-center gap-1 sm:gap-1.5 shadow-xs hover:shadow-md transition-shadow duration-300 ease-out text-center group cursor-pointer"
                   >
                     <ArrowUpRight
                       size={15}
-                      strokeWidth={2.2}
+                      strokeWidth={2.5}
                       className="text-[#FF6B2C] transition-transform duration-200 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-active:scale-110 shrink-0"
                     />
                     <span className="tracking-tight whitespace-nowrap text-xs sm:text-[13px]">Start Route</span>
-                  </a>
+                  </motion.a>
 
                   {/* Secondary CTA: Save */}
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.04, y: -2 }}
+                    whileTap={{ scale: 0.96 }}
                     type="button"
                     onClick={toggleSaveDestination}
-                    className={`flex-[0.9] min-w-0 hover:bg-[#FAF8F5] ${
+                    className={`flex-[0.9] min-w-0 ${
                       isDestinationSaved
-                        ? 'bg-linear-to-r from-[#FFE8DE] to-[#FFF3ED] text-[#D94E14] border border-[#FF6B2C]/30 shadow-2xs'
-                        : 'bg-white text-[#1F1F1F] border border-black/6 hover:border-black/12 shadow-2xs'
-                    } font-semibold rounded-xl px-2 h-10 flex items-center justify-center gap-1 sm:gap-1.5 hover:shadow-sm hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out text-center group cursor-pointer`}
+                        ? 'bg-linear-to-r from-[#FFE8DE] to-[#FFF3ED] text-[#D94E14] border border-[#FF6B2C]/30 shadow-sm'
+                        : 'bg-white text-[#1F1F1F] border border-black/10 hover:border-black/20 shadow-xs hover:shadow-md'
+                    } font-semibold rounded-xl px-2 h-10 flex items-center justify-center gap-1 sm:gap-1.5 transition-shadow duration-300 ease-out text-center group cursor-pointer`}
                   >
                     <Heart
                       size={15}
-                      strokeWidth={2.2}
+                      strokeWidth={2.5}
                       className={`shrink-0 transition-all duration-200 ${
                         isDestinationSaved
                           ? 'fill-[#FF6B2C] text-[#FF6B2C] scale-110'
@@ -2399,21 +2441,23 @@ export default function InteractiveRouteMap({
                       }`}
                     />
                     <span className="tracking-tight whitespace-nowrap text-xs sm:text-[13px]">{isDestinationSaved ? 'Saved' : 'Save'}</span>
-                  </button>
+                  </motion.button>
 
-                  {/* Secondary CTA: Share (icon fills solid on hover) */}
-                  <button
+                  {/* Secondary CTA: Share */}
+                  <motion.button
+                    whileHover={{ scale: 1.04, y: -2 }}
+                    whileTap={{ scale: 0.96 }}
                     type="button"
                     onClick={() => setIsInviteModalOpen(true)}
-                    className="flex-[0.9] min-w-0 bg-white hover:bg-[#FAF8F5] text-[#1F1F1F] border border-black/6 hover:border-black/12 font-semibold rounded-xl px-2 h-10 flex items-center justify-center gap-1 sm:gap-1.5 shadow-2xs hover:shadow-sm hover:-translate-y-0.5 active:scale-95 transition-all duration-200 ease-out text-center group cursor-pointer"
+                    className="flex-[0.9] min-w-0 bg-white text-[#1F1F1F] border border-black/10 hover:border-black/20 font-semibold rounded-xl px-2 h-10 flex items-center justify-center gap-1 sm:gap-1.5 shadow-xs hover:shadow-md transition-shadow duration-300 ease-out text-center group cursor-pointer"
                   >
                     <Share2
                       size={15}
-                      strokeWidth={2.2}
+                      strokeWidth={2.5}
                       className="shrink-0 text-[#1F1F1F] fill-transparent group-hover:fill-[#1F1F1F] transition-all duration-200 ease-out group-hover:scale-110"
                     />
                     <span className="tracking-tight whitespace-nowrap text-xs sm:text-[13px]">Share</span>
-                  </button>
+                  </motion.button>
                 </div>
 
                 {/* Previous / Stop Counter / Next Navigation */}
@@ -2442,9 +2486,10 @@ export default function InteractiveRouteMap({
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         );
       })()}
+      </AnimatePresence>
 
       {/* Loading Overlay while Leaflet fetches */}
       {!isReady && (
