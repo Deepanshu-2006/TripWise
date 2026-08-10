@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, Camera, Trash2, Edit2, AlertCircle, CheckCircle2, 
   X, Eye, CloudOff, Download, Users, RefreshCw, Utensils, Car, ShoppingBag, Ticket, Hotel, CreditCard,
-  TrendingUp, TrendingDown, DollarSign
+  TrendingUp, TrendingDown, DollarSign, ChevronDown
 } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
 import { getTripCollaborators } from '../actions/trips';
@@ -120,7 +120,8 @@ export default function ExpenseTrackerView({
   estBudget = 1450, 
   destination = 'Rome, Italy', 
   daysCount = 3,
-  collaborators = []
+  collaborators = [],
+  onShowToast = null
 }) {
   const [expenses, setExpenses] = useState([]);
   const [homeCurrency, setHomeCurrency] = useState('USD');
@@ -495,9 +496,18 @@ export default function ExpenseTrackerView({
     } catch(e) {}
     setShowAddModal(false);
     setDuplicateWarning(null);
+    console.log("Attempting to show toast", !!onShowToast);
+    if (onShowToast) {
+      onShowToast(
+        editingExpense ? "Expense updated" : "Expense logged", 
+        editingExpense ? "success" : "expense", 
+        editingExpense ? "CheckCircle2" : "Receipt"
+      );
+    }
   };
 
   const handleDeleteExpense = (id) => {
+    const deletedExp = expenses.find(exp => exp.id === id);
     const updated = expenses.filter(exp => exp.id !== id);
     setExpenses(updated);
     saveTripExpenses(tripId, updated);
@@ -505,6 +515,29 @@ export default function ExpenseTrackerView({
       localStorage.setItem('tw_shared_expenses_global', JSON.stringify(updated));
       window.dispatchEvent(new Event('storage'));
     } catch(e) {}
+    
+    if (onShowToast && deletedExp) {
+      onShowToast("Expense deleted", "error", "Trash2", {
+        label: "Undo",
+        onClick: () => handleRestoreExpense(deletedExp)
+      });
+    }
+  };
+
+  const handleRestoreExpense = (expToRestore) => {
+    setExpenses(prev => {
+      // Re-insert at top of list
+      const restored = [expToRestore, ...prev];
+      saveTripExpenses(tripId, restored);
+      try {
+        localStorage.setItem('tw_shared_expenses_global', JSON.stringify(restored));
+        window.dispatchEvent(new Event('storage'));
+      } catch(e) {}
+      return restored;
+    });
+    if (onShowToast) {
+      onShowToast("Expense restored", "success", "CheckCircle2");
+    }
   };
 
   const handleEditClick = (exp) => {
@@ -929,7 +962,7 @@ export default function ExpenseTrackerView({
                 const catConfig = CATEGORY_ICONS[exp.category] || CATEGORY_ICONS['Other'];
                 const IconComp = catConfig.icon;
                 const usdEquiv = convertCurrency(exp.amount, exp.currency, homeCurrency);
-                const isForeign = exp.currency && exp.currency !== 'USD';
+                const isForeign = exp.currency && exp.currency !== homeCurrency;
                 const currObj = SUPPORTED_CURRENCIES.find(c => c.code === exp.currency);
                 const symbol = currObj ? currObj.symbol : (homeCurrency === 'EUR' ? '€' : homeCurrency === 'INR' ? '₹' : homeCurrency === 'GBP' ? '£' : '$');
                 return (
@@ -1009,20 +1042,24 @@ export default function ExpenseTrackerView({
                       </div>
 
                       <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                        <button
+                        <motion.button
+                          whileHover={{ scale: 1.15, rotate: 5 }}
+                          whileTap={{ scale: 0.9 }}
                           onClick={() => handleEditClick(exp)}
                           className="p-1.5 rounded-lg text-gray-500 hover:text-[#1E1C1A] hover:bg-[#FAF6F0] transition-colors cursor-pointer"
                           title="Edit Expense"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.15, rotate: -5 }}
+                          whileTap={{ scale: 0.9 }}
                           onClick={() => handleDeleteExpense(exp.id)}
                           className="p-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                           title="Delete Expense"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        </motion.button>
                       </div>
                     </div>
                   </motion.div>
@@ -1144,17 +1181,20 @@ export default function ExpenseTrackerView({
 
                   <div>
                     <label className="block font-bold text-gray-700 mb-1">Currency</label>
-                    <select
-                      value={expenseCurrency}
-                      onChange={(e) => setExpenseCurrency(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E6DFD5] text-xs font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C]"
-                    >
-                      {SUPPORTED_CURRENCIES.map(c => (
-                        <option key={c.code} value={c.code}>
-                          {c.code} ({c.symbol}) — {c.label}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        value={expenseCurrency}
+                        onChange={(e) => setExpenseCurrency(e.target.value)}
+                        className="w-full px-3.5 py-2.5 pr-10 rounded-xl bg-white border border-[#E6DFD5] text-xs font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C] appearance-none"
+                      >
+                        {SUPPORTED_CURRENCIES.map(c => (
+                          <option key={c.code} value={c.code}>
+                            {c.code} ({c.symbol}) — {c.label}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+                    </div>
                   </div>
                 </div>
 
@@ -1173,42 +1213,51 @@ export default function ExpenseTrackerView({
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block font-bold text-gray-700 mb-1">Category</label>
-                    <select
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E6DFD5] text-xs font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C]"
-                    >
-                      {EXPENSE_CATEGORIES.map(cat => (
-                        <option key={cat.id} value={cat.id}>{cat.label}</option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        className="w-full px-3.5 py-2.5 pr-10 rounded-xl bg-white border border-[#E6DFD5] text-xs font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C] appearance-none"
+                      >
+                        {EXPENSE_CATEGORIES.map(cat => (
+                          <option key={cat.id} value={cat.id}>{cat.label}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+                    </div>
                   </div>
 
                   <div>
                     <label className="block font-bold text-gray-700 mb-1">Itinerary Day</label>
-                    <select
-                      value={expenseDay}
-                      onChange={(e) => setExpenseDay(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E6DFD5] text-xs font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C]"
-                    >
-                      <option value="Day 1">Day I (Sep 4)</option>
-                      <option value="Day 2">Day II (Sep 5)</option>
-                      <option value="Day 3">Day III (Sep 6)</option>
-                    </select>
+                    <div className="relative">
+                      <select
+                        value={expenseDay}
+                        onChange={(e) => setExpenseDay(e.target.value)}
+                        className="w-full px-3.5 py-2.5 pr-10 rounded-xl bg-white border border-[#E6DFD5] text-xs font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C] appearance-none"
+                      >
+                        <option value="Day 1">Day I (Sep 4)</option>
+                        <option value="Day 2">Day II (Sep 5)</option>
+                        <option value="Day 3">Day III (Sep 6)</option>
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+                    </div>
                   </div>
                 </div>
 
                 <div>
                   <label className="block font-bold text-gray-700 mb-1">Paid By (Group Settlement)</label>
-                  <select
-                    value={paidBy}
-                    onChange={(e) => setPaidBy(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E6DFD5] text-xs font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C]"
-                  >
-                    <option value="Me">Me (Direct Expense)</option>
-                    <option value={primaryCollaborator.name}>{primaryCollaborator.name} (Partner Paid)</option>
-                    <option value="Shared 50/50">Shared 50/50 Split</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={paidBy}
+                      onChange={(e) => setPaidBy(e.target.value)}
+                      className="w-full px-3.5 py-2.5 pr-10 rounded-xl bg-white border border-[#E6DFD5] text-xs font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C] appearance-none"
+                    >
+                      <option value="Me">Me (Direct Expense)</option>
+                      <option value={primaryCollaborator.name}>{primaryCollaborator.name} (Partner Paid)</option>
+                      <option value="Shared 50/50">Shared 50/50 Split</option>
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+                  </div>
                 </div>
 
                 {!receiptPhotoDataUrl && (
@@ -1233,12 +1282,14 @@ export default function ExpenseTrackerView({
                   >
                     Cancel
                   </button>
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.05, boxShadow: "0px 10px 20px rgba(255,107,44,0.3)" }}
+                    whileTap={{ scale: 0.95 }}
                     type="submit"
-                    className="px-5 py-2 rounded-xl bg-[#FF6B2C] hover:bg-[#E55A1C] text-white font-bold shadow-md transition-all cursor-pointer"
+                    className="px-5 py-2 rounded-xl bg-[#FF6B2C] hover:bg-[#E55A1C] text-white font-bold shadow-md transition-colors cursor-pointer"
                   >
                     Save Expense
-                  </button>
+                  </motion.button>
                 </div>
               </form>
             </motion.div>
