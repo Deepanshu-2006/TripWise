@@ -180,8 +180,8 @@ export default function TripsCalendarView({ trips }) {
                     className={`w-full h-full flex items-center ${barClass} ${roundedClass} text-[11px] font-bold overflow-hidden px-1 outline-none focus:ring-2 focus:ring-[#FF6B2C]/50 transition-colors`}
                 >
                     <div className="flex items-center min-w-0 flex-1">
-                        {isStart && destInfo?.imageUrl && (
-                            <img src={destInfo.imageUrl} alt={destName} className="w-5 h-5 rounded-full object-cover shrink-0 mr-2 shadow-sm" />
+                        {isStart && trip.imageUrl && (
+                            <img src={trip.imageUrl} alt={destName} className="w-5 h-5 rounded-full object-cover shrink-0 mr-2 shadow-sm" />
                         )}
                         <span className="truncate tracking-wide">{isStart ? destName : '→ ' + destName}</span>
                         {isNearest && daysUntil !== null && (
@@ -559,8 +559,8 @@ export default function TripsCalendarView({ trips }) {
                         ref={popoverRef}
                     >
                         <div className="relative h-32 w-full bg-stone-100">
-                            {selectedTripPopover.destInfo?.imageUrl ? (
-                                <img src={selectedTripPopover.destInfo.imageUrl} alt={selectedTripPopover.trip.destinationName} className="w-full h-full object-cover" />
+                            {selectedTripPopover.trip?.imageUrl ? (
+                                <img src={selectedTripPopover.trip.imageUrl} alt={selectedTripPopover.trip.destinationName} className="w-full h-full object-cover" />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center bg-stone-200">
                                     <MapPin size={24} className="text-stone-400" />

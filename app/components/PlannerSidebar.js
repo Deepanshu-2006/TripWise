@@ -1222,10 +1222,14 @@ export default function PlannerSidebar({
   useEffect(() => {
     // Dynamically load Google Maps script if a key is provided and not already loaded
     if (typeof window !== 'undefined' && !window.google && process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
-      script.async = true;
-      document.body.appendChild(script);
+      const scriptId = 'google-maps-api-script';
+      if (!document.getElementById(scriptId)) {
+        const script = document.createElement('script');
+        script.id = scriptId;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
+        script.async = true;
+        document.body.appendChild(script);
+      }
     }
   }, []);
 
@@ -2816,8 +2820,9 @@ export default function PlannerSidebar({
                         {/* Top Row: Day Navigation Segmented Control + Weather Chip (top-right) */}
                         <div className="flex items-center justify-between gap-3">
                           {itinerary.days && itinerary.days.length > 0 ? (
-                            <div className="inline-flex items-center gap-1 bg-[#F6F4F1] p-0.5 rounded-full border border-[#ECE8E2] h-8.5 select-none shadow-inner w-fit">
-                              {itinerary.days.map((day, idx) => {
+                            <div className="flex-1 min-w-0 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                              <div className="inline-flex items-center gap-1 bg-[#F6F4F1] p-0.5 rounded-full border border-[#ECE8E2] h-8.5 select-none shadow-inner w-max">
+                                {itinerary.days.map((day, idx) => {
                                 const isSelected = selectedDayIndex === idx;
                                 return (
                                   <button
@@ -2842,6 +2847,7 @@ export default function PlannerSidebar({
                                   </button>
                                 );
                               })}
+                              </div>
                             </div>
                           ) : <div />}
 
