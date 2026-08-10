@@ -29,11 +29,12 @@ const MAP_HEIGHT = 600;
 const OFFSET_X = 120; // (1440 - 1200) / 2
 const OFFSET_Y = 20; // Move map down slightly to make plenty of room for Northern flight arcs
 
-function getCityCoords(destName) {
+function getCityCoords(destName, dynamicCoords = {}) {
   if (!destName) return null;
   const lower = destName.toLowerCase();
   let coords = null;
-  for (const [city, latlon] of Object.entries(CITY_LAT_LON)) {
+  const combined = { ...CITY_LAT_LON, ...dynamicCoords };
+  for (const [city, latlon] of Object.entries(combined)) {
     if (lower.includes(city)) {
         coords = latlon;
         break;
@@ -57,6 +58,7 @@ function getCityCoords(destName) {
 export default function AnimatedFlightMap({ trips = [] }) {
     const [reducedMotion, setReducedMotion] = useState(false);
     const [isVisible, setIsVisible] = useState(true);
+    const [dynamicCoords, setDynamicCoords] = useState({});
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
@@ -74,18 +76,54 @@ export default function AnimatedFlightMap({ trips = [] }) {
         };
     }, []);
 
+    useEffect(() => {
+        // Collect unknown cities
+        const unknown = trips
+            .map(t => t.destinationName ? t.destinationName.split(',')[0].trim().toLowerCase() : '')
+            .filter(name => name && !CITY_LAT_LON[name] && !dynamicCoords[name]);
+        
+        const uniqueUnknown = [...new Set(unknown)];
+        
+        if (uniqueUnknown.length > 0) {
+            Promise.all(uniqueUnknown.map(async city => {
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`);
+                    const data = await res.json();
+                    if (data && data.length > 0) {
+                        return { city, lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+                    }
+                } catch (e) {
+                    console.error("Geocoding failed for", city, e);
+                }
+                return null;
+            })).then(results => {
+                const newCoords = {};
+                let updated = false;
+                results.forEach(res => {
+                    if (res) {
+                        newCoords[res.city] = { lat: res.lat, lon: res.lon };
+                        updated = true;
+                    }
+                });
+                if (updated) {
+                    setDynamicCoords(prev => ({ ...prev, ...newCoords }));
+                }
+            });
+        }
+    }, [trips, dynamicCoords]);
+
     const points = useMemo(() => {
         // Sort chronologically and map to coordinates
         const sorted = [...trips].sort((a, b) => new Date(a.startDate || a.created_at) - new Date(b.startDate || b.created_at));
         const pts = [];
         sorted.forEach(t => {
-            const coords = getCityCoords(t.destinationName);
+            const coords = getCityCoords(t.destinationName, dynamicCoords);
             if (coords) pts.push(coords);
         });
         
         // Remove consecutive duplicate locations
         return pts.filter((p, i) => i === 0 || p.x !== pts[i-1].x || p.y !== pts[i-1].y);
-    }, [trips]);
+    }, [trips, dynamicCoords]);
 
     // Generate SVG path connecting points using Great Circle (bowing up)
     const generatePath = (points) => {

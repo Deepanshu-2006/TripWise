@@ -229,19 +229,20 @@ export default function ItineraryMapModal({ activities = [], coordinates = null,
     const routeGlow  = 'rgba(236,103,53,0.45)';
 
     // Layer 1: Wide outer glow
-    L.polyline(latLngs, {
+    const polylineCoords = latLngs.map(ll => [ll.lat, ll.lng]);
+    L.polyline(polylineCoords, {
       color: routeGlow, weight: 14,
       opacity: 0.30, lineCap: 'round', lineJoin: 'round'
     }).addTo(lg);
 
     // Layer 2: Inner glow
-    L.polyline(latLngs, {
+    L.polyline(polylineCoords, {
       color: routeGlow, weight: 8,
       opacity: 0.50, lineCap: 'round', lineJoin: 'round'
     }).addTo(lg);
 
     // Layer 3: Solid premium route line
-    L.polyline(latLngs, {
+    L.polyline(polylineCoords, {
       color: routeColor, weight: 4,
       opacity: 0.96, lineCap: 'round', lineJoin: 'round'
     }).addTo(lg);

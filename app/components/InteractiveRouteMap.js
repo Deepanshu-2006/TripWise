@@ -1318,8 +1318,9 @@ export default function InteractiveRouteMap({
         if (latLngs.length > 1 && window.L) {
           const routeColor = isMultiDayMode ? dayColorMeta.color : themeColor;
           const routeGlow = isMultiDayMode ? dayColorMeta.glow : (isItineraryView ? 'rgba(186, 85, 54, 0.45)' : 'rgba(255, 107, 44, 0.45)');
+          const polylineCoords = latLngs.map(ll => [ll.lat, ll.lng]);
  
-          L.polyline(latLngs, {
+          L.polyline(polylineCoords, {
             color: routeGlow,
             weight: isMultiDayMode ? 8 : 10,
             opacity: selectedCategory !== 'all' ? 0.15 : 0.40,
@@ -1330,8 +1331,8 @@ export default function InteractiveRouteMap({
  
           // Layer 2: Clean solid premium route line (Point 3: Completed vs Upcoming route split)
           if (selectedStopIdx !== null && !isMultiDayMode && selectedStopIdx > 0 && selectedStopIdx < latLngs.length) {
-            const completedLatLngs = latLngs.slice(0, selectedStopIdx + 1);
-            const upcomingLatLngs = latLngs.slice(selectedStopIdx);
+            const completedLatLngs = latLngs.slice(0, selectedStopIdx + 1).map(ll => [ll.lat, ll.lng]);
+            const upcomingLatLngs = latLngs.slice(selectedStopIdx).map(ll => [ll.lat, ll.lng]);
             
             L.polyline(completedLatLngs, {
               color: isItineraryView ? '#9C4124' : '#D95524',
@@ -1350,7 +1351,7 @@ export default function InteractiveRouteMap({
               lineJoin: 'round'
             }).addTo(layerGroupRef.current);
           } else {
-            animatedPolyline = L.polyline(latLngs, {
+            animatedPolyline = L.polyline(polylineCoords, {
               color: routeColor,
               weight: 4,
               opacity: selectedCategory !== 'all' ? 0.35 : 0.96,
@@ -1472,7 +1473,8 @@ export default function InteractiveRouteMap({
         });
 
         if (allLatLngs.length > 1 && selectedStopIdx === null && selectedCategory === 'all') {
-          mapRef.current.flyToBounds(L.polyline(allLatLngs).getBounds(), {
+          const allPolylineCoords = allLatLngs.map(ll => [ll.lat, ll.lng]);
+          mapRef.current.flyToBounds(L.polyline(allPolylineCoords).getBounds(), {
             paddingTopLeft: [75, 120],
             paddingBottomRight: [75, 95],
             maxZoom: 15,
