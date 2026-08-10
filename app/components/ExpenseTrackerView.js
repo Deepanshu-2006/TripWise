@@ -373,7 +373,46 @@ export default function ExpenseTrackerView({
 
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const dataUrl = event.target.result;
+      let dataUrl = event.target.result;
+
+      // Compress image to prevent LocalStorage QuotaExceededError
+      try {
+        dataUrl = await new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 800;
+            const MAX_HEIGHT = 800;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height *= MAX_WIDTH / width;
+                width = MAX_WIDTH;
+              }
+            } else {
+              if (height > MAX_HEIGHT) {
+                width *= MAX_HEIGHT / height;
+                height = MAX_HEIGHT;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Output as compressed JPEG
+            resolve(canvas.toDataURL('image/jpeg', 0.6));
+          };
+          img.onerror = () => resolve(event.target.result);
+          img.src = event.target.result;
+        });
+      } catch (err) {
+        console.warn('Image compression failed', err);
+      }
+
       setReceiptPhotoDataUrl(dataUrl);
 
       // Trigger OCR
