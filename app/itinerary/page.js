@@ -13,7 +13,7 @@ import LiveAssistantNudge from '../components/LiveAssistantNudge';
 import WeatherNudge from '../components/WeatherNudge';
 import LiveAssistantProposalModal from '../components/LiveAssistantProposalModal';
 import { usePreferenceEngine } from '../hooks/usePreferenceEngine';
-import { getTripExpenses, convertCurrency, getUserDisplayCurrency, formatCurrency } from '../../lib/expenseApi';
+import { getTripExpenses, convertCurrency, getUserDisplayCurrency, formatCurrency, fetchExchangeRates } from '../../lib/expenseApi';
 import Link from 'next/link';
 import {
   Download,
@@ -65,7 +65,8 @@ import {
   BookOpen,
   Save,
   FastForward,
-  ChevronRight
+  ChevronRight,
+  Receipt
 } from 'lucide-react';
 import {
   getActivityThumbnail,
@@ -130,6 +131,18 @@ const getPacingLabel = (activities = []) => {
   if (count <= 3) return 'Relaxed Pacing (Optimal Daylight Balance)';
   if (count <= 5) return 'Moderate Pacing (Balanced Daylight Schedule)';
   return 'Active Pacing (Comprehensive Daylight Exploration)';
+};
+
+const parseEstimatedCostSafe = (costStr) => {
+  if (!costStr) return 1450;
+  const str = String(costStr);
+  // Prefer extracting USD equivalent if provided in the string
+  const usdMatch = str.match(/\$[\s]*([\d,]+(\.\d+)?)/);
+  if (usdMatch) return parseFloat(usdMatch[1].replace(/,/g, ''));
+  // Fallback to the first contiguous number
+  const match = str.match(/[\d,]+(\.\d+)?/);
+  if (match) return parseFloat(match[0].replace(/,/g, ''));
+  return 1450;
 };
 
 const getStopEndTimeMinutes = (timeStr, durationStr) => {
@@ -549,9 +562,11 @@ export default function ItineraryPage() {
   const [activeTripId, setActiveTripId] = useState(null);
   const [itinerary, setItinerary] = useState(null);
   const [userCurrency, setUserCurrency] = useState('USD');
+  const [ratesReady, setRatesReady] = useState(false);
 
   useEffect(() => {
     setUserCurrency(getUserDisplayCurrency());
+    fetchExchangeRates().then(() => setRatesReady(true));
     if (typeof window !== 'undefined') {
       const storedId = localStorage.getItem('tripwise_trip_id');
       if (storedId) setActiveTripId(storedId);
@@ -559,7 +574,7 @@ export default function ItineraryPage() {
   }, []);
 
   // Navigation & Modal State
-  const [activeDay, setActiveDay] = useState(1); // Active Day, 'epilogue', 'packing', 'visa', 'tracking', or 'emergency'
+  const [activeDay, setActiveDay] = useState(1); 
   const [activeModalDay, setActiveModalDay] = useState(null);
   const [isEmergencyModalOpen, setIsEmergencyModalOpen] = useState(false);
   const [isSavedPlacesModalOpen, setIsSavedPlacesModalOpen] = useState(false);
@@ -583,7 +598,7 @@ export default function ItineraryPage() {
       }, 4000);
       return () => clearTimeout(timer);
     }
-  }, [journalSuccessMessage]); // { activity, dayNum, stopNum }
+  }, [journalSuccessMessage]);
 
   const handleRatingChange = (actKey, activity, rating) => {
     setActivityRatings(prev => ({
@@ -957,8 +972,8 @@ export default function ItineraryPage() {
   const [isPrinting, setIsPrinting] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
-  const showToast = (message, type = 'success', icon = 'Bell') => {
-    setToastMessage({ message, type, icon });
+  const showToast = (message, type = 'success', icon = 'Bell', action = null) => {
+    setToastMessage({ message, type, icon, action });
     setTimeout(() => {
       setToastMessage(null);
     }, 5000);
@@ -1223,22 +1238,8 @@ export default function ItineraryPage() {
       let shareUrl = window.location.href;
       if (itinerary) {
         try {
-          // CONFIRMATION & PRIVACY DOCUMENTATION:
-          // The shared dossier payload intentionally serializes ONLY the core `itinerary` object 
-          // (destination, dates, stops, coordinates, times, titles, and costs).
-          // Personal booking/reservation state (dining confirmation notes, ticket reference numbers)
-          // is stored in `localStorage` on the original user's device (`tw_dining_res_...` and `tw_ticket_note_...`)
-          // and is explicitly EXCLUDED from this share link.
-          // Recipients opening a shared link will see all bookable items as "Action Needed" since they have no prior
-          // local booking state on their device.
-          //
-          // FUTURE BACKEND NOTE (Non-urgent / architectural roadmap):
-          // Once a backend exists, replace this full-JSON-in-URL approach with a server-saved dossier + short shareable ID
-          // (e.g., `/itinerary?id=abc123`) to avoid URL length limits on longer multi-week itineraries.
           const jsonStr = JSON.stringify(itinerary);
           const url = new URL(window.location.origin + window.location.pathname);
-          // Fix double URL-encoding: `url.searchParams.set()` automatically URL-encodes the value once (`"` -> `%22`).
-          // Do NOT call `encodeURIComponent()` beforehand, otherwise `%` becomes `%25` (`%2522`).
           url.searchParams.set('dossier', jsonStr);
           shareUrl = url.toString();
         } catch (e) {
@@ -1323,7 +1324,6 @@ export default function ItineraryPage() {
           isPrebooked: isConf
         });
       } else {
-        // Sightseeing / Attraction / Park
         const ticketKey = `tw_ticket_note_${dest}_day${dNum}_stop${stopNum}`;
         let ticketNote = '';
         try {
@@ -1369,30 +1369,76 @@ export default function ItineraryPage() {
 
   return (
     <div className="min-h-screen bg-[#FAF6F0] text-[#1E1C1A] flex flex-col font-sans selection:bg-[#FF6B2C]/15">
-      {/* Scroll Progress Bar at the top of the page */}
       <motion.div
         style={{ scaleX }}
         className="fixed top-0 left-0 right-0 h-0.75 bg-[#FF6B2C] origin-left z-60 pointer-events-none print:hidden"
       />
 
-      {/* Global-ish Toast Notification */}
       <AnimatePresence>
         {toastMessage && (
           <motion.div
-            initial={{ opacity: 0, y: -20, x: '-50%' }}
-            animate={{ opacity: 1, y: 0, x: '-50%' }}
-            exit={{ opacity: 0, y: -20, x: '-50%' }}
-            className="fixed top-4 left-1/2 z-70 pointer-events-auto"
+            initial={{ opacity: 0, y: 80, x: '-50%', scale: 0.5, rotate: -5 }}
+            animate={{ opacity: 1, y: 0, x: '-50%', scale: 1, rotate: 0 }}
+            exit={{ opacity: 0, y: 50, x: '-50%', scale: 0.8, rotate: 5 }}
+            transition={{ type: 'spring', stiffness: 450, damping: 15, mass: 1, bounce: 0.6 }}
+            className="fixed bottom-8 left-1/2 z-[99999] pointer-events-auto"
           >
-            <div className={`flex items-center gap-2 px-4 py-3 rounded-2xl shadow-xl border ${toastMessage.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
+            <div className={`relative overflow-hidden flex items-center gap-2 px-4 py-3 rounded-2xl shadow-xl border ${toastMessage.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
                 toastMessage.type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
-                  'bg-white border-[#E6DFD5] text-[#1E1C1A]'
+                  toastMessage.type === 'expense' ? 'bg-orange-50 border-orange-200 text-[#E55A1C]' :
+                    'bg-white border-[#E6DFD5] text-[#1E1C1A]'
               }`}>
               {toastMessage.icon === 'Bell' && <Bell className="w-4 h-4" />}
+              {toastMessage.icon === 'CheckCircle2' && (
+                <motion.div
+                  initial={{ scale: 0, rotate: -90 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 15, delay: 0.05 }}
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                </motion.div>
+              )}
+              {toastMessage.icon === 'Trash2' && (
+                <motion.div
+                  initial={{ y: -15, opacity: 0, rotate: 15 }}
+                  animate={{ y: 0, opacity: 1, rotate: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 12, delay: 0.05 }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </motion.div>
+              )}
+              {toastMessage.icon === 'Receipt' && (
+                <motion.div
+                  initial={{ scale: 0, y: 10 }}
+                  animate={{ scale: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 12, delay: 0.05 }}
+                >
+                  <Receipt className="w-4 h-4" />
+                </motion.div>
+              )}
               <span className="text-sm font-semibold">{toastMessage.message}</span>
-              <button onClick={() => setToastMessage(null)} className="ml-2 hover:opacity-70">
+              {toastMessage.action && (
+                <button
+                  onClick={() => {
+                    toastMessage.action.onClick();
+                    setToastMessage(null);
+                  }}
+                  className="ml-2 px-3 py-1 rounded-full bg-black/10 hover:bg-black/20 text-xs font-bold transition-colors cursor-pointer"
+                >
+                  {toastMessage.action.label}
+                </button>
+              )}
+              <button onClick={() => setToastMessage(null)} className="ml-2 hover:opacity-70 cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
+              
+              {/* Toast Auto-Dismiss Timer */}
+              <motion.div
+                initial={{ width: "100%" }}
+                animate={{ width: "0%" }}
+                transition={{ duration: 5, ease: "linear" }}
+                className="absolute bottom-0 left-0 h-1 bg-current opacity-20"
+              />
             </div>
           </motion.div>
         )}
@@ -1406,13 +1452,11 @@ export default function ItineraryPage() {
         <Header />
       </div>
 
-      {/* HERO SECTION: Scroll-Driven Layered Parallax with Interactive Hover Zoom & Text Float (Accesses Requirement 1) */}
       <section
         onMouseEnter={() => setIsHeroHovered(true)}
         onMouseLeave={() => setIsHeroHovered(false)}
         className="relative w-full min-h-135 md:min-h-145 pt-32 pb-8 px-6 flex flex-col justify-end overflow-hidden border-b border-[#E6DFD5] print:hidden cursor-default select-none"
       >
-        {/* Layer 1: Parallax Background (Image Layer with slow zoom-in on mount and saturation lift on hover) */}
         <motion.div
           style={{
             translateY: reduceMotion ? "0%" : bgY,
@@ -1436,16 +1480,13 @@ export default function ItineraryPage() {
           />
         </motion.div>
 
-        {/* Layer 2: Directional Color Wash (Darker at bottom-left for text contrast, lighter at top-right for sky visibility) */}
         <motion.div
           style={{ translateY: reduceMotion ? "0%" : midY, opacity: reduceMotion ? 1 : heroOpacity }}
           className="absolute inset-0 z-10 pointer-events-none bg-linear-to-tr from-black/95 via-black/40 to-transparent"
         />
 
-        {/* Layer 2b: Bottom Ivory Blend Gradient (Smoothly transitions the background to match the ivory page body) */}
         <div className="absolute bottom-0 left-0 right-0 h-28 bg-linear-to-t from-[#FAF6F0] via-[#FAF6F0]/40 to-transparent z-15 pointer-events-none" />
 
-        {/* Layer 3: Foreground content (High-contrast light typography on dark directional wash with vertical hover float lift) */}
         <motion.div
           style={{
             translateY: reduceMotion ? "0%" : foreY,
@@ -1462,7 +1503,6 @@ export default function ItineraryPage() {
             transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
             className="flex items-center flex-wrap gap-2.5"
           >
-            {/* Primary Brand Dossier Pill */}
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-[#FF6B2C] to-[#E0591F] text-white font-mono text-[10px] font-bold tracking-widest uppercase shadow-md shadow-[#FF6B2C]/25 border border-white/20">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
@@ -1471,20 +1511,17 @@ export default function ItineraryPage() {
               <span>Curated Travel Guide</span>
             </span>
 
-            {/* Demo Mode / Official Edition Pill */}
             {hasDemo && (
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 border border-white/20 text-white/90 font-mono text-[10px] font-bold tracking-widest uppercase backdrop-blur-md shadow-xs">
                 <span>Demo Mode</span>
               </span>
             )}
 
-            {/* Concierge Badge Pill */}
             <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 text-white/90 font-serif italic text-[11px] backdrop-blur-md shadow-xs">
               <Sparkles size={11} className="text-[#FF6B2C]" />
               <span>Refined by TripWise Private Concierge</span>
             </span>
 
-            {/* Basecamp Badge Indicator / CTA Pill */}
             {itinerary?.hotelMode === 'basecamp' || (itinerary?.basecampHotel || itinerary?.preferences?.basecamp) ? (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -1503,12 +1540,10 @@ export default function ItineraryPage() {
                 whileTap={{ scale: 0.98 }}
                 className="group/basecamp relative inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/20 hover:border-white/40 text-white/90 hover:text-white font-mono text-[10px] font-bold tracking-wider uppercase backdrop-blur-xl shadow-lg transition-all duration-300 cursor-pointer overflow-visible"
               >
-                {/* Animated gradient border glow effect on hover */}
                 <div className="absolute inset-[-1px] rounded-full opacity-0 group-hover/basecamp:opacity-100 transition-opacity duration-500 z-0">
                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#FF6B2C] via-orange-400 to-[#FF6B2C] opacity-40 blur-[4px] animate-pulse" />
                 </div>
                 
-                {/* Inner glass layer */}
                 <div className="absolute inset-0 rounded-full bg-black/20 group-hover/basecamp:bg-black/40 transition-colors duration-300 z-0 border border-white/20 group-hover/basecamp:border-white/40" />
                 
                 <motion.div 
@@ -1548,7 +1583,6 @@ export default function ItineraryPage() {
             “{itinerary.tagline || 'An immersive, thoughtfully paced exploration tailored to your unique preference guide.'}”
           </motion.p>
 
-          {/* Structured stat metadata cards block blended directly on top of gradient overlay */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1570,16 +1604,15 @@ export default function ItineraryPage() {
             </div>
             <div className="flex flex-col border-l border-white/10 pl-6 last:border-0 cursor-pointer" onClick={() => setActiveDay('expenses')}>
               <span className="text-[10px] sm:text-xs font-sans font-bold text-white/70 uppercase tracking-widest">
-                {typeof window !== 'undefined' && getTripExpenses(itinerary?.id || activeTripId || 'default_trip').length > 0 ? 'Spent / Budget' : 'Est. Budget'}
+                {typeof window !== 'undefined' && getTripExpenses(itinerary?.id || itinerary?.db_id || activeTripId || 'default-trip').length > 0 ? 'Spent / Budget' : 'Est. Budget'}
               </span>
               <span className="text-2xl sm:text-3xl font-serif font-black text-[#FF6B2C] mt-1.5">
                 {(() => {
                   if (typeof window === 'undefined') return itinerary.estimatedCost || '$1,450';
-                  // const userCurrency = getUserDisplayCurrency(); handled by state
-                  const currentExp = getTripExpenses(itinerary?.id || activeTripId || 'default_trip');
-                  if (currentExp.length === 0) return formatCurrency(convertCurrency(parseFloat(itinerary.estimatedCost?.replace(/[^0-9.]/g, '')) || 1450, 'USD', userCurrency), userCurrency);
+                  const currentExp = getTripExpenses(itinerary?.id || itinerary?.db_id || activeTripId || 'default-trip');
+                  if (currentExp.length === 0) return formatCurrency(convertCurrency(parseEstimatedCostSafe(itinerary.estimatedCost), 'USD', userCurrency), userCurrency);
                   const spentTotal = currentExp.reduce((acc, e) => acc + convertCurrency(e.amount, e.currency, userCurrency), 0);
-                  const budgetNum = parseFloat((itinerary.estimatedCost || '1450').replace(/[^0-9.]/g, '')) || 1450;
+                  const budgetNum = parseEstimatedCostSafe(itinerary.estimatedCost);
                   return `${formatCurrency(spentTotal, userCurrency)} of ${formatCurrency(convertCurrency(budgetNum, 'USD', userCurrency), userCurrency)}`;
                 })()}
               </span>
@@ -1592,19 +1625,15 @@ export default function ItineraryPage() {
         </motion.div>
       </section>
 
-      {/* Trip Recap Banner */}
       <TripRecapBanner 
         itinerary={itinerary} 
         onLaunchRecap={() => setIsRecapModalOpen(true)} 
       />
 
-      {/* STICKY JUMP BAR & UTILITY STRIP (Light-themed to blend cleanly with the page body background) */}
       <div className="sticky top-16 sm:top-18 z-40 bg-[#FAF6F0]/95 backdrop-blur-md border-b border-[#E6DFD5] pt-4 pb-0 px-6 shadow-2xs transition-all print:hidden">
         <div className="max-w-6xl mx-auto w-full flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           
-          {/* Chapter Tabs Link System - Single Horizontally Scrollable Row */}
           <div className="relative flex-1 min-w-0">
-            {/* Scrollable Container */}
             <div className="flex items-center gap-0.5 sm:gap-1.5 overflow-x-auto w-full no-scrollbar pb-0 pr-12">
               {days.map((day, dIdx) => {
                 const dayNum = day.dayNumber || dIdx + 1;
@@ -1621,7 +1650,6 @@ export default function ItineraryPage() {
                     {dateStr && (
                       <span className="text-[9px] font-sans text-stone-400 font-bold -mt-0.5 tracking-wide">{dateStr}</span>
                     )}
-                    {/* Hover Underline */}
                     {!isSelected && (
                       <div className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#E6DFD5] rounded-t-full opacity-0 scale-x-50 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-300 ease-out origin-center" />
                     )}
@@ -1636,14 +1664,12 @@ export default function ItineraryPage() {
                 );
               })}
 
-              {/* Epilogue Tab */}
               <button
                 onClick={() => setActiveDay('epilogue')}
                 className={`group relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'epilogue' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
                   }`}
               >
                 <span>Epilogue</span>
-                {/* Hover Underline */}
                 {activeDay !== 'epilogue' && (
                   <div className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#E6DFD5] rounded-t-full opacity-0 scale-x-50 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-300 ease-out origin-center" />
                 )}
@@ -1656,14 +1682,12 @@ export default function ItineraryPage() {
                 )}
               </button>
 
-              {/* Journal Tab */}
               <button
                 onClick={() => setActiveDay('journal')}
                 className={`group relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'journal' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
                   }`}
               >
                 <span>Journal</span>
-                {/* Hover Underline */}
                 {activeDay !== 'journal' && (
                   <div className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#E6DFD5] rounded-t-full opacity-0 scale-x-50 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-300 ease-out origin-center" />
                 )}
@@ -1676,14 +1700,12 @@ export default function ItineraryPage() {
                 )}
               </button>
 
-              {/* Price Tracking Tab */}
               <button
                 onClick={() => setActiveDay('tracking')}
                 className={`group relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'tracking' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
                   }`}
               >
                 <span>Price Tracking</span>
-                {/* Hover Underline */}
                 {activeDay !== 'tracking' && (
                   <div className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#E6DFD5] rounded-t-full opacity-0 scale-x-50 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-300 ease-out origin-center" />
                 )}
@@ -1697,13 +1719,11 @@ export default function ItineraryPage() {
               </button>
             </div>
             
-            {/* Premium Scroll Indicator (Gradient Fade + Arrow) */}
             <div className="absolute right-0 top-0 bottom-[3px] w-14 bg-gradient-to-l from-[#FAF6F0] via-[#FAF6F0]/80 to-transparent pointer-events-none flex items-center justify-end z-10">
               <ChevronRight className="w-4 h-4 text-[#FF6B2C] opacity-70 animate-pulse mr-1 mt-1" />
             </div>
           </div>
 
-          {/* Actions Set (Compact Icons on small screens, Full Text on XL) */}
           <div className="flex items-center gap-2 shrink-0 pb-3.5 self-end sm:self-auto flex-nowrap justify-end">
             <div className="relative group/print">
               <button
@@ -1711,19 +1731,15 @@ export default function ItineraryPage() {
                 onClick={handlePrintOrDownload}
                 className="group/btn relative overflow-hidden inline-flex items-center gap-0 xl:gap-1.5 px-3 xl:px-4 py-1.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] text-xs font-sans font-bold text-[#1E1C1A] hover:border-[#FF6B2C]/60 hover:shadow-[0_8px_20px_-6px_rgba(255,107,44,0.4)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer active:scale-95"
               >
-                {/* 1. Shimmer Gloss Sweep */}
                 <div className="absolute top-0 left-[-100%] w-[120%] h-full bg-gradient-to-r from-transparent via-white/90 to-transparent skew-x-[-25deg] group-hover/btn:left-[100%] transition-all duration-700 ease-out z-0 pointer-events-none" />
                 
-                {/* 2. Intense Icon Glow */}
                 <div className="absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 bg-[#FF6B2C]/30 rounded-full blur-md opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500 z-0 pointer-events-none" />
                 
                 <div className="relative flex items-center justify-center w-4 h-4 z-10">
-                  {/* Animated paper sliding up out of the printer */}
                   <div className="absolute top-1 w-2.5 h-2 bg-white border border-[#1E1C1A] rounded-[1px] opacity-0 group-hover/btn:opacity-100 group-hover/btn:-translate-y-2.5 transition-all duration-500 ease-out flex flex-col justify-evenly px-[1px] py-[1px] shadow-sm">
                      <div className="w-full h-[0.5px] bg-[#1E1C1A]/40" />
                      <div className="w-full h-[0.5px] bg-[#1E1C1A]/40" />
                   </div>
-                  {/* Printer icon placed on top so the paper slides out from behind */}
                   <div className="bg-white rounded-[2px] relative z-10">
                     <Printer className="w-4 h-4 text-[#FF6B2C] group-hover/btn:scale-110 transition-transform duration-300" />
                   </div>
@@ -1740,15 +1756,13 @@ export default function ItineraryPage() {
               onClick={handleShareDossier}
               className="group/btn relative overflow-hidden inline-flex items-center gap-0 xl:gap-1.5 px-3 xl:px-4 py-1.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] text-xs font-sans font-bold text-[#1E1C1A] hover:border-[#FF6B2C]/60 hover:shadow-[0_8px_20px_-6px_rgba(255,107,44,0.4)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer active:scale-95"
             >
-              {/* 1. Shimmer Gloss Sweep */}
               <div className="absolute top-0 left-[-100%] w-[120%] h-full bg-gradient-to-r from-transparent via-white/90 to-transparent skew-x-[-25deg] group-hover/btn:left-[100%] transition-all duration-700 ease-out z-0 pointer-events-none" />
               
-              {/* 2. Intense Icon Glow */}
               <div className="absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 bg-[#FF6B2C]/30 rounded-full blur-md opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500 z-0 pointer-events-none" />
               
               {shareCopied ? (
                 <>
-                  <Check className="w-4 h-4 text-emerald-600 relative z-10 group-hover/btn:scale-110 transition-transform duration-300" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 relative z-10 group-hover/btn:scale-110 transition-transform duration-300" />
                   <span className="hidden xl:inline text-emerald-700 relative z-10 transition-colors duration-300 ml-1.5">Copied!</span>
                 </>
               ) : (
@@ -1760,9 +1774,9 @@ export default function ItineraryPage() {
             </button>
 
             <OfflineTripManager
-              tripId={activeTripId || itinerary?.id || itinerary?.db_id || 'default_trip'}
+              tripId={activeTripId || itinerary?.id || itinerary?.db_id || 'default-trip'}
               itinerary={itinerary}
-              expenses={getTripExpenses(activeTripId || itinerary?.id || 'default_trip')}
+              expenses={getTripExpenses(itinerary?.id || itinerary?.db_id || activeTripId || 'default-trip')}
               packingList={packingList}
               visaReqs={visaReqs}
               externalIsOpen={isOfflineModalOpen}
@@ -2935,9 +2949,11 @@ export default function ItineraryPage() {
               ) : activeDay === 'expenses' ? (
                 <ExpenseTrackerView
                   tripId={itinerary?.id || itinerary?.db_id || activeTripId || 'default-trip'}
-                  estBudget={itinerary?.estimatedCost ? parseFloat(itinerary.estimatedCost.replace(/[^0-9.]/g, '')) : 1450}
+                  userCurrency={userCurrency}
+                  estBudget={parseEstimatedCostSafe(itinerary?.estimatedCost)}
                   destination={itinerary?.destinationName || 'Rome, Italy'}
                   daysCount={itinerary?.days?.length || 3}
+                  onShowToast={showToast}
                   collaborators={itinerary?.collaborators || [
                     { name: 'Sarah Jenkins', photoURL: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', email: 'sarah@example.com' }
                   ]}
