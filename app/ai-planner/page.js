@@ -272,7 +272,7 @@ export default function AIPlannerDashboard() {
                         return {
                             ...dt,
                             country: destInfo.country || parsedCountry || 'Destination',
-                            imageUrl: destInfo.imageUrl,
+                            imageUrl: destInfo.imageUrl || `/api/image?q=${encodeURIComponent(dt.destinationName)}`,
                             gradient: destInfo.gradient,
                             dateRange: formatDates(dt.startDate, dt.endDate)
                         };

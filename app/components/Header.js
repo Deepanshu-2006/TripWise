@@ -17,9 +17,16 @@ function Header() {
     const rawProgress = useTransform(scrollY, [0, 120], [0, 1]);
     const progress = useSpring(rawProgress, { stiffness: 300, damping: 30, restDelta: 0.001 });
 
-    useMotionValueEvent(progress, "change", (latest) => {
-        if (latest > 0.5 && !isScrolled) setIsScrolled(true);
-        else if (latest <= 0.5 && isScrolled) setIsScrolled(false);
+    useMotionValueEvent(scrollY, "change", (latest) => {
+        let threshold = 60;
+        if (isHomePage) {
+            const heroSec = document.getElementById('hero-section');
+            if (heroSec) {
+                threshold = heroSec.offsetHeight - window.innerHeight - 20;
+            }
+        }
+        if (latest > threshold && !isScrolled) setIsScrolled(true);
+        else if (latest <= threshold && isScrolled) setIsScrolled(false);
     });
 
     const pathname = usePathname();
@@ -104,30 +111,7 @@ function Header() {
 
     const isLightPage = pathname?.startsWith('/planner') && !pathname?.startsWith('/planner-sidebar');
 
-    useEffect(() => {
-        const handleScroll = () => {
-            const heroSec = document.getElementById('hero-section')
-            if (heroSec) {
-                // The scroll animation ends when the user reaches the end of the pinned section.
-                const pinDuration = heroSec.offsetHeight - window.innerHeight
-                if (window.scrollY >= pinDuration - 20) {
-                    setIsScrolled(true)
-                } else {
-                    setIsScrolled(false)
-                }
-            } else {
-                if (window.scrollY > 20) {
-                    setIsScrolled(true)
-                } else {
-                    setIsScrolled(false)
-                }
-            }
-        }
-        window.addEventListener('scroll', handleScroll)
-        handleScroll()
-        return () => window.removeEventListener('scroll', handleScroll)
-    }, [])
-
+    // Removed duplicate unoptimized scroll listener.
     return (
         <motion.header 
             style={{

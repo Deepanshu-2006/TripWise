@@ -21,6 +21,7 @@ export const metadata = {
 import SmoothScroll from "./components/SmoothScroll";
 import ServiceWorkerRegistrar from "./components/ServiceWorkerRegistrar";
 import OfflineBanner from "./components/OfflineBanner";
+import CustomCursor from "./components/CustomCursor";
 
 export default function RootLayout({ children }) {
   return (
@@ -30,6 +31,7 @@ export default function RootLayout({ children }) {
         className={`${fraunces.variable} ${inter.variable} antialiased`}
       >
         <body className="flex flex-col min-h-screen">
+          <CustomCursor />
           <ServiceWorkerRegistrar />
           <OfflineBanner />
           <SmoothScroll>
