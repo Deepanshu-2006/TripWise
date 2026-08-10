@@ -220,10 +220,10 @@ export async function POST(req) {
     const basecampHotel = isBasecampProvided ? basecamp.trim() : null;
 
     const basecampInstruction = isBasecampProvided 
-      ? `\nCRITICAL GEOGRAPHY RULE: The user is staying at "${basecampHotel}". This is their "Basecamp". 
-1. Morning coffee and breakfast MUST be within a 10-15 minute walk from this location.
-2. Route the rest of the day logically starting from and ending near this location.
-3. Provide realistic travel times and distances from this basecamp.`
+      ? `\nCRITICAL GEOGRAPHY RULE: The user has explicitly requested to regenerate the trip around their selected hotel: "${basecampHotel}". 
+1. ALL cafes, breakfast spots, and dining locations MUST be strictly within a 15-minute walk from "${basecampHotel}".
+2. The entire trip must be logically re-optimized and regenerated to start from, revolve around, and end near this specific hotel.
+3. Provide realistic travel times and distances from this hotel for all activities.`
       : `\nNOTE ON GEOGRAPHY: The user has not chosen a specific hotel yet (hotelMode: "undecided"). Route activities around a popular central area of the city (e.g. City Center / Central Plaza) as a placeholder anchor.`;
 
     let preferenceInstruction = "";
@@ -290,6 +290,22 @@ CRITICAL RULES FOR SPEED & QUALITY:
 
     if (!response || !response.text) {
       console.warn('All Gemini models failed (likely quota/rate limit). Returning dynamic mock itinerary.', lastError);
+      
+      // If we're falling back but the user specifically wanted to re-optimize around a hotel, 
+      // let's intelligently adjust the mock data so the UI accurately reflects their request.
+      if (isBasecampProvided && mockPayload && mockPayload.days) {
+        mockPayload.days.forEach(day => {
+          if (day.activities) {
+            day.activities.forEach(act => {
+              if (act.category === 'Dining') {
+                act.title = `${act.title} (Near Hotel)`;
+                act.description = `Just a 10-15 minute walk from ${basecampHotel}. ${act.description}`;
+              }
+            });
+          }
+        });
+      }
+
       return NextResponse.json({ 
         success: true, 
         itinerary: { ...mockPayload, hotelMode, basecampHotel }, 

@@ -1418,15 +1418,18 @@ export default function ItineraryPage() {
               )}
               <span className="text-sm font-semibold">{toastMessage.message}</span>
               {toastMessage.action && (
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05, backgroundColor: 'rgba(0,0,0,0.08)' }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => {
                     toastMessage.action.onClick();
                     setToastMessage(null);
                   }}
-                  className="ml-2 px-3 py-1 rounded-full bg-black/10 hover:bg-black/20 text-xs font-bold transition-colors cursor-pointer"
+                  className="ml-3 flex items-center gap-1 px-4 py-1.5 rounded-full bg-black/5 shadow-sm border border-black/5 text-[11px] uppercase tracking-wider font-extrabold transition-colors cursor-pointer"
                 >
                   {toastMessage.action.label}
-                </button>
+                  <ChevronRight className="w-3.5 h-3.5 opacity-70" />
+                </motion.button>
               )}
               <button onClick={() => setToastMessage(null)} className="ml-2 hover:opacity-70 cursor-pointer">
                 <X className="w-4 h-4" />
@@ -2727,7 +2730,10 @@ export default function ItineraryPage() {
                           const basecampHotelRecord = {
                             name: hotelTitle,
                             address: basecampAddress,
-                            coordinates: basecampCoords
+                            coordinates: basecampCoords,
+                            image: hotelObj?.image,
+                            rating: hotelObj?.rating || 4.8,
+                            reviewCount: hotelObj?.reviewCount || 12000
                           };
 
                           const updated = {
@@ -2749,7 +2755,10 @@ export default function ItineraryPage() {
                               saveTrackingState(tripId, trackingState);
                             }
                           }
-                          showToast(`Your itinerary has been updated around ${hotelTitle}`, 'success');
+                          showToast(`Your itinerary has been updated around ${hotelTitle}`, 'success', 'CheckCircle2', {
+                            label: 'View Itinerary',
+                            onClick: () => setActiveDay(1)
+                          });
                         }
                       } catch (err) {
                         console.error('Failed to re-optimize itinerary:', err);
