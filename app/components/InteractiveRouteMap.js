@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { renderToString } from 'react-dom/server';
 import dynamic from 'next/dynamic';
 import { getPlaceDetails } from '@/app/actions/hotels';
+import ImageCarousel from './ImageCarousel';
 import { Route, Ticket, Heart, Share2, ArrowLeft, ArrowRight, ArrowUpRight, ArrowUp, Star, Clock, Banknote, Check, Utensils, Building2, Coffee, TreePine, ShoppingBag, LocateFixed, Ruler, Map, Maximize, Minimize, X, ChevronDown, Satellite, Moon, Mountain, Wine, Footprints, MapPin, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -2205,8 +2206,7 @@ export default function InteractiveRouteMap({
             }
           }
         };
-
-        return (
+          return (
           <motion.div
             key="details-panel"
             initial={{ opacity: 0, scale: 0.95, x: 20, y: 10 }}
@@ -2214,23 +2214,36 @@ export default function InteractiveRouteMap({
             exit={{ opacity: 0, scale: 0.95, x: 20, y: 10, transition: { duration: 0.2 } }}
             transition={{ type: 'spring', stiffness: 350, damping: 25, bounce: 0.4 }}
             data-lenis-prevent="true" 
-            className="absolute bottom-4 sm:bottom-auto sm:top-16 right-3 left-3 sm:left-auto sm:right-6 sm:w-110 max-w-[95vw] sm:max-h-[calc(100%-85px)] max-h-[82vh] z-[850] bg-white rounded-3xl border border-[#ECE8E2] shadow-[0_24px_64px_rgba(0,0,0,0.16)] overflow-hidden pointer-events-auto flex flex-col transform-gpu text-[#1F1F1F]"
+            className="absolute bottom-4 sm:bottom-auto sm:top-16 right-3 left-3 sm:left-auto sm:right-6 sm:w-110 max-w-[95vw] sm:max-h-[calc(100%-85px)] max-h-[82vh] z-[850] bg-white/85 backdrop-blur-2xl rounded-3xl border border-white/40 shadow-[0_24px_64px_rgba(0,0,0,0.16)] overflow-hidden pointer-events-auto flex flex-col transform-gpu text-[#1F1F1F]"
           >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={isBasecamp ? 'base' : stopIndex}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                variants={{
+                  hidden: { opacity: 0 },
+                  visible: { 
+                    opacity: 1, 
+                    transition: { staggerChildren: 0.1 } 
+                  },
+                  exit: { opacity: 0, x: -20, transition: { duration: 0.2 } }
+                }}
+                className="flex flex-col flex-1 min-h-0 w-full"
+              >
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto w-full flex flex-col custom-scrollbar bg-white">
-              {/* 1. Hero Image */}
-              <div className="w-full h-48 sm:h-56 relative bg-[#FAF8F5] shrink-0 group">
-                {!heroImageLoaded && (
-                  <div className="absolute inset-0 bg-linear-to-br from-[#ECE8E2] to-[#FAF8F5] animate-pulse flex items-center justify-center">
-                    <span className="w-5 h-5 rounded-full border-2 border-t-transparent border-[#FF6B2C] animate-spin" />
-                  </div>
-                )}
-                <img
-                  src={heroImageUrl}
-                  alt={act.title || 'Destination view'}
-                  onLoad={() => setHeroImageLoaded(true)}
-                  className={`w-full h-full object-cover transition-opacity duration-500 ease-out ${heroImageLoaded ? 'opacity-100' : 'opacity-0'}`}
-                />
+            <motion.div className="flex-1 overflow-y-auto w-full flex flex-col custom-scrollbar">
+              {/* 1. Hero Image Carousel */}
+              <motion.div variants={{ hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: 'easeOut' } } }} className="w-full h-48 sm:h-56 relative bg-[#FAF8F5]/50 shrink-0 group">
+                <div className="absolute inset-0">
+                  <ImageCarousel 
+                    images={act?.photos?.length > 0 ? act.photos : undefined}
+                    initialImage={heroImageUrl}
+                    alt={act.title || 'Destination view'}
+                    query={`${act.title || 'Destination'} ${destinationName}`}
+                  />
+                </div>
                 <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
                 {/* Close Button */}
@@ -2270,14 +2283,14 @@ export default function InteractiveRouteMap({
                     <MapPin size={14} /> {act.location || `${destinationName}${meta.name ? ` • ${meta.name}` : ''}`}
                   </p>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Main Content Area */}
-              <div className="p-5 pb-6 flex flex-col gap-5 bg-white">
+              <div className="p-5 pb-6 flex flex-col gap-5">
                 
                 {/* Key Metrics Clean Grid (Replacing Pills) */}
-                <div className="grid grid-cols-2 gap-y-3 gap-x-4 pb-4 border-b border-[#ECE8E2]">
-                  <div className="flex items-center gap-2 text-sm text-[#4A4A4A] font-semibold">
+                <motion.div variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }} className="grid grid-cols-2 gap-y-3 gap-x-4 pb-4 border-b border-[#ECE8E2]/50">
+                  <div className="group flex items-center gap-2 text-sm text-[#4A4A4A] font-semibold cursor-default">
                     <Star size={16} strokeWidth={2.5} className="text-[#FFB000] fill-[#FFB000]" />
                     <span className="text-[#1F1F1F] font-bold">{ratingInfo.rating}</span>
                     <span className="text-xs font-medium text-[#6B6B6B]">({formatReviewCount(ratingInfo.reviews)})</span>
@@ -2294,32 +2307,35 @@ export default function InteractiveRouteMap({
                   </div>
 
                   {walkTimeFormatted !== 'Not Available' && (
-                    <div className="flex items-center gap-2 text-sm text-[#4A4A4A] font-semibold">
-                      <Footprints size={16} strokeWidth={2.5} className="text-[#3B82F6]" />
+                    <div className="group flex items-center gap-2 text-sm text-[#4A4A4A] font-semibold cursor-default">
+                      <Footprints size={16} strokeWidth={2.5} className="text-[#3B82F6] transition-transform group-hover:scale-110" />
                       <span>{walkTimeFormatted}</span>
                     </div>
                   )}
-                </div>
+                </motion.div>
 
                 {/* Clean Description */}
                 {act?.description && (
-                  <div className="text-[13px] sm:text-sm text-[#4A4A4A] leading-relaxed font-medium">
+                  <motion.div variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }} className="text-[13px] sm:text-sm text-[#4A4A4A] leading-relaxed font-medium">
                     {act.description}
-                  </div>
+                  </motion.div>
                 )}
                 
                 {/* Weather & Crowd Info */}
-                <div className="flex items-center gap-4 py-3 bg-[#FAF8F5] rounded-2xl px-4 border border-[#ECE8E2]">
-                  <div className="flex items-center gap-2 text-xs font-bold text-[#4A4A4A] border-r border-[#ECE8E2] pr-4">
+                <motion.div variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }} className="flex items-center gap-4 py-3 bg-white/50 backdrop-blur-sm rounded-2xl px-4 border border-white/40 shadow-xs">
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#4A4A4A] border-r border-[#ECE8E2]/50 pr-4">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#3B82F6] animate-pulse shadow-[0_0_8px_#3B82F6]" />
                     {weatherChipText.split('•')[0].trim()}
                   </div>
                   <div className="flex items-center gap-2 text-xs font-bold text-[#059669]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse shadow-[0_0_8px_#10B981]" />
                     {crowdChipText}
                   </div>
-                </div>
+                </motion.div>
 
                 {/* AI Insight (Simplified) */}
-                <div className="mt-1">
+                <motion.div variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }} className="mt-1 relative">
+                  <div className="absolute -inset-4 bg-linear-to-r from-[#FF6B2C]/5 to-[#E65D20]/5 blur-xl rounded-full -z-10 animate-pulse pointer-events-none" />
                   <div className="flex items-center gap-1.5 mb-2">
                     <span className="text-sm">✨</span>
                     <span className="text-xs font-extrabold text-[#1F1F1F] uppercase tracking-wider">TripWise Insight</span>
@@ -2332,61 +2348,155 @@ export default function InteractiveRouteMap({
                       </div>
                     ))}
                   </div>
-                </div>
-
-                {/* Navigation Footer (Start, Save, Share) - NO TICKETS BUTTON FOR HOTEL */}
+                </motion.div>
               </div>
-            </div>
-
+            </motion.div>
+            </motion.div>
+            </AnimatePresence>
+            
             {/* FIXED FOOTER */}
-            <div className="p-5 pt-4 bg-white border-t border-[#ECE8E2] shrink-0">
-                <div className="flex items-center gap-2">
-                  {!isBasecamp && (
-                    <button
-                      type="button"
-                      onClick={() => setActivePassModal({ activity: act, dayNum: selectedDayIndex + 1, stopNum: (selectedStopIdx !== null ? selectedStopIdx + 1 : 1) })}
-                      className="flex-1 bg-linear-to-r from-[#FF6B2C] to-[#E65D20] text-white font-bold rounded-xl h-11 flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(255,107,44,0.3)] hover:shadow-lg transition-all active:scale-95 group cursor-pointer"
-                    >
-                      <Ticket size={16} strokeWidth={2.5} className="group-hover:scale-110 group-hover:-rotate-12 transition-transform duration-300" />
-                      <span>Tickets</span>
-                      <ArrowRight size={16} strokeWidth={2.5} className="w-0 opacity-0 group-hover:w-4 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-300" />
-                    </button>
-                  )}
-                  <a
-                    href={googleMapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`flex-1 ${!isBasecamp ? 'bg-white text-[#1F1F1F] border border-[#ECE8E2] shadow-sm' : 'bg-linear-to-r from-[#FF6B2C] to-[#E65D20] text-white shadow-[0_4px_16px_rgba(255,107,44,0.3)]'} font-bold rounded-xl h-11 flex items-center justify-center gap-2 hover:shadow-lg transition-all active:scale-95 group cursor-pointer`}
-                  >
-                    <ArrowUpRight size={16} strokeWidth={3} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                    <span>Start Route</span>
-                  </a>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.4 }} className="p-5 pt-4 bg-white/40 backdrop-blur-md border-t border-white/30 shrink-0">
+                <div className="flex items-center gap-2 w-full h-11">
+                  <AnimatePresence>
+                    {!isBasecamp && (
+                      <motion.button
+                        key="tickets-btn"
+                        layoutId="primary-action-btn"
+                        initial={{ opacity: 0, scale: 0.8, filter: "blur(4px)" }}
+                        animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                        exit={{ opacity: 0, scale: 0.8, filter: "blur(4px)" }}
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                        type="button"
+                        onClick={() => setActivePassModal({ activity: act, dayNum: selectedDayIndex + 1, stopNum: (selectedStopIdx !== null ? selectedStopIdx + 1 : 1) })}
+                        className="flex-1 overflow-hidden whitespace-nowrap bg-linear-to-r from-[#FF6B2C] to-[#E65D20] text-white font-bold rounded-xl h-11 flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(255,107,44,0.3)] hover:shadow-lg transition-all active:scale-95 group cursor-pointer relative"
+                      >
+                        <AnimatePresence mode="popLayout">
+                          <motion.div
+                            key={stopIndex}
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: -20, opacity: 0 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 30, delay: 0 }}
+                            className="flex items-center justify-center gap-2"
+                          >
+                            <Ticket size={16} strokeWidth={2.5} className="group-hover:scale-110 group-hover:-rotate-12 transition-transform duration-300 shrink-0" />
+                            <span className="shrink-0">Tickets</span>
+                            <ArrowRight size={16} strokeWidth={2.5} className="w-0 opacity-0 group-hover:w-4 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-300 shrink-0" />
+                          </motion.div>
+                        </AnimatePresence>
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
                   
-                  <button
+                  <AnimatePresence mode="popLayout">
+                    {!isBasecamp ? (
+                      <motion.a
+                        key="start-route-activity"
+                        layoutId="secondary-action-btn"
+                        initial={{ opacity: 0, scale: 0.8, filter: "blur(4px)" }}
+                        animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                        exit={{ opacity: 0, scale: 0.8, filter: "blur(4px)", width: 0 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                        href={googleMapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 overflow-hidden whitespace-nowrap bg-white/80 text-[#1F1F1F] border border-[#ECE8E2] shadow-sm hover:bg-white font-bold rounded-xl h-11 flex items-center justify-center gap-2 hover:shadow-lg transition-all active:scale-95 group cursor-pointer relative"
+                      >
+                        <AnimatePresence mode="popLayout">
+                          <motion.div
+                            key={stopIndex}
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: -20, opacity: 0 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 30, delay: 0.04 }}
+                            className="flex items-center justify-center gap-2"
+                          >
+                            <ArrowUpRight size={16} strokeWidth={3} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform shrink-0" />
+                            <span className="shrink-0">Start Route</span>
+                          </motion.div>
+                        </AnimatePresence>
+                      </motion.a>
+                    ) : (
+                      <motion.a
+                        key="start-route-basecamp"
+                        layoutId="primary-action-btn"
+                        initial={{ opacity: 0, scale: 0.8, filter: "blur(4px)" }}
+                        animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                        exit={{ opacity: 0, scale: 0.8, filter: "blur(4px)" }}
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                        href={googleMapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 overflow-hidden whitespace-nowrap bg-linear-to-r from-[#FF6B2C] to-[#E65D20] text-white shadow-[0_4px_16px_rgba(255,107,44,0.3)] font-bold rounded-xl h-11 flex items-center justify-center gap-2 hover:shadow-lg transition-all active:scale-95 group cursor-pointer relative"
+                      >
+                        <AnimatePresence mode="popLayout">
+                          <motion.div
+                            key={stopIndex}
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: -20, opacity: 0 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 30, delay: 0.04 }}
+                            className="flex items-center justify-center gap-2"
+                          >
+                            <ArrowUpRight size={16} strokeWidth={3} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform shrink-0" />
+                            <span className="shrink-0">Start Route</span>
+                          </motion.div>
+                        </AnimatePresence>
+                      </motion.a>
+                    )}
+                  </AnimatePresence>
+                  
+                  <motion.button
+                    layout
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     type="button"
                     onClick={toggleSaveDestination}
-                    className={`group flex items-center justify-center h-11 px-3 min-w-[44px] rounded-xl border transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-95 cursor-pointer ${
+                    className={`group flex items-center justify-center h-11 px-3 min-w-[44px] rounded-xl border transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-95 cursor-pointer relative ${
                       isDestinationSaved 
                         ? 'bg-[#FFE8DE] border-[#FF6B2C]/40 text-[#FF6B2C]' 
-                        : 'bg-white border-[#ECE8E2] hover:border-[#1F1F1F]/20 hover:bg-[#F9F9F9] text-[#1F1F1F] shadow-xs hover:shadow-md'
+                        : 'bg-white/80 border-[#ECE8E2] hover:border-[#1F1F1F]/20 hover:bg-white text-[#1F1F1F] shadow-xs hover:shadow-md'
                     }`}
                   >
-                    <Heart size={18} strokeWidth={2.5} className={`shrink-0 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-125 group-hover:-translate-y-0.5 ${isDestinationSaved ? 'fill-[#FF6B2C] group-hover:-rotate-12' : 'group-hover:rotate-12'}`} />
-                    <span className="max-w-0 opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:max-w-[50px] group-hover:ml-2 group-hover:opacity-100 font-bold text-sm transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden whitespace-nowrap">
-                      {isDestinationSaved ? 'Saved' : 'Save'}
-                    </span>
-                  </button>
+                    <AnimatePresence mode="popLayout">
+                      <motion.div
+                        key={stopIndex}
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: -20, opacity: 0 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 30, delay: 0.08 }}
+                        className="flex items-center justify-center gap-2"
+                      >
+                        <Heart size={18} strokeWidth={2.5} className={`shrink-0 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-125 group-hover:-translate-y-0.5 ${isDestinationSaved ? 'fill-[#FF6B2C] group-hover:-rotate-12' : 'group-hover:rotate-12'}`} />
+                        <span className="max-w-0 opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:max-w-[50px] group-hover:ml-2 group-hover:opacity-100 font-bold text-sm transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden whitespace-nowrap">
+                          {isDestinationSaved ? 'Saved' : 'Save'}
+                        </span>
+                      </motion.div>
+                    </AnimatePresence>
+                  </motion.button>
                   
-                  <button
+                  <motion.button
+                    layout
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     type="button"
                     onClick={() => setIsInviteModalOpen(true)}
-                    className="group flex items-center justify-center h-11 px-3 min-w-[44px] rounded-xl bg-white border border-[#ECE8E2] hover:border-[#1F1F1F]/20 hover:bg-[#F9F9F9] text-[#1F1F1F] shadow-xs hover:shadow-md transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-95 cursor-pointer"
+                    className="group flex items-center justify-center h-11 px-3 min-w-[44px] rounded-xl bg-white/80 border border-[#ECE8E2] hover:border-[#1F1F1F]/20 hover:bg-white text-[#1F1F1F] shadow-xs hover:shadow-md transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-95 cursor-pointer relative"
                   >
-                    <Share2 size={18} strokeWidth={2.5} className="shrink-0 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-110 group-hover:rotate-12 group-hover:-translate-y-0.5" />
-                    <span className="max-w-0 opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:max-w-[50px] group-hover:ml-2 group-hover:opacity-100 font-bold text-sm transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden whitespace-nowrap">
-                      Share
-                    </span>
-                  </button>
+                    <AnimatePresence mode="popLayout">
+                      <motion.div
+                        key={stopIndex}
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: -20, opacity: 0 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 30, delay: 0.12 }}
+                        className="flex items-center justify-center gap-2"
+                      >
+                        <Share2 size={18} strokeWidth={2.5} className="shrink-0 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-110 group-hover:rotate-12 group-hover:-translate-y-0.5" />
+                        <span className="max-w-0 opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:max-w-[50px] group-hover:ml-2 group-hover:opacity-100 font-bold text-sm transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden whitespace-nowrap">
+                          Share
+                        </span>
+                      </motion.div>
+                    </AnimatePresence>
+                  </motion.button>
                 </div>
 
                 {/* Next/Prev Navigation */}
@@ -2408,7 +2518,7 @@ export default function InteractiveRouteMap({
                         animate={{ scale: 1, opacity: 1, y: 0, filter: 'blur(0px)' }}
                         exit={{ scale: 0.8, opacity: 0, y: -15, filter: 'blur(4px)' }}
                         transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                        className="px-3 py-1 bg-[#FAF8F5] rounded-full border border-[#ECE8E2] shadow-xs flex items-center justify-center whitespace-nowrap"
+                        className="px-3 py-1 bg-white/80 backdrop-blur-md rounded-full border border-white/50 shadow-xs flex items-center justify-center whitespace-nowrap"
                       >
                         <span className="text-[11px] font-extrabold text-[#4A4A4A] tracking-widest uppercase">
                           {isBasecamp ? 'Basecamp' : `${stopIndex} / ${totalStops || (dayStops.length - 1)}`}
@@ -2426,7 +2536,7 @@ export default function InteractiveRouteMap({
                     <ArrowRight size={14} strokeWidth={2.5} className="group-hover:translate-x-0.5 transition-transform duration-300" />
                   </button>
                 </div>
-            </div>
+            </motion.div>
           </motion.div>
         );
       })()}
