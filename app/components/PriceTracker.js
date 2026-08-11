@@ -590,6 +590,7 @@ export default function PriceTracker({
   basecampHotel: propBasecampHotel, 
   onReoptimize, 
   onToast,
+  onHotelSelect,
   itinerary 
 }) {
   const displayCurrency = useDisplayCurrency();
@@ -831,6 +832,8 @@ export default function PriceTracker({
       saveTrackingState(tripId, state);
     }
     setTrackingState(getTrackingState(tripId));
+
+    if (onHotelSelect) onHotelSelect(hotel);
 
     if (typeof window !== 'undefined') {
       try {

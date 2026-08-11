@@ -186,6 +186,7 @@ const DAY_SIGNATURE_COLORS = [
 
 const getDestinationHeroImage = (act, destinationName, isBasecamp, stopIdx = 0) => {
   if (act?.image || act?.photoUrl || act?.imageUrl || act?.thumbnail) return act.image || act.photoUrl || act.imageUrl || act.thumbnail;
+  if (act?.photos && act.photos.length > 0) return act.photos[0];
   if (isBasecamp || act?.isBasecamp) return 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80';
   return getActivityThumbnail(act, stopIdx);
 };
@@ -544,7 +545,7 @@ export default function InteractiveRouteMap({
     category: 'hotel',
     time: 'Departure & Return Hub',
     coordinates: basecampDetails.coordinates || { lat: basecampLat, lng: basecampLng },
-    image: basecampDetails.image || basecampDetails.photoUrl || basecampDetails.thumbnail,
+    image: basecampDetails.image || basecampDetails.photoUrl || basecampDetails.thumbnail || (basecampDetails.photos?.length > 0 ? basecampDetails.photos[0] : null),
     rating: basecampDetails.rating || 4.8,
     reviewCount: basecampDetails.reviewCount || 12000
   };
@@ -1539,7 +1540,7 @@ export default function InteractiveRouteMap({
       clearTimeout(timer1);
       clearTimeout(timer2);
     };
-  }, [isReady, activities, allDays, selectedDayIndex, showAllDaysOverview, coordinates, isFullscreen, selectedCategory]);
+  }, [isReady, activities, allDays, selectedDayIndex, showAllDaysOverview, coordinates, isFullscreen, selectedCategory, basecampHotel]);
 
   // LIGHTWEIGHT DOM/STYLE UPDATE ON PIN HIGHLIGHT DURING SCROLL (Zero layer destruction / zero jitter)
   useEffect(() => {

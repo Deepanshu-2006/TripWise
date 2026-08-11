@@ -953,8 +953,14 @@ export default function PlannerSidebar({
   }, [currentStep, localStep]);
 
   const [userPromptInput, setUserPromptInput] = useState(() => rawPrompt || itinerary?.prompt || '');
-  const [basecamp, setBasecamp] = useState(() => itinerary?.preferences?.basecamp || '');
+  const [basecamp, setBasecamp] = useState(() => itinerary?.basecampHotelDetails?.name || itinerary?.basecampHotel || itinerary?.preferences?.basecamp || '');
   const [basecampSuggestions, setBasecampSuggestions] = useState([]);
+  
+  useEffect(() => {
+    if (itinerary?.basecampHotelDetails?.name || itinerary?.basecampHotel) {
+      setBasecamp(itinerary?.basecampHotelDetails?.name || itinerary?.basecampHotel);
+    }
+  }, [itinerary?.basecampHotelDetails?.name, itinerary?.basecampHotel]);
   const [isSearchingBasecamp, setIsSearchingBasecamp] = useState(false);
   const [showBasecampDropdown, setShowBasecampDropdown] = useState(false);
   const [isListeningVoice, setIsListeningVoice] = useState(false);

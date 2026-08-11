@@ -128,7 +128,15 @@ export default function ItineraryMapModal({ activities = [], coordinates = null,
   const [heroLoaded, setHeroLoaded] = useState(false);
   const [routeStats, setRouteStats] = useState({ stops: 0, km: '0.0' });
 
-  const center = coordinates ? [coordinates.lat, coordinates.lng] : [41.9028, 12.4964];
+  let validCenter = [41.9028, 12.4964];
+  if (coordinates) {
+    if (Array.isArray(coordinates) && coordinates.length >= 2 && Number.isFinite(coordinates[0])) {
+      validCenter = [coordinates[0], coordinates[1]];
+    } else if (coordinates.lat !== undefined && coordinates.lng !== undefined && Number.isFinite(coordinates.lat)) {
+      validCenter = [coordinates.lat, coordinates.lng];
+    }
+  }
+  const center = validCenter;
 
   // ── CSS keyframe injection for marker pulse ───────────────────────────────
   useEffect(() => {

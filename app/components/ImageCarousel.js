@@ -4,12 +4,16 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-export default function ImageCarousel({ query, initialImage, alt }) {
-  const [images, setImages] = useState(initialImage ? [initialImage] : []);
+export default function ImageCarousel({ query, initialImage, alt, images: propImages }) {
+  const [images, setImages] = useState(propImages || (initialImage ? [initialImage] : []));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
+    if (propImages && propImages.length > 0) {
+      setImages(propImages);
+      return;
+    }
     if (!query) return;
     
     // Fetch multiple images

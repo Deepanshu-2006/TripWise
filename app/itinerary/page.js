@@ -7,6 +7,7 @@ import Header from '../components/Header';
 import ImageCarousel from '../components/ImageCarousel';
 import { generatePackingList } from '../../lib/packingListLogic';
 import { fetchVisaRequirements } from '../../lib/visaApi';
+import { updateTrip } from '../actions/trips';
 import ExpenseTrackerView from '../components/ExpenseTrackerView';
 import { useLiveAssistant } from '../hooks/useLiveAssistant';
 import LiveAssistantNudge from '../components/LiveAssistantNudge';
@@ -546,6 +547,7 @@ const getDistanceAndProximity = (p1, p2, basecampName = 'Basecamp') => {
 import HiddenGemsWall from '../components/HiddenGemsWall';
 import FeaturesSelection from '../components/FeaturesSelection';
 import SavedPlacesModal from '../components/SavedPlacesModal';
+import { getPlaceDetails } from '@/app/actions/hotels';
 import NoDossierState from '../components/NoDossierState';
 import { supabase } from '../../lib/supabase';
 
@@ -1526,15 +1528,19 @@ export default function ItineraryPage() {
             </span>
 
             {itinerary?.hotelMode === 'basecamp' || (itinerary?.basecampHotel || itinerary?.preferences?.basecamp) ? (
-              <motion.div
+              <motion.button
+                type="button"
+                onClick={() => setActiveDay('tracking')}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="relative inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-400/30 text-emerald-100 font-mono text-[10px] font-bold tracking-wider uppercase backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="relative inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-400/30 hover:border-emerald-400/50 text-emerald-100 font-mono text-[10px] font-bold tracking-wider uppercase backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.15)] transition-all duration-300 cursor-pointer"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/0 via-emerald-400/10 to-emerald-400/0 opacity-50 rounded-full" />
                 <span className="relative z-10 text-emerald-400 animate-pulse">🏡</span>
                 <span className="relative z-10 text-emerald-50">Basecamp: {itinerary?.basecampHotel || itinerary?.preferences?.basecamp}</span>
-              </motion.div>
+              </motion.button>
             ) : (
               <motion.button
                 type="button"
@@ -2707,62 +2713,112 @@ export default function ItineraryPage() {
                     onReoptimize={async (newHotelName, hotelObj) => {
                       try {
                         const hotelTitle = typeof newHotelName === 'string' ? newHotelName : (newHotelName?.name || 'The Rome Palace');
-                        showToast(`Re-optimizing itinerary around ${hotelTitle}...`, 'info');
-                        const response = await fetch('/api/generate-trip', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            prompt: itinerary?.prompt || `Trip to ${itinerary?.destinationName}`,
-                            destination: itinerary?.destinationName || 'Destination',
-                            basecamp: hotelTitle,
-                            interests: itinerary?.interests || [],
-                            budget: itinerary?.budget || 'standard',
-                            pace: itinerary?.pace || 'balanced'
-                          })
-                        });
-                        const data = await response.json();
-                        if (data.success && data.itinerary) {
-                          const basecampCoords = hotelObj?.coordinates || hotelObj?.latLng || {
+                        showToast(`Updating itinerary to use ${hotelTitle}...`, 'info');
+                        
+                        let basecampCoords = hotelObj?.coordinates || hotelObj?.latLng;
+                        let hotelPhotos = [hotelObj?.image];
+                        let exactAddress = hotelObj?.address;
+                        
+                        try {
+                          const details = await getPlaceDetails(hotelTitle + ' ' + (itinerary?.destinationName || ''));
+                          if (!details.error) {
+                            if (details.coordinates) basecampCoords = details.coordinates;
+                            if (details.photos && details.photos.length > 0) {
+                              hotelPhotos = details.photos;
+                              hotelObj.image = details.photos[0];
+                            }
+                            if (details.address) exactAddress = details.address;
+                          }
+                        } catch (e) {
+                          console.error('Failed to get exact hotel coordinates', e);
+                        }
+
+                        if (!basecampCoords) {
+                          basecampCoords = {
                             lat: (itinerary?.coordinates?.lat || 41.9028) + ((hotelObj?.mapPos?.y || 45) - 50) * 0.0003,
                             lng: (itinerary?.coordinates?.lng || 12.4964) + ((hotelObj?.mapPos?.x || 45) - 50) * 0.0003
                           };
-                          const basecampAddress = hotelObj?.address || `${hotelTitle}, ${itinerary?.destinationName || 'Rome, Italy'}`;
-                          const basecampHotelRecord = {
-                            name: hotelTitle,
-                            address: basecampAddress,
-                            coordinates: basecampCoords,
-                            image: hotelObj?.image,
-                            rating: hotelObj?.rating || 4.8,
-                            reviewCount: hotelObj?.reviewCount || 12000
-                          };
+                        }
+                        const basecampAddress = exactAddress || `${hotelTitle}, ${itinerary?.destinationName || 'Rome, Italy'}`;
+                        const basecampHotelRecord = {
+                          name: hotelTitle,
+                          address: basecampAddress,
+                          coordinates: basecampCoords,
+                          image: hotelObj?.image,
+                          photos: hotelPhotos,
+                          rating: hotelObj?.rating || 4.8,
+                          reviewCount: hotelObj?.reviewCount || 12000
+                        };
 
-                          const updated = {
-                            ...itinerary,
-                            ...(data.itinerary || {}),
-                            hotelMode: 'basecamp',
-                            basecampHotel: hotelTitle,
-                            basecampHotelDetails: basecampHotelRecord
-                          };
+                        const updated = {
+                          ...itinerary,
+                          // Intentionally NOT overwriting itinerary days here so existing places are preserved
+                          hotelMode: 'basecamp',
+                          basecampHotel: hotelTitle,
+                          basecampHotelDetails: basecampHotelRecord
+                        };
                           setItinerary(updated);
                           if (typeof window !== 'undefined') {
                             localStorage.setItem('tripwise_itinerary', JSON.stringify(updated));
-                            const tripId = itinerary?.id || itinerary?.db_id || activeTripId || 'shared-trip';
-                            const trackingState = getTrackingState(tripId);
+                            const tripIdToUpdate = itinerary?.id || itinerary?.db_id || activeTripId;
+                            
+                            if (tripIdToUpdate && tripIdToUpdate !== 'shared-trip') {
+                              updateTrip(tripIdToUpdate, itinerary.destinationName || 'Trip', updated).catch(e => console.error('Failed to persist re-optimized trip', e));
+                            }
+                            
+                            const trackingState = getTrackingState(tripIdToUpdate || 'shared-trip');
                             if (trackingState) {
                               trackingState.hotelMode = 'basecamp';
                               trackingState.basecampHotel = hotelTitle;
                               trackingState.basecampHotelDetails = basecampHotelRecord;
-                              saveTrackingState(tripId, trackingState);
+                              saveTrackingState(tripIdToUpdate || 'shared-trip', trackingState);
                             }
                           }
                           showToast(`Your itinerary has been updated around ${hotelTitle}`, 'success', 'CheckCircle2', {
                             label: 'View Itinerary',
                             onClick: () => setActiveDay(1)
                           });
-                        }
                       } catch (err) {
                         console.error('Failed to re-optimize itinerary:', err);
                         showToast('Failed to re-optimize itinerary. Please try again.', 'error');
+                      }
+                    }}
+                    onHotelSelect={async (hotel) => {
+                      if (itinerary) {
+                        showToast('Fetching hotel details...', 'info');
+                        let details;
+                        try {
+                          details = await getPlaceDetails(`${hotel.name} ${itinerary.destinationName || ''}`);
+                        } catch (e) {
+                          console.error("Error fetching hotel details:", e);
+                        }
+                        
+                        const basecampCoords = details?.coordinates || {
+                          lat: itinerary?.coordinates?.lat || 41.9028,
+                          lng: itinerary?.coordinates?.lng || 12.4964
+                        };
+                        
+                        const basecampHotelRecord = {
+                          name: hotel.name,
+                          address: details?.address || hotel.address || `${hotel.name}, ${itinerary.destinationName || 'Destination'}`,
+                          coordinates: basecampCoords,
+                          image: details?.photos && details.photos.length > 0 ? details.photos[0] : hotel.image,
+                          photos: details?.photos || (hotel.image ? [hotel.image] : []),
+                          rating: details?.rating || hotel.rating || 4.8,
+                          reviewCount: details?.reviewCount || hotel.reviewCount || 12000
+                        };
+
+                        const updated = {
+                          ...itinerary,
+                          hotelMode: 'basecamp',
+                          basecampHotel: hotel.name,
+                          basecampHotelDetails: basecampHotelRecord
+                        };
+                        setItinerary(updated);
+                        if (typeof window !== 'undefined') {
+                          localStorage.setItem('tripwise_itinerary', JSON.stringify(updated));
+                        }
+                        showToast(`Hotel updated to ${hotel.name}.`, 'success');
                       }
                     }}
                     onToast={showToast}
