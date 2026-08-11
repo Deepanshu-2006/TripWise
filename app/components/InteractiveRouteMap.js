@@ -4,7 +4,8 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { renderToString } from 'react-dom/server';
 import dynamic from 'next/dynamic';
-import { Route, Ticket, Heart, Share2, ArrowRight, ArrowUpRight, ArrowUp, Star, Clock, Banknote, Check, Utensils, Building2, Coffee, TreePine, ShoppingBag, LocateFixed, Ruler, Map, Maximize, Minimize, X, ChevronDown, Satellite, Moon, Mountain, Wine, Footprints, MapPin, ExternalLink } from 'lucide-react';
+import { getPlaceDetails } from '@/app/actions/hotels';
+import { Route, Ticket, Heart, Share2, ArrowLeft, ArrowRight, ArrowUpRight, ArrowUp, Star, Clock, Banknote, Check, Utensils, Building2, Coffee, TreePine, ShoppingBag, LocateFixed, Ruler, Map, Maximize, Minimize, X, ChevronDown, Satellite, Moon, Mountain, Wine, Footprints, MapPin, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   getActivityThumbnail,
@@ -185,8 +186,18 @@ const DAY_SIGNATURE_COLORS = [
 ];
 
 const getDestinationHeroImage = (act, destinationName, isBasecamp, stopIdx = 0) => {
-  if (act?.image || act?.photoUrl || act?.imageUrl || act?.thumbnail) return act.image || act.photoUrl || act.imageUrl || act.thumbnail;
   if (act?.photos && act.photos.length > 0) return act.photos[0];
+  
+  const isFallback = [act?.image, act?.photoUrl, act?.imageUrl, act?.thumbnail].some(
+    img => img && typeof img === 'string' && img.includes('unsplash.com/photo-')
+  );
+
+  if (!isFallback) {
+    if (act?.image || act?.photoUrl || act?.imageUrl || act?.thumbnail) {
+      return act.image || act.photoUrl || act.imageUrl || act.thumbnail;
+    }
+  }
+
   if (isBasecamp || act?.isBasecamp) return 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80';
   return getActivityThumbnail(act, stopIdx);
 };
@@ -218,6 +229,40 @@ export default function InteractiveRouteMap({
   const [showLayerMenu, setShowLayerMenu] = useState(false);
   const [internalSelectedStopIdx, setInternalSelectedStopIdx] = useState(null);
   const [activeDestination, setActiveDestination] = useState(null);
+  const [dynamicBasecampImage, setDynamicBasecampImage] = useState(null);
+  const [dynamicBasecampPhotos, setDynamicBasecampPhotos] = useState(null);
+
+  useEffect(() => {
+    if (basecampHotel) {
+      const basecampTitle = typeof basecampHotel === 'string' ? basecampHotel : (basecampHotel?.name || basecampHotel?.title);
+      const currentImage = basecampHotel?.image || basecampHotel?.photoUrl;
+      const isFallback = currentImage && typeof currentImage === 'string' && currentImage.includes('unsplash.com/photo-');
+      const hasPhotos = basecampHotel?.photos && basecampHotel.photos.length > 0;
+      
+      if (basecampTitle && (isFallback || !hasPhotos)) {
+        getPlaceDetails(`${basecampTitle} ${destinationName}`).then(details => {
+          if (details && details.photos && details.photos.length > 0) {
+            setDynamicBasecampImage(details.photos[0]);
+            setDynamicBasecampPhotos(details.photos);
+            // Also auto-update the active destination if it's the basecamp and currently open
+            setActiveDestination(prev => {
+              if (prev && prev.isBasecamp) {
+                return {
+                  ...prev,
+                  act: {
+                    ...prev.act,
+                    image: details.photos[0],
+                    photos: details.photos
+                  }
+                };
+              }
+              return prev;
+            });
+          }
+        }).catch(err => console.error('Dynamic photo fetch failed:', err));
+      }
+    }
+  }, [basecampHotel, destinationName]);
 
   const derivedBasecampTitle = typeof basecampHotel === 'string'
     ? basecampHotel
@@ -545,7 +590,8 @@ export default function InteractiveRouteMap({
     category: 'hotel',
     time: 'Departure & Return Hub',
     coordinates: basecampDetails.coordinates || { lat: basecampLat, lng: basecampLng },
-    image: basecampDetails.image || basecampDetails.photoUrl || basecampDetails.thumbnail || (basecampDetails.photos?.length > 0 ? basecampDetails.photos[0] : null),
+    image: dynamicBasecampImage || basecampDetails.image || basecampDetails.photoUrl || basecampDetails.thumbnail || (basecampDetails.photos?.length > 0 ? basecampDetails.photos[0] : null),
+    photos: dynamicBasecampPhotos || basecampDetails.photos || [],
     rating: basecampDetails.rating || 4.8,
     reviewCount: basecampDetails.reviewCount || 12000
   };
@@ -2168,324 +2214,218 @@ export default function InteractiveRouteMap({
             exit={{ opacity: 0, scale: 0.95, x: 20, y: 10, transition: { duration: 0.2 } }}
             transition={{ type: 'spring', stiffness: 350, damping: 25, bounce: 0.4 }}
             data-lenis-prevent="true" 
-            className="absolute bottom-4 sm:bottom-auto sm:top-16 right-3 left-3 sm:left-auto sm:right-6 sm:w-110 max-w-[95vw] sm:max-h-[calc(100%-85px)] max-h-[82vh] z-850 bg-[#FFFFFF] rounded-3xl border border-[#ECE8E2] shadow-[0_24px_64px_rgba(0,0,0,0.16),0_8px_24px_rgba(0,0,0,0.06)] overflow-y-auto pointer-events-auto flex flex-col transform-gpu text-[#1F1F1F]"
+            className="absolute bottom-4 sm:bottom-auto sm:top-16 right-3 left-3 sm:left-auto sm:right-6 sm:w-110 max-w-[95vw] sm:max-h-[calc(100%-85px)] max-h-[82vh] z-[850] bg-white rounded-3xl border border-[#ECE8E2] shadow-[0_24px_64px_rgba(0,0,0,0.16)] overflow-hidden pointer-events-auto flex flex-col transform-gpu text-[#1F1F1F]"
           >
-            {/* Subtle pointer triangle connecting visually toward the marker on the map */}
-            <div className="hidden sm:block absolute -left-2.5 top-28 w-5 h-5 bg-[#FFFFFF] border-l border-b border-[#ECE8E2] transform rotate-45 pointer-events-none shadow-[-3px_3px_8px_rgba(0,0,0,0.04)] z-50" />
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto w-full flex flex-col custom-scrollbar bg-white">
+              {/* 1. Hero Image */}
+              <div className="w-full h-48 sm:h-56 relative bg-[#FAF8F5] shrink-0 group">
+                {!heroImageLoaded && (
+                  <div className="absolute inset-0 bg-linear-to-br from-[#ECE8E2] to-[#FAF8F5] animate-pulse flex items-center justify-center">
+                    <span className="w-5 h-5 rounded-full border-2 border-t-transparent border-[#FF6B2C] animate-spin" />
+                  </div>
+                )}
+                <img
+                  src={heroImageUrl}
+                  alt={act.title || 'Destination view'}
+                  onLoad={() => setHeroImageLoaded(true)}
+                  className={`w-full h-full object-cover transition-opacity duration-500 ease-out ${heroImageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                />
+                <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
-            {/* 1. Hero Image (approx 28-30% height, compact impactful view) */}
-            <div className="w-full h-35 sm:h-38.75 relative bg-[#FAF8F5] overflow-hidden shrink-0 rounded-t-3xl group">
-              {!heroImageLoaded && (
-                <div className="absolute inset-0 bg-linear-to-br from-[#ECE8E2] to-[#FAF8F5] animate-pulse flex items-center justify-center">
-                  <span className="text-xs font-bold text-[#6B6B6B] flex items-center gap-2">
-                    <span className="w-4 h-4 rounded-full border-2 border-t-transparent border-[#FF6B2C] animate-spin" />
-                    Loading Photo...
+                {/* Close Button */}
+                <button
+                  type="button"
+                  onClick={handleClosePanel}
+                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/40 hover:bg-black/70 backdrop-blur-md text-white border border-white/20 flex items-center justify-center font-bold transition-all shadow-md hover:scale-105 active:scale-95 z-20 cursor-pointer"
+                  title="Close Panel"
+                >
+                  <X size={16} strokeWidth={3} />
+                </button>
+
+                {/* Badge top left */}
+                <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 bg-black/40 backdrop-blur-md text-white text-[11px] font-bold rounded-full p-1 pr-2.5 border border-white/20">
+                  <span className="bg-[#FF6B2C] text-white px-2 py-0.5 rounded-full whitespace-nowrap">
+                    {stopNumberLabel}
+                  </span>
+                  <span className="whitespace-nowrap flex items-center gap-1.5">
+                    {meta.icon} {meta.name}
                   </span>
                 </div>
-              )}
-              <img
-                src={heroImageUrl}
-                alt={act.title || 'Destination view'}
-                onLoad={() => setHeroImageLoaded(true)}
-                className={`w-full h-full object-cover transition-opacity duration-500 ease-out group-hover:scale-105 ${heroImageLoaded ? 'opacity-100' : 'opacity-0'}`}
-              />
-              {/* Soft dark gradient overlay at bottom for title readability */}
-              <div className="absolute inset-0 bg-linear-to-t from-[rgba(0,0,0,0.70)] via-black/20 to-transparent pointer-events-none" />
+                
+                {/* Photo Count */}
+                {act?.photos?.length > 1 && (
+                  <div className="absolute top-4 right-14 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md text-white border border-white/20 text-[10px] font-bold flex items-center gap-1 z-10">
+                    <span>📷</span>
+                    <span>{act.photos.length} Photos</span>
+                  </div>
+                )}
 
-              {/* Category & Stop number badge inside image */}
-              <div className="absolute top-3.5 left-3.5 z-10 flex items-center gap-1.5 bg-black/55 backdrop-blur-md text-white text-[11px] font-extrabold rounded-full p-1 border border-white/20 shadow-sm">
-                <span className="bg-[#FF6B2C] text-white px-2 py-0.5 rounded-full shadow-xs whitespace-nowrap">
-                  {stopNumberLabel}
-                </span>
-                <span className="flex items-center gap-1 pr-2 whitespace-nowrap">
-                  <span>{meta.icon}</span>
-                  <span>{meta.name}</span>
-                </span>
+                {/* Title */}
+                <div className="absolute bottom-4 left-5 right-5 z-10">
+                  <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-tight drop-shadow-md">
+                    {act.title || (isBasecamp ? derivedBasecampTitle : `Waypoint ${stopIndex}`)}
+                  </h3>
+                  <p className="text-sm font-medium text-white/90 mt-1 drop-shadow-md flex items-center gap-1 truncate">
+                    <MapPin size={14} /> {act.location || `${destinationName}${meta.name ? ` • ${meta.name}` : ''}`}
+                  </p>
+                </div>
               </div>
 
-              {/* Close Button (~15% smaller, w-7 h-7, dark translucent background, hover scale) */}
-              <button
-                type="button"
-                onClick={handleClosePanel}
-                className="absolute top-3.5 right-3.5 w-7 h-7 rounded-full bg-black/55 hover:bg-black/80 backdrop-blur-md text-white border border-white/20 flex items-center justify-center font-bold text-xs transition-all duration-200 shadow-md hover:scale-110 active:scale-90 z-20 cursor-pointer"
-                title="Close Details Panel"
-              >
-                ✕
-              </button>
+              {/* Main Content Area */}
+              <div className="p-5 pb-6 flex flex-col gap-5 bg-white">
+                
+                {/* Key Metrics Clean Grid (Replacing Pills) */}
+                <div className="grid grid-cols-2 gap-y-3 gap-x-4 pb-4 border-b border-[#ECE8E2]">
+                  <div className="flex items-center gap-2 text-sm text-[#4A4A4A] font-semibold">
+                    <Star size={16} strokeWidth={2.5} className="text-[#FFB000] fill-[#FFB000]" />
+                    <span className="text-[#1F1F1F] font-bold">{ratingInfo.rating}</span>
+                    <span className="text-xs font-medium text-[#6B6B6B]">({formatReviewCount(ratingInfo.reviews)})</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm text-[#4A4A4A] font-semibold">
+                    <Clock size={16} strokeWidth={2.5} className="text-[#6B6B6B]" />
+                    <span>{act?.duration || (isBasecamp ? 'All-Day Hub' : '2 hrs')}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm text-[#4A4A4A] font-semibold">
+                    <Banknote size={16} strokeWidth={2.5} className="text-[#059669]" />
+                    <span>{isBasecamp ? 'Included in Stay' : costInfo.title.replace('💰 ', '')}</span>
+                  </div>
 
-              {/* Photo count floating badge with semi-transparent glass background */}
-              <div className="absolute bottom-2.5 right-3 px-2 py-0.5 rounded-full bg-black/45 backdrop-blur-md text-white border border-white/20 text-[10px] font-bold shadow-xs flex items-center gap-1 z-10">
-                <span>📷</span>
-                <span>{act?.photos?.length || act?.images?.length || act?.photoCount || (isBasecamp ? 14 : 8)} Photos</span>
-              </div>
+                  {walkTimeFormatted !== 'Not Available' && (
+                    <div className="flex items-center gap-2 text-sm text-[#4A4A4A] font-semibold">
+                      <Footprints size={16} strokeWidth={2.5} className="text-[#3B82F6]" />
+                      <span>{walkTimeFormatted}</span>
+                    </div>
+                  )}
+                </div>
 
-              {/* 2. Destination Title overlay at bottom of hero image */}
-              <div className="absolute bottom-2.5 left-4 right-24 z-10">
-                <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight leading-tight line-clamp-2 drop-shadow-sm">
-                  {act.title || (isBasecamp ? derivedBasecampTitle : `Waypoint ${stopIndex}`)}
-                </h3>
-                <p className="text-xs font-medium text-white/80 mt-0.5 truncate">
-                  {act.location || `${destinationName}${meta.name ? ` • ${meta.name}` : ''}`}
-                </p>
+                {/* Clean Description */}
+                {act?.description && (
+                  <div className="text-[13px] sm:text-sm text-[#4A4A4A] leading-relaxed font-medium">
+                    {act.description}
+                  </div>
+                )}
+                
+                {/* Weather & Crowd Info */}
+                <div className="flex items-center gap-4 py-3 bg-[#FAF8F5] rounded-2xl px-4 border border-[#ECE8E2]">
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#4A4A4A] border-r border-[#ECE8E2] pr-4">
+                    {weatherChipText.split('•')[0].trim()}
+                  </div>
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#059669]">
+                    {crowdChipText}
+                  </div>
+                </div>
+
+                {/* AI Insight (Simplified) */}
+                <div className="mt-1">
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <span className="text-sm">✨</span>
+                    <span className="text-xs font-extrabold text-[#1F1F1F] uppercase tracking-wider">TripWise Insight</span>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {insightBullets.slice(0, 2).map((bullet, idx) => (
+                      <div key={idx} className="flex items-start gap-2 text-[13px] text-[#4A4A4A] leading-snug">
+                        <span className="text-[#FF6B2C] font-black mt-0.5 opacity-80">•</span>
+                        <span>{bullet}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Navigation Footer (Start, Save, Share) - NO TICKETS BUTTON FOR HOTEL */}
               </div>
             </div>
 
-            {/* Main content area */}
-            <div className="p-4 sm:p-5 flex flex-col gap-4">
-              {/* 3. Quick Summary Bar (Horizontal glass chips below hero title & above primary actions) */}
-              <div className="flex items-center justify-between gap-1 sm:gap-1.5 w-full flex-nowrap pb-1 pt-0.5">
-                <div className="bg-[rgba(255,255,255,0.85)] backdrop-blur-md border border-black/6 shadow-[0_8px_24px_rgba(0,0,0,0.06)] rounded-full px-2 sm:px-2.5 py-1.5 flex items-center gap-1 text-[11px] font-extrabold text-[#1F1F1F] whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-default">
-                  <span className="text-[#FFB000] text-xs font-black">★</span>
-                  <span>{ratingInfo.rating} ({formatReviewCount(ratingInfo.reviews)})</span>
-                </div>
-
-                <div className="bg-[rgba(255,255,255,0.85)] backdrop-blur-md border border-black/6 shadow-[0_8px_24px_rgba(0,0,0,0.06)] rounded-full px-2 sm:px-2.5 py-1.5 flex items-center gap-1 text-[11px] font-extrabold text-[#059669] dark:text-[#10B981] whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-default">
-                  <span className="relative flex h-1.5 w-1.5 shrink-0">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10B981] opacity-75" />
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#10B981]" />
-                  </span>
-                  <span>Open Now</span>
-                </div>
-
-                <div className="bg-[rgba(255,255,255,0.85)] backdrop-blur-md border border-black/6 shadow-[0_8px_24px_rgba(0,0,0,0.06)] rounded-full px-2 sm:px-2.5 py-1.5 flex items-center gap-1 text-[11px] font-extrabold text-[#1F1F1F] whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-default">
-                  <span className="text-[#6B6B6B] text-xs">🚶</span>
-                  <span>{walkTimeFormatted}</span>
-                </div>
-
-                <div className="bg-[rgba(255,255,255,0.85)] backdrop-blur-md border border-black/6 shadow-[0_8px_24px_rgba(0,0,0,0.06)] rounded-full px-2 sm:px-2.5 py-1.5 flex items-center gap-1 text-[11px] font-extrabold text-[#1F1F1F] whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-default">
-                  <span className="text-[#FF6B2C] text-xs">⏳</span>
-                  <span>{act?.duration || (isBasecamp ? 'All-Day Hub' : '2 hrs')}</span>
-                </div>
-              </div>
-
-              {/* 5. Short Description */}
-              {act?.description && (
-                <p className="text-xs sm:text-[13px] font-medium text-[#4A4A4A] leading-relaxed">
-                  {act.description}
-                </p>
-              )}
-
-              {/* 6. Quick Information Grid (Replaced with Pill Chips) */}
-              <div className="flex items-center flex-wrap gap-1.5">
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#5F5E5A] bg-[#F7F5F2] px-2 py-1 rounded-full border border-[#ECE8E2]">
-                  <span className="text-stone-400"><Clock size={10} strokeWidth={2.5} /></span> {act?.duration || (isBasecamp ? 'All-Day Hub' : '1.5 – 2 Hours')}
-                </span>
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#5F5E5A] bg-[#F7F5F2] px-2 py-1 rounded-full border border-[#ECE8E2]">
-                  <span className="text-stone-400"><Banknote size={10} strokeWidth={2.5} /></span> {isBasecamp ? 'Included in Stay' : costInfo.title.replace('💰 ', '')}
-                </span>
-                {walkTimeFormatted !== 'Not Available' && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#5F5E5A] bg-[#F7F5F2] px-2 py-1 rounded-full border border-[#ECE8E2]">
-                    <span className="text-stone-400">🚶</span> {walkTimeFormatted} {walkDistFormatted ? `(${walkDistFormatted})` : ''}
-                  </span>
-                )}
-                {iconBadges.map((badge, bIdx) => {
-                  let premiumIcon = null;
-                  if (badge.icon === '⚡') premiumIcon = <Star size={10} strokeWidth={2.5} className="text-[#FF6B2C] fill-[#FF6B2C]" />;
-                  else if (badge.icon === '🎯') premiumIcon = <ArrowUpRight size={10} strokeWidth={2.5} className="text-[#059669]" />;
-                  else premiumIcon = badge.icon;
-                  return (
-                    <span key={bIdx} className={`inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-1 rounded-full border ${badge.colorClass}`}>
-                      <span className="opacity-80">{premiumIcon}</span> <span>{badge.text}</span>
-                    </span>
-                  );
-                })}
-              </div>
-
-              {/* Weather & Crowd Level compact chips */}
-              <div className="flex items-center gap-2 -mt-1 flex-wrap">
-                <span className="px-2.5 py-1 rounded-xl bg-[#FAF8F5] border border-[#ECE8E2] text-xs font-bold text-[#4A4A4A] flex items-center gap-1.5 shadow-2xs transition-all duration-200 hover:border-[#FF6B2C]/40">
-                  {weatherChipText}
-                </span>
-                <span className="px-2.5 py-1 rounded-xl bg-[#10B981]/10 border border-[#10B981]/25 text-xs font-bold text-[#059669] flex items-center gap-1.5 shadow-2xs transition-all duration-200 hover:scale-[1.02]">
-                  {crowdChipText}
-                </span>
-              </div>
-
-              {/* 7. ✨ TripWise Insight (AI Recommendation) */}
-              <motion.div
-                whileHover={{ scale: 1.02, y: -2 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                className="bg-linear-to-br from-[#FFF8F3] via-[#FFF3EC]/80 to-[#FFECE2]/60 border border-[#FF6B2C]/30 rounded-2xl p-4 shadow-[0_8px_24px_rgba(255,107,44,0.12)] relative overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_rgba(255,107,44,0.18)] hover:border-[#FF6B2C]/50 group cursor-default"
-              >
-                {/* Glossy overlay effect */}
-                <div className="absolute inset-0 bg-linear-to-b from-white/40 to-transparent pointer-events-none rounded-2xl opacity-50" />
-                
-                <div className="flex items-center gap-2 mb-2.5 relative z-10">
-                  <div className="w-5 h-5 rounded-lg bg-linear-to-r from-[#FF6B2C] to-[#E65D20] text-white flex items-center justify-center text-[11px] shadow-sm font-bold shrink-0">
-                    <motion.div
-                      animate={{ rotate: [0, -10, 10, -10, 10, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
+            {/* FIXED FOOTER */}
+            <div className="p-5 pt-4 bg-white border-t border-[#ECE8E2] shrink-0">
+                <div className="flex items-center gap-2">
+                  {!isBasecamp && (
+                    <button
+                      type="button"
+                      onClick={() => setActivePassModal({ activity: act, dayNum: selectedDayIndex + 1, stopNum: (selectedStopIdx !== null ? selectedStopIdx + 1 : 1) })}
+                      className="flex-1 bg-linear-to-r from-[#FF6B2C] to-[#E65D20] text-white font-bold rounded-xl h-11 flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(255,107,44,0.3)] hover:shadow-lg transition-all active:scale-95 group cursor-pointer"
                     >
-                      ✨
-                    </motion.div>
-                  </div>
-                  <span className="text-[11px] font-extrabold text-[#D94E14] uppercase tracking-wider">
-                    TripWise Insight
-                  </span>
-                </div>
-                <div className="flex flex-col gap-1.5 pl-1 relative z-10">
-                  {insightBullets.map((bullet, idx) => (
-                    <motion.div 
-                      key={idx}
-                      initial={{ opacity: 0, x: -5 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 + (idx * 0.1) }}
-                      className="flex items-start gap-2 text-xs font-semibold text-[#1F1F1F] leading-relaxed"
-                    >
-                      <span className="text-[#FF6B2C] font-black mt-0.5">•</span>
-                      <span>{bullet}</span>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-
-              {/* 8. 🤖 Why TripWise Chose This Stop section */}
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                className="bg-[#FAF8F5] border border-[#ECE8E2] rounded-2xl p-3.5 transition-all duration-300 hover:border-[#ECE8E2]/90 hover:shadow-sm hover:bg-white cursor-default"
-              >
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-sm">🤖</span>
-                  <span className="text-[11px] font-extrabold text-[#1F1F1F] uppercase tracking-wider">
-                    Why TripWise Chose This Stop
-                  </span>
-                </div>
-                <p className="text-xs font-medium text-[#6B6B6B] leading-relaxed italic">
-                  &quot;{whyChosenText}&quot;
-                </p>
-              </motion.div>
-
-              {/* 9. Nearby AI Suggestions (Optional recommendations below AI section) */}
-              <div className="flex flex-col gap-2.5 pt-1">
-                <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#1F1F1F]">
-                  <span>📍</span>
-                  <span className="uppercase tracking-wider text-[11px]">Nearby AI Suggestions</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {nearbySuggestions.map((sug, i) => (
-                    <div key={i} className="flex items-center gap-2.5 p-2 bg-[#FAF8F5] hover:bg-white border border-[#ECE8E2] rounded-xl transition-all duration-200 hover:shadow-2xs cursor-pointer group">
-                      <img src={sug.image} alt={sug.title} className="w-11 h-11 rounded-lg object-cover shrink-0" />
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-xs font-bold text-[#1F1F1F] group-hover:text-[#FF6B2C] truncate transition-colors">
-                          {sug.title}
-                        </span>
-                        <span className="text-[10px] font-extrabold text-[#FF6B2C] truncate">
-                          {sug.category}
-                        </span>
-                        <div className="flex items-center gap-2 mt-0.5 text-[10px] font-semibold text-[#6B6B6B]">
-                          <span>{sug.dist}</span>
-                          <span className="font-bold text-[#1F1F1F]">★ {sug.rating}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Spacer to prevent content clipping under the sticky footer */}
-              <div className="h-8 sm:h-10 shrink-0 w-full" />
-
-              {/* STICKY ACTION BAR & 10. Footer Navigation (Pinned to bottom of panel when scrolling) */}
-              <div className="sticky bottom-0 z-40 bg-[rgba(255,255,255,0.88)] backdrop-blur-md border-t border-[#ECE8E2] pt-3 pb-3 sm:pb-4 mt-2 -mx-4 sm:-mx-5 px-4 sm:px-5 rounded-b-3xl shadow-[0_-8px_24px_rgba(0,0,0,0.06)] flex flex-col gap-2.5">
-                {/* Premium Compact Sticky Action Bar (always 1 click away on scroll) */}
-                <div className="flex items-center justify-between gap-1.5 sm:gap-2 w-full">
-                  {/* Primary CTA: Tickets */}
-                  <motion.button
-                    whileHover={{ scale: 1.04, y: -2 }}
-                    whileTap={{ scale: 0.96 }}
-                    type="button"
-                    onClick={() => setActivePassModal({ activity: act, dayNum: selectedDayIndex + 1, stopNum: (selectedStopIdx !== null ? selectedStopIdx + 1 : 1) })}
-                    className="group/ticket flex-[1.4] min-w-0 bg-linear-to-r from-[#FF6B2C] to-[#E65D20] text-white font-bold rounded-xl px-2 sm:px-3 h-10 flex items-center justify-center gap-1.5 shadow-[0_4px_16px_rgba(255,107,44,0.3)] hover:shadow-[0_8px_24px_rgba(255,107,44,0.45)] transition-shadow duration-300 ease-out cursor-pointer"
-                  >
-                    <Ticket size={15} strokeWidth={2.5} className="shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover/ticket:-rotate-[15deg] group-hover/ticket:scale-110" />
-                    <span className="tracking-tight whitespace-nowrap text-[13px] sm:text-sm">Tickets</span>
-                    <ArrowRight size={15} strokeWidth={2.5} className="shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover/ticket:translate-x-1" />
-                  </motion.button>
-
-                  {/* Secondary CTA: Start Route */}
-                  <motion.a
-                    whileHover={{ scale: 1.04, y: -2 }}
-                    whileTap={{ scale: 0.96 }}
+                      <Ticket size={16} strokeWidth={2.5} className="group-hover:scale-110 group-hover:-rotate-12 transition-transform duration-300" />
+                      <span>Tickets</span>
+                      <ArrowRight size={16} strokeWidth={2.5} className="w-0 opacity-0 group-hover:w-4 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-300" />
+                    </button>
+                  )}
+                  <a
                     href={googleMapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-[1.2] min-w-0 bg-white text-[#1F1F1F] border border-black/10 hover:border-black/20 font-semibold rounded-xl px-2 h-10 flex items-center justify-center gap-1 sm:gap-1.5 shadow-xs hover:shadow-md transition-shadow duration-300 ease-out text-center group cursor-pointer"
+                    className={`flex-1 ${!isBasecamp ? 'bg-white text-[#1F1F1F] border border-[#ECE8E2] shadow-sm' : 'bg-linear-to-r from-[#FF6B2C] to-[#E65D20] text-white shadow-[0_4px_16px_rgba(255,107,44,0.3)]'} font-bold rounded-xl h-11 flex items-center justify-center gap-2 hover:shadow-lg transition-all active:scale-95 group cursor-pointer`}
                   >
-                    <ArrowUpRight
-                      size={15}
-                      strokeWidth={2.5}
-                      className="text-[#FF6B2C] transition-transform duration-200 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-active:scale-110 shrink-0"
-                    />
-                    <span className="tracking-tight whitespace-nowrap text-xs sm:text-[13px]">Start Route</span>
-                  </motion.a>
-
-                  {/* Secondary CTA: Save */}
-                  <motion.button
-                    whileHover={{ scale: 1.04, y: -2 }}
-                    whileTap={{ scale: 0.96 }}
+                    <ArrowUpRight size={16} strokeWidth={3} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                    <span>Start Route</span>
+                  </a>
+                  
+                  <button
                     type="button"
                     onClick={toggleSaveDestination}
-                    className={`flex-[0.9] min-w-0 ${
-                      isDestinationSaved
-                        ? 'bg-linear-to-r from-[#FFE8DE] to-[#FFF3ED] text-[#D94E14] border border-[#FF6B2C]/30 shadow-sm'
-                        : 'bg-white text-[#1F1F1F] border border-black/10 hover:border-black/20 shadow-xs hover:shadow-md'
-                    } font-semibold rounded-xl px-2 h-10 flex items-center justify-center gap-1 sm:gap-1.5 transition-shadow duration-300 ease-out text-center group cursor-pointer`}
+                    className={`group flex items-center justify-center h-11 px-3 min-w-[44px] rounded-xl border transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-95 cursor-pointer ${
+                      isDestinationSaved 
+                        ? 'bg-[#FFE8DE] border-[#FF6B2C]/40 text-[#FF6B2C]' 
+                        : 'bg-white border-[#ECE8E2] hover:border-[#1F1F1F]/20 hover:bg-[#F9F9F9] text-[#1F1F1F] shadow-xs hover:shadow-md'
+                    }`}
                   >
-                    <Heart
-                      size={15}
-                      strokeWidth={2.5}
-                      className={`shrink-0 transition-all duration-200 ${
-                        isDestinationSaved
-                          ? 'fill-[#FF6B2C] text-[#FF6B2C] scale-110'
-                          : 'text-[#1F1F1F] group-hover:text-[#FF6B2C] group-active:scale-125'
-                      }`}
-                    />
-                    <span className="tracking-tight whitespace-nowrap text-xs sm:text-[13px]">{isDestinationSaved ? 'Saved' : 'Save'}</span>
-                  </motion.button>
-
-                  {/* Secondary CTA: Share */}
-                  <motion.button
-                    whileHover={{ scale: 1.04, y: -2 }}
-                    whileTap={{ scale: 0.96 }}
+                    <Heart size={18} strokeWidth={2.5} className={`shrink-0 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-125 group-hover:-translate-y-0.5 ${isDestinationSaved ? 'fill-[#FF6B2C] group-hover:-rotate-12' : 'group-hover:rotate-12'}`} />
+                    <span className="max-w-0 opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:max-w-[50px] group-hover:ml-2 group-hover:opacity-100 font-bold text-sm transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden whitespace-nowrap">
+                      {isDestinationSaved ? 'Saved' : 'Save'}
+                    </span>
+                  </button>
+                  
+                  <button
                     type="button"
                     onClick={() => setIsInviteModalOpen(true)}
-                    className="flex-[0.9] min-w-0 bg-white text-[#1F1F1F] border border-black/10 hover:border-black/20 font-semibold rounded-xl px-2 h-10 flex items-center justify-center gap-1 sm:gap-1.5 shadow-xs hover:shadow-md transition-shadow duration-300 ease-out text-center group cursor-pointer"
+                    className="group flex items-center justify-center h-11 px-3 min-w-[44px] rounded-xl bg-white border border-[#ECE8E2] hover:border-[#1F1F1F]/20 hover:bg-[#F9F9F9] text-[#1F1F1F] shadow-xs hover:shadow-md transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-95 cursor-pointer"
                   >
-                    <Share2
-                      size={15}
-                      strokeWidth={2.5}
-                      className="shrink-0 text-[#1F1F1F] fill-transparent group-hover:fill-[#1F1F1F] transition-all duration-200 ease-out group-hover:scale-110"
-                    />
-                    <span className="tracking-tight whitespace-nowrap text-xs sm:text-[13px]">Share</span>
-                  </motion.button>
+                    <Share2 size={18} strokeWidth={2.5} className="shrink-0 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-110 group-hover:rotate-12 group-hover:-translate-y-0.5" />
+                    <span className="max-w-0 opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:max-w-[50px] group-hover:ml-2 group-hover:opacity-100 font-bold text-sm transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden whitespace-nowrap">
+                      Share
+                    </span>
+                  </button>
                 </div>
 
-                {/* Previous / Stop Counter / Next Navigation */}
-                <div className="flex items-center justify-between pt-2 border-t border-[#ECE8E2]/80">
+                {/* Next/Prev Navigation */}
+                <div className="flex items-center justify-between pt-4">
                   <button
                     type="button"
                     onClick={handleNavigatePrev}
-                    className="px-3.5 py-1.5 h-8 rounded-xl bg-white hover:bg-[#FAF8F5] border border-[#E2DED8] hover:border-[#1F1F1F]/30 text-[#1F1F1F] font-extrabold text-xs shadow-2xs hover:shadow-sm transition-all duration-200 flex items-center gap-1.5 active:scale-95 cursor-pointer hover:-translate-x-0.5 group"
+                    className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-[#1F1F1F] border border-[#ECE8E2] hover:border-[#1F1F1F] text-[#4A4A4A] hover:text-white text-xs font-bold transition-all duration-300 active:scale-95 cursor-pointer shadow-xs hover:shadow-md"
                   >
-                    <span className="transition-transform duration-200 group-hover:-translate-x-0.5 font-black text-sm">←</span>
-                    <span className="tracking-tight">Previous</span>
+                    <ArrowLeft size={14} strokeWidth={2.5} className="group-hover:-translate-x-0.5 transition-transform duration-300" />
+                    <span>Prev</span>
                   </button>
-
-                  <span className="text-xs font-black text-[#1F1F1F] bg-linear-to-br from-[#FAF8F5] to-[#F3EFEA] px-3.5 py-1.5 h-8 rounded-xl border border-[#E2DED8] shadow-2xs flex items-center justify-center tracking-wide">
-                    {isBasecamp ? 'Base' : `${stopIndex} / ${totalStops || (dayStops.length - 1)}`}
-                  </span>
-
+                  
+                  <div className="relative flex items-center justify-center min-w-[85px] h-[26px]">
+                    <AnimatePresence>
+                      <motion.div
+                        key={isBasecamp ? 'base' : stopIndex}
+                        initial={{ scale: 0.8, opacity: 0, y: 15, filter: 'blur(4px)', position: 'absolute' }}
+                        animate={{ scale: 1, opacity: 1, y: 0, filter: 'blur(0px)' }}
+                        exit={{ scale: 0.8, opacity: 0, y: -15, filter: 'blur(4px)' }}
+                        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                        className="px-3 py-1 bg-[#FAF8F5] rounded-full border border-[#ECE8E2] shadow-xs flex items-center justify-center whitespace-nowrap"
+                      >
+                        <span className="text-[11px] font-extrabold text-[#4A4A4A] tracking-widest uppercase">
+                          {isBasecamp ? 'Basecamp' : `${stopIndex} / ${totalStops || (dayStops.length - 1)}`}
+                        </span>
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
+                  
                   <button
                     type="button"
                     onClick={handleNavigateNext}
-                    className="px-3.5 py-1.5 h-8 rounded-xl bg-white hover:bg-[#FAF8F5] border border-[#E2DED8] hover:border-[#1F1F1F]/30 text-[#1F1F1F] font-extrabold text-xs shadow-2xs hover:shadow-sm transition-all duration-200 flex items-center gap-1.5 active:scale-95 cursor-pointer hover:translate-x-0.5 group"
+                    className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-[#1F1F1F] border border-[#ECE8E2] hover:border-[#1F1F1F] text-[#4A4A4A] hover:text-white text-xs font-bold transition-all duration-300 active:scale-95 cursor-pointer shadow-xs hover:shadow-md"
                   >
-                    <span className="tracking-tight">Next</span>
-                    <span className="transition-transform duration-200 group-hover:translate-x-0.5 font-black text-sm">→</span>
+                    <span>Next</span>
+                    <ArrowRight size={14} strokeWidth={2.5} className="group-hover:translate-x-0.5 transition-transform duration-300" />
                   </button>
                 </div>
-              </div>
             </div>
           </motion.div>
         );
