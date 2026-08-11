@@ -85,6 +85,24 @@ export default function AIPlannerPage() {
       }
     }
     loadSharedTrip();
+    
+    const handleStorageChange = (e) => {
+      if (e.key === 'tripwise_itinerary' && e.newValue) {
+        try {
+          const updatedItinerary = JSON.parse(e.newValue);
+          if (updatedItinerary) {
+            setItinerary(updatedItinerary);
+          }
+        } catch (err) {
+          console.error("Failed to sync itinerary from storage", err);
+        }
+      }
+    };
+    
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', handleStorageChange);
+      return () => window.removeEventListener('storage', handleStorageChange);
+    }
   }, []);
 
   const handleGenerate = async (selections) => {

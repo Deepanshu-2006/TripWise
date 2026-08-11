@@ -1,5 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 import { NextResponse } from 'next/server';
+import { getPlaceDetails } from '@/app/actions/hotels';
 import londonMock from '../../mocks/london_mock.json';
 import romeMock from '../../mocks/rome_mock.json';
 import kyotoMock from '../../mocks/kyoto_mock.json';
@@ -314,9 +315,35 @@ CRITICAL RULES FOR SPEED & QUALITY:
     }
 
     const itinerary = JSON.parse(response.text);
+    
+    let basecampHotelDetails = null;
+    if (isBasecampProvided) {
+      try {
+        const details = await getPlaceDetails(`${basecampHotel} ${destination || prompt}`);
+        if (details && !details.error) {
+          basecampHotelDetails = {
+            name: details.name,
+            address: details.address,
+            coordinates: details.coordinates,
+            image: details.photos && details.photos.length > 0 ? details.photos[0] : null,
+            photos: details.photos || [],
+            rating: details.rating || 4.8,
+            reviewCount: details.reviewCount || 12000
+          };
+        }
+      } catch (e) {
+        console.error("Failed to fetch real basecamp details during generation:", e);
+      }
+    }
+
     return NextResponse.json({ 
       success: true, 
-      itinerary: { ...itinerary, hotelMode, basecampHotel } 
+      itinerary: { 
+        ...itinerary, 
+        hotelMode, 
+        basecampHotel,
+        ...(basecampHotelDetails ? { basecampHotelDetails } : {})
+      } 
     });
   } catch (error) {
     console.error('Gemini API Error:', error);

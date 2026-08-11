@@ -55,6 +55,8 @@ export async function updateTrip(tripId, destinationName, itineraryData) {
     }
 
     revalidatePath('/ai-planner');
+    revalidatePath('/ai-planner/new');
+    revalidatePath('/itinerary');
     return { success: true, trip: data[0] };
 }
 

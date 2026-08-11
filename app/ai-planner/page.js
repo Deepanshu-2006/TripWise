@@ -232,8 +232,14 @@ export default function AIPlannerDashboard() {
                             // parse safely to avoid UTC offset issues (e.g. 2026-08-01 becoming July 31)
                             const [sYear, sMonth, sDay] = actualData.startDate.split('-');
                             start = new Date(sYear, sMonth - 1, sDay);
-                            const [eYear, eMonth, eDay] = actualData.endDate.split('-');
-                            end = new Date(eYear, eMonth - 1, eDay);
+                            
+                            if (actualData.days && actualData.days.length > 0) {
+                                end = new Date(start);
+                                end.setDate(end.getDate() + actualData.days.length - 1);
+                            } else {
+                                const [eYear, eMonth, eDay] = actualData.endDate.split('-');
+                                end = new Date(eYear, eMonth - 1, eDay);
+                            }
                         } else {
                             // If they didn't pick dates, default to starting today for the given duration
                             start = new Date(now);
