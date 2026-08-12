@@ -20,7 +20,9 @@ export default function Home() {
         <Destination />
       </FigmaReveal>
       <PassportGrid />
-      <FAQAndMarqueeCTA />
+      <FigmaReveal id="section-faq" index={2}>
+        <FAQAndMarqueeCTA />
+      </FigmaReveal>
     </div>
   );
 }

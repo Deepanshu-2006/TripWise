@@ -47,10 +47,8 @@ export default function FAQAndMarqueeCTA() {
   const marqueeTrack1Ref = useRef(null);
   const marqueeTrack2Ref = useRef(null);
 
-  // 3D Origami Unfold & Keynote Sheet Refs
   const faqSectionRef = useRef(null);
-  const faqOrigamiCardRef = useRef(null);
-  const laserBeamRef = useRef(null);
+  const faqHeaderRef = useRef(null);
 
   const [isFlying, setIsFlying] = useState(false);
   const plane1Ref = useRef(null);
@@ -152,69 +150,49 @@ export default function FAQAndMarqueeCTA() {
     }
   };
 
-  // 3D Origami Unfold & Keynote Sheet Morph Animation
+  // FAQ Section ScrollTrigger Entrance Animation
   useEffect(() => {
     if (typeof window === 'undefined') return;
     gsap.registerPlugin(ScrollTrigger);
 
     const section = faqSectionRef.current;
-    const card = faqOrigamiCardRef.current;
-    const beam = laserBeamRef.current;
-    if (!section || !card) return;
+    const header = faqHeaderRef.current;
+    if (!section) return;
 
-    // Initial 3D Origami Perspective State
-    gsap.set(card, {
-      scale: 0.88,
-      rotateX: 14,
-      rotateY: -4,
-      rotateZ: 1.2,
-      y: 150,
-      z: -160,
-      opacity: 0.15,
-      filter: 'blur(10px)',
-      transformPerspective: 2000,
-      transformOrigin: 'center top',
-    });
+    if (header) {
+      gsap.set(header, {
+        y: 40,
+        opacity: 0,
+      });
+    }
 
     gsap.set('.faq-keynote-card', {
       opacity: 0,
-      y: 45,
+      y: 40,
       rotateX: 18,
-      scale: 0.95,
+      scale: 0.96,
       transformPerspective: 1200,
       transformOrigin: 'top center',
     });
 
-    if (beam) {
-      gsap.set(beam, { opacity: 0.85 });
-    }
-
     const ctx = gsap.context(() => {
-      // 3D Origami Unfold Scrubbed Timeline
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: section,
-          start: 'top 92%',
-          end: 'top 18%',
-          scrub: 0.7,
+          start: 'top 80%',
+          toggleActions: 'play none none reverse',
         },
       });
 
-      // 1. Unfold 3D sheet to flat presentation plane
-      tl.to(card, {
-        scale: 1,
-        rotateX: 0,
-        rotateY: 0,
-        rotateZ: 0,
-        y: 0,
-        z: 0,
-        opacity: 1,
-        filter: 'blur(0px)',
-        duration: 1,
-        ease: 'power2.out',
-      });
+      if (header) {
+        tl.to(header, {
+          y: 0,
+          opacity: 1,
+          duration: 0.6,
+          ease: 'power2.out',
+        });
+      }
 
-      // 2. Cascading 3D card flip-in
       tl.to('.faq-keynote-card', {
         opacity: 1,
         y: 0,
@@ -223,23 +201,7 @@ export default function FAQAndMarqueeCTA() {
         stagger: 0.1,
         duration: 0.65,
         ease: 'back.out(1.3)',
-      }, 0.25);
-
-      // Flash top laser highlight upon document snap
-      ScrollTrigger.create({
-        trigger: section,
-        start: 'top 80%',
-        onEnter: () => {
-          if (!beam) return;
-          gsap.timeline()
-            .to(beam, { opacity: 1, duration: 0.35, ease: 'power2.out' })
-            .to(beam, { opacity: 0.8, duration: 0.8 });
-        },
-        onLeaveBack: () => {
-          if (!beam) return;
-          gsap.to(beam, { opacity: 0.6, duration: 0.4 });
-        }
-      });
+      }, '-=0.35');
     }, section);
 
     return () => ctx.revert();
@@ -362,95 +324,123 @@ export default function FAQAndMarqueeCTA() {
     };
   }, []);
 
-  return (
-    <div className="w-full bg-[#FFF8F5] overflow-hidden relative">
-      {/* 1. FAQ 3D Origami Unfold & Keynote Card Architecture */}
+  // 3D Card Interactive Tilt Listeners
+  const handleCardMouseMove = (e, cardEl) => {
+    if (!cardEl) return;
+    const rect = cardEl.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    const tiltX = (y - 0.5) * -6;
+    const tiltY = (x - 0.5) * 6;
+
+    gsap.to(cardEl, {
+      rotateX: tiltX,
+      rotateY: tiltY,
+      z: 20,
+      scale: 1.015,
+      duration: 0.25,
+      ease: 'power2.out',
+      overwrite: 'auto',
+    });
+  };
+
+  const handleCardMouseLeave = (cardEl) => {
+    if (!cardEl) return;
+    gsap.to(cardEl, {
+      rotateX: 0,
+      rotateY: 0,
+      z: 0,
+      scale: 1,
+      duration: 0.5,
+      ease: 'power2.out',
+      overwrite: 'auto',
+    });
+  };  return (
+    <div className="w-full bg-[#FFF8F5] relative">
+      {/* 1. FAQ Accordion Architecture */}
       <section 
         ref={faqSectionRef} 
-        className="relative z-20 w-full -mt-16 md:-mt-24"
-        style={{ perspective: '2000px' }}
+        className="py-24 md:py-32 max-w-4xl mx-auto px-4 md:px-8 relative z-10"
       >
-        <div
-          ref={faqOrigamiCardRef}
-          className="relative will-change-transform w-full bg-[#FFF8F5] rounded-t-[40px] md:rounded-t-[60px] border-t-2 border-[#FF5B1D]/40 overflow-hidden py-24 md:py-32"
-          style={{
-            boxShadow: '0 -30px 70px -15px rgba(0,0,0,0.14), 0 -10px 30px rgba(0,0,0,0.08), 0 -2px 12px rgba(255,91,29,0.3), inset 0 1px 0 rgba(255,255,255,0.98)',
-          }}
-        >
-          {/* Top Luminous Laser Beam / Specular Edge Line */}
-          <div
-            ref={laserBeamRef}
-            aria-hidden="true"
-            className="absolute top-0 inset-x-0 h-[3px] pointer-events-none z-50 transition-opacity duration-300"
-            style={{
-              background: 'linear-gradient(90deg, transparent 0%, rgba(255,91,29,0.4) 10%, #FF5B1D 50%, rgba(255,91,29,0.4) 90%, transparent 100%)',
-              boxShadow: '0 0 20px 3px rgba(255, 91, 29, 0.8), 0 2px 25px 5px rgba(255, 91, 29, 0.45)',
-            }}
-          />
-
-          <div className="max-w-4xl mx-auto px-4 md:px-8 relative z-10">
-            {/* Header Block */}
-            <div className="text-center mb-14 md:mb-18">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FF5B1D]/10 border border-[#FF5B1D]/20 text-[#FF5B1D] text-xs font-bold tracking-widest uppercase mb-4 shadow-2xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D] animate-pulse" />
-                ✦ CLARITY &amp; PRECISION
-              </div>
-              <h2 className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-[#111827] tracking-tight mb-4">
-                Got Questions? We Have Itineraries.
-              </h2>
-              <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
-                Everything you need to know about how TripWise replaces weeks of open-tab research with instant, AI-perfected travel planning.
-              </p>
-            </div>
-
-            {/* Vertical Stack of 3D Keynote Accordion Cards */}
-            <div className="space-y-4">
-              {faqData.map((item, i) => {
-                const isOpen = openIdx === i;
-                return (
-                  <div
-                    key={i}
-                    className="faq-keynote-card group cursor-pointer transition-all duration-300 rounded-2xl border border-brand-dark/10 bg-white/85 backdrop-blur-md p-5 md:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_16px_36px_-10px_rgba(255,91,29,0.15)] hover:border-[#FF5B1D]/40 hover:-translate-y-0.5 will-change-transform"
-                    onClick={() => toggleAccordion(i)}
-                  >
-                    <div className="flex items-center justify-between gap-4 select-none">
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        <span className="w-7 h-7 rounded-lg bg-[#FF5B1D]/10 group-hover:bg-[#FF5B1D] text-[#FF5B1D] group-hover:text-white font-mono text-[11px] font-bold flex items-center justify-center transition-colors duration-300 shrink-0 shadow-2xs">
-                          0{i + 1}
-                        </span>
-                        <h3 className="text-base md:text-lg lg:text-xl font-extrabold text-[#111827] group-hover:text-[#FF5B1D] transition-colors duration-300 leading-snug">
-                          {item.question}
-                        </h3>
-                      </div>
-                      <div
-                        ref={(el) => (iconRefs.current[i] = el)}
-                        className="w-8 h-8 rounded-full bg-black/5 group-hover:bg-[#FF5B1D]/15 flex items-center justify-center shrink-0 transition-all duration-300 border border-black/5 group-hover:border-[#FF5B1D]/30"
-                      >
-                        <svg
-                          className="w-4 h-4 text-gray-700 group-hover:text-[#FF5B1D] transition-colors duration-300"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2.5}
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                        </svg>
-                      </div>
-                    </div>
-
-                    <div
-                      ref={(el) => (contentRefs.current[i] = el)}
-                      className="h-0 opacity-0 overflow-hidden text-gray-600 text-sm md:text-base leading-relaxed pl-10.5 pr-4"
-                    >
-                      <div className="pt-4 pb-2 border-t border-brand-dark/5 mt-3">
-                        {item.answer}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+        {/* Header Block */}
+        <div ref={faqHeaderRef} className="text-center mb-14 md:mb-18 will-change-transform">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FF5B1D]/10 border border-[#FF5B1D]/20 text-[#FF5B1D] text-xs font-bold tracking-widest uppercase mb-4 shadow-2xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D] animate-pulse" />
+            ✦ CLARITY &amp; PRECISION
           </div>
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-[#111827] tracking-tight mb-4">
+            Got Questions? We Have Itineraries.
+          </h2>
+          <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
+            Everything you need to know about how TripWise replaces weeks of open-tab research with instant, AI-perfected travel planning.
+          </p>
+        </div>
+
+        {/* Vertical Stack of 3D Keynote Accordion Cards */}
+        <div className="space-y-4" style={{ perspective: '1600px', transformStyle: 'preserve-3d' }}>
+          {faqData.map((item, i) => {
+            const isOpen = openIdx === i;
+            const isAnyOpen = openIdx !== null;
+            return (
+              <div
+                key={i}
+                className={`faq-keynote-card group cursor-pointer transition-all duration-300 rounded-2xl p-5 md:p-6 will-change-transform ${
+                  isOpen
+                    ? 'bg-white border-2 border-[#FF5B1D] shadow-[0_20px_50px_-10px_rgba(255,91,29,0.22)] scale-[1.02] z-30'
+                    : isAnyOpen
+                    ? 'bg-white/70 border border-brand-dark/10 opacity-75 shadow-xs'
+                    : 'bg-white/85 border border-brand-dark/10 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_16px_36px_-10px_rgba(255,91,29,0.15)] hover:border-[#FF5B1D]/40'
+                }`}
+                style={{ transformStyle: 'preserve-3d' }}
+                onClick={() => toggleAccordion(i)}
+                onMouseMove={(e) => handleCardMouseMove(e, e.currentTarget)}
+                onMouseLeave={(e) => handleCardMouseLeave(e.currentTarget)}
+              >
+                <div className="flex items-center justify-between gap-4 select-none">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <span className={`w-7 h-7 rounded-lg font-mono text-[11px] font-bold flex items-center justify-center transition-colors duration-300 shrink-0 shadow-2xs ${
+                      isOpen
+                        ? 'bg-[#FF5B1D] text-white'
+                        : 'bg-[#FF5B1D]/10 group-hover:bg-[#FF5B1D] text-[#FF5B1D] group-hover:text-white'
+                    }`}>
+                      0{i + 1}
+                    </span>
+                    <h3 className={`text-base md:text-lg lg:text-xl font-extrabold transition-colors duration-300 leading-snug ${
+                      isOpen ? 'text-[#FF5B1D]' : 'text-[#111827] group-hover:text-[#FF5B1D]'
+                    }`}>
+                      {item.question}
+                    </h3>
+                  </div>
+                  <div
+                    ref={(el) => (iconRefs.current[i] = el)}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 border ${
+                      isOpen
+                        ? 'bg-[#FF5B1D] text-white border-[#FF5B1D]'
+                        : 'bg-black/5 group-hover:bg-[#FF5B1D]/15 text-gray-700 group-hover:text-[#FF5B1D] border-black/5 group-hover:border-[#FF5B1D]/30'
+                    }`}
+                  >
+                    <svg
+                      className="w-4 h-4 fill-none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2.5}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                  </div>
+                </div>
+
+                <div
+                  ref={(el) => (contentRefs.current[i] = el)}
+                  className="h-0 opacity-0 overflow-hidden text-gray-600 text-sm md:text-base leading-relaxed pl-10.5 pr-4"
+                >
+                  <div className="pt-4 pb-2 border-t border-brand-dark/5 mt-3">
+                    {item.answer}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 
