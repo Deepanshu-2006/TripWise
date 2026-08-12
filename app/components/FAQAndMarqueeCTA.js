@@ -207,6 +207,46 @@ export default function FAQAndMarqueeCTA() {
     return () => ctx.revert();
   }, []);
 
+  // Marquee & Ambient Pulsing Glow GSAP Effects
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // Track 1: Scroll left to right continuously
+      if (marqueeTrack1Ref.current) {
+        gsap.to(marqueeTrack1Ref.current, {
+          xPercent: -50,
+          duration: 35,
+          repeat: -1,
+          ease: "none"
+        });
+      }
+
+      // Track 2: Scroll right to left continuously
+      if (marqueeTrack2Ref.current) {
+        gsap.fromTo(marqueeTrack2Ref.current,
+          { xPercent: -50 },
+          {
+            xPercent: 0,
+            duration: 40,
+            repeat: -1,
+            ease: "none"
+          }
+        );
+      }
+
+      // Ambient Orange Glow Slow Pulse
+      gsap.to(".cta-ambient-glow", {
+        scale: 1.25,
+        opacity: 0.8,
+        duration: 4.5,
+        yoyo: true,
+        repeat: -1,
+        ease: "sine.inOut"
+      });
+    });
+
+    return () => ctx.revert();
+  }, []);
+
   // Marquee & Pulsing Glow GSAP Effects
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -449,7 +489,13 @@ export default function FAQAndMarqueeCTA() {
         ref={ctaContainerRef}
         className="relative w-full bg-[#0A0A0A] py-32 md:py-44 overflow-hidden flex flex-col items-center justify-center text-center select-none"
       >
-        {/* Soft Ambient Orange Pulse Layer */}
+        {/* Soft Ambient Aurora Mesh Layer — Smooth Organic Orange Glow */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+          <div className="liquid-mesh-blob-1 absolute -top-1/4 -left-1/4 w-[600px] md:w-[900px] h-[600px] md:h-[900px] bg-radial from-[#FF5B1D]/20 via-[#F97316]/5 to-transparent blur-[140px] md:blur-[200px] animate-liquid-morph-1 pointer-events-none" />
+          <div className="liquid-mesh-blob-2 absolute -bottom-1/4 -right-1/4 w-[650px] md:w-[950px] h-[650px] md:h-[950px] bg-radial from-[#EA580C]/15 via-[#7C3AED]/5 to-transparent blur-[150px] md:blur-[200px] animate-liquid-morph-2 pointer-events-none" />
+        </div>
+
+        {/* Soft Ambient Center Orange Pulse Layer */}
         <div className="cta-ambient-glow absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-87.5 md:w-162.5 h-62.5 md:h-112.5 rounded-full bg-[#F97316]/30 blur-[130px] md:blur-[180px] pointer-events-none z-0" />
 
         {/* Infinite Horizontal Dual-Track Marquee Background at Low Opacity */}

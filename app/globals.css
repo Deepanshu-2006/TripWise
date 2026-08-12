@@ -391,3 +391,57 @@ html.lenis, html.lenis body {
   -webkit-backface-visibility: hidden;
   transform-style: preserve-3d;
 }
+
+/* ==========================================================================
+   Liquid Aurora Background Morphing Keyframes
+   ========================================================================== */
+@keyframes liquid-morph-1 {
+  0%, 100% {
+    border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  33% {
+    border-radius: 70% 30% 46% 54% / 30% 29% 71% 70%;
+    transform: translate(35px, -45px) rotate(120deg) scale(1.12);
+  }
+  66% {
+    border-radius: 100% 60% 60% 100% / 100% 100% 60% 60%;
+    transform: translate(-40px, 30px) rotate(240deg) scale(0.92);
+  }
+}
+
+@keyframes liquid-morph-2 {
+  0%, 100% {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  50% {
+    border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+    transform: translate(-45px, -35px) rotate(-180deg) scale(1.18);
+  }
+}
+
+@keyframes liquid-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-liquid-morph-1 {
+  animation: liquid-morph-1 16s ease-in-out infinite;
+}
+
+.animate-liquid-morph-2 {
+  animation: liquid-morph-2 20s ease-in-out infinite;
+}
+
+.animate-liquid-shimmer {
+  background-size: 200% 200%;
+  animation: liquid-shimmer 6s ease infinite;
+}
