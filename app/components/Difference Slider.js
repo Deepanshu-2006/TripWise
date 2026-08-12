@@ -1,10 +1,18 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 export default function Destination() {
+    const sectionRef = useRef(null);
+    const artboardRef = useRef(null);
+    const badgeRef = useRef(null);
+    const headingRef = useRef(null);
+    const underlinePathRef = useRef(null);
     const containerRef = useRef(null);
-    const [sliderPos, setSliderPos] = useState(20); // starts at 20% on load
+
+    const [sliderPos, setSliderPos] = useState(15); // starts at 15% on initial entry
     const [isRevealed, setIsRevealed] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [headerVisible, setHeaderVisible] = useState(false);
@@ -36,28 +44,109 @@ export default function Destination() {
         return () => clearInterval(interval);
     }, [isRevealed]);
 
-    // Initial load animation: divider starts at 20%, pauses 600ms, then slides smoothly to 50% using spring deceleration
+    const isRevealedRef = useRef(false);
+
+    // Figma Canvas 3D Morph & Scroll-Scrubbed Transition
     useEffect(() => {
-        setHeaderVisible(true);
+        if (typeof window === 'undefined') return;
+        gsap.registerPlugin(ScrollTrigger);
 
-        const timer = setTimeout(() => {
-            let currentVal = 20;
-            const targetVal = 50;
+        const section = sectionRef.current;
+        const artboard = artboardRef.current;
+        const badge = badgeRef.current;
+        const heading = headingRef.current;
+        const underline = underlinePathRef.current;
 
-            const tick = () => {
-                const diff = targetVal - currentVal;
-                if (Math.abs(diff) > 0.05) {
-                    currentVal += diff * 0.06; // Approaching the target gradually by moving 6% of the remaining distance per frame
-                    setSliderPos(currentVal);
-                    requestAnimationFrame(tick);
-                } else {
-                    setSliderPos(targetVal);
-                }
-            };
-            requestAnimationFrame(tick);
-        }, 600);
+        if (!section || !artboard) return;
 
-        return () => clearTimeout(timer);
+        // Set initial 3D isometric tilt state
+        gsap.set(artboard, {
+            rotateX: 12,
+            scale: 0.86,
+            y: 100,
+            opacity: 0.15,
+            filter: 'blur(10px)',
+            transformPerspective: 1200,
+            transformOrigin: 'center top',
+        });
+
+        if (badge) gsap.set(badge, { scale: 0.7, y: -25, opacity: 0 });
+        if (heading) gsap.set(heading, { y: 45, opacity: 0 });
+
+        if (underline) {
+            const length = 120;
+            underline.style.strokeDasharray = `${length} ${length}`;
+            underline.style.strokeDashoffset = length;
+        }
+
+        const sliderTracker = { pos: 15 };
+
+        const ctx = gsap.context(() => {
+            // Main scroll-scrubbed timeline
+            const tl = gsap.timeline({
+                scrollTrigger: {
+                    trigger: section,
+                    start: 'top 85%',
+                    end: 'top 25%',
+                    scrub: 0.6,
+                    onUpdate: (self) => {
+                        if (self.progress > 0.35 && !isRevealedRef.current) {
+                            isRevealedRef.current = true;
+                            setIsRevealed(true);
+                        }
+                    },
+                },
+            });
+
+            // 1. Badge pop
+            if (badge) {
+                tl.to(badge, {
+                    scale: 1,
+                    y: 0,
+                    opacity: 1,
+                    ease: 'none',
+                }, 0);
+            }
+
+            // 2. Heading glide
+            if (heading) {
+                tl.to(heading, {
+                    y: 0,
+                    opacity: 1,
+                    ease: 'none',
+                }, 0.05);
+            }
+
+            // 3. Draw SVG Underline
+            if (underline) {
+                tl.to(underline, {
+                    strokeDashoffset: 0,
+                    ease: 'none',
+                }, 0.15);
+            }
+
+            // 4. 3D Canvas Smart-Animate level out
+            tl.to(artboard, {
+                rotateX: 0,
+                scale: 1,
+                y: 0,
+                opacity: 1,
+                filter: 'blur(0px)',
+                ease: 'none',
+            }, 0.08);
+
+            // 5. Sweep slider divider from 15% to 50%
+            tl.to(sliderTracker, {
+                pos: 50,
+                ease: 'none',
+                onUpdate: () => {
+                    setSliderPos(sliderTracker.pos);
+                },
+            }, 0.15);
+
+        }, section);
+
+        return () => ctx.revert();
     }, []);
 
     // Watch slider position to trigger reveals once right side opens past 40% (sliderPos < 60)
@@ -172,7 +261,11 @@ export default function Destination() {
     }, [isDragging]);
 
     return (
-        <section id="ai-planner" className="relative w-full flex flex-col items-center justify-center select-none font-sans py-12 md:py-16 px-4 md:px-8 border-t mt-5 border-brand-dark/5 bg-transparent animate-fade-in">
+        <section 
+            ref={sectionRef} 
+            id="ai-planner" 
+            className="relative w-full flex flex-col items-center justify-center select-none font-sans py-20 md:py-28 px-4 md:px-8 bg-transparent overflow-hidden"
+        >
             {/* Embedded styles for alternate tab jitter, blinking typewriter cursor, slow sticky notes wobble, and clicking frantic cursor */}
             <style>{`
                 @keyframes tab-jitter {
@@ -247,35 +340,67 @@ export default function Destination() {
 
             {/* Centered Heading */}
             <div
-                className={`text-center mb-10 md:mb-12 transition-all duration-1000 transform shrink-0 flex flex-col items-center ${
-                    headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
-                }`}
+                ref={headingRef}
+                className="text-center mb-10 md:mb-14 shrink-0 flex flex-col items-center will-change-transform"
             >
                 {/* Spaced Micro-Badge */}
-                <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-orange-500/10 text-[#FF5B1D] rounded-full font-mono text-[12px] font-black tracking-widest uppercase mb-3.5 shadow-sm border border-orange-500/5 select-none">
+                <div 
+                    ref={badgeRef}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#FF5B1D]/10 text-[#FF5B1D] rounded-full font-mono text-[12px] font-bold tracking-wider uppercase mb-4 shadow-sm border border-[#FF5B1D]/20 select-none will-change-transform"
+                >
                     <span className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D] animate-pulse" />
-                    TripWise Experience
+                    ✦ TRIPWISE EXPERIENCE
                 </div>
                 
-                <h2 className="text-3xl md:text-4xl font-bold text-brand-dark tracking-tight leading-none font-serif uppercase">
-                    Trip planning,  <span className="relative inline-block text-[#FF5B1D] select-none text-3xl md:text-4xl normal-case font-serif italic font-bold">
+                <h2 className="text-3xl md:text-5xl font-extrabold text-brand-dark tracking-tight leading-tight uppercase font-serif">
+                    Trip planning,  <span className="relative inline-block text-[#FF5B1D] select-none text-3xl md:text-5xl normal-case font-serif italic font-extrabold">
                         reimagined
-                        <svg className="absolute -bottom-1 left-0 w-full h-1 text-[#FF5B1D]/560" viewBox="0 0 100 10" preserveAspectRatio="none">
-                            <path d="M0,5 C30,9 70,2 100,6" stroke="currentColor" strokeWidth="8" strokeLinecap="round" fill="none" />
+                        <svg className="absolute -bottom-1.5 left-0 w-full h-2 text-[#FF5B1D]" viewBox="0 0 100 10" preserveAspectRatio="none">
+                            <path 
+                                ref={underlinePathRef}
+                                d="M0,5 C30,9 70,2 100,6" 
+                                stroke="currentColor" 
+                                strokeWidth="5" 
+                                strokeLinecap="round" 
+                                fill="none" 
+                            />
                         </svg>
                     </span>
                 </h2>
 
-                <p className="text-xs md:text-sm text-brand-dark/50 max-w-md mt-4 tracking-wide select-none leading-relaxed">
+                <p className="text-xs md:text-sm text-brand-dark/60 max-w-md mt-4 tracking-wide select-none leading-relaxed">
                     Drag the slider to compare the chaotic manual way of planning a trip with the streamlined simplicity of TripWise AI.
                 </p>
             </div>
 
-            {/* 500px Fixed Height Split Canvas */}
-            <div
-                ref={containerRef}
-                className="relative w-full max-w-5xl h-125 rounded-3xl overflow-hidden border border-brand-dark/10 bg-transparent"
+            {/* 3D Figma Perspective Canvas Artboard */}
+            <div 
+                ref={artboardRef} 
+                className="relative w-full max-w-5xl flex flex-col items-center will-change-transform"
             >
+                {/* Floating Figma Frame Header Tab */}
+                <div className="w-full flex items-center justify-between px-3 mb-1.5 select-none pointer-events-none">
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#1C1B1B] text-[#fe7717] rounded-md font-mono text-[10px] font-bold tracking-wider uppercase shadow-md border border-white/10">
+                        <span className="text-[#fe7717]">❖</span>
+                        <span>TripWise_Comparison_Matrix</span>
+                    </div>
+                    <div className="hidden sm:flex items-center gap-2 font-mono text-[10px] text-brand-dark/40 font-bold">
+                        <span>100%</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500/80" />
+                        <span>Interactive Prototype</span>
+                    </div>
+                </div>
+
+                {/* 500px Fixed Height Split Canvas with Figma Selection Handles */}
+                <div
+                    ref={containerRef}
+                    className="relative w-full h-125 rounded-3xl overflow-hidden border border-brand-dark/15 bg-transparent shadow-[0_25px_80px_-15px_rgba(254,119,23,0.12),_0_20px_50px_rgba(0,0,0,0.06)]"
+                >
+                    {/* Figma Corner Selection Handles */}
+                    <div className="absolute top-2 left-2 w-2 h-2 rounded-[1px] bg-white border border-[#fe7717] shadow-sm z-50 pointer-events-none" />
+                    <div className="absolute top-2 right-2 w-2 h-2 rounded-[1px] bg-white border border-[#fe7717] shadow-sm z-50 pointer-events-none" />
+                    <div className="absolute bottom-2 left-2 w-2 h-2 rounded-[1px] bg-white border border-[#fe7717] shadow-sm z-50 pointer-events-none" />
+                    <div className="absolute bottom-2 right-2 w-2 h-2 rounded-[1px] bg-white border border-[#fe7717] shadow-sm z-50 pointer-events-none" />
                 
                 {/* ========================================================
                     LEFT SIDE: THE OLD WAY (Chaotic Red-Black Slate)
@@ -617,8 +742,8 @@ export default function Destination() {
                         </svg>
                     </div>
                 </div>
-
             </div>
-        </section>
-    );
+        </div>
+    </section>
+);
 }
