@@ -48,11 +48,17 @@ export default function RealTimeAdjuster() {
                 scale: 1,
             });
 
-            // Set initial state of timeline cards (hidden initially)
+            // Set initial 3D spatial extrusion state of timeline cards (originating from inside phone screen)
             gsap.set('.timeline-card', {
                 opacity: 0,
-                scale: 0.95,
+                scale: 0.84,
+                x: -85,
                 y: 15,
+                rotateY: -20,
+                rotateX: 4,
+                filter: 'blur(8px)',
+                transformPerspective: 1400,
+                transformOrigin: 'left center',
             });
 
             // Instantiate master timeline
@@ -81,7 +87,7 @@ export default function RealTimeAdjuster() {
                 ease: 'power2.out',
             }, 3.5);
 
-            // 3. Trigger button click animation & phone container pulse
+            // 3. Trigger button click animation & phone container 3D projection tilt
             tl.to(generateBtnRef.current, {
                 scale: 0.95,
                 backgroundColor: '#E04F18',
@@ -97,16 +103,16 @@ export default function RealTimeAdjuster() {
                 repeat: 1,
             }, 4.1);
 
-            // Phone visual pulse on emit
+            // Phone tilts in 3D to project cards out into spatial plane
             tl.to(phoneRef.current, {
-                scale: 1.02,
-                borderColor: 'rgba(255, 91, 29, 0.4)',
-                boxShadow: '0 0 45px rgba(255, 91, 29, 0.25)',
-                duration: 0.15,
-                yoyo: true,
-                repeat: 1,
-                ease: 'power1.inOut',
-            }, 4.2);
+                scale: 1.03,
+                rotateY: 7,
+                rotateX: -3,
+                borderColor: 'rgba(255, 91, 29, 0.6)',
+                boxShadow: '0 30px 80px rgba(0,0,0,0.6), 0 0 60px rgba(255, 91, 29, 0.35)',
+                duration: 0.35,
+                ease: 'power2.out',
+            }, 4.15);
 
             // Fade cursor out after click
             tl.to(cursorRef.current, {
@@ -114,7 +120,7 @@ export default function RealTimeAdjuster() {
                 duration: 0.2,
             }, 4.3);
 
-            // 4. Recalculating micro-state: Loader overlays the list (0.3s delay)
+            // 4. Recalculating micro-state: Loader overlays the list
             tl.call(() => {
                 const isForward = !tl.reversed();
                 setIsAdjusting(isForward);
@@ -126,15 +132,30 @@ export default function RealTimeAdjuster() {
                 setIsAdjusting(false);
             }, null, 4.75);
 
-            // 5. Staggered cascade of timeline cards popping into view
+            // 5. 3D Spatial Extrusion Cascade: Cards float out from phone screen into real-world Z-plane
             tl.to('.timeline-card', {
                 opacity: 1,
                 scale: 1,
+                x: 0,
                 y: 0,
-                stagger: 0.22,
-                duration: 0.55,
-                ease: 'back.out(1.2)',
+                rotateY: 0,
+                rotateX: 0,
+                filter: 'blur(0px)',
+                stagger: 0.16,
+                duration: 0.7,
+                ease: 'back.out(1.3)',
             }, 4.75);
+
+            // Phone settles back smoothly as cards lock into place
+            tl.to(phoneRef.current, {
+                scale: 1,
+                rotateY: 0,
+                rotateX: 0,
+                borderColor: '#4A4950',
+                boxShadow: '0 0 0 1px #2C2B30, 0 0 0 4px #121114, 0 30px 70px -15px rgba(0, 0, 0, 0.6), 0 0 60px rgba(255, 91, 29, 0.12)',
+                duration: 0.8,
+                ease: 'power2.out',
+            }, 5.3);
 
         }, sectionRef);
 
@@ -152,7 +173,9 @@ export default function RealTimeAdjuster() {
         }
     }, [isDelayed]);
 
-    // ScrollTrigger to auto-play when user scrolls in
+    const innerContainerRef = useRef(null);
+
+    // ScrollTrigger to auto-play when user scrolls in and smoothly recede when scrolling out
     useEffect(() => {
         gsap.registerPlugin(ScrollTrigger);
 
@@ -167,18 +190,36 @@ export default function RealTimeAdjuster() {
             }
         });
 
-        return () => trigger.kill();
+        const exitTrigger = ScrollTrigger.create({
+            trigger: sectionRef.current,
+            start: 'bottom 90%',
+            end: 'bottom 15%',
+            scrub: 0.6,
+            onUpdate: (self) => {
+                const p = self.progress;
+                if (innerContainerRef.current) {
+                    innerContainerRef.current.style.opacity = Math.max(0.3, 1 - p * 0.7);
+                    innerContainerRef.current.style.transform = `translate3d(0, ${-p * 45}px, 0) scale(${1 - p * 0.05}) perspective(1200px) rotateX(${p * 4}deg)`;
+                    innerContainerRef.current.style.filter = `blur(${p * 5}px)`;
+                }
+            }
+        });
+
+        return () => {
+            trigger.kill();
+            exitTrigger.kill();
+        };
     }, []);
 
     return (
-        <section ref={sectionRef} className="pt-30 pb-32 bg-[#FFF8F5] relative overflow-hidden border-t border-brand-dark/5">
+        <section ref={sectionRef} className="pt-20 md:pt-28 pb-28 md:pb-36 bg-transparent relative overflow-hidden">
             {/* Ambient decorative glowing spots */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-1/4 left-1/4 -translate-y-1/2 w-87.5 h-87.5 rounded-full bg-[#FF5B1D]/3 blur-[120px]" />
                 <div className="absolute bottom-1/4 right-1/4 w-100 h-100 rounded-full bg-[#FF5B1D]/2 blur-[130px]" />
             </div>
 
-            <div className="max-w-6xl mx-auto px-6 relative z-10">
+            <div ref={innerContainerRef} className="max-w-6xl mx-auto px-6 relative z-10 will-change-transform">
                 {/* Header */}
                 <div className="text-center max-w-3xl mx-auto mb-16">
                     <div className="inline-block px-4 py-1.5 bg-[#FF5B1D]/10 border border-[#FF5B1D]/20 text-[#FF5B1D] font-mono text-[12px] font-bold tracking-wider uppercase rounded-full mb-6">
@@ -348,7 +389,10 @@ export default function RealTimeAdjuster() {
                         </div>
 
                         {/* Interactive Timeline List */}
-                        <div className="relative pl-8 flex flex-col gap-4 min-h-75">
+                        <div 
+                            className="relative pl-8 flex flex-col gap-4 min-h-75"
+                            style={{ perspective: '1400px', transformStyle: 'preserve-3d' }}
+                        >
                             {/* Dotted Vertical Line Connector */}
                             <div className="absolute left-2.75 top-3 bottom-3 w-0.5 bg-brand-dark/5 border-l border-dashed border-brand-dark/15" />
 
@@ -365,7 +409,7 @@ export default function RealTimeAdjuster() {
                             {/* Event 1: Flight Landing */}
                             <div
                                 ref={el => { cardRefs.current[0] = el; }}
-                                className="timeline-card card-flight relative p-5 rounded-2xl border border-brand-dark/5 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.04)] flex items-start justify-between gap-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:border-[#FF5B1D]/20"
+                                className="timeline-card card-flight relative p-5 rounded-2xl border border-brand-dark/10 bg-white/95 backdrop-blur-sm shadow-[0_10px_30px_rgba(0,0,0,0.05)] flex items-start justify-between gap-4 transition-all duration-300 hover:-translate-y-1 hover:scale-[1.015] hover:shadow-[0_20px_45px_-10px_rgba(0,0,0,0.1),_0_0_30px_rgba(254,119,23,0.08)] hover:border-[#FF5B1D]/35 will-change-transform cursor-default"
                             >
                                 {/* Dot Icon */}
                                 <div className="absolute -left-10 top-5.5 w-6 h-6 rounded-full bg-[#FFF8F5] border-2 border-brand-dark/20 flex items-center justify-center z-10 text-[10px] font-black font-sans shadow-sm">
@@ -390,7 +434,7 @@ export default function RealTimeAdjuster() {
                             {/* Event 2: Hotel Check-In */}
                             <div
                                 ref={el => { cardRefs.current[1] = el; }}
-                                className="timeline-card relative p-5 rounded-2xl border border-brand-dark/5 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.04)] flex items-start justify-between gap-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:border-[#FF5B1D]/20"
+                                className="timeline-card relative p-5 rounded-2xl border border-brand-dark/10 bg-white/95 backdrop-blur-sm shadow-[0_10px_30px_rgba(0,0,0,0.05)] flex items-start justify-between gap-4 transition-all duration-300 hover:-translate-y-1 hover:scale-[1.015] hover:shadow-[0_20px_45px_-10px_rgba(0,0,0,0.1),_0_0_30px_rgba(254,119,23,0.08)] hover:border-[#FF5B1D]/35 will-change-transform cursor-default"
                             >
                                 <div className="absolute -left-10 top-5.5 w-6 h-6 rounded-full bg-[#FFF8F5] border-2 border-brand-dark/20 flex items-center justify-center z-10 text-[10px] font-black font-sans shadow-sm">
                                     02
@@ -414,7 +458,7 @@ export default function RealTimeAdjuster() {
                             {/* Event 3: Colosseum Guided Tour */}
                             <div
                                 ref={el => { cardRefs.current[2] = el; }}
-                                className="timeline-card card-tour relative p-5 rounded-2xl border border-brand-dark/5 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.04)] flex items-start justify-between gap-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:border-[#FF5B1D]/20"
+                                className="timeline-card card-tour relative p-5 rounded-2xl border border-brand-dark/10 bg-white/95 backdrop-blur-sm shadow-[0_10px_30px_rgba(0,0,0,0.05)] flex items-start justify-between gap-4 transition-all duration-300 hover:-translate-y-1 hover:scale-[1.015] hover:shadow-[0_20px_45px_-10px_rgba(0,0,0,0.1),_0_0_30px_rgba(254,119,23,0.08)] hover:border-[#FF5B1D]/35 will-change-transform cursor-default"
                             >
                                 <div className="absolute -left-10 top-5.5 w-6 h-6 rounded-full bg-[#FFF8F5] border-2 border-brand-dark/20 flex items-center justify-center z-10 text-[10px] font-black font-sans shadow-sm">
                                     03
@@ -438,7 +482,7 @@ export default function RealTimeAdjuster() {
                             {/* Event 4: Trastevere Dinner Reservation */}
                             <div
                                 ref={el => { cardRefs.current[3] = el; }}
-                                className="timeline-card card-dinner relative p-5 rounded-2xl border border-brand-dark/5 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.04)] flex items-start justify-between gap-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:border-[#FF5B1D]/20"
+                                className="timeline-card card-dinner relative p-5 rounded-2xl border border-brand-dark/10 bg-white/95 backdrop-blur-sm shadow-[0_10px_30px_rgba(0,0,0,0.05)] flex items-start justify-between gap-4 transition-all duration-300 hover:-translate-y-1 hover:scale-[1.015] hover:shadow-[0_20px_45px_-10px_rgba(0,0,0,0.1),_0_0_30px_rgba(254,119,23,0.08)] hover:border-[#FF5B1D]/35 will-change-transform cursor-default"
                             >
                                 <div className="absolute -left-10 top-5.5 w-6 h-6 rounded-full bg-[#FFF8F5] border-2 border-brand-dark/20 flex items-center justify-center z-10 text-[10px] font-black font-sans shadow-sm">
                                     04
@@ -452,8 +496,8 @@ export default function RealTimeAdjuster() {
                                     <p className="text-[11.5px] text-secondary-text mt-1 leading-relaxed">Hyper-local Trastevere dining spot serving authentic Roman pasta.</p>
                                 </div>
 
-                                {/* Local gem badge */}
-                                <div className="badge-dinner shrink-0 px-2.5 py-1 border border-[#FF5B1D]/25 bg-[#FF5B1D]/5 text-[#FF5B1D] rounded font-mono text-[8px] font-bold tracking-wider uppercase select-none flex items-center gap-1">
+                                {/* Custom Local Gem tag */}
+                                <div className="badge-dinner shrink-0 px-2.5 py-1 border border-orange-500/20 bg-orange-500/5 text-[#FF5B1D] rounded font-mono text-[8px] font-bold tracking-wider uppercase select-none flex items-center gap-1">
                                     <span className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D] animate-pulse" />
                                     LOCAL GEM
                                 </div>
