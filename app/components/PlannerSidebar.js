@@ -954,6 +954,7 @@ export default function PlannerSidebar({
 
   const [userPromptInput, setUserPromptInput] = useState(() => rawPrompt || itinerary?.prompt || '');
   const [basecamp, setBasecamp] = useState(() => itinerary?.basecampHotelDetails?.name || itinerary?.basecampHotel || itinerary?.preferences?.basecamp || '');
+  const [basecampDetails, setBasecampDetails] = useState(null); // Full place object from suggestion pick
   const [basecampSuggestions, setBasecampSuggestions] = useState([]);
   
   useEffect(() => {
@@ -1225,19 +1226,7 @@ export default function PlannerSidebar({
   const [newStopTitle, setNewStopTitle] = useState('');
   const [newStopDesc, setNewStopDesc] = useState('');
 
-  useEffect(() => {
-    // Dynamically load Google Maps script if a key is provided and not already loaded
-    if (typeof window !== 'undefined' && !window.google && process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
-      const scriptId = 'google-maps-api-script';
-      if (!document.getElementById(scriptId)) {
-        const script = document.createElement('script');
-        script.id = scriptId;
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
-        script.async = true;
-        document.body.appendChild(script);
-      }
-    }
-  }, []);
+
 
   const fetchBasecampSuggestions = async (query) => {
     if (!query || query.trim().length < 3) {
@@ -1293,6 +1282,7 @@ export default function PlannerSidebar({
   const handleBasecampChange = (e) => {
     const val = e.target.value;
     setBasecamp(val);
+    setBasecampDetails(null); // User is typing manually, clear any previously selected details
     if (basecampSearchTimeoutRef.current) clearTimeout(basecampSearchTimeoutRef.current);
     if (val.trim().length === 0) {
       setShowBasecampDropdown(false);
@@ -1399,6 +1389,16 @@ export default function PlannerSidebar({
         basecamp: cleanBasecamp,
         hotelMode: cleanBasecamp ? 'basecamp' : 'undecided',
         basecampHotel: cleanBasecamp || null,
+        // Pass pre-fetched details if the user selected from the autocomplete dropdown
+        basecampPreFetched: cleanBasecamp && basecampDetails ? {
+          name: basecampDetails.name || basecampDetails.display_name?.split(',')[0] || cleanBasecamp,
+          address: basecampDetails.display_name || basecampDetails.address || '',
+          coordinates: basecampDetails.coordinates ||
+            (basecampDetails.lat && basecampDetails.lon
+              ? { lat: parseFloat(basecampDetails.lat), lng: parseFloat(basecampDetails.lon) }
+              : null),
+          place_id: basecampDetails.place_id || null,
+        } : null,
         prompt: userPromptInput || rawPrompt || "Planning a trip",
         destination: parsedIntent?.destination || extracted?.destination || userPromptInput || rawPrompt || "Your Destination",
         startDate: startDate,
@@ -2098,19 +2098,31 @@ export default function PlannerSidebar({
                 {/* Autocomplete Dropdown */}
                 {showBasecampDropdown && (
                   <div className="absolute z-50 w-full mt-1 bg-white border border-stone-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
-                    {basecampSuggestions.map((place) => (
-                      <div
-                        key={place.place_id}
-                        className="px-4 py-2.5 hover:bg-stone-50 cursor-pointer border-b border-stone-100 last:border-0 transition-colors"
-                        onClick={() => {
-                          setBasecamp(place.name || place.display_name.split(',')[0]);
-                          setShowBasecampDropdown(false);
-                        }}
-                      >
-                        <div className="font-semibold text-stone-800 text-xs sm:text-sm">{place.name || place.display_name.split(',')[0]}</div>
-                        <div className="text-[11px] text-stone-500 truncate mt-0.5">{place.display_name}</div>
-                      </div>
-                    ))}
+                    {basecampSuggestions.map((place, idx) => {
+                      const hotelName = place.name || place.display_name?.split(',')[0] || '';
+                      const hotelAddress = place.display_name || '';
+                      return (
+                        <div
+                          key={place.place_id || idx}
+                          className="px-3 py-2.5 hover:bg-[#FFF5EF] cursor-pointer border-b border-stone-100 last:border-0 transition-colors flex items-center gap-2.5"
+                          onClick={() => {
+                            setBasecamp(hotelName);
+                            setBasecampDetails(place); // Store FULL place object for coordinate-aware generation
+                            setShowBasecampDropdown(false);
+                            setBasecampSuggestions([]);
+                          }}
+                        >
+                          <div className="shrink-0 w-7 h-7 rounded-lg bg-[#FFF2EA] border border-[#FDDCC7] flex items-center justify-center text-[13px]">
+                            🏨
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-semibold text-stone-800 text-xs sm:text-sm truncate">{hotelName}</div>
+                            <div className="text-[10px] text-stone-400 truncate mt-0.5">{hotelAddress}</div>
+                          </div>
+                          <div className="ml-auto shrink-0 text-[10px] font-bold text-[#FF6B2C] bg-[#FFF2EA] px-1.5 py-0.5 rounded-md">Select</div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
 

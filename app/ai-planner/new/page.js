@@ -121,6 +121,7 @@ export default function AIPlannerPage() {
           prompt: finalPrompt,
           destination: finalDest,
           basecamp: selections.basecamp || "",
+          basecampPreFetched: selections.basecampPreFetched || null,
           interests: selections.interests || [],
           budget: selections.budget || 'standard',
           pace: selections.pace || 'balanced',

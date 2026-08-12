@@ -204,7 +204,7 @@ function getDynamicMockItinerary(promptOrDest = "", destination = "") {
 
 export async function POST(req) {
   try {
-    const { prompt = "", destination = "", basecamp = "", interests = [], budget = 'standard', pace = 'balanced', userPreferences = null } = await req.json();
+    const { prompt = "", destination = "", basecamp = "", basecampPreFetched = null, interests = [], budget = 'standard', pace = 'balanced', userPreferences = null } = await req.json();
 
     const apiKey = process.env.GEMINI_API_KEY;
     const mockPayload = getDynamicMockItinerary(prompt, destination);
@@ -318,21 +318,51 @@ CRITICAL RULES FOR SPEED & QUALITY:
     
     let basecampHotelDetails = null;
     if (isBasecampProvided) {
-      try {
-        const details = await getPlaceDetails(`${basecampHotel} ${destination || prompt}`);
-        if (details && !details.error) {
-          basecampHotelDetails = {
-            name: details.name,
-            address: details.address,
-            coordinates: details.coordinates,
-            image: details.photos && details.photos.length > 0 ? details.photos[0] : null,
-            photos: details.photos || [],
-            rating: details.rating || 4.8,
-            reviewCount: details.reviewCount || 12000
-          };
+      // If user selected a hotel from the autocomplete with pre-fetched coordinates, use those directly
+      if (basecampPreFetched && basecampPreFetched.coordinates) {
+        // Use pre-fetched location data. Only fetch photos if we don't have any yet.
+        let photos = [];
+        try {
+          const photoRes = await fetch(`https://unsplash.com/napi/search/photos?query=${encodeURIComponent(basecampHotel + ' hotel')}&per_page=3&orientation=landscape`);
+          if (photoRes.ok) {
+            const json = await photoRes.json();
+            if (json.results) {
+              photos = json.results.map(r => r.urls.regular || r.urls.small).filter(Boolean);
+            }
+          }
+        } catch (e) { /* swallow - photos are supplemental */ }
+
+        if (photos.length === 0) {
+          photos = ['https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80'];
         }
-      } catch (e) {
-        console.error("Failed to fetch real basecamp details during generation:", e);
+
+        basecampHotelDetails = {
+          name: basecampPreFetched.name || basecampHotel,
+          address: basecampPreFetched.address || '',
+          coordinates: basecampPreFetched.coordinates,
+          image: photos[0],
+          photos: photos,
+          rating: 4.5,
+          reviewCount: 0
+        };
+      } else {
+        // User typed the hotel name manually - do a full search lookup
+        try {
+          const details = await getPlaceDetails(`${basecampHotel} ${destination || prompt}`);
+          if (details && !details.error) {
+            basecampHotelDetails = {
+              name: details.name,
+              address: details.address,
+              coordinates: details.coordinates,
+              image: details.photos && details.photos.length > 0 ? details.photos[0] : null,
+              photos: details.photos || [],
+              rating: details.rating || 4.8,
+              reviewCount: details.reviewCount || 12000
+            };
+          }
+        } catch (e) {
+          console.error("Failed to fetch real basecamp details during generation:", e);
+        }
       }
     }
 
