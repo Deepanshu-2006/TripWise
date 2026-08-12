@@ -14,6 +14,7 @@ function FeaturesSelection() {
     const activePathRef = useRef(null);
     const maskPathRef = useRef(null);
     const svgRef = useRef(null);
+    const contentWrapperRef = useRef(null);
 
     useEffect(() => {
         if (!containerRef.current || !stickyRef.current) return;
@@ -30,17 +31,20 @@ function FeaturesSelection() {
                     const progress = self.progress;
 
                     // 1. Map activeIdx and activePreviewTab based on when the plane reaches each checkpoint
+                    // Plane completes its flight from 0.0 to 0.88
+                    const flightProgress = Math.min(1.0, progress / 0.88);
+
                     let activeIdx = 0;
-                    if (progress >= 0.44 && progress < 0.68) activeIdx = 1;
-                    else if (progress >= 0.68 && progress < 0.90) activeIdx = 2;
-                    else if (progress >= 0.90) activeIdx = 3;
+                    if (progress >= 0.30 && progress < 0.52) activeIdx = 1;
+                    else if (progress >= 0.52 && progress < 0.72) activeIdx = 2;
+                    else if (progress >= 0.72) activeIdx = 3;
                     setActiveTab(activeIdx);
 
-                    // Dashboard changes ONLY when the plane reaches its relative preview container (or destination card)
+                    // Dashboard changes ONLY when the plane reaches its relative preview container
                     let activePreviewIdx = 0;
-                    if (progress >= 0.46 && progress < 0.70) activePreviewIdx = 1;
-                    else if (progress >= 0.70 && progress < 0.92) activePreviewIdx = 2;
-                    else if (progress >= 0.92) activePreviewIdx = 3;
+                    if (progress >= 0.32 && progress < 0.55) activePreviewIdx = 1;
+                    else if (progress >= 0.55 && progress < 0.75) activePreviewIdx = 2;
+                    else if (progress >= 0.75) activePreviewIdx = 3;
                     setActivePreviewTab(activePreviewIdx);
 
                     // Plane Flight Path Coordinate Calculation
@@ -58,7 +62,6 @@ function FeaturesSelection() {
                         let logoY = -40; // fallback value above header
                         if (logoEl) {
                             const logoRect = logoEl.getBoundingClientRect();
-                            // Added +25 to shift the starting position slightly to the right
                             logoX = ((logoRect.left + logoRect.right) / 2 - stickyRect.left) + 25;
                             logoY = (logoRect.top + logoRect.bottom) / 2 - stickyRect.top;
                         }
@@ -122,12 +125,8 @@ function FeaturesSelection() {
                         {
                             const p0 = points[0];
                             const p1 = points[1];
-                            
-                            // Exit logo downwards
                             const cp1x = p0.x - (p0.x - p1.x) * 0.3;
                             const cp1y = p0.y + (p1.y - p0.y) * 0.6;
-                            
-                            // Enter Card 0 from top-right with a nice curve
                             const cp2x = p1.x + 80;
                             const cp2y = p1.y - 80;
                             pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`;
@@ -137,13 +136,10 @@ function FeaturesSelection() {
                         {
                             const p1 = points[1];
                             const p2 = points[2];
-                            
-                            const cp1x = p1.x + 200; // Pull right
+                            const cp1x = p1.x + 200;
                             const cp1y = p1.y + (p2.y - p1.y) * 0.2;
-                            
-                            const cp2x = p2.x - 200; // Pull left
+                            const cp2x = p2.x - 200;
                             const cp2y = p2.y - (p2.y - p1.y) * 0.2;
-                            
                             pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
                         }
 
@@ -151,13 +147,10 @@ function FeaturesSelection() {
                         {
                             const p2 = points[2];
                             const p3 = points[3];
-                            
-                            const cp1x = p2.x - 200; // Pull left
+                            const cp1x = p2.x - 200;
                             const cp1y = p2.y + (p3.y - p2.y) * 0.2;
-                            
-                            const cp2x = p3.x + 200; // Pull right
+                            const cp2x = p3.x + 200;
                             const cp2y = p3.y - (p3.y - p2.y) * 0.2;
-                            
                             pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p3.x} ${p3.y}`;
                         }
 
@@ -165,13 +158,10 @@ function FeaturesSelection() {
                         {
                             const p3 = points[3];
                             const p4 = points[4];
-                            
-                            const cp1x = p3.x + 200; // Pull right
+                            const cp1x = p3.x + 200;
                             const cp1y = p3.y + (p4.y - p3.y) * 0.2;
-                            
-                            const cp2x = p4.x - 200; // Pull left
+                            const cp2x = p4.x - 200;
                             const cp2y = p4.y - (p4.y - p3.y) * 0.2;
-                            
                             pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p4.x} ${p4.y}`;
                         }
 
@@ -182,7 +172,7 @@ function FeaturesSelection() {
 
                         try {
                             const pathLength = basePathRef.current.getTotalLength();
-                            const distance = pathLength * progress;
+                            const distance = pathLength * flightProgress;
 
                             // Locate plane coordinates along path
                             const point = basePathRef.current.getPointAtLength(distance);
@@ -197,19 +187,44 @@ function FeaturesSelection() {
 
                             // Reveal active trail behind plane
                             maskPathRef.current.style.strokeDasharray = `${pathLength} ${pathLength}`;
-                            maskPathRef.current.style.strokeDashoffset = pathLength * (1 - progress);
-
-                            // Fade plane out only at the very top and very bottom of the runway
-                            let opacity = 1;
-                            if (progress < 0.02) {
-                                opacity = progress / 0.02;
-                            } else if (progress > 0.98) {
-                                opacity = (1.0 - progress) / 0.02;
-                            }
+                            maskPathRef.current.style.strokeDashoffset = pathLength * (1 - flightProgress);
 
                             planeRef.current.style.transform = `translate3d(${x - 16}px, ${y - 16}px, 0) rotate(${angle + 90}deg)`;
-                            planeRef.current.style.opacity = opacity;
                             planeRef.current.style.display = 'block';
+
+                            // --- FIGMA TRANSITION: Exit Layering when Plane animation finishes ---
+                            const exitStart = 0.88;
+                            if (progress >= exitStart) {
+                                const exitProgress = Math.min(1.0, (progress - exitStart) / (1.0 - exitStart));
+                                
+                                // Softly recede into background (scale to 0.95, fade to 0.35, gentle blur)
+                                if (contentWrapperRef.current) {
+                                    contentWrapperRef.current.style.opacity = Math.max(0.2, 1 - exitProgress * 0.75);
+                                    contentWrapperRef.current.style.transform = `translate3d(0, ${-exitProgress * 35}px, 0) scale(${1 - exitProgress * 0.04})`;
+                                    contentWrapperRef.current.style.filter = `blur(${exitProgress * 5}px)`;
+                                }
+                                // Plane fades out completely
+                                if (planeRef.current) {
+                                    planeRef.current.style.opacity = Math.max(0, 1 - exitProgress / 0.6);
+                                }
+                                if (svgRef.current) {
+                                    svgRef.current.style.opacity = Math.max(0.2, 1 - exitProgress * 0.75);
+                                }
+                            } else {
+                                if (contentWrapperRef.current) {
+                                    contentWrapperRef.current.style.opacity = 1;
+                                    contentWrapperRef.current.style.transform = 'translate3d(0, 0, 0) scale(1)';
+                                    contentWrapperRef.current.style.filter = 'blur(0px)';
+                                }
+                                if (svgRef.current) {
+                                    svgRef.current.style.opacity = 1;
+                                }
+                                let planeOpacity = 1;
+                                if (progress < 0.02) {
+                                    planeOpacity = progress / 0.02;
+                                }
+                                planeRef.current.style.opacity = planeOpacity;
+                            }
                         } catch (e) {
                             console.error("SVG serpentine path computation error", e);
                         }
@@ -230,7 +245,7 @@ function FeaturesSelection() {
         const containerHeight = rect.height;
         const pinRange = containerHeight - window.innerHeight;
         
-        const targetProgress = idx === 0 ? 0.18 : idx === 1 ? 0.48 : idx === 2 ? 0.72 : 0.95;
+        const targetProgress = idx === 0 ? 0.15 : idx === 1 ? 0.42 : idx === 2 ? 0.65 : 0.82;
         const targetY = containerStart + pinRange * targetProgress;
         
         window.scrollTo({
@@ -310,7 +325,7 @@ function FeaturesSelection() {
     ];
 
     return (
-        <section ref={containerRef} className="relative w-full h-[300vh] bg-[#FFF8F5]">
+        <section ref={containerRef} className="relative w-full h-[260vh] bg-[#FFF8F5]">
             <div ref={stickyRef} className="sticky top-0 w-full h-screen overflow-hidden flex items-center justify-center">
                 {/* Background elements */}
                 <div className="absolute top-1/4 left-0 w-96 h-96 bg-[#fe7717]/5 rounded-full filter blur-[100px] pointer-events-none" />
@@ -319,7 +334,7 @@ function FeaturesSelection() {
                 {/* SVG Dotted Trails */}
                 <svg
                     ref={svgRef}
-                    className="absolute inset-0 w-full h-full pointer-events-none z-30"
+                    className="absolute inset-0 w-full h-full pointer-events-none z-30 transition-opacity duration-300"
                     style={{ overflow: 'visible' }}
                 >
                     <defs>
@@ -359,7 +374,7 @@ function FeaturesSelection() {
                 {/* Small Plane Element */}
                 <div
                     ref={planeRef}
-                    className="absolute pointer-events-none z-45"
+                    className="absolute pointer-events-none z-45 transition-opacity duration-300"
                     style={{
                         width: '32px',
                         height: '32px',
@@ -375,7 +390,10 @@ function FeaturesSelection() {
                     </svg>
                 </div>
 
-                <div className="max-w-7xl mx-auto px-6 relative z-10 w-full h-full flex flex-col justify-start pt-24 md:pt-28 pb-6">
+                <div 
+                    ref={contentWrapperRef} 
+                    className="max-w-7xl mx-auto px-6 relative z-10 w-full h-full flex flex-col justify-start pt-24 md:pt-28 pb-6 will-change-transform transition-all"
+                >
                     {/* Header Block */}
                     <div className="text-center max-w-3xl mx-auto mb-5">
                         <div className="inline-block px-4 py-1.5 bg-[#1C1B1B] backdrop-blur-md rounded-full shadow-md border border-white/20 text-[#fe7717] font-mono text-[12px] font-bold tracking-[0.16em] uppercase mb-1.5">
