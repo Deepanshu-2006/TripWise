@@ -378,30 +378,11 @@ export default function Destination() {
                 ref={artboardRef} 
                 className="relative w-full max-w-5xl flex flex-col items-center will-change-transform"
             >
-                {/* Floating Figma Frame Header Tab */}
-                <div className="w-full flex items-center justify-between px-3 mb-1.5 select-none pointer-events-none">
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#1C1B1B] text-[#fe7717] rounded-md font-mono text-[10px] font-bold tracking-wider uppercase shadow-md border border-white/10">
-                        <span className="text-[#fe7717]">❖</span>
-                        <span>TripWise_Comparison_Matrix</span>
-                    </div>
-                    <div className="hidden sm:flex items-center gap-2 font-mono text-[10px] text-brand-dark/40 font-bold">
-                        <span>100%</span>
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-500/80" />
-                        <span>Interactive Prototype</span>
-                    </div>
-                </div>
-
-                {/* 500px Fixed Height Split Canvas with Figma Selection Handles */}
+                {/* 500px Fixed Height Split Canvas */}
                 <div
                     ref={containerRef}
                     className="relative w-full h-125 rounded-3xl overflow-hidden border border-brand-dark/15 bg-transparent shadow-[0_25px_80px_-15px_rgba(254,119,23,0.12),_0_20px_50px_rgba(0,0,0,0.06)]"
                 >
-                    {/* Figma Corner Selection Handles */}
-                    <div className="absolute top-2 left-2 w-2 h-2 rounded-[1px] bg-white border border-[#fe7717] shadow-sm z-50 pointer-events-none" />
-                    <div className="absolute top-2 right-2 w-2 h-2 rounded-[1px] bg-white border border-[#fe7717] shadow-sm z-50 pointer-events-none" />
-                    <div className="absolute bottom-2 left-2 w-2 h-2 rounded-[1px] bg-white border border-[#fe7717] shadow-sm z-50 pointer-events-none" />
-                    <div className="absolute bottom-2 right-2 w-2 h-2 rounded-[1px] bg-white border border-[#fe7717] shadow-sm z-50 pointer-events-none" />
-                
                 {/* ========================================================
                     LEFT SIDE: THE OLD WAY (Chaotic Red-Black Slate)
                    ======================================================== */}
