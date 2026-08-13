@@ -4,27 +4,90 @@ import React, { useState, useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useAuth } from "@clerk/nextjs";
+import FigmaReveal from "./FigmaReveal";
+import TravelTelemetryBackground from "./TravelTelemetryBackground";
+import HorizonWarp from "./HorizonWarp";
 
-const faqData = [
+const faqNotes = [
   {
+    id: 'memo-01',
+    num: '01',
+    category: '⚡ SPEED & AI',
+    bg: '#FEF9C3', // Warm Canary Yellow
+    borderColor: '#FDE047',
+    pinColor: '#EF4444', // Red metallic pushpin
+    tapeAngle: '-3deg',
+    defaultRotate: -2.4,
+    tag: '30-SEC ENGINE',
     question: "How does TripWise generate custom itineraries in 30 seconds?",
-    answer: "Our AI engine simultaneously analyzes millions of real-time flight schedules, live hotel pricing, Michelin & local dining reviews, and seasonal weather patterns to craft optimal, logically routed day-by-day itineraries tailored to your exact taste."
+    answer: "Our multi-agent AI pipeline ingests your prompt and computes optimal logical paths by synchronizing live flight tables, hotel inventory, Michelin & local dining guides, and neighborhood opening hours simultaneously.",
+    highlight: "✓ Multi-API parallel routing engine with zero wait time",
+    stamp: "DISPATCH #849 • AI CORE",
+    helpfulCount: 84
   },
   {
+    id: 'memo-02',
+    num: '02',
+    category: '🎨 DRAG & DROP',
+    bg: '#DCFCE7', // Mint Sage
+    borderColor: '#86EFAC',
+    pinColor: '#10B981', // Emerald green pin
+    tapeAngle: '4deg',
+    defaultRotate: 2.6,
+    tag: 'REAL-TIME EDIT',
     question: "Can I customize or re-order activities after the itinerary is built?",
-    answer: "Absolutely! With our Real-Time Adjuster, you can effortlessly drag and drop activities, swap dining recommendations, or adjust pacing with a single click—and our intelligent timeline automatically recalculates travel times and routes instantly."
+    answer: "Yes! Every itinerary is 100% interactive. Effortlessly drag and reorder stops, swap restaurants, or add custom notes. Our map geometry recalculates walk and transit times immediately.",
+    highlight: "✓ Live map geometry recalculation on every edit",
+    stamp: "FLEXIBLE TIMELINE",
+    helpfulCount: 62
   },
   {
+    id: 'memo-03',
+    num: '03',
+    category: '💎 ZERO COST',
+    bg: '#FFE4E6', // Peach Blush
+    borderColor: '#FDA4AF',
+    pinColor: '#F43F5E', // Rose Gold pin
+    tapeAngle: '-2deg',
+    defaultRotate: -1.8,
+    tag: '100% FREE',
     question: "Is TripWise really free to use?",
-    answer: "Yes! Creating your custom itinerary, exploring interactive maps, and collaborating with travel companions is 100% free. We also offer optional VIP concierge perks and direct booking guarantees for premium travelers."
+    answer: "Creating unlimited custom itineraries, discovering curated destinations, and syncing with co-travelers is 100% free. No credit card required, ever. Optional premium concierge add-ons are available for VIP hotel upgrades.",
+    highlight: "✓ Unlimited free itineraries & co-traveler invites",
+    stamp: "ZERO HIDDEN FEES",
+    helpfulCount: 118
   },
   {
+    id: 'memo-04',
+    num: '04',
+    category: '🥗 DIET & ACCESS',
+    bg: '#E0F2FE', // Soft Sky Blue
+    borderColor: '#7DD3FC',
+    pinColor: '#0284C7', // Sapphire pin
+    tapeAngle: '3deg',
+    defaultRotate: 2.2,
+    tag: 'ACCESSIBLE',
     question: "How does TripWise handle dietary restrictions and accessibility?",
-    answer: "During your quick 30-second onboarding questionnaire, you can specify gluten-free, vegan, halal, kosher, or wheelchair accessibility preferences. Our AI filters all restaurant, tour, and transit recommendations accordingly."
+    answer: "During your prompt or settings setup, specify vegan, halal, kosher, celiac, or mobility requirements. Our recommendations automatically exclude inaccessible venues and flag certified restaurants.",
+    highlight: "✓ Verified accessibility checks & filtered menus",
+    stamp: "INCLUSIVE TRAVEL ENGINE",
+    helpfulCount: 47
   },
   {
+    id: 'memo-05',
+    num: '05',
+    category: '📲 OFFLINE & SYNC',
+    bg: '#EDE9FE', // Lilac Purple
+    borderColor: '#C4B5FD',
+    pinColor: '#8B5CF6', // Purple pin
+    tapeAngle: '-4deg',
+    defaultRotate: -2.8,
+    tag: 'OFFLINE SYNC',
     question: "Can I export my itinerary to offline maps or my calendar?",
-    answer: "Yes. With one click, you can export your complete day-by-day plan directly to Apple Wallet, Google Maps offline pins, or sync seamlessly with Apple Calendar, Google Calendar, and Outlook."
+    answer: "1-click export sends your entire day-by-day routing into Apple Wallet passes, Google Maps saved pins, or synced ICS calendar invites for Google Calendar, Apple Calendar, and Outlook.",
+    highlight: "✓ 1-click Apple Wallet pass & offline GPX export",
+    stamp: "OFFLINE READY",
+    helpfulCount: 93
   }
 ];
 
@@ -38,14 +101,18 @@ const citiesTrack2 = [
 
 export default function FAQAndMarqueeCTA() {
   const { isSignedIn } = useAuth();
-  const [openIdx, setOpenIdx] = useState(null);
+  const [openIdx, setOpenIdx] = useState(null); // All sticky notes start collapsed by default
+  const [helpfulCounts, setHelpfulCounts] = useState(
+    faqNotes.reduce((acc, n, i) => ({ ...acc, [i]: n.helpfulCount }), {})
+  );
+  const [helpfulClicked, setHelpfulClicked] = useState({});
+
+  const noteRefs = useRef([]);
   const contentRefs = useRef([]);
-  const iconRefs = useRef([]);
+  const polaroidRefs = useRef([]);
   const buttonRef = useRef(null);
   const buttonTextRef = useRef(null);
   const ctaContainerRef = useRef(null);
-  const marqueeTrack1Ref = useRef(null);
-  const marqueeTrack2Ref = useRef(null);
 
   const faqSectionRef = useRef(null);
   const faqHeaderRef = useRef(null);
@@ -56,6 +123,13 @@ export default function FAQAndMarqueeCTA() {
   const plane3Ref = useRef(null);
   const wipeOverlayRef = useRef(null);
 
+  const handleHelpfulClick = (e, index) => {
+    e.stopPropagation();
+    if (helpfulClicked[index]) return;
+    setHelpfulClicked(prev => ({ ...prev, [index]: true }));
+    setHelpfulCounts(prev => ({ ...prev, [index]: prev[index] + 1 }));
+  };
+
   const handleFlyTransition = (e) => {
     if (e) e.preventDefault();
     
@@ -63,7 +137,6 @@ export default function FAQAndMarqueeCTA() {
     
     const tl = gsap.timeline();
 
-    // Plane 1: Swoops high and right
     tl.fromTo(plane1Ref.current, 
         { x: 0, y: 0, rotation: 0, scale: 0.5, opacity: 0 },
         { x: window.innerWidth * 0.6, ease: "power2.out", duration: 1.2, opacity: 1 }, 0
@@ -71,7 +144,6 @@ export default function FAQAndMarqueeCTA() {
         { y: -window.innerHeight * 0.8, rotation: 75, scale: 2, ease: "power3.in", duration: 1.2 }, 0
     );
 
-    // Plane 2: Swoops far right, lower
     tl.fromTo(plane2Ref.current, 
         { x: 0, y: 0, rotation: 0, scale: 0.3, opacity: 0 },
         { x: window.innerWidth * 0.8, ease: "power1.out", duration: 1.4, opacity: 1 }, 0.1
@@ -79,7 +151,6 @@ export default function FAQAndMarqueeCTA() {
         { y: -window.innerHeight * 0.3, rotation: 85, scale: 1.2, ease: "power2.in", duration: 1.4 }, 0.1
     );
 
-    // Plane 3: Swoops left and very high
     tl.fromTo(plane3Ref.current, 
         { x: 0, y: 0, rotation: 0, scale: 0.4, opacity: 0 },
         { x: -window.innerWidth * 0.4, ease: "power2.out", duration: 1.3, opacity: 1 }, 0.05
@@ -87,70 +158,172 @@ export default function FAQAndMarqueeCTA() {
         { y: -window.innerHeight * 0.9, rotation: -45, scale: 1.5, ease: "power4.in", duration: 1.3 }, 0.05
     );
 
-    // Cinematic Circle Wipe Transition
     tl.to(wipeOverlayRef.current, {
-        scale: 250, // Massive scale to cover any screen
+        scale: 250,
         opacity: 1,
         duration: 1.0,
         ease: "power3.inOut"
     }, 0.4);
 
-    // Wait for the transition to finish
     setTimeout(() => {
         window.location.href = isSignedIn ? '/ai-planner/new' : '/sign-in';
     }, 1300);
   };
 
-  // Handle Accordion Click with GSAP
-  const toggleAccordion = (index) => {
+  // ✦ Creative 3D Origami Paper Unfold & Stamped Dispatch Reveal ✦
+  const toggleStickyNote = (index) => {
     const isOpening = openIdx !== index;
     const prevIdx = openIdx;
 
-    // Close previously open item
+    // 1. Smoothly fold up previously opened note
     if (prevIdx !== null && contentRefs.current[prevIdx]) {
       gsap.to(contentRefs.current[prevIdx], {
         height: 0,
         opacity: 0,
-        duration: 0.35,
-        ease: "power2.out"
+        rotateX: -45,
+        transformOrigin: 'top center',
+        duration: 0.28,
+        ease: "power2.in",
+        force3D: true,
       });
-      if (iconRefs.current[prevIdx]) {
-        gsap.to(iconRefs.current[prevIdx], {
-          rotation: 0,
+      if (noteRefs.current[prevIdx]) {
+        gsap.to(noteRefs.current[prevIdx], {
+          rotate: faqNotes[prevIdx].defaultRotate,
+          rotateX: 0,
+          scale: 1,
+          y: 0,
+          opacity: isOpening ? 0.4 : 1,
           duration: 0.35,
-          ease: "power2.out"
+          ease: "power2.out",
+          force3D: true,
         });
       }
     }
 
-    // Open or close current item
+    // 2. Open target note with 3D Origami Paper Unfold & Stamped Seal
     if (isOpening) {
       setOpenIdx(index);
+
+      // Active card unpins & peels off corkboard towards camera
+      const activeEl = noteRefs.current[index];
+      if (activeEl) {
+        gsap.to(activeEl, {
+          rotate: 0,
+          rotateX: -5,
+          scale: 1.05,
+          y: -12,
+          opacity: 1,
+          duration: 0.45,
+          ease: "back.out(2.0)",
+          force3D: true,
+        });
+
+        // Pushpin Head Pulse
+        const pinHead = activeEl.querySelector('.pushpin-head');
+        if (pinHead) {
+          gsap.fromTo(pinHead,
+            { scale: 1, y: 0 },
+            { scale: 1.35, y: -4, duration: 0.25, yoyo: true, repeat: 1, ease: 'back.out(2.5)' }
+          );
+        }
+      }
+
+      // Background notes recede into 3D depth with subtle tilt
+      noteRefs.current.forEach((el, i) => {
+        if (!el || i === index) return;
+        gsap.to(el, {
+          scale: 0.94,
+          rotateX: 8,
+          y: 8,
+          opacity: 0.4,
+          duration: 0.4,
+          ease: "power2.out",
+          force3D: true,
+        });
+      });
+
+      // Answer Container 3D Origami Paper Unfold
       const target = contentRefs.current[index];
       if (target) {
         gsap.fromTo(target,
-          { height: 0, opacity: 0 },
+          { height: 0, opacity: 0, rotateX: -65, transformOrigin: 'top center' },
           {
-            height: target.scrollHeight,
+            height: 'auto',
             opacity: 1,
-            duration: 0.45,
-            ease: "power3.out"
+            rotateX: 0,
+            duration: 0.5,
+            ease: "back.out(1.8)",
+            force3D: true,
           }
         );
-      }
-      if (iconRefs.current[index]) {
-        gsap.to(iconRefs.current[index], {
-          rotation: 45,
-          duration: 0.4,
-          ease: "power3.out"
-        });
+
+        // Staggered Takeaway Badge & Helpful Stamp Seal Reveal
+        const takeaway = target.querySelector('.takeaway-badge');
+        const stampBar = target.querySelector('.stamp-seal-bar');
+
+        if (takeaway) {
+          gsap.fromTo(takeaway,
+            { x: -20, opacity: 0, scale: 0.9 },
+            { x: 0, opacity: 1, scale: 1, duration: 0.4, delay: 0.15, ease: "back.out(2)" }
+          );
+        }
+
+        if (stampBar) {
+          gsap.fromTo(stampBar,
+            { scale: 1.3, opacity: 0, rotate: -3 },
+            { scale: 1, opacity: 1, rotate: 0, duration: 0.38, delay: 0.22, ease: "back.out(2.2)" }
+          );
+        }
       }
     } else {
       setOpenIdx(null);
+      // Restore all notes to normal floating state on corkboard
+      noteRefs.current.forEach((el, i) => {
+        if (!el) return;
+        gsap.to(el, {
+          rotate: faqNotes[i].defaultRotate,
+          rotateX: 0,
+          scale: 1,
+          y: 0,
+          opacity: 1,
+          duration: 0.4,
+          ease: "back.out(1.5)",
+          force3D: true,
+        });
+      });
     }
   };
 
-  // FAQ Section ScrollTrigger Entrance Animation
+  const handleNoteHover = (index) => {
+    if (openIdx !== null && openIdx !== index) return;
+    const el = noteRefs.current[index];
+    if (!el) return;
+
+    gsap.to(el, {
+      rotate: 0,
+      scale: 1.03,
+      y: -6,
+      duration: 0.25,
+      ease: "power2.out",
+      overwrite: 'auto'
+    });
+  };
+
+  const handleNoteLeave = (index) => {
+    if (openIdx !== null && openIdx !== index) return;
+    const el = noteRefs.current[index];
+    if (!el) return;
+
+    gsap.to(el, {
+      rotate: faqNotes[index].defaultRotate,
+      scale: openIdx === index ? 1.03 : 1,
+      y: 0,
+      duration: 0.35,
+      ease: "power2.out",
+      overwrite: 'auto'
+    });
+  };
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
     gsap.registerPlugin(ScrollTrigger);
@@ -161,25 +334,38 @@ export default function FAQAndMarqueeCTA() {
 
     if (header) {
       gsap.set(header, {
-        y: 40,
+        y: -30,
         opacity: 0,
       });
     }
 
-    gsap.set('.faq-keynote-card', {
-      opacity: 0,
-      y: 40,
-      rotateX: 18,
-      scale: 0.96,
-      transformPerspective: 1200,
-      transformOrigin: 'top center',
+    polaroidRefs.current.forEach((el, idx) => {
+      if (!el) return;
+      gsap.set(el, {
+        y: -40,
+        opacity: 0,
+        rotate: idx === 0 ? -10 : 12,
+        scale: 0.9,
+      });
+    });
+
+    // ✦ Fast, Silky-Smooth Figma Smart-Animate Stagger Entrance ✦
+    noteRefs.current.forEach((el, idx) => {
+      if (!el) return;
+      gsap.set(el, {
+        y: 40,
+        scale: 0.95,
+        opacity: 0,
+        rotate: faqNotes[idx].defaultRotate,
+        force3D: true,
+      });
     });
 
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: section,
-          start: 'top 80%',
+          start: 'top 85%',
           toggleActions: 'play none none reverse',
         },
       });
@@ -188,106 +374,139 @@ export default function FAQAndMarqueeCTA() {
         tl.to(header, {
           y: 0,
           opacity: 1,
-          duration: 0.6,
-          ease: 'power2.out',
+          duration: 0.45,
+          ease: 'power3.out',
         });
       }
 
-      tl.to('.faq-keynote-card', {
-        opacity: 1,
-        y: 0,
-        rotateX: 0,
-        scale: 1,
-        stagger: 0.1,
-        duration: 0.65,
-        ease: 'back.out(1.3)',
-      }, '-=0.35');
+      polaroidRefs.current.forEach((el) => {
+        if (!el) return;
+        tl.to(el, {
+          y: 0,
+          opacity: 1,
+          scale: 1,
+          duration: 0.45,
+          ease: 'power3.out',
+          force3D: true,
+        }, '-=0.3');
+      });
+
+      const validNotes = noteRefs.current.filter(Boolean);
+      if (validNotes.length) {
+        tl.to(validNotes, {
+          y: 0,
+          scale: 1,
+          opacity: 1,
+          duration: 0.55,
+          stagger: 0.06,
+          ease: 'power3.out',
+          force3D: true,
+          onComplete: () => {
+            // ✦ Infinite Anti-Gravity Floating Levitation Loop ✦
+            noteRefs.current.forEach((el, idx) => {
+              if (!el) return;
+              const floatDist = 5 + (idx % 3) * 3;
+              const floatTime = 3.0 + (idx % 4) * 0.45;
+              
+              gsap.to(el, {
+                y: `-=${floatDist}`,
+                rotate: `+=${idx % 2 === 0 ? 1.2 : -1.2}`,
+                duration: floatTime,
+                repeat: -1,
+                yoyo: true,
+                ease: 'sine.inOut',
+                delay: idx * 0.15,
+                force3D: true,
+              });
+            });
+
+            // Floating loop for Rome & Kyoto Figma Cards
+            polaroidRefs.current.forEach((el, idx) => {
+              if (!el) return;
+              gsap.to(el, {
+                y: '-=8',
+                rotate: idx === 0 ? '-=1.8' : '+=1.8',
+                duration: 3.8 + idx * 0.6,
+                repeat: -1,
+                yoyo: true,
+                ease: 'sine.inOut',
+                delay: 0.2,
+                force3D: true,
+              });
+            });
+          }
+        }, '-=0.3');
+      }
     }, section);
 
     return () => ctx.revert();
   }, []);
 
-  // Marquee & Ambient Pulsing Glow GSAP Effects
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Track 1: Scroll left to right continuously
-      if (marqueeTrack1Ref.current) {
-        gsap.to(marqueeTrack1Ref.current, {
-          xPercent: -50,
-          duration: 35,
-          repeat: -1,
-          ease: "none"
-        });
-      }
+  // Hardware-Accelerated Dynamic Mouse Parallax
+  const handleBoardMouseMove = (e) => {
+    const section = faqSectionRef.current;
+    if (!section) return;
+    const rect = section.getBoundingClientRect();
+    const xRatio = (e.clientX - rect.left) / rect.width - 0.5;
+    const yRatio = (e.clientY - rect.top) / rect.height - 0.5;
 
-      // Track 2: Scroll right to left continuously
-      if (marqueeTrack2Ref.current) {
-        gsap.fromTo(marqueeTrack2Ref.current,
-          { xPercent: -50 },
-          {
-            xPercent: 0,
-            duration: 40,
-            repeat: -1,
-            ease: "none"
-          }
-        );
-      }
-
-      // Ambient Orange Glow Slow Pulse
-      gsap.to(".cta-ambient-glow", {
-        scale: 1.25,
-        opacity: 0.8,
-        duration: 4.5,
-        yoyo: true,
-        repeat: -1,
-        ease: "sine.inOut"
+    noteRefs.current.forEach((el, idx) => {
+      if (!el || openIdx === idx) return;
+      const depth = (idx % 3 + 1) * 5;
+      gsap.to(el, {
+        x: xRatio * depth,
+        y: yRatio * depth,
+        rotateX: -yRatio * 6,
+        rotateY: xRatio * 6,
+        duration: 0.3,
+        ease: 'power2.out',
+        force3D: true,
+        overwrite: 'auto'
       });
     });
 
-    return () => ctx.revert();
-  }, []);
+    polaroidRefs.current.forEach((el) => {
+      if (!el) return;
+      gsap.to(el, {
+        x: xRatio * 10,
+        y: yRatio * 10,
+        duration: 0.35,
+        ease: 'power2.out',
+        force3D: true,
+        overwrite: 'auto'
+      });
+    });
+  };
 
-  // Marquee & Pulsing Glow GSAP Effects
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Track 1: Scroll left to right continuously
-      if (marqueeTrack1Ref.current) {
-        gsap.to(marqueeTrack1Ref.current, {
-          xPercent: -50,
-          duration: 35,
-          repeat: -1,
-          ease: "none"
-        });
-      }
-
-      // Track 2: Scroll right to left continuously
-      if (marqueeTrack2Ref.current) {
-        gsap.fromTo(marqueeTrack2Ref.current,
-          { xPercent: -50 },
-          {
-            xPercent: 0,
-            duration: 40,
-            repeat: -1,
-            ease: "none"
-          }
-        );
-      }
-
-      // Ambient Orange Glow Slow Pulse
-      gsap.to(".cta-ambient-glow", {
-        scale: 1.3,
-        opacity: 0.85,
-        duration: 4.5,
-        yoyo: true,
-        repeat: -1,
-        ease: "sine.inOut"
+  const handleBoardMouseLeave = () => {
+    noteRefs.current.forEach((el, idx) => {
+      if (!el || openIdx === idx) return;
+      gsap.to(el, {
+        x: 0,
+        y: 0,
+        rotateX: 0,
+        rotateY: 0,
+        rotate: faqNotes[idx].defaultRotate,
+        duration: 0.5,
+        ease: 'power2.out',
+        force3D: true,
+        overwrite: 'auto'
       });
     });
 
-    return () => ctx.revert();
-  }, []);
+    polaroidRefs.current.forEach((el) => {
+      if (!el) return;
+      gsap.to(el, {
+        x: 0,
+        y: 0,
+        duration: 0.5,
+        ease: 'power2.out',
+        force3D: true,
+        overwrite: 'auto'
+      });
+    });
+  };
 
-  // Magnetic Button MouseMove Attraction Listener
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!buttonRef.current || !buttonTextRef.current) return;
@@ -296,16 +515,12 @@ export default function FAQAndMarqueeCTA() {
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
 
-      // Distance from cursor to button center
       const distX = e.clientX - centerX;
       const distY = e.clientY - centerY;
       const distance = Math.hypot(distX, distY);
-
-      // Proximity radius of 100px around the button's outer bounds
       const proximityRadius = 100 + rect.width / 2;
 
       if (distance < proximityRadius) {
-        // Pull button slightly toward cursor (magnetic effect)
         const pullFactor = 0.35;
         const textPullFactor = 0.15;
 
@@ -325,7 +540,6 @@ export default function FAQAndMarqueeCTA() {
           overwrite: "auto"
         });
       } else {
-        // Snap back smoothly when cursor leaves proximity radius
         gsap.to(buttonRef.current, {
           x: 0,
           y: 0,
@@ -364,220 +578,312 @@ export default function FAQAndMarqueeCTA() {
     };
   }, []);
 
-  // 3D Card Interactive Tilt Listeners
-  const handleCardMouseMove = (e, cardEl) => {
-    if (!cardEl) return;
-    const rect = cardEl.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
-    const tiltX = (y - 0.5) * -6;
-    const tiltY = (x - 0.5) * 6;
+  return (
+    <div className="w-full relative">
+      <FigmaReveal id="section-faq" index={2} variant="light" direction="zoom">
+        <section 
+          ref={faqSectionRef} 
+          onMouseMove={handleBoardMouseMove}
+          onMouseLeave={handleBoardMouseLeave}
+          className="relative py-24 md:py-32 pb-16 w-full z-10 select-none"
+        >
+          <div 
+            className="absolute inset-0 pointer-events-none opacity-[0.035]"
+            style={{
+              backgroundImage: 'radial-gradient(#1E1B18 1.5px, transparent 1.5px)',
+              backgroundSize: '24px 24px',
+            }}
+          />
 
-    gsap.to(cardEl, {
-      rotateX: tiltX,
-      rotateY: tiltY,
-      z: 20,
-      scale: 1.015,
-      duration: 0.25,
-      ease: 'power2.out',
-      overwrite: 'auto',
-    });
-  };
-
-  const handleCardMouseLeave = (cardEl) => {
-    if (!cardEl) return;
-    gsap.to(cardEl, {
-      rotateX: 0,
-      rotateY: 0,
-      z: 0,
-      scale: 1,
-      duration: 0.5,
-      ease: 'power2.out',
-      overwrite: 'auto',
-    });
-  };  return (
-    <div className="w-full bg-[#FFF8F5] relative">
-      {/* 1. FAQ Accordion Architecture */}
-      <section 
-        ref={faqSectionRef} 
-        className="py-24 md:py-32 max-w-4xl mx-auto px-4 md:px-8 relative z-10"
-      >
-        {/* Header Block */}
-        <div ref={faqHeaderRef} className="text-center mb-14 md:mb-18 will-change-transform">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FF5B1D]/10 border border-[#FF5B1D]/20 text-[#FF5B1D] text-xs font-bold tracking-widest uppercase mb-4 shadow-2xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D] animate-pulse" />
-            ✦ CLARITY &amp; PRECISION
-          </div>
-          <h2 className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-[#111827] tracking-tight mb-4">
-            Got Questions? We Have Itineraries.
-          </h2>
-          <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
-            Everything you need to know about how TripWise replaces weeks of open-tab research with instant, AI-perfected travel planning.
-          </p>
-        </div>
-
-        {/* Vertical Stack of 3D Keynote Accordion Cards */}
-        <div className="space-y-4" style={{ perspective: '1600px', transformStyle: 'preserve-3d' }}>
-          {faqData.map((item, i) => {
-            const isOpen = openIdx === i;
-            const isAnyOpen = openIdx !== null;
-            return (
-              <div
-                key={i}
-                className={`faq-keynote-card group cursor-pointer transition-all duration-300 rounded-2xl p-5 md:p-6 will-change-transform ${
-                  isOpen
-                    ? 'bg-white border-2 border-[#FF5B1D] shadow-[0_20px_50px_-10px_rgba(255,91,29,0.22)] scale-[1.02] z-30'
-                    : isAnyOpen
-                    ? 'bg-white/70 border border-brand-dark/10 opacity-75 shadow-xs'
-                    : 'bg-white/85 border border-brand-dark/10 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_16px_36px_-10px_rgba(255,91,29,0.15)] hover:border-[#FF5B1D]/40'
-                }`}
-                style={{ transformStyle: 'preserve-3d' }}
-                onClick={() => toggleAccordion(i)}
-                onMouseMove={(e) => handleCardMouseMove(e, e.currentTarget)}
-                onMouseLeave={(e) => handleCardMouseLeave(e.currentTarget)}
-              >
-                <div className="flex items-center justify-between gap-4 select-none">
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <span className={`w-7 h-7 rounded-lg font-mono text-[11px] font-bold flex items-center justify-center transition-colors duration-300 shrink-0 shadow-2xs ${
-                      isOpen
-                        ? 'bg-[#FF5B1D] text-white'
-                        : 'bg-[#FF5B1D]/10 group-hover:bg-[#FF5B1D] text-[#FF5B1D] group-hover:text-white'
-                    }`}>
-                      0{i + 1}
-                    </span>
-                    <h3 className={`text-base md:text-lg lg:text-xl font-extrabold transition-colors duration-300 leading-snug ${
-                      isOpen ? 'text-[#FF5B1D]' : 'text-[#111827] group-hover:text-[#FF5B1D]'
-                    }`}>
-                      {item.question}
-                    </h3>
-                  </div>
-                  <div
-                    ref={(el) => (iconRefs.current[i] = el)}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 border ${
-                      isOpen
-                        ? 'bg-[#FF5B1D] text-white border-[#FF5B1D]'
-                        : 'bg-black/5 group-hover:bg-[#FF5B1D]/15 text-gray-700 group-hover:text-[#FF5B1D] border-black/5 group-hover:border-[#FF5B1D]/30'
-                    }`}
-                  >
-                    <svg
-                      className="w-4 h-4 fill-none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2.5}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                    </svg>
-                  </div>
-                </div>
-
-                <div
-                  ref={(el) => (contentRefs.current[i] = el)}
-                  className="h-0 opacity-0 overflow-hidden text-gray-600 text-sm md:text-base leading-relaxed pl-10.5 pr-4"
-                >
-                  <div className="pt-4 pb-2 border-t border-brand-dark/5 mt-3">
-                    {item.answer}
-                  </div>
-                </div>
+          {/* ✦ FIGMA SHOWCASE DESTINATION CARD: ROME ✦ */}
+          <div 
+            ref={el => polaroidRefs.current[0] = el}
+            className="absolute top-8 left-2 md:left-6 hidden lg:flex flex-col p-3 bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.16)] border border-stone-200/90 rotate-[-10deg] z-0 pointer-events-none w-52 transition-transform duration-300 group"
+          >
+            {/* Figma Artboard Header */}
+            <div className="flex items-center justify-between gap-1 mb-2 px-0.5">
+              <div className="flex items-center gap-1.5 text-[9px] font-mono font-extrabold text-[#FF5B1D] tracking-widest uppercase">
+                <span className="text-[11px]">❖</span>
+                <span>FRAME • ROME_ITALY</span>
               </div>
-            );
-          })}
-        </div>
-      </section>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            </div>
 
-      {/* 2. The Final Marquee CTA Container */}
-      <section
-        ref={ctaContainerRef}
-        className="relative w-full bg-[#0A0A0A] py-32 md:py-44 overflow-hidden flex flex-col items-center justify-center text-center select-none"
-      >
-        {/* Soft Ambient Aurora Mesh Layer — Smooth Organic Orange Glow */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-          <div className="liquid-mesh-blob-1 absolute -top-1/4 -left-1/4 w-[600px] md:w-[900px] h-[600px] md:h-[900px] bg-radial from-[#FF5B1D]/20 via-[#F97316]/5 to-transparent blur-[140px] md:blur-[200px] animate-liquid-morph-1 pointer-events-none" />
-          <div className="liquid-mesh-blob-2 absolute -bottom-1/4 -right-1/4 w-[650px] md:w-[950px] h-[650px] md:h-[950px] bg-radial from-[#EA580C]/15 via-[#7C3AED]/5 to-transparent blur-[150px] md:blur-[200px] animate-liquid-morph-2 pointer-events-none" />
-        </div>
+            {/* Real Unsplash Photo Container with Dark Scrim Overlay */}
+            <div className="w-full h-36 rounded-xl overflow-hidden relative shadow-inner p-3 flex flex-col justify-between group">
+              <img 
+                src="https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&auto=format&fit=crop&q=80" 
+                alt="Rome Colosseum" 
+                className="absolute inset-0 w-full h-full object-cover z-0"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/20 z-10" />
 
-        {/* Soft Ambient Center Orange Pulse Layer */}
-        <div className="cta-ambient-glow absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-87.5 md:w-162.5 h-62.5 md:h-112.5 rounded-full bg-[#F97316]/30 blur-[130px] md:blur-[180px] pointer-events-none z-0" />
-
-        {/* Infinite Horizontal Dual-Track Marquee Background at Low Opacity */}
-        <div className="absolute inset-0 flex flex-col justify-between py-12 pointer-events-none overflow-hidden z-0 opacity-15 md:opacity-20">
-          {/* Track 1 (Left to Right) */}
-          <div className="w-full overflow-hidden whitespace-nowrap flex">
-            <div ref={marqueeTrack1Ref} className="inline-flex gap-8 items-center text-3xl md:text-6xl font-black text-white/40 tracking-wider">
-              {citiesTrack1.concat(citiesTrack1).map((city, index) => (
-                <span key={index} className="flex items-center gap-8">
-                  <span>{city}</span>
-                  <span className="w-2 h-2 rounded-full bg-[#FF5B1D]/60" />
+              <div className="relative z-20 flex justify-between items-center gap-1">
+                <span className="px-2 py-0.5 rounded-full bg-black/60 text-white font-mono text-[9px] font-bold backdrop-blur-md border border-white/20 whitespace-nowrap">
+                  ✈️ FCO • 8H 15M
                 </span>
-              ))}
+                <span className="px-1.5 py-0.5 rounded bg-white/90 text-stone-900 font-mono text-[8px] font-extrabold shadow-sm whitespace-nowrap">
+                  LIVE AI
+                </span>
+              </div>
+              
+              <div className="relative z-20">
+                <div className="text-white font-black text-sm drop-shadow-md leading-tight">Colosseum &amp; Trastevere</div>
+                <div className="text-white/80 font-mono text-[9px] font-semibold mt-0.5">41.9028° N, 12.4964° E</div>
+              </div>
+            </div>
+
+            {/* Bottom Info Bar */}
+            <div className="mt-2.5 flex items-center justify-between text-stone-600 font-mono text-[9px] font-bold px-0.5">
+              <span className="flex items-center gap-1">☀️ 24°C • SUNNY</span>
+              <span className="text-[#FF5B1D]">DAY 1 • 19:30</span>
             </div>
           </div>
 
-          {/* Track 2 (Right to Left) */}
-          <div className="w-full overflow-hidden whitespace-nowrap flex">
-            <div ref={marqueeTrack2Ref} className="inline-flex gap-8 items-center text-3xl md:text-6xl font-black text-white/40 tracking-wider">
-              {citiesTrack2.concat(citiesTrack2).map((city, index) => (
-                <span key={index} className="flex items-center gap-8">
-                  <span>{city}</span>
-                  <span className="w-2 h-2 rounded-full bg-[#FF5B1D]/60" />
+          {/* ✦ FIGMA SHOWCASE DESTINATION CARD: KYOTO ✦ */}
+          <div 
+            ref={el => polaroidRefs.current[1] = el}
+            className="absolute top-12 right-2 md:right-6 hidden lg:flex flex-col p-3 bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.16)] border border-stone-200/90 rotate-[12deg] z-0 pointer-events-none w-52 transition-transform duration-300 group"
+          >
+            {/* Figma Artboard Header */}
+            <div className="flex items-center justify-between gap-1 mb-2 px-0.5">
+              <div className="flex items-center gap-1.5 text-[9px] font-mono font-extrabold text-[#FF5B1D] tracking-widest uppercase">
+                <span className="text-[11px]">❖</span>
+                <span>FRAME • KYOTO_JAPAN</span>
+              </div>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            </div>
+
+            {/* Real Unsplash Photo Container with Dark Scrim Overlay */}
+            <div className="w-full h-36 rounded-xl overflow-hidden relative shadow-inner p-3 flex flex-col justify-between group">
+              <img 
+                src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&auto=format&fit=crop&q=80" 
+                alt="Kyoto Temple" 
+                className="absolute inset-0 w-full h-full object-cover z-0"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/20 z-10" />
+
+              <div className="relative z-20 flex justify-between items-center gap-1">
+                <span className="px-2 py-0.5 rounded-full bg-black/60 text-white font-mono text-[9px] font-bold backdrop-blur-md border border-white/20 whitespace-nowrap">
+                  ⛩️ KIX • 9H 40M
                 </span>
-              ))}
+                <span className="px-1.5 py-0.5 rounded bg-white/90 text-stone-900 font-mono text-[8px] font-extrabold shadow-sm whitespace-nowrap">
+                  VERIFIED
+                </span>
+              </div>
+              
+              <div className="relative z-20">
+                <div className="text-white font-black text-sm drop-shadow-md leading-tight">Arashiyama &amp; Gion</div>
+                <div className="text-white/80 font-mono text-[9px] font-semibold mt-0.5">35.0116° N, 135.7681° E</div>
+              </div>
+            </div>
+
+            {/* Bottom Info Bar */}
+            <div className="mt-2.5 flex items-center justify-between text-stone-600 font-mono text-[9px] font-bold px-0.5">
+              <span className="flex items-center gap-1">🌸 19°C • SPRING</span>
+              <span className="text-[#FF5B1D]">DAY 3 • 10:15</span>
             </div>
           </div>
-        </div>
 
-        {/* Center Massive High-Contrast Text Block & Magnetic Button */}
-        <div className="relative z-10 max-w-5xl mx-auto px-4 flex flex-col items-center">
-          <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white tracking-tight leading-none mb-10 md:mb-14 drop-shadow-lg">
+          <div className="max-w-6xl mx-auto px-4 md:px-8 relative z-10">
+            <div ref={faqHeaderRef} className="text-center mb-14 md:mb-18 will-change-transform">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FF5B1D]/10 border border-[#FF5B1D]/20 text-[#FF5B1D] text-xs font-bold tracking-widest uppercase mb-4 shadow-2xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D] animate-pulse" />
+                📌 TRAVEL PINBOARD • DISPATCHES &amp; QUERIES
+              </div>
+              <h2 className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-[#111827] tracking-tight mb-4">
+                Got Questions? Pinned on the Board.
+              </h2>
+              <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
+                Everything you need to know before takeoff. Click any memo to unpin details, pricing breakdown, and offline sync.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 items-start relative">
+              {faqNotes.map((note, i) => {
+                const isOpen = openIdx === i;
+
+                return (
+                  <div
+                    key={note.id}
+                    ref={(el) => (noteRefs.current[i] = el)}
+                    className={`sticky-note-card group relative cursor-pointer transition-all duration-300 rounded-2xl p-6 md:p-7 will-change-transform transform-gpu ${
+                      isOpen 
+                        ? 'z-50 shadow-[0_30px_70px_-12px_rgba(255,91,29,0.3)] ring-2 ring-[#FF5B1D]' 
+                        : 'z-20 shadow-[0_12px_30px_-8px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)]'
+                    }`}
+                    style={{
+                      backgroundColor: note.bg,
+                      border: `1.5px solid ${note.borderColor}`,
+                      transform: `rotate(${isOpen ? 0 : note.defaultRotate}deg)`,
+                      transformOrigin: 'top center',
+                      opacity: openIdx === null || isOpen ? 1 : 0.5,
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden',
+                    }}
+                    onClick={() => toggleStickyNote(i)}
+                    onMouseEnter={() => handleNoteHover(i)}
+                    onMouseLeave={() => handleNoteLeave(i)}
+                  >
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 pointer-events-none flex flex-col items-center">
+                      <div 
+                        className={`pushpin-head w-4.5 h-4.5 rounded-full relative transition-transform duration-300 ${
+                          isOpen ? 'scale-125 shadow-lg' : 'shadow-md'
+                        }`}
+                        style={{
+                          background: `radial-gradient(circle at 35% 30%, #ffffff 0%, ${note.pinColor} 55%, #181512 100%)`,
+                          boxShadow: isOpen 
+                            ? '0 6px 16px rgba(255,91,29,0.5)' 
+                            : '0 4px 10px rgba(0,0,0,0.35)',
+                        }}
+                      >
+                        <div className="absolute top-0.5 left-1 w-1.5 h-1.5 rounded-full bg-white/80 blur-[0.4px]" />
+                      </div>
+                    </div>
+
+                    <div 
+                      className="absolute -top-3 left-6 w-16 h-5 pointer-events-none z-20 opacity-85"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.75) 0%, rgba(255,245,230,0.55) 100%)',
+                        borderLeft: '1px dashed rgba(0,0,0,0.12)',
+                        borderRight: '1px dashed rgba(0,0,0,0.12)',
+                        transform: `rotate(${note.tapeAngle})`,
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+                        backdropFilter: 'blur(2px)',
+                      }}
+                    />
+
+                    <div className="flex items-center justify-between gap-3 mb-4 select-none pt-1">
+                      <span className="font-mono text-[10px] font-bold tracking-widest text-stone-700/70 uppercase px-2 py-0.5 rounded bg-black/5 border border-black/5">
+                        #{note.num} • {note.tag}
+                      </span>
+                      <span className={`text-[10px] font-mono font-bold uppercase transition-colors ${
+                        isOpen ? 'text-[#FF5B1D]' : 'text-stone-600/60'
+                      }`}>
+                        {isOpen ? 'UNPINNED ▲' : 'PINNED ▼'}
+                      </span>
+                    </div>
+
+                    <h3 className={`text-lg md:text-xl font-black leading-snug tracking-tight mb-2 transition-colors ${
+                      isOpen ? 'text-[#FF5B1D]' : 'text-stone-900'
+                    }`}>
+                      {note.question}
+                    </h3>
+
+                    <div
+                      ref={(el) => (contentRefs.current[i] = el)}
+                      className={`overflow-hidden transition-all duration-300 ${
+                        isOpen ? 'opacity-100 mt-4' : 'h-0 opacity-0'
+                      }`}
+                    >
+                      <div className="pt-3 pb-1 border-t border-stone-800/10 text-stone-800 text-sm md:text-[15px] leading-relaxed font-medium">
+                        <p className="mb-3">{note.answer}</p>
+                        
+                        <div className="takeaway-badge px-3 py-1.5 rounded-lg bg-black/5 border border-black/5 font-mono text-[11px] font-bold text-stone-900 flex items-center gap-2 mb-3">
+                          <span className="text-[#FF5B1D]">✦</span>
+                          <span>{note.highlight}</span>
+                        </div>
+
+                        <div className="stamp-seal-bar flex items-center justify-between pt-2 border-t border-stone-800/10 text-[10px] font-mono uppercase">
+                          <button
+                            onClick={(e) => handleHelpfulClick(e, i)}
+                            className={`helpful-btn px-2.5 py-1 rounded-md font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                              helpfulClicked[i]
+                                ? 'bg-[#FF5B1D] text-white shadow-xs'
+                                : 'bg-black/5 hover:bg-[#FF5B1D]/15 text-stone-700 hover:text-[#FF5B1D]'
+                            }`}
+                          >
+                            <span>{helpfulClicked[i] ? '👍 HELPFUL!' : '💡 HELPFUL?'}</span>
+                            <span className="font-sans font-black text-xs">({helpfulCounts[i]})</span>
+                          </button>
+
+                          <span className="text-stone-500 font-bold">{note.stamp}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div 
+                      className="absolute bottom-0 right-0 w-5 h-5 pointer-events-none"
+                      style={{
+                        background: 'linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.06) 50%)',
+                      }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      </FigmaReveal>
+
+      <HorizonWarp />
+
+      <FigmaReveal id="section-cta" index={3} variant="dark">
+        <section
+          ref={ctaContainerRef}
+          className="relative w-full bg-[#070709] py-32 md:py-44 overflow-hidden flex flex-col items-center justify-center text-center select-none"
+        >
+          <TravelTelemetryBackground />
+
+          <svg className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-30" viewBox="0 0 1200 600" preserveAspectRatio="none">
+            <path d="M-100,500 Q 300,100 700,450 T 1300,100" fill="none" stroke="#FF5B1D" strokeWidth="2" strokeDasharray="8 8" className="animate-pulse" />
+            <path d="M-100,100 Q 400,550 900,150 T 1300,500" fill="none" stroke="#FF8A5B" strokeWidth="1.5" strokeDasharray="6 6" />
+          </svg>
+
+          <div className="relative z-10 max-w-4xl mx-auto px-4 flex flex-col items-center">
+            
+            <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white tracking-tight leading-none mb-10 md:mb-14 drop-shadow-lg">
             Stop planning.<br />
-            <span className="bg-linear-to-r from-white via-orange-100 to-[#FF5B1D] bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-white via-orange-100 to-[#FF5B1D] bg-clip-text text-transparent animate-liquid-shimmer">
               Start traveling.
             </span>
           </h2>
 
-          {/* 3. The Magnetic Button */}
-          <div className="relative inline-block p-4">
-            <button
-              ref={buttonRef}
-              onClick={handleFlyTransition}
-              className={`group relative inline-flex items-center justify-center px-8 sm:px-12 py-5 sm:py-6 rounded-full bg-[#FF5B1D] text-white font-extrabold text-lg sm:text-2xl tracking-wide shadow-[0_0_50px_rgba(249,115,22,0.4)] transition-shadow duration-300 cursor-pointer overflow-visible border border-white/20 ${isFlying ? 'scale-95 shadow-[0_0_80px_rgba(249,115,22,0.8)]' : 'hover:bg-[#ff6c34] hover:shadow-[0_0_80px_rgba(249,115,22,0.6)]'}`}
-            >
-              {/* Button inner highlight sheen */}
-              <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none">
-                <span className={`absolute inset-0 w-1/2 h-full bg-white/20 skew-x-[-25deg] -translate-x-full transition-transform duration-1000 ease-out pointer-events-none ${isFlying ? 'opacity-0' : 'group-hover:translate-x-[300%]'}`} />
-              </div>
+            {/* 3. The Magnetic Button */}
+            <div className="relative inline-block p-4">
+              <button
+                ref={buttonRef}
+                onClick={handleFlyTransition}
+                className={`group relative inline-flex items-center justify-center px-8 sm:px-12 py-5 sm:py-6 rounded-full bg-[#FF5B1D] text-white font-extrabold text-lg sm:text-2xl tracking-wide shadow-[0_0_50px_rgba(249,115,22,0.4)] transition-shadow duration-300 cursor-pointer overflow-visible border border-white/20 ${isFlying ? 'scale-95 shadow-[0_0_80px_rgba(249,115,22,0.8)]' : 'hover:bg-[#ff6c34] hover:shadow-[0_0_80px_rgba(249,115,22,0.6)]'}`}
+              >
+                {/* Button inner highlight sheen */}
+                <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none">
+                  <span className={`absolute inset-0 w-1/2 h-full bg-white/20 skew-x-[-25deg] -translate-x-full transition-transform duration-1000 ease-out pointer-events-none ${isFlying ? 'opacity-0' : 'group-hover:translate-x-[300%]'}`} />
+                </div>
 
-              {/* Parallax Button Text */}
-              <span ref={buttonTextRef} className={`relative z-10 flex items-center gap-3 transition-colors duration-300 ${isFlying ? 'text-[#FF5B1D] opacity-0' : ''}`}>
-                <span>[ Plan My Trip — It&apos;s Free ]</span>
-                <svg
-                  className={`w-6 h-6 transition-transform duration-300 ${isFlying ? 'translate-x-10 opacity-0' : 'group-hover:translate-x-1.5'}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                {/* Parallax Button Text */}
+                <span ref={buttonTextRef} className={`relative z-10 flex items-center gap-3 transition-colors duration-300 ${isFlying ? 'text-[#FF5B1D] opacity-0' : ''}`}>
+                  <span>[ Plan My Trip — It&apos;s Free ]</span>
+                  <svg
+                    className={`w-6 h-6 transition-transform duration-300 ${isFlying ? 'translate-x-10 opacity-0' : 'group-hover:translate-x-1.5'}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </span>
+
+                {/* Plane 1 (Main, fast) */}
+                <svg ref={plane1Ref} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 text-white z-50 pointer-events-none opacity-0" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M1.946 9.315c-.522-.174-.527-.455.01-.634l19.087-6.362c.529-.176.832.12.684.638l-5.454 19.086c-.15.524-.46.529-.65-.013l-3.35-9.404-9.327-3.311Zm9.638 4.27 2.656 7.457 4.148-14.52-14.52 4.839 8.358 2.966c.277.098.423.238.455.514l-2.083 6.945-1.014-8.197Z" />
                 </svg>
-              </span>
+                
+                {/* Plane 2 (Smaller, flies wider right) */}
+                <svg ref={plane2Ref} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 text-[#FFF8F5] z-50 pointer-events-none opacity-0" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M1.946 9.315c-.522-.174-.527-.455.01-.634l19.087-6.362c.529-.176.832.12.684.638l-5.454 19.086c-.15.524-.46.529-.65-.013l-3.35-9.404-9.327-3.311Zm9.638 4.27 2.656 7.457 4.148-14.52-14.52 4.839 8.358 2.966c.277.098.423.238.455.514l-2.083 6.945-1.014-8.197Z" />
+                </svg>
 
-              {/* Plane 1 (Main, fast) */}
-              <svg ref={plane1Ref} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 text-white z-50 pointer-events-none opacity-0" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M1.946 9.315c-.522-.174-.527-.455.01-.634l19.087-6.362c.529-.176.832.12.684.638l-5.454 19.086c-.15.524-.46.529-.65-.013l-3.35-9.404-9.327-3.311Zm9.638 4.27 2.656 7.457 4.148-14.52-14.52 4.839 8.358 2.966c.277.098.423.238.455.514l-2.083 6.945-1.014-8.197Z" />
-              </svg>
-              
-              {/* Plane 2 (Smaller, flies wider right) */}
-              <svg ref={plane2Ref} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 text-[#FFF8F5] z-50 pointer-events-none opacity-0" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M1.946 9.315c-.522-.174-.527-.455.01-.634l19.087-6.362c.529-.176.832.12.684.638l-5.454 19.086c-.15.524-.46.529-.65-.013l-3.35-9.404-9.327-3.311Zm9.638 4.27 2.656 7.457 4.148-14.52-14.52 4.839 8.358 2.966c.277.098.423.238.455.514l-2.083 6.945-1.014-8.197Z" />
-              </svg>
-
-              {/* Plane 3 (Medium, flies higher left) */}
-              <svg ref={plane3Ref} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-[#FFE6DA] z-50 pointer-events-none opacity-0" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M1.946 9.315c-.522-.174-.527-.455.01-.634l19.087-6.362c.529-.176.832.12.684.638l-5.454 19.086c-.15.524-.46.529-.65-.013l-3.35-9.404-9.327-3.311Zm9.638 4.27 2.656 7.457 4.148-14.52-14.52 4.839 8.358 2.966c.277.098.423.238.455.514l-2.083 6.945-1.014-8.197Z" />
-              </svg>
-            </button>
+                {/* Plane 3 (Medium, flies higher left) */}
+                <svg ref={plane3Ref} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-[#FFE6DA] z-50 pointer-events-none opacity-0" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M1.946 9.315c-.522-.174-.527-.455.01-.634l19.087-6.362c.529-.176.832.12.684.638l-5.454 19.086c-.15.524-.46.529-.65-.013l-3.35-9.404-9.327-3.311Zm9.638 4.27 2.656 7.457 4.148-14.52-14.52 4.839 8.358 2.966c.277.098.423.238.455.514l-2.083 6.945-1.014-8.197Z" />
+                </svg>
+              </button>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </FigmaReveal>
 
       {/* Cinematic Circle Wipe Transition Overlay */}
       <div 
