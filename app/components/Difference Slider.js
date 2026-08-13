@@ -12,15 +12,15 @@ export default function Destination() {
     const underlinePathRef = useRef(null);
     const containerRef = useRef(null);
 
-    const [sliderPos, setSliderPos] = useState(15); // starts at 15% on initial entry
-    const [isRevealed, setIsRevealed] = useState(false);
+    const [sliderPos, setSliderPos] = useState(5); // Starts at left edge (0% / 5%)
+    const [isRevealed, setIsRevealed] = useState(true);
     const [isDragging, setIsDragging] = useState(false);
-    const [headerVisible, setHeaderVisible] = useState(false);
+    const [headerVisible, setHeaderVisible] = useState(true);
 
     // Dynamic state values for the counting stats
-    const [daysPlanned, setDaysPlanned] = useState(0);
-    const [stopsAdded, setStopsAdded] = useState(0);
-    const [timeTaken, setTimeTaken] = useState("0.0");
+    const [daysPlanned, setDaysPlanned] = useState(10);
+    const [stopsAdded, setStopsAdded] = useState(24);
+    const [timeTaken, setTimeTaken] = useState("1.2");
 
     // Typewriter state
     const [typedText, setTypedText] = useState("");
@@ -44,110 +44,37 @@ export default function Destination() {
         return () => clearInterval(interval);
     }, [isRevealed]);
 
-    const isRevealedRef = useRef(false);
+    const isRevealedRef = useRef(true);
 
-    // Figma Canvas 3D Morph & Scroll-Scrubbed Transition
+    // Listen to custom slider-progress event emitted by FigmaPinnedSlide scroll scrub
     useEffect(() => {
-        if (typeof window === 'undefined') return;
-        gsap.registerPlugin(ScrollTrigger);
-
-        const section = sectionRef.current;
-        const artboard = artboardRef.current;
-        const badge = badgeRef.current;
-        const heading = headingRef.current;
-        const underline = underlinePathRef.current;
-
-        if (!section || !artboard) return;
-
-        // Set initial 3D isometric tilt state
-        gsap.set(artboard, {
-            rotateX: 12,
-            scale: 0.86,
-            y: 100,
-            opacity: 0.15,
-            filter: 'blur(10px)',
-            transformPerspective: 1200,
-            transformOrigin: 'center top',
-        });
-
-        if (badge) gsap.set(badge, { scale: 0.7, y: -25, opacity: 0 });
-        if (heading) gsap.set(heading, { y: 45, opacity: 0 });
-
-        if (underline) {
-            const length = 120;
-            underline.style.strokeDasharray = `${length} ${length}`;
-            underline.style.strokeDashoffset = length;
-        }
-
-        const sliderTracker = { pos: 15 };
-
-        const ctx = gsap.context(() => {
-            // Main scroll-scrubbed timeline
-            const tl = gsap.timeline({
-                scrollTrigger: {
-                    trigger: section,
-                    start: 'top 85%',
-                    end: 'top 25%',
-                    scrub: 0.6,
-                    onUpdate: (self) => {
-                        if (self.progress > 0.35 && !isRevealedRef.current) {
-                            isRevealedRef.current = true;
-                            setIsRevealed(true);
-                        }
-                    },
-                },
-            });
-
-            // 1. Badge pop
-            if (badge) {
-                tl.to(badge, {
-                    scale: 1,
-                    y: 0,
-                    opacity: 1,
-                    ease: 'none',
-                }, 0);
+        const handleSliderProgress = (e) => {
+            if (e.detail !== undefined) {
+                setSliderPos(e.detail);
             }
-
-            // 2. Heading glide
-            if (heading) {
-                tl.to(heading, {
-                    y: 0,
-                    opacity: 1,
-                    ease: 'none',
-                }, 0.05);
-            }
-
-            // 3. Draw SVG Underline
-            if (underline) {
-                tl.to(underline, {
-                    strokeDashoffset: 0,
-                    ease: 'none',
-                }, 0.15);
-            }
-
-            // 4. 3D Canvas Smart-Animate level out
-            tl.to(artboard, {
-                rotateX: 0,
-                scale: 1,
-                y: 0,
-                opacity: 1,
-                filter: 'blur(0px)',
-                ease: 'none',
-            }, 0.08);
-
-            // 5. Sweep slider divider from 15% to 50%
-            tl.to(sliderTracker, {
-                pos: 50,
-                ease: 'none',
-                onUpdate: () => {
-                    setSliderPos(sliderTracker.pos);
-                },
-            }, 0.15);
-
-        }, section);
-
-        return () => ctx.revert();
+        };
+        window.addEventListener('slider-progress', handleSliderProgress);
+        return () => window.removeEventListener('slider-progress', handleSliderProgress);
     }, []);
+
+    // ✦ 1:1 Real-time Sync: As slider moves from 0% (5%) to 50%, underline draws 0% -> 100% ✦
+    useEffect(() => {
+        const section = sectionRef.current;
+        if (!section) return;
+        const underlineEls = section.querySelectorAll('.underline-svg-path');
+        if (!underlineEls.length) return;
+
+        // Calculate 0 to 1 progress as sliderPos moves from 5% to 50%
+        const progress = Math.max(0, Math.min((sliderPos - 5) / 45, 1));
+
+        underlineEls.forEach((el) => {
+            const len = el.getTotalLength ? el.getTotalLength() || 220 : 220;
+            el.style.strokeDasharray = `${len}`;
+            el.style.strokeDashoffset = `${len * (1 - progress)}`;
+        });
+    }, [sliderPos]);
+
+
 
     // Watch slider position to trigger reveals once right side opens past 40% (sliderPos < 60)
     useEffect(() => {
@@ -264,7 +191,7 @@ export default function Destination() {
         <section 
             ref={sectionRef} 
             id="ai-planner" 
-            className="relative w-full flex flex-col items-center justify-center select-none font-sans py-20 md:py-28 px-4 md:px-8 bg-transparent overflow-hidden"
+            className="relative w-full flex flex-col items-center justify-center select-none font-sans py-10 md:py-14 px-4 md:px-8 bg-transparent overflow-hidden"
         >
             {/* Embedded styles for alternate tab jitter, blinking typewriter cursor, slow sticky notes wobble, and clicking frantic cursor */}
             <style>{`
@@ -355,14 +282,17 @@ export default function Destination() {
                 <h2 className="text-3xl md:text-5xl font-extrabold text-brand-dark tracking-tight leading-tight uppercase font-serif">
                     Trip planning,  <span className="relative inline-block text-[#FF5B1D] select-none text-3xl md:text-5xl normal-case font-serif italic font-extrabold">
                         reimagined
-                        <svg className="absolute -bottom-1.5 left-0 w-full h-2 text-[#FF5B1D]" viewBox="0 0 100 10" preserveAspectRatio="none">
+                        <svg className="absolute -bottom-3 left-0 w-full h-3.5 md:h-4 text-[#FF5B1D] overflow-visible pointer-events-none" viewBox="0 0 100 14" preserveAspectRatio="none">
                             <path 
                                 ref={underlinePathRef}
-                                d="M0,5 C30,9 70,2 100,6" 
-                                stroke="currentColor" 
-                                strokeWidth="5" 
+                                className="underline-svg-path"
+                                d="M 2,10 C 30,2 60,14 98,6" 
+                                stroke="#FF5B1D" 
+                                strokeWidth="4.5" 
                                 strokeLinecap="round" 
+                                strokeLinejoin="round"
                                 fill="none" 
+                                style={{ filter: 'drop-shadow(0 3px 8px rgba(255, 91, 29, 0.45))' }}
                             />
                         </svg>
                     </span>

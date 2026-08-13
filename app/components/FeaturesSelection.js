@@ -28,23 +28,28 @@ function FeaturesSelection() {
                 scrub: true,
                 pin: stickyRef.current,
                 onUpdate: (self) => {
-                    const progress = self.progress;
+                    const rawProgress = self.progress;
+                    
+                    // Stage 1: Features & Airplane (0.0 to 0.60)
+                    const featureProgress = Math.min(1.0, rawProgress / 0.60);
+                    // Stage 2: Exit Layering / Slide Overlap (0.60 to 1.0)
+                    const exitProgress = Math.max(0, (rawProgress - 0.60) / 0.40);
 
                     // 1. Map activeIdx and activePreviewTab based on when the plane reaches each checkpoint
-                    // Plane completes its flight from 0.0 to 0.88
-                    const flightProgress = Math.min(1.0, progress / 0.88);
+                    // Plane completes its flight precisely as featureProgress reaches 1.0
+                    const flightProgress = featureProgress;
 
                     let activeIdx = 0;
-                    if (progress >= 0.30 && progress < 0.52) activeIdx = 1;
-                    else if (progress >= 0.52 && progress < 0.72) activeIdx = 2;
-                    else if (progress >= 0.72) activeIdx = 3;
+                    if (featureProgress >= 0.30 && featureProgress < 0.52) activeIdx = 1;
+                    else if (featureProgress >= 0.52 && featureProgress < 0.72) activeIdx = 2;
+                    else if (featureProgress >= 0.72) activeIdx = 3;
                     setActiveTab(activeIdx);
 
                     // Dashboard changes ONLY when the plane reaches its relative preview container
                     let activePreviewIdx = 0;
-                    if (progress >= 0.32 && progress < 0.55) activePreviewIdx = 1;
-                    else if (progress >= 0.55 && progress < 0.75) activePreviewIdx = 2;
-                    else if (progress >= 0.75) activePreviewIdx = 3;
+                    if (featureProgress >= 0.32 && featureProgress < 0.55) activePreviewIdx = 1;
+                    else if (featureProgress >= 0.55 && featureProgress < 0.75) activePreviewIdx = 2;
+                    else if (featureProgress >= 0.75) activePreviewIdx = 3;
                     setActivePreviewTab(activePreviewIdx);
 
                     // Plane Flight Path Coordinate Calculation
@@ -193,10 +198,7 @@ function FeaturesSelection() {
                             planeRef.current.style.display = 'block';
 
                             // --- FIGMA TRANSITION: Exit Layering when Plane animation finishes ---
-                            const exitStart = 0.88;
-                            if (progress >= exitStart) {
-                                const exitProgress = Math.min(1.0, (progress - exitStart) / (1.0 - exitStart));
-                                
+                            if (exitProgress > 0) {
                                 // Softly recede into background (scale to 0.95, fade to 0.35, gentle blur)
                                 if (contentWrapperRef.current) {
                                     contentWrapperRef.current.style.opacity = Math.max(0.2, 1 - exitProgress * 0.75);
@@ -220,8 +222,8 @@ function FeaturesSelection() {
                                     svgRef.current.style.opacity = 1;
                                 }
                                 let planeOpacity = 1;
-                                if (progress < 0.02) {
-                                    planeOpacity = progress / 0.02;
+                                if (featureProgress < 0.02) {
+                                    planeOpacity = featureProgress / 0.02;
                                 }
                                 planeRef.current.style.opacity = planeOpacity;
                             }
@@ -325,7 +327,7 @@ function FeaturesSelection() {
     ];
 
     return (
-        <section ref={containerRef} className="relative w-full h-[260vh] bg-[#FFF8F5]">
+        <section ref={containerRef} className="relative w-full h-[350vh] bg-[#FFF8F5]">
             <div ref={stickyRef} className="sticky top-0 w-full h-screen overflow-hidden flex items-center justify-center">
                 {/* Background elements */}
                 <div className="absolute top-1/4 left-0 w-96 h-96 bg-[#fe7717]/5 rounded-full filter blur-[100px] pointer-events-none" />
