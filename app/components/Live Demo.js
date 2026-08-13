@@ -247,6 +247,14 @@ export default function RealTimeAdjuster() {
 
         }, sectionRef);
 
+        // Create a ScrollTrigger that fires when this section comes up fully (top edge hits top of screen)
+        ScrollTrigger.create({
+            trigger: sectionRef.current,
+            start: 'top top',
+            onEnter: () => setIsDelayed(true),
+            onLeaveBack: () => setIsDelayed(false),
+        });
+
         return () => ctx.revert();
     }, []);
 
@@ -266,13 +274,53 @@ export default function RealTimeAdjuster() {
 
     const innerContainerRef = useRef(null);
 
+    // Listen to slide overlay progress from FigmaPinnedSlide to close animatedly
+    useEffect(() => {
+        const handleOverlayProgress = (e) => {
+            const progress = e.detail; // 0 to 1
+
+            // Animate phone falling back and fading out
+            if (phoneRef.current) {
+                gsap.set(phoneRef.current, {
+                    scale: 1 - (progress * 0.4), // Shrink to 0.6
+                    rotateX: progress * -45, // Tilt backwards
+                    y: progress * 150, // Move down
+                });
+            }
+
+            if (phoneShadowRef.current) {
+                gsap.set(phoneShadowRef.current, {
+                    scale: 1 - (progress * 0.5),
+                });
+            }
+
+            // Animate timeline scaling out and fading
+            if (timelineRef.current) {
+                gsap.set(timelineRef.current, {
+                    x: progress * -80, // Slide left
+                    scale: 1 - (progress * 0.15), // Shrink slightly
+                });
+            }
+
+            // Fade out the entire content of the section smoothly
+            if (innerContainerRef.current) {
+                gsap.set(innerContainerRef.current, {
+                    opacity: Math.max(0, 1 - (progress * 1.5)), // Fades out completely by 66% progress
+                });
+            }
+        };
+
+        window.addEventListener('slide-overlay-progress', handleOverlayProgress);
+        return () => window.removeEventListener('slide-overlay-progress', handleOverlayProgress);
+    }, []);
+
     // ScrollTrigger to auto-play when user scrolls in and smoothly recede when scrolling out
     useEffect(() => {
         gsap.registerPlugin(ScrollTrigger);
 
         const trigger = ScrollTrigger.create({
             trigger: sectionRef.current,
-            start: 'top 65%',
+            start: 'top 75%',
             onEnter: () => {
                 setIsDelayed(true);
             },
@@ -281,29 +329,13 @@ export default function RealTimeAdjuster() {
             }
         });
 
-        const exitTrigger = ScrollTrigger.create({
-            trigger: sectionRef.current,
-            start: 'bottom 90%',
-            end: 'bottom 15%',
-            scrub: 0.6,
-            onUpdate: (self) => {
-                const p = self.progress;
-                if (innerContainerRef.current) {
-                    innerContainerRef.current.style.opacity = Math.max(0.3, 1 - p * 0.7);
-                    innerContainerRef.current.style.transform = `translate3d(0, ${-p * 45}px, 0) scale(${1 - p * 0.05}) perspective(1200px) rotateX(${p * 4}deg)`;
-                    innerContainerRef.current.style.filter = `blur(${p * 5}px)`;
-                }
-            }
-        });
-
         return () => {
             trigger.kill();
-            exitTrigger.kill();
         };
     }, []);
 
     return (
-        <section ref={sectionRef} className="pt-24 md:pt-28 pb-16 md:pb-20 bg-transparent relative overflow-hidden">
+        <section ref={sectionRef} className="pt-12 md:pt-16 pb-8 md:pb-12 bg-transparent relative">
             {/* Ambient decorative glowing spots */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-1/4 left-1/4 -translate-y-1/2 w-87.5 h-87.5 rounded-full bg-[#FF5B1D]/3 blur-[120px]" />
@@ -312,7 +344,7 @@ export default function RealTimeAdjuster() {
 
             <div ref={innerContainerRef} className="max-w-6xl mx-auto px-6 relative z-10 will-change-transform">
                 {/* Header */}
-                <div className="text-center max-w-3xl mx-auto mb-8 md:mb-10">
+                <div className="text-center max-w-3xl mx-auto mb-6 md:mb-8">
                     <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#FF5B1D]/10 border border-[#FF5B1D]/20 text-[#FF5B1D] font-mono text-[11px] font-bold tracking-wider uppercase rounded-full mb-3 shadow-2xs">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D] animate-pulse" />
                         ✦ TYPE &amp; MAGIC
@@ -333,12 +365,12 @@ export default function RealTimeAdjuster() {
                         {/* Ground Contact Shadow */}
                         <div
                             ref={phoneShadowRef}
-                            className="absolute -bottom-4 w-60 h-8 rounded-full bg-black/50 blur-xl pointer-events-none z-0 will-change-transform"
+                            className="absolute -bottom-3 w-56 h-7 rounded-full bg-black/50 blur-xl pointer-events-none z-0 will-change-transform"
                         />
 
                         <div
                             ref={phoneRef}
-                            className="relative w-70 h-136 md:w-72 md:h-138 rounded-[48px] bg-[#1A191C] border-[3px] border-[#4A4950] transition-all duration-500 will-change-transform z-10"
+                            className="relative w-64 h-[495px] sm:w-66 sm:h-[505px] md:w-68 md:h-[515px] rounded-[44px] bg-[#1A191C] border-[3px] border-[#4A4950] will-change-transform z-10"
                             style={{
                                 boxShadow: '0 0 0 1px #2C2B30, 0 0 0 4px #121114, 0 30px 70px -15px rgba(0, 0, 0, 0.6), 0 0 60px rgba(255, 91, 29, 0.12)',
                             }}
