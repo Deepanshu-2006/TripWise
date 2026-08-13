@@ -191,7 +191,7 @@ export default function Destination() {
         <section 
             ref={sectionRef} 
             id="ai-planner" 
-            className="relative w-full flex flex-col items-center justify-center select-none font-sans py-10 md:py-14 px-4 md:px-8 bg-transparent overflow-hidden"
+            className="relative w-full min-h-screen flex flex-col items-center justify-center select-none font-sans pt-24 md:pt-28 pb-12 md:pb-16 px-4 md:px-8 bg-transparent overflow-hidden scroll-mt-24"
         >
             {/* Embedded styles for alternate tab jitter, blinking typewriter cursor, slow sticky notes wobble, and clicking frantic cursor */}
             <style>{`
@@ -268,12 +268,12 @@ export default function Destination() {
             {/* Centered Heading */}
             <div
                 ref={headingRef}
-                className="text-center mb-10 md:mb-14 shrink-0 flex flex-col items-center will-change-transform"
+                className="text-center mb-6 md:mb-10 shrink-0 flex flex-col items-center will-change-transform"
             >
                 {/* Spaced Micro-Badge */}
                 <div 
                     ref={badgeRef}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#FF5B1D]/10 text-[#FF5B1D] rounded-full font-mono text-[12px] font-bold tracking-wider uppercase mb-4 shadow-sm border border-[#FF5B1D]/20 select-none will-change-transform"
+                    className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#FF5B1D]/10 text-[#FF5B1D] rounded-full font-mono text-[12px] font-bold tracking-wider uppercase mb-3 shadow-xs border border-[#FF5B1D]/20 select-none will-change-transform"
                 >
                     <span className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D] animate-pulse" />
                     ✦ TRIPWISE EXPERIENCE

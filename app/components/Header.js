@@ -38,14 +38,14 @@ function Header() {
     
     const headerBgLight = useTransform(progress, [0, 1], ["rgba(255,255,255,0.6)", "rgba(255,255,255,0.85)"]);
     
-    const darkBgStart = isHomePage ? "rgba(17,17,17,0.5)" : "rgba(10,10,10,0.92)";
+    const darkBgStart = "rgba(10,10,10,0.95)";
     const darkBgEnd = "rgba(10,10,10,0.98)";
     const headerBgDark = useTransform(progress, [0, 1], [darkBgStart, darkBgEnd]);
     
     const headerShadowLight = useTransform(progress, [0, 1], ["0 12px 40px rgba(0,0,0,0.06)", "0 16px 48px rgba(0,0,0,0.08)"]);
-    const headerShadowDark = useTransform(progress, [0, 1], ["0 12px 40px rgba(0,0,0,0.25)", "0 16px 48px rgba(0,0,0,0.38)"]);
+    const headerShadowDark = useTransform(progress, [0, 1], ["0 16px 48px rgba(0,0,0,0.35)", "0 16px 48px rgba(0,0,0,0.40)"]);
     
-    const headerBlur = useTransform(progress, [0, 1], [isHomePage ? "blur(8px)" : "blur(12px)", "blur(12px)"]);
+    const headerBlur = useTransform(progress, [0, 1], ["blur(12px)", "blur(12px)"]);
 
     const navGap = useTransform(progress, [0, 1], ["16px", "24px"]);
     const desktopNavGap = useTransform(progress, [0, 1], ["32px", "24px"]);
@@ -123,14 +123,10 @@ function Header() {
                 WebkitBackdropFilter: headerBlur,
             }}
             className={`fixed left-0 right-0 z-[9999] mx-auto border rounded-full w-[calc(100%-2rem)] transition-colors duration-300 ${
-            isScrolled
-                ? isLightPage
+                isLightPage
                     ? "border-[#ECE8E2] hover:border-[#FF6B2C]/30"
                     : "border-white/20 hover:border-white/30"
-                : isLightPage
-                    ? "border-[#ECE8E2] hover:border-[#FF6B2C]/30"
-                    : (isHomePage ? "border-white/15 hover:border-white/25" : "border-white/20 hover:border-white/30")
-        }`}>
+            }`}>
             <motion.div style={{ gap: navGap }} className={`px-4 md:px-6 flex items-center justify-between h-15`}>
                 {/* Left Side: Destinations & AI Planner (Desktop) */}
                 <motion.div style={{ gap: desktopNavGap }} className={`hidden md:flex items-center justify-start`}>
@@ -164,10 +160,10 @@ function Header() {
                 </motion.div>
 
                 {/* Center: Logo (Centered on desktop, left on mobile) */}
-                <a href="/" className="header-logo flex items-center justify-center cursor-pointer group select-none shrink-0 relative" style={{ left: isScrolled ? '0px' : '0px' }}>
+                <a id="main-navbar-logo" href="/" className="header-logo flex items-center justify-center cursor-pointer group select-none shrink-0 relative" style={{ left: isScrolled ? '0px' : '0px' }}>
                     {/* Icon Part (Always visible, height stays constant h-16) */}
                     <div className="h-16 w-16 shrink-0 flex items-center justify-center">
-                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 object-contain transition-transform duration-300 group-hover:scale-105">
+                        <svg id="navbar-logo-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 object-contain transition-transform duration-300 group-hover:scale-105">
                             <path
                                 d="M24 170 C 70 135, 105 105, 168 42"
                                 fill="none"
@@ -177,7 +173,7 @@ function Header() {
                                 strokeLinecap="round"
                             />
                             <circle cx="24" cy="170" r="9" fill="#0D9488" />
-                            <g transform="translate(136,28) rotate(45)">
+                            <g id="navbar-plane" transform="translate(136,28) rotate(45)">
                                 <path
                                     d="M0 34 L8 0 L16 34 L34 44 L34 52 L16 46 L13 64 L21 70 L21 76 L8 70 L-5 76 L-5 70 L3 64 L0 46 L-18 52 L-18 44 Z"
                                     fill="#fe7717"

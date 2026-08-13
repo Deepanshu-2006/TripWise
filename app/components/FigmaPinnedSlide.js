@@ -53,26 +53,36 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
         },
       });
 
+      // Fade out top luminous beam and border as section scrolls into the top half
+      gsap.to(topBeamRef.current, {
+        opacity: 0,
+        ease: 'power1.inOut',
+        scrollTrigger: {
+          trigger: pinWrapper,
+          start: 'top 50%',
+          end: 'top 15%', // Faded fully before hitting the nav bar
+          scrub: true,
+        },
+      });
+
+      gsap.to(pinWrapper, {
+        borderColor: 'transparent',
+        boxShadow: 'none',
+        ease: 'power1.inOut',
+        scrollTrigger: {
+          trigger: pinWrapper,
+          start: 'top 50%',
+          end: 'top 15%',
+          scrub: true,
+        },
+      });
+
       // 1. Subtle depth push on base section as new card slides over
       tl.to(baseContainer, {
         scale: 0.94,
         xPercent: -10,
         opacity: 0.6,
         duration: 1,
-        ease: 'power2.inOut',
-      }, 0);
-
-      // Fade out the top boundary of the phone section (pinWrapper) as the slider comes over
-      tl.to(topBeamRef.current, {
-        opacity: 0,
-        duration: 0.8,
-        ease: 'power2.inOut',
-      }, 0);
-
-      tl.to(pinWrapper, {
-        borderColor: 'transparent',
-        boxShadow: 'none',
-        duration: 0.8,
         ease: 'power2.inOut',
       }, 0);
 

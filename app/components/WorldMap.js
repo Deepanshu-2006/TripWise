@@ -6,15 +6,10 @@ export default function WorldMap({ className, pathRef }) {
             ref={pathRef} 
             className={className}
             style={{
-                WebkitMaskImage: 'url(/physical_map.svg)',
-                maskImage: 'url(/physical_map.svg)',
-                WebkitMaskSize: '100% 100%',
-                maskSize: '100% 100%',
-                WebkitMaskRepeat: 'no-repeat',
-                maskRepeat: 'no-repeat',
-                WebkitMaskPosition: 'center',
-                maskPosition: 'center',
-                backgroundColor: 'currentColor'
+                backgroundImage: 'url(/physical_map.svg)',
+                backgroundSize: '100% 100%',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center'
             }}
         />
     );

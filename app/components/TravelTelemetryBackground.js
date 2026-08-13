@@ -221,7 +221,12 @@ export default function TravelTelemetryBackground() {
       </svg>
 
       {/* 2.5. Animated Vector World Map */}
-      <div className="absolute inset-0 w-full h-full flex items-center justify-center opacity-30 text-[#FF5B1D] z-0 overflow-hidden pointer-events-none" style={{ willChange: 'transform' }}>
+      <div 
+        className="absolute inset-0 w-full h-full flex items-center justify-center opacity-40 z-0 overflow-hidden pointer-events-none" 
+        style={{ 
+          willChange: 'transform'
+        }}
+      >
         <WorldMap className="w-[140%] h-[140%] max-w-none will-change-transform" pathRef={mapRef} />
       </div>
 
@@ -239,8 +244,7 @@ export default function TravelTelemetryBackground() {
 
       {/* 4. Animated Geodesic Flight Trajectories & Waypoints */}
       <svg 
-        className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none"
-        className="absolute inset-0 w-full h-full overflow-visible z-10" 
+        className="absolute inset-0 w-full h-full overflow-visible z-10 pointer-events-none"
         xmlns="http://www.w3.org/2000/svg" 
         preserveAspectRatio="none"
         viewBox="0 0 1440 800"

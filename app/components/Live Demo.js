@@ -99,8 +99,22 @@ export default function RealTimeAdjuster() {
                 transformOrigin: 'left center',
             });
 
-            // Instantiate master timeline
-            const tl = gsap.timeline({ paused: true });
+            // Instantiate master timeline with scroll-lock for Lenis
+            const tl = gsap.timeline({ 
+                paused: true,
+                onStart: () => {
+                    if (window.__lenis) window.__lenis.stop();
+                    document.body.style.overflow = 'hidden'; // Fallback
+                },
+                onComplete: () => {
+                    if (window.__lenis) window.__lenis.start();
+                    document.body.style.overflow = '';
+                },
+                onReverseComplete: () => {
+                    if (window.__lenis) window.__lenis.start();
+                    document.body.style.overflow = '';
+                }
+            });
             timelineObjRef.current = tl;
 
             // 0. Phone Gravity Drop: Phone drops from above with Apple-grade momentum & landing bounce
@@ -191,13 +205,13 @@ export default function RealTimeAdjuster() {
                 repeat: 1,
             }, 4.75);
 
-            // Phone tilts in 3D to project cards out into spatial plane
+            // Phone tilts in 3D to project cards out into spatial plane, sides intensely glow with TripWise Orange
             tl.to(phoneRef.current, {
                 scale: 1.03,
                 rotateY: 7,
                 rotateX: -3,
-                borderColor: 'rgba(255, 91, 29, 0.6)',
-                boxShadow: '0 30px 80px rgba(0,0,0,0.6), 0 0 60px rgba(255, 91, 29, 0.35)',
+                borderColor: '#FF5B1D',
+                boxShadow: '0 0 0 1px rgba(255, 91, 29, 1), 0 0 0 4px rgba(255, 91, 29, 0.4), 0 30px 80px 0px rgba(0, 0, 0, 0.6), 0 0 100px 20px rgba(255, 91, 29, 0.6), inset 0 0 40px 0px rgba(255, 91, 29, 0.3)',
                 duration: 0.35,
                 ease: 'power2.out',
             }, 4.8);
@@ -234,13 +248,13 @@ export default function RealTimeAdjuster() {
                 ease: 'back.out(1.3)',
             }, 5.4);
 
-            // Phone settles back smoothly as cards lock into place
+            // Phone settles back smoothly as cards lock into place, glow animates off
             tl.to(phoneRef.current, {
                 scale: 1,
                 rotateY: 0,
                 rotateX: 0,
                 borderColor: '#4A4950',
-                boxShadow: '0 0 0 1px #2C2B30, 0 0 0 4px #121114, 0 30px 70px -15px rgba(0, 0, 0, 0.6), 0 0 60px rgba(255, 91, 29, 0.12)',
+                boxShadow: '0 0 0 1px rgba(44, 43, 48, 1), 0 0 0 4px rgba(18, 17, 20, 1), 0 30px 70px -15px rgba(0, 0, 0, 0.6), 0 0 60px 0px rgba(255, 91, 29, 0.12), inset 0 0 0px 0px rgba(255, 91, 29, 0)',
                 duration: 0.8,
                 ease: 'power2.out',
             }, 5.95);
@@ -372,7 +386,7 @@ export default function RealTimeAdjuster() {
                             ref={phoneRef}
                             className="relative w-64 h-[495px] sm:w-66 sm:h-[505px] md:w-68 md:h-[515px] rounded-[44px] bg-[#1A191C] border-[3px] border-[#4A4950] will-change-transform z-10"
                             style={{
-                                boxShadow: '0 0 0 1px #2C2B30, 0 0 0 4px #121114, 0 30px 70px -15px rgba(0, 0, 0, 0.6), 0 0 60px rgba(255, 91, 29, 0.12)',
+                                boxShadow: '0 0 0 1px rgba(44, 43, 48, 1), 0 0 0 4px rgba(18, 17, 20, 1), 0 30px 70px -15px rgba(0, 0, 0, 0.6), 0 0 60px 0px rgba(255, 91, 29, 0.12), inset 0 0 0px 0px rgba(255, 91, 29, 0)',
                             }}
                         >
                             {/* Physical Hardware Side Buttons */}

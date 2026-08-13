@@ -394,29 +394,29 @@ function FeaturesSelection() {
 
                 <div 
                     ref={contentWrapperRef} 
-                    className="max-w-7xl mx-auto px-6 relative z-10 w-full h-full flex flex-col justify-start pt-24 md:pt-28 pb-6 will-change-transform transition-all"
+                    className="max-w-7xl mx-auto px-6 relative z-10 w-full h-full flex flex-col justify-start pt-12 md:pt-16 pb-4 will-change-transform transition-all"
                 >
                     {/* Header Block */}
-                    <div className="text-center max-w-3xl mx-auto mb-5">
-                        <div className="inline-block px-4 py-1.5 bg-[#1C1B1B] backdrop-blur-md rounded-full shadow-md border border-white/20 text-[#fe7717] font-mono text-[12px] font-bold tracking-[0.16em] uppercase mb-1.5">
+                    <div className="text-center max-w-3xl mx-auto mb-3">
+                        <div className="inline-block px-4 py-1 bg-[#1C1B1B] backdrop-blur-md rounded-full shadow-md border border-white/20 text-[#fe7717] font-mono text-[10px] md:text-[12px] font-bold tracking-[0.16em] uppercase mb-1">
                             Why TripWise?
                         </div>
-                        <h2 className="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-brand-dark mb-1 leading-tight">
+                        <h2 className="text-xl md:text-2xl lg:text-3xl font-extrabold tracking-tight text-brand-dark mb-0.5 leading-tight">
                             Beyond Map Pins &amp; Standard Prompts
                         </h2>
                     </div>
 
                     {/* Features Split Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center flex-1 min-h-0">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-center flex-1 min-h-0">
                         {/* Left Column: Interactive Selector List */}
-                        <div className="lg:col-span-5 flex flex-col gap-2 justify-center">
+                        <div className="lg:col-span-5 flex flex-col gap-1.5 justify-center">
                             {features.map((feature, idx) => {
                                 const isActive = activeTab === idx;
                                 return (
                                     <div
                                         key={idx}
                                         onClick={() => handleTabClick(idx)}
-                                        className={`feature-card relative overflow-hidden p-3 md:p-3.5 rounded-xl cursor-pointer transition-all duration-300 flex items-start gap-3.5 ${
+                                        className={`feature-card relative overflow-hidden p-2 md:p-2.5 rounded-xl cursor-pointer transition-all duration-300 flex items-start gap-3 ${
                                             isActive 
                                                 ? "bg-white shadow-lg shadow-brand-coral/5 scale-[1.01]" 
                                                 : "bg-transparent hover:bg-white/40 hover:scale-[1.005]"
@@ -542,20 +542,20 @@ function FeaturesSelection() {
                                 </div>
 
                                 {/* PREVIEW CONTAINER 2: Local Hidden Gems */}
-                                <div className={`flex flex-col flex-1 transition-all duration-500 ease-in-out absolute inset-x-6 md:inset-x-8 bottom-6 md:bottom-8 top-16 md:top-20 ${
+                                <div className={`flex flex-col flex-1 transition-all duration-500 ease-in-out absolute inset-x-4 md:inset-x-6 bottom-4 top-12 md:top-14 ${
                                     activePreviewTab === 1 ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
                                 }`}>
-                                    <div className="flex justify-between items-center mb-6">
+                                    <div className="flex justify-between items-center mb-3">
                                         <div className="flex flex-col">
-                                            <span className="font-mono text-xs font-bold text-[#fe7717]">REAL-TIME CURATION</span>
-                                            <span className="text-xl font-extrabold text-white">Hidden Gem Rerouting</span>
+                                            <span className="font-mono text-[10px] font-bold text-[#fe7717]">REAL-TIME CURATION</span>
+                                            <span className="text-lg md:text-xl font-extrabold text-white">Hidden Gem Rerouting</span>
                                         </div>
-                                        <span className="px-3 py-1 bg-[#fe7717]/20 text-[#fe7717] border border-[#fe7717]/30 rounded-full font-mono text-[10px] font-bold">120+ LOCAL CHEFS AGREE</span>
+                                        <span className="px-2 py-1 bg-[#fe7717]/20 text-[#fe7717] border border-[#fe7717]/30 rounded-full font-mono text-[10px] font-bold">120+ LOCAL CHEFS AGREE</span>
                                     </div>
 
-                                    <div className="flex-1 flex flex-col md:grid md:grid-cols-2 gap-4 items-center">
+                                    <div className="flex-1 flex flex-col md:grid md:grid-cols-2 gap-3 items-center">
                                         {/* Left: Tourist Trap Card */}
-                                        <div className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col relative opacity-60">
+                                        <div className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col relative opacity-60">
                                             <div className="absolute top-3 right-3 px-2 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded font-mono text-[8px] font-bold uppercase">Tourist Zone</div>
                                             <span className="text-xs font-bold font-mono text-white/40 mb-1">STANDARD RECOMMENDATION</span>
                                             <h4 className="text-base font-extrabold text-white mb-2 leading-tight">Caffè di Trevi</h4>
@@ -591,13 +591,13 @@ function FeaturesSelection() {
                                 </div>
 
                                 {/* PREVIEW CONTAINER 3: Budget Optimization */}
-                                <div className={`flex flex-col flex-1 transition-all duration-500 ease-in-out absolute inset-x-6 md:inset-x-8 bottom-6 md:bottom-8 top-16 md:top-20 ${
+                                <div className={`flex flex-col flex-1 transition-all duration-500 ease-in-out absolute inset-x-4 md:inset-x-6 bottom-4 top-12 md:top-14 ${
                                     activePreviewTab === 2 ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
                                 }`}>
-                                    <div className="flex justify-between items-center mb-6">
+                                    <div className="flex justify-between items-center mb-3">
                                         <div className="flex flex-col">
                                             <span className="font-mono text-xs font-bold text-[#fe7717]">FINANCIAL FORECASTING</span>
-                                            <span className="text-xl font-extrabold text-white">Smart Budget Monitor</span>
+                                            <span className="text-lg font-extrabold text-white">Smart Budget Monitor</span>
                                         </div>
                                         <span className="px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full font-mono text-[10px] font-bold">$340 SAVED</span>
                                     </div>
@@ -647,18 +647,18 @@ function FeaturesSelection() {
                                 </div>
 
                                 {/* PREVIEW CONTAINER 4: Flight & Hotel Integration */}
-                                <div className={`flex flex-col flex-1 transition-all duration-500 ease-in-out absolute inset-x-6 md:inset-x-8 bottom-6 md:bottom-8 top-16 md:top-20 ${
+                                <div className={`flex flex-col flex-1 transition-all duration-500 ease-in-out absolute inset-x-4 md:inset-x-6 bottom-4 top-12 md:top-14 ${
                                     activePreviewTab === 3 ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
                                 }`}>
-                                    <div className="flex justify-between items-center mb-4">
+                                    <div className="flex justify-between items-center mb-3">
                                         <div className="flex flex-col">
-                                            <span className="font-mono text-xs font-bold text-[#fe7717]">SYSTEM SYNC</span>
-                                            <span className="text-xl font-extrabold text-white">Live Booking Voucher</span>
+                                            <span className="font-mono text-[10px] font-bold text-[#fe7717]">SYSTEM SYNC</span>
+                                            <span className="text-lg md:text-xl font-extrabold text-white">Live Booking Voucher</span>
                                         </div>
-                                        <span className="px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full font-mono text-[10px] font-bold">ON TIME</span>
+                                        <span className="px-2 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full font-mono text-[10px] font-bold uppercase tracking-widest">On Time</span>
                                     </div>
 
-                                    <div className="flex-1 flex flex-col gap-3 overflow-y-auto pr-1">
+                                    <div className="flex-1 w-full flex flex-col gap-3 overflow-y-auto pr-1">
                                         {/* Mock Flight Boarding Pass */}
                                         <div className="w-full bg-[#FFF8F5] text-brand-dark rounded-2xl overflow-hidden shadow-lg border border-white/10 flex flex-col">
                                             <div className="bg-[#1C1B1B] text-[#fe7717] px-3.5 py-1.5 border-b border-white/5 flex justify-between items-center">
