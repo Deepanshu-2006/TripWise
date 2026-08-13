@@ -72,10 +72,20 @@
   }
 }
 
+html {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+  position: relative;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -444,4 +454,36 @@ html.lenis, html.lenis body {
 .animate-liquid-shimmer {
   background-size: 200% 200%;
   animation: liquid-shimmer 6s ease infinite;
+}
+
+@keyframes marquee-scroll-left {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes marquee-scroll-right {
+  0% {
+    transform: translate3d(-50%, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-marquee-left {
+  display: inline-flex;
+  width: max-content;
+  animation: marquee-scroll-left 40s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-right {
+  display: inline-flex;
+  width: max-content;
+  animation: marquee-scroll-right 40s linear infinite;
+  will-change: transform;
 }

@@ -6,23 +6,20 @@ import RealTimeAdjuster from "./components/Live Demo";
 import PassportGrid from "./components/PassportGrid";
 import FAQAndMarqueeCTA from "./components/FAQAndMarqueeCTA";
 import FigmaReveal from "./components/FigmaReveal";
+import FigmaPinnedSlide from "./components/FigmaPinnedSlide";
 
 export default function Home() {
   return (
-    <div>
+    <main className="w-full max-w-full overflow-x-clip relative">
       <Header />
       <Hero />
       <FeaturesSelection />
-      <FigmaReveal id="section-live-demo" index={0}>
-        <RealTimeAdjuster />
-      </FigmaReveal>
-      <FigmaReveal id="section-slider" index={1}>
-        <Destination />
-      </FigmaReveal>
+      <FigmaPinnedSlide
+        baseSection={<RealTimeAdjuster />}
+        slideSection={<Destination />}
+      />
       <PassportGrid />
-      <FigmaReveal id="section-faq" index={2}>
-        <FAQAndMarqueeCTA />
-      </FigmaReveal>
-    </div>
+      <FAQAndMarqueeCTA />
+    </main>
   );
 }
