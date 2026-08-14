@@ -143,16 +143,17 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
   }, []);
 
   return (
-    <div
-      ref={pinWrapperRef}
-      id="section-interactive-showcase"
-      className="relative z-20 w-full max-w-full overflow-hidden bg-[#FFF8F5] -mt-[100vh] rounded-t-[40px] md:rounded-t-[60px] border-t-2 border-[#FF5B1D]"
-      style={{
-        perspective: '2400px',
-        boxShadow: '0 -28px 70px -15px rgba(0,0,0,0.18), 0 -10px 30px -5px rgba(0,0,0,0.12), 0 -2px 14px rgba(255,91,29,0.45), inset 0 1px 0 rgba(255,255,255,0.98)',
-      }}
-    >
-      {/* Top Luminous Laser Beam */}
+    <div className="relative z-20 w-full max-w-full -mt-[100vh]">
+      <div
+        ref={pinWrapperRef}
+        id="section-interactive-showcase"
+        className="w-full max-w-full overflow-hidden bg-[#FFF8F5] rounded-t-[40px] md:rounded-t-[60px] border-t-2 border-[#FF5B1D]"
+        style={{
+          perspective: '2400px',
+          boxShadow: '0 -28px 70px -15px rgba(0,0,0,0.18), 0 -10px 30px -5px rgba(0,0,0,0.12), 0 -2px 14px rgba(255,91,29,0.45), inset 0 1px 0 rgba(255,255,255,0.98)',
+        }}
+      >
+        {/* Top Luminous Laser Beam */}
       <div
         ref={topBeamRef}
         aria-hidden="true"
@@ -194,6 +195,7 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
         <div className="relative w-full">
           {slideSection}
         </div>
+      </div>
       </div>
     </div>
   );
