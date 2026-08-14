@@ -292,7 +292,11 @@ export default function Destination() {
                                 strokeLinecap="round" 
                                 strokeLinejoin="round"
                                 fill="none" 
-                                style={{ filter: 'drop-shadow(0 3px 8px rgba(255, 91, 29, 0.45))' }}
+                                style={{ 
+                                    filter: 'drop-shadow(0 3px 8px rgba(255, 91, 29, 0.45))',
+                                    strokeDasharray: '220',
+                                    strokeDashoffset: '220'
+                                }}
                             />
                         </svg>
                     </span>
