@@ -12,8 +12,7 @@ import Intro from "./components/Intro";
 export default function Home() {
   return (
     <>
-      {/* Opening animation — position:fixed overlay, first-visit only.
-          Renders client-side only (ssr:false) so sessionStorage is safe. */}
+      {/* Opening animation — position:fixed overlay, first-visit only. */}
       <Intro />
 
       <main className="w-full max-w-full overflow-x-clip relative">
