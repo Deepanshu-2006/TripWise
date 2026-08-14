@@ -12,6 +12,14 @@ const STATUS_STEPS = [
   { pct: 100, text: 'WELCOME TO TRIPWISE' },
 ];
 
+const DESTINATION_IMAGES = [
+  "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=2020&auto=format&fit=crop", // Paris
+  "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?q=80&w=1974&auto=format&fit=crop", // Tokyo
+  "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=2070&auto=format&fit=crop", // Sydney
+  "https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=1996&auto=format&fit=crop", // Rome
+  "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=80&w=2070&auto=format&fit=crop", // London
+];
+
 export default function MinimalLoader() {
   const [mounted, setMounted] = useState(true);
 
@@ -23,7 +31,6 @@ export default function MinimalLoader() {
   const progressBarRef = useRef(null);
   const brandRef       = useRef(null);
   const footerRef      = useRef(null);
-  const curtainRef     = useRef(null);
   const tlRef          = useRef(null);
 
   /* ── Teardown & Skip ────────────────────────────────────────── */
@@ -31,27 +38,11 @@ export default function MinimalLoader() {
     sessionStorage.setItem('tw_intro_seen', '1');
     tlRef.current?.kill();
     document.body.style.overflow = '';
-
-    if (overlayRef.current) {
-      gsap.to(overlayRef.current, {
-        opacity: 0,
-        duration: 0.4,
-        ease: 'power2.inOut',
-        onComplete: () => setMounted(false),
-      });
-    } else {
-      setMounted(false);
-    }
+    setMounted(false);
   }, []);
 
-  useEffect(() => {
-    /* First-visit check with ?intro=true override */
-    const params = new URLSearchParams(window.location.search);
-    const force  = params.get('intro') === 'true';
-    if (sessionStorage.getItem('tw_intro_seen') && !force) {
-      setMounted(false);
-      return;
-    }
+    useEffect(() => {
+    if (!overlayRef.current) return;
 
     document.body.style.overflow = 'hidden';
 
@@ -60,15 +51,66 @@ export default function MinimalLoader() {
     tlRef.current = tl;
 
     // Initial states
-    gsap.set(overlayRef.current, { opacity: 0 });
-    gsap.set([brandRef.current, footerRef.current], { opacity: 0, y: (i) => (i === 0 ? -10 : 10) });
-    gsap.set([counterRef.current, percentRef.current, statusRef.current], { opacity: 0, y: 15 });
-    gsap.set(progressBarRef.current, { width: '0%' });
+    gsap.set(overlayRef.current, { opacity: 0, y: 0 });
+    
+    const headerFooter = [brandRef.current, footerRef.current].filter(Boolean);
+    if (headerFooter.length) {
+      gsap.set(headerFooter, { opacity: 0, y: (i) => (i === 0 ? -10 : 10) });
+    }
+    
+    const centerElements = [counterRef.current, percentRef.current, statusRef.current].filter(Boolean);
+    if (centerElements.length) {
+      gsap.set(centerElements, { opacity: 0, y: 15 });
+    }
+
+    if (progressBarRef.current) {
+      gsap.set(progressBarRef.current, { width: '0%' });
+    }
+
+    // Fan animation offsets
+    const isMobile = window.innerWidth <= 768;
+    const offsets = isMobile ? [
+      { x: -120, y: 30, rotation: -20 },
+      { x: -60,  y: 10, rotation: -10 },
+      { x: 0,    y: 0,  rotation: 0 },
+      { x: 60,   y: 10, rotation: 10 },
+      { x: 120,  y: 30, rotation: 20 },
+    ] : [
+      { x: -380, y: 80, rotation: -24 },
+      { x: -190, y: 30, rotation: -12 },
+      { x: 0,    y: 0,  rotation: 0 },
+      { x: 190,  y: 30, rotation: 12 },
+      { x: 380,  y: 80, rotation: 24 },
+    ];
 
     /* ── 1. Soft Entrance ─────────────────────────────────────── */
-    tl.to(overlayRef.current, { opacity: 1, duration: 0.4 })
-      .to([brandRef.current, footerRef.current], { opacity: 1, y: 0, duration: 0.6 }, '<+0.1')
-      .to([counterRef.current, percentRef.current, statusRef.current], { opacity: 1, y: 0, duration: 0.6 }, '<+0.15');
+    tl.to(overlayRef.current, { opacity: 1, duration: 0.4 });
+    if (headerFooter.length) {
+      tl.to(headerFooter, { opacity: 1, y: 0, duration: 0.6 }, '<+0.1');
+    }
+    if (centerElements.length) {
+      tl.to(centerElements, { opacity: 1, y: 0, duration: 0.6 }, '<+0.15');
+    }
+
+    /* ── Fan Images Entrance ──────────────────────────────────── */
+    const fanCards = document.querySelectorAll('.ml-fan-card');
+    fanCards.forEach((card, i) => {
+        gsap.fromTo(card,
+            { x: 0, y: 200, rotation: 0, opacity: 0, scale: 0.8 },
+            { 
+                x: offsets[i].x, 
+                y: offsets[i].y, 
+                rotation: offsets[i].rotation, 
+                opacity: 0.85, // Much higher opacity for vibrant photos
+                scale: 1,
+                duration: 2.0, 
+                ease: 'power3.out' 
+            }
+        );
+    });
+    
+    // Add tl entry to align timeline
+    tl.addLabel('startCount', '<');
 
     /* ── 2. Clean 000 -> 100 Countup (2.4s duration) ──────────── */
     tl.to(
@@ -90,32 +132,34 @@ export default function MinimalLoader() {
           }
         },
       },
-      '0.5'
+      'startCount'
     );
 
     /* ── 3. Subtle Hold on 100% ───────────────────────────────── */
     tl.addLabel('complete', '+=0.2');
 
-    /* ── 4. Elegant Smooth Dissolve & Flight Transition ───────── */
-    tl.to(
-      [counterRef.current, percentRef.current, statusRef.current, footerRef.current, '.ml-tagline', '.ml-brand-name', '#intro-path', '#intro-circle'],
-      {
-        opacity: 0,
-        y: -15,
-        duration: 0.45,
-        ease: 'power2.in',
-      },
-      'complete'
-    )
-    .to(
-      overlayRef.current,
-      {
-        backgroundColor: 'rgba(255, 248, 245, 0)',
-        duration: 0.5,
-      },
-      'complete'
-    )
-    .add(() => {
+    /* ── 4. Elegant Screen Swipe Up & Flight Transition ───────── */
+    const exitElements = [
+      counterRef.current, percentRef.current, statusRef.current, footerRef.current,
+      '.ml-tagline', '.ml-brand-name', '#intro-path', '#intro-circle'
+    ].filter(Boolean);
+    
+    if (exitElements.length) {
+      tl.to(
+        exitElements,
+        {
+          opacity: 0,
+          y: -15,
+          duration: 0.3,
+          ease: 'power2.in',
+        },
+        'complete'
+      );
+    }
+
+    tl.to('.ml-fan-card', { opacity: 0, duration: 0.3, ease: 'power2.in' }, 'complete');
+
+    tl.add(() => {
         const sourceSvg = document.getElementById('intro-logo-svg');
         const targetSvg = document.getElementById('navbar-logo-svg');
         const targetPlane = document.getElementById('navbar-plane');
@@ -142,61 +186,65 @@ export default function MinimalLoader() {
         if (clonePath) clonePath.style.opacity = '0';
         if (cloneCircle) cloneCircle.style.opacity = '0';
         
-        document.body.appendChild(clone);
+        // We want the source SVG to just fade out, not physically travel.
+        gsap.to(sourceSvg, {
+            opacity: 0,
+            duration: 0.4,
+            ease: "power2.out"
+        });
 
-        // Position clone exactly over the source
+        // Position clone offset slightly bottom-left of the target, scaled and hidden
         gsap.set(clone, {
             position: 'fixed',
             top: 0,
             left: 0,
-            x: sourceRect.left,
-            y: sourceRect.top,
-            width: sourceRect.width,
-            height: sourceRect.height,
+            x: targetRect.left - 40, // Offset to the left
+            y: targetRect.top + 40,  // Offset to the bottom
+            width: targetRect.width,
+            height: targetRect.height,
+            opacity: 0,
             zIndex: 999999,
             margin: 0,
             transformOrigin: "center center"
         });
 
-        // Hide original source SVG
-        sourceSvg.style.opacity = '0';
+        document.body.appendChild(clone);
 
-        // Smooth, Fluid Flight Animation
-        const flightDuration = 1.2;
-
-        gsap.to(clone, {
-            x: targetRect.left,
-            width: targetRect.width,
-            duration: flightDuration,
-            ease: "power2.inOut"
+        // Screen Swipe Up
+        gsap.to(overlayRef.current, {
+            y: '-100vh',
+            duration: 1.0,
+            ease: "power3.inOut"
         });
 
+        // Plane flight to Navbar with a significant delay
+        const flightDuration = 0.8;
         gsap.to(clone, {
+            x: targetRect.left,
             y: targetRect.top,
-            height: targetRect.height,
+            opacity: 1,
             duration: flightDuration,
-            ease: "power3.inOut", // Smooth curve, no overshoot
+            delay: 0.9, // Delayed so it appears right at the end of the swipe up
+            ease: "power2.out",
             onComplete: () => {
                 if (targetPlane) targetPlane.style.opacity = '1';
                 if (clone) clone.remove();
                 
-                // Finally fade out the transparent overlay to unmount
+                // Finally fade out the transparent overlay to unmount if it didn't finish
                 if (overlayRef.current) {
                     gsap.to(overlayRef.current, {
                         opacity: 0,
                         duration: 0.3,
                         onComplete: () => {
-                            sessionStorage.setItem('tw_intro_seen', '1');
                             cleanAndExit();
                         }
                     });
                 } else {
-                    sessionStorage.setItem('tw_intro_seen', '1');
                     cleanAndExit();
                 }
             }
         });
-    }, 'complete+=0.1');
+    }, 'complete+=0.3');
 
     /* ── Skip Listener ────────────────────────────────────────── */
     const onKey = (e) => {
@@ -227,13 +275,20 @@ export default function MinimalLoader() {
         aria-label="TripWise Loading"
         aria-modal="true"
       >
+        {/* Fan Background Container */}
+        <div className="ml-fan-container">
+          {DESTINATION_IMAGES.map((src, i) => (
+            <img key={i} src={src} alt="Destination" className="ml-fan-card" />
+          ))}
+        </div>
+
         {/* Skip button */}
         <button className="ml-skip" onClick={cleanAndExit} aria-label="Skip loader">
           ESC TO SKIP
         </button>
 
         {/* ── Top Header Brandmark ─────────────────────────────── */}
-        <div ref={brandRef} className="ml-header">
+        <div ref={brandRef} className="ml-header relative z-10">
           <div className="ml-brand">
             <svg id="intro-logo-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="ml-brand-svg">
               <path
@@ -259,7 +314,7 @@ export default function MinimalLoader() {
         </div>
 
         {/* ── Center Stage: Minimal 000 -> 100% Count ─────────── */}
-        <div className="ml-center">
+        <div className="ml-center relative z-10">
           <div className="ml-counter-row">
             <span ref={counterRef} className="ml-counter-num">
               000
@@ -281,7 +336,7 @@ export default function MinimalLoader() {
         </div>
 
         {/* ── Minimal Footer ───────────────────────────────────── */}
-        <div ref={footerRef} className="ml-footer">
+        <div ref={footerRef} className="ml-footer relative z-10">
           <span>CURATING BESPOKE ITINERARIES</span>
           <span>© {new Date().getFullYear()} TRIPWISE INC.</span>
         </div>
@@ -312,6 +367,40 @@ const CSS = `
   overflow: hidden;
 }
 
+/* ── Fan Images ──────────────────────────────────────────────── */
+.ml-fan-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.ml-fan-card {
+  position: absolute;
+  width: 220px;
+  height: 320px;
+  object-fit: cover;
+  border-radius: 24px;
+  opacity: 0;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  will-change: transform, opacity;
+  transform-origin: bottom center;
+}
+
+@media (min-width: 768px) {
+  .ml-fan-card {
+    width: 300px;
+    height: 450px;
+  }
+}
+
 /* ── Skip Button ──────────────────────────────────────────────── */
 .ml-skip {
   position: absolute;
@@ -327,6 +416,7 @@ const CSS = `
   cursor: pointer;
   text-transform: uppercase;
   transition: all 0.2s ease;
+  z-index: 20;
 }
 .ml-skip:hover {
   color: #1C1B1B;
@@ -395,24 +485,27 @@ const CSS = `
   letter-spacing: -0.03em;
   color: #1C1B1B;
   font-variant-numeric: tabular-nums;
+  text-shadow: 0 4px 20px rgba(255, 248, 245, 0.9), 0 0 10px rgba(255, 248, 245, 0.8);
 }
 
 .ml-counter-pct {
   font-family: 'Courier New', monospace;
-  font-size: clamp(24px, 4vw, 40px);
+  font-size: clamp(36px, 6vw, 72px);
   font-weight: 600;
   color: #EC6735;
-  margin-left: 8px;
+  margin-left: 12px;
+  text-shadow: 0 4px 10px rgba(255, 248, 245, 0.9);
 }
 
 /* ── Minimalist Progress Line ─────────────────────────────────── */
 .ml-progress-track {
   width: 100%;
   max-width: 320px;
-  height: 2px;
+  height: 6px;
   background-color: rgba(28, 27, 27, 0.08);
   border-radius: 999px;
   overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .ml-progress-fill {
@@ -425,11 +518,17 @@ const CSS = `
 
 /* ── Status Text ──────────────────────────────────────────────── */
 .ml-status {
-  font: 600 11px/1 'Courier New', monospace;
+  font: 700 11px/1 'Courier New', monospace;
   letter-spacing: 0.18em;
-  color: #8C827A;
+  color: #1C1B1B;
   text-transform: uppercase;
   margin: 0;
+  background: rgba(255, 248, 245, 0.85);
+  backdrop-filter: blur(8px);
+  padding: 8px 16px;
+  border-radius: 99px;
+  border: 1px solid rgba(28, 27, 27, 0.1);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
 }
 
 /* ── Footer ───────────────────────────────────────────────────── */
