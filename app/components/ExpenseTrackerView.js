@@ -264,17 +264,7 @@ export default function ExpenseTrackerView({
     fetchExchangeRates().then(() => setRatesReady(true));
     let loaded = getTripExpenses(tripId);
     
-    // Check shared cross-session expenses storage key
-    try {
-      const sharedRaw = localStorage.getItem('tw_shared_expenses_global');
-      if (sharedRaw) {
-        const sharedList = JSON.parse(sharedRaw);
-        if (Array.isArray(sharedList) && sharedList.length > loaded.length) {
-          loaded = sharedList;
-          saveTripExpenses(tripId, loaded);
-        }
-      }
-    } catch(e) {}
+    // Check shared cross-session expenses storage key removed to prevent cross-trip contamination
     
     // Auto-migrate old cached €64 Ristorante Aroma to €41.29 Fish & Chips Fast Foods
     let migrated = false;
@@ -490,10 +480,7 @@ export default function ExpenseTrackerView({
 
     setExpenses(updated);
     saveTripExpenses(tripId, updated);
-    try {
-      localStorage.setItem('tw_shared_expenses_global', JSON.stringify(updated));
-      window.dispatchEvent(new Event('storage'));
-    } catch(e) {}
+    // removed global sync
     setShowAddModal(false);
     setDuplicateWarning(null);
     console.log("Attempting to show toast", !!onShowToast);
@@ -511,10 +498,7 @@ export default function ExpenseTrackerView({
     const updated = expenses.filter(exp => exp.id !== id);
     setExpenses(updated);
     saveTripExpenses(tripId, updated);
-    try {
-      localStorage.setItem('tw_shared_expenses_global', JSON.stringify(updated));
-      window.dispatchEvent(new Event('storage'));
-    } catch(e) {}
+    // removed global sync
     
     if (onShowToast && deletedExp) {
       onShowToast("Expense deleted", "error", "Trash2", {
@@ -529,10 +513,7 @@ export default function ExpenseTrackerView({
       // Re-insert at top of list
       const restored = [expToRestore, ...prev];
       saveTripExpenses(tripId, restored);
-      try {
-        localStorage.setItem('tw_shared_expenses_global', JSON.stringify(restored));
-        window.dispatchEvent(new Event('storage'));
-      } catch(e) {}
+      // removed global sync
       return restored;
     });
     if (onShowToast) {
