@@ -99,21 +99,9 @@ export default function RealTimeAdjuster() {
                 transformOrigin: 'left center',
             });
 
-            // Instantiate master timeline with scroll-lock for Lenis
+            // Instantiate master timeline
             const tl = gsap.timeline({ 
-                paused: true,
-                onStart: () => {
-                    if (window.__lenis) window.__lenis.stop();
-                    document.body.style.overflow = 'hidden'; // Fallback
-                },
-                onComplete: () => {
-                    if (window.__lenis) window.__lenis.start();
-                    document.body.style.overflow = '';
-                },
-                onReverseComplete: () => {
-                    if (window.__lenis) window.__lenis.start();
-                    document.body.style.overflow = '';
-                }
+                paused: true
             });
             timelineObjRef.current = tl;
 
