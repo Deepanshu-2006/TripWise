@@ -1207,6 +1207,14 @@ export default function ItineraryPage() {
   };
 
   const toggleSaveStop = (stopKey) => {
+    const isCurrentlySaved = savedStops[stopKey];
+    
+    if (isCurrentlySaved) {
+      showToast('Removed from your curated collection', 'info', 'Bookmark');
+    } else {
+      showToast('Pinned to your TripWise Dossier', 'success', 'Bookmark');
+    }
+
     setSavedStops(prev => {
       const newState = { ...prev, [stopKey]: !prev[stopKey] };
       if (typeof window !== 'undefined') {
@@ -1416,6 +1424,15 @@ export default function ItineraryPage() {
                   transition={{ type: "spring", stiffness: 400, damping: 12, delay: 0.05 }}
                 >
                   <Receipt className="w-4 h-4" />
+                </motion.div>
+              )}
+              {toastMessage.icon === 'Bookmark' && (
+                <motion.div
+                  initial={{ scale: 0, rotate: 45 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 12, delay: 0.05 }}
+                >
+                  <Bookmark className="w-4 h-4" />
                 </motion.div>
               )}
               <span className="text-sm font-semibold">{toastMessage.message}</span>
@@ -1639,7 +1656,7 @@ export default function ItineraryPage() {
         onLaunchRecap={() => setIsRecapModalOpen(true)} 
       />
 
-      <div className="sticky top-16 sm:top-18 z-40 bg-[#FAF6F0]/95 backdrop-blur-md border-b border-[#E6DFD5] pt-4 pb-0 px-6 shadow-2xs transition-all print:hidden">
+      <div className="sticky top-[80px] sm:top-[90px] z-40 bg-[#FAF6F0]/95 backdrop-blur-md border-b border-[#E6DFD5] pt-4 pb-0 px-6 shadow-2xs transition-all print:hidden">
         <div className="max-w-6xl mx-auto w-full flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           
           <div className="relative flex-1 min-w-0">
@@ -1812,7 +1829,7 @@ export default function ItineraryPage() {
       <div className="max-w-6xl mx-auto px-6 py-12 w-full flex items-start gap-8 relative">
         
         {/* DESKTOP VERTICAL UTILITY SIDEBAR RAIL (Desktop Only - hidden on mobile/tablet < lg) */}
-        <aside className="hidden lg:flex flex-col items-center p-2.5 bg-white/95 backdrop-blur-md rounded-3xl border border-[#E6DFD5] shadow-md sticky top-36 lg:top-40 shrink-0 h-fit z-20 font-sans gap-2 w-28 -ml-8 lg:-ml-20 xl:-ml-28 transition-all duration-200">
+        <aside className="hidden lg:flex flex-col items-center p-2.5 bg-white/95 backdrop-blur-md rounded-3xl border border-[#E6DFD5] shadow-md sticky top-[160px] lg:top-[170px] shrink-0 h-fit z-20 font-sans gap-2 w-28 transition-all duration-200">
           
           {/* GROUP 1: PREPARE (Pre-trip planning tools) */}
           <div className="flex flex-col items-center w-full gap-2">
