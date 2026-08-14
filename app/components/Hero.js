@@ -5,7 +5,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useAuth } from "@clerk/nextjs";
 
-const FRAME_COUNT = 240;
+const FRAME_COUNT = 265;
 
 const Hero = () => {
     const containerRef = useRef(null);
@@ -314,7 +314,7 @@ const Hero = () => {
         const loadFrame = async (i) => {
             return new Promise((resolve) => {
                 const img = new Image();
-                img.src = getFrameUrl(i);
+                img.src = getFrameUrl(i) + '?v=2';
                 img.onload = async () => {
                     try {
                         if (window.createImageBitmap) {
@@ -379,8 +379,10 @@ const Hero = () => {
 
             if (currentRenderedIndexRef.current >= 0) {
                 drawFrame(currentRenderedIndexRef.current);
+                animateOverlays(currentRenderedIndexRef.current);
             } else {
                 drawFrame(0);
+                animateOverlays(0);
             }
         };
 
@@ -452,56 +454,16 @@ const Hero = () => {
                         {/* STAGE 1: Main Hero Landing View */}
                         <div
                             ref={stage1Ref}
-                            className="absolute inset-0 flex flex-col items-center justify-between py-2 md:py-6 pointer-events-auto transition-all duration-300 ease-out z-20"
+                            className="absolute inset-0 flex flex-col items-center justify-end pointer-events-auto transition-all duration-300 ease-out z-20"
                         >
-                            {/* Top Hero Headline & Subtitle */}
-                            <div className="flex flex-col items-center max-w-3xl px-4 mt-2 md:mt-4">
-                                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/85 border border-[#ECE8E2] shadow-xs mb-3 backdrop-blur-md">
-                                    <span className="w-2 h-2 rounded-full bg-[#EC6735] animate-pulse" />
-                                    <span className="font-mono text-[10px] md:text-[11px] font-bold tracking-widest text-[#180F0F] uppercase">
-                                        Next-Gen AI Travel Intelligence
-                                    </span>
-                                </div>
-                                <h1 className="font-serif text-3xl md:text-5xl lg:text-6xl font-extrabold text-[#180F0F] tracking-tight leading-[1.1] mb-3">
-                                    Plan your dream trip <br className="hidden sm:block" />
-                                    <span className="italic font-normal text-[#EC6735]">in seconds.</span>
-                                </h1>
-                                <p className="text-xs md:text-sm text-[#5F5E5A] max-w-lg mx-auto leading-relaxed">
-                                    Turn a single sentence into a full day-by-day itinerary with optimized routes, curated stays, and local gems.
-                                </p>
-                            </div>
-
-                            {/* Bottom Floating Interactive Search / Prompt Capsule */}
-                            <div className="flex flex-col items-center gap-3 w-full max-w-xl px-4 mb-2">
-                                <div className="w-full flex items-center justify-between p-1.5 pl-5 bg-white/95 backdrop-blur-xl rounded-full shadow-[0_12px_40px_rgba(0,0,0,0.08)] border border-[#ECE8E2] group hover:border-[#EC6735]/40 transition-all">
-                                    <div className="flex items-center gap-3 overflow-hidden flex-1 mr-2">
-                                        <svg className="w-4 h-4 text-[#8CA3A8] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                        </svg>
-                                        <input
-                                            type="text"
-                                            readOnly
-                                            onClick={scrollToPlanner}
-                                            placeholder="Where to next? e.g. 7 days across Kyoto & Amalfi..."
-                                            className="w-full bg-transparent text-xs md:text-sm text-[#180F0F] placeholder-[#8CA3A8] outline-none cursor-pointer font-sans"
-                                        />
-                                    </div>
-                                    <button
-                                        onClick={scrollToPlanner}
-                                        className="px-5 py-2.5 bg-[#EC6735] hover:bg-[#D95524] text-white font-mono text-[11px] font-bold uppercase tracking-wider rounded-full shadow-[0_4px_16px_rgba(236,103,53,0.3)] transition-all shrink-0 cursor-pointer flex items-center gap-2"
-                                    >
-                                        <span>Plan Trip</span>
-                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                        </svg>
-                                    </button>
-                                </div>
-
-                                {/* Scroll prompt */}
-                                <div className="flex items-center gap-2 font-mono text-[10px] text-[#8CA3A8] uppercase tracking-widest animate-bounce">
-                                    <span>Scroll to explore 3D canvas</span>
-                                    <span>↓</span>
-                                </div>
+                            {/* Premium Scroll prompt positioned at the absolute bottom */}
+                            <div className="absolute -bottom-8 md:-bottom-18 flex flex-col items-center gap-2 animate-bounce">
+                                <span className="font-mono text-[10px] font-bold text-[#180F0F] uppercase tracking-[0.2em] bg-white/30 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/40 shadow-sm">
+                                    Scroll to Explore
+                                </span>
+                                <svg className="w-4 h-4 text-[#180F0F]/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                </svg>
                             </div>
                         </div>
 
