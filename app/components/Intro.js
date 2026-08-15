@@ -70,11 +70,11 @@ export default function MinimalLoader() {
     // Fan animation offsets
     const isMobile = window.innerWidth <= 768;
     const offsets = isMobile ? [
-      { x: -120, y: 30, rotation: -20 },
-      { x: -60,  y: 10, rotation: -10 },
-      { x: 0,    y: 0,  rotation: 0 },
-      { x: 60,   y: 10, rotation: 10 },
-      { x: 120,  y: 30, rotation: 20 },
+      { x: -80, y: 25, rotation: -20 },
+      { x: -40, y: 10, rotation: -10 },
+      { x: 0,   y: 0,  rotation: 0 },
+      { x: 40,  y: 10, rotation: 10 },
+      { x: 80,  y: 25, rotation: 20 },
     ] : [
       { x: -380, y: 80, rotation: -24 },
       { x: -190, y: 30, rotation: -12 },
@@ -384,10 +384,10 @@ const CSS = `
 
 .ml-fan-card {
   position: absolute;
-  width: 220px;
-  height: 320px;
+  width: 140px;
+  height: 210px;
   object-fit: cover;
-  border-radius: 24px;
+  border-radius: 16px;
   opacity: 0;
   box-shadow: 0 10px 30px rgba(0,0,0,0.15);
   will-change: transform, opacity;
@@ -547,6 +547,9 @@ const CSS = `
 @media (max-width: 640px) {
   .ml-overlay {
     padding: 24px 20px;
+  }
+  .ml-skip {
+    display: none;
   }
   .ml-skip {
     top: 24px;
