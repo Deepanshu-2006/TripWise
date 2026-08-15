@@ -20,6 +20,7 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
   const slideSheetRef = useRef(null);
   const leftBeamRef = useRef(null);
   const topBeamRef = useRef(null);
+  const mobileTopBeamRef = useRef(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -37,6 +38,7 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
       rotateY: -5,
       transformPerspective: 2400,
       transformOrigin: 'left center',
+      boxShadow: '-35px 0 85px -15px rgba(0,0,0,0.22), -12px 0 32px -5px rgba(0,0,0,0.14), -3px 0 18px rgba(255,91,29,0.55), inset 1px 0 0 rgba(255,255,255,0.98)'
     });
 
     const ctx = gsap.context(() => {
@@ -45,9 +47,9 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
         scrollTrigger: {
           trigger: pinWrapper,
           start: 'top top',
-          end: '+=150%', // 150vh scroll distance while locked
+          end: '+=150%',
           pin: true,
-          scrub: 0.8,
+          scrub: 1,
           anticipatePin: 1,
           invalidateOnRefresh: true,
         },
@@ -77,6 +79,9 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
         },
       });
 
+      // 0. Dead zone: Wait for Live Demo animation (maps to scroll distance)
+      tl.to({}, { duration: 0.5 });
+
       // 1. Subtle depth push on base section as new card slides over
       tl.to(baseContainer, {
         scale: 0.94,
@@ -84,7 +89,7 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
         opacity: 0.6,
         duration: 1,
         ease: 'power2.inOut',
-      }, 0);
+      }, 0.5);
 
       let hasTriggered50 = false;
 
@@ -135,7 +140,7 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
             window.dispatchEvent(sliderEvent);
           }
         }
-      }, 0);
+      }, 0.5);
 
     }, pinWrapper);
 
@@ -143,11 +148,11 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
   }, []);
 
   return (
-    <div className="relative z-20 w-full max-w-full -mt-[100vh]">
+    <div className="relative z-30 w-full max-w-full -mt-[100svh]">
       <div
         ref={pinWrapperRef}
         id="section-interactive-showcase"
-        className="w-full max-w-full overflow-hidden bg-[#FFF8F5] rounded-t-[40px] md:rounded-t-[60px] border-t-2 border-[#FF5B1D]"
+        className="w-full max-w-full overflow-hidden bg-[#FFF8F5] rounded-t-[40px] md:rounded-t-[60px] border-t-2 border-[#FF5B1D] block"
         style={{
           perspective: '2400px',
           boxShadow: '0 -28px 70px -15px rgba(0,0,0,0.18), 0 -10px 30px -5px rgba(0,0,0,0.12), 0 -2px 14px rgba(255,91,29,0.45), inset 0 1px 0 rgba(255,255,255,0.98)',
@@ -157,7 +162,7 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
       <div
         ref={topBeamRef}
         aria-hidden="true"
-        className="absolute top-0 inset-x-0 h-[3px] pointer-events-none z-50"
+        className="hidden lg:block absolute top-0 inset-x-0 h-[3px] pointer-events-none z-50"
         style={{
           background: 'linear-gradient(90deg, transparent 0%, rgba(255,91,29,0.5) 10%, #FF5B1D 50%, rgba(255,91,29,0.5) 90%, transparent 100%)',
           boxShadow: '0 0 22px 3.5px rgba(255, 91, 29, 0.9), 0 2px 28px 5px rgba(255, 91, 29, 0.55)',
@@ -167,24 +172,21 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
       {/* ── Base Section (Live Demo - pinned in viewport) ── */}
       <div 
         ref={baseContainerRef} 
-        className="relative w-full min-h-screen flex flex-col justify-center will-change-transform z-10"
+        className="relative w-full min-h-[100svh] flex flex-col justify-center will-change-transform z-10"
       >
         {baseSection}
       </div>
 
-      {/* ── Sliding Layer (Difference Slider - slides from right to left ON TOP) ── */}
+      {/* ── Sliding Layer (Difference Slider - slides LEFT from right) ── */}
       <div
         ref={slideSheetRef}
-        className="absolute inset-0 w-full h-full z-30 bg-[#FFF8F5] rounded-l-[36px] md:rounded-l-[56px] border-l-2 border-[#FF5B1D] overflow-y-auto overflow-x-hidden flex flex-col justify-center will-change-transform"
-        style={{
-          boxShadow: '-35px 0 85px -15px rgba(0,0,0,0.22), -12px 0 32px -5px rgba(0,0,0,0.14), -3px 0 18px rgba(255,91,29,0.55), inset 1px 0 0 rgba(255,255,255,0.98)',
-        }}
+        className="absolute top-0 bottom-0 inset-x-0 w-full h-full z-30 bg-[#FFF8F5] rounded-l-[36px] border-l-2 border-[#FF5B1D] flex flex-col justify-start will-change-transform"
       >
         {/* Left Leading Edge Luminous Laser Beam */}
         <div
           ref={leftBeamRef}
           aria-hidden="true"
-          className="absolute top-0 bottom-0 left-0 w-[3.5px] pointer-events-none z-50"
+          className="hidden lg:block absolute top-0 bottom-0 left-0 w-[3.5px] pointer-events-none z-50"
           style={{
             background: 'linear-gradient(180deg, #FF5B1D 0%, rgba(255,91,29,0.85) 35%, rgba(255,91,29,0.2) 80%, transparent 100%)',
             boxShadow: '-4px 0 24px 4px rgba(255, 91, 29, 0.9), -2px 0 28px 6px rgba(255, 91, 29, 0.55)',
@@ -192,8 +194,10 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
         />
 
         {/* Slide Section Content */}
-        <div className="relative w-full">
-          {slideSection}
+        <div className="relative w-full h-full">
+          <div className="sticky top-0 w-full h-[100svh] overflow-hidden flex flex-col justify-start">
+            {slideSection}
+          </div>
         </div>
       </div>
       </div>
