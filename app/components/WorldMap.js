@@ -7,7 +7,7 @@ export default function WorldMap({ className, pathRef }) {
             className={className}
             style={{
                 backgroundImage: 'url(/physical_map.svg)',
-                backgroundSize: '100% 100%',
+                backgroundSize: 'cover',
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'center'
             }}
