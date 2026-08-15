@@ -137,25 +137,27 @@ export default function FAQAndMarqueeCTA() {
     
     const tl = gsap.timeline();
 
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
     tl.fromTo(plane1Ref.current, 
         { x: 0, y: 0, rotation: 0, scale: 0.5, opacity: 0 },
         { x: window.innerWidth * 0.6, ease: "power2.out", duration: 1.2, opacity: 1 }, 0
     ).to(plane1Ref.current, 
-        { y: -window.innerHeight * 0.8, rotation: 75, scale: 2, ease: "power3.in", duration: 1.2 }, 0
+        { y: -window.innerHeight * (isMobile ? 0.5 : 0.8), rotation: 75, scale: 2, ease: "power3.in", duration: 1.2 }, 0
     );
 
     tl.fromTo(plane2Ref.current, 
         { x: 0, y: 0, rotation: 0, scale: 0.3, opacity: 0 },
         { x: window.innerWidth * 0.8, ease: "power1.out", duration: 1.4, opacity: 1 }, 0.1
     ).to(plane2Ref.current, 
-        { y: -window.innerHeight * 0.3, rotation: 85, scale: 1.2, ease: "power2.in", duration: 1.4 }, 0.1
+        { y: -window.innerHeight * (isMobile ? 0.2 : 0.3), rotation: 85, scale: 1.2, ease: "power2.in", duration: 1.4 }, 0.1
     );
 
     tl.fromTo(plane3Ref.current, 
         { x: 0, y: 0, rotation: 0, scale: 0.4, opacity: 0 },
         { x: -window.innerWidth * 0.4, ease: "power2.out", duration: 1.3, opacity: 1 }, 0.05
     ).to(plane3Ref.current, 
-        { y: -window.innerHeight * 0.9, rotation: -45, scale: 1.5, ease: "power4.in", duration: 1.3 }, 0.05
+        { y: -window.innerHeight * (isMobile ? 0.6 : 0.9), rotation: -45, scale: 1.5, ease: "power4.in", duration: 1.3 }, 0.05
     );
 
     tl.to(wipeOverlayRef.current, {
@@ -169,6 +171,8 @@ export default function FAQAndMarqueeCTA() {
         window.location.href = isSignedIn ? '/ai-planner/new' : '/sign-in';
     }, 1300);
   };
+
+  const getRotate = (idx) => (typeof window !== 'undefined' && window.innerWidth >= 1024) ? faqNotes[idx].defaultRotate : 0;
 
   // ✦ Creative 3D Origami Paper Unfold & Stamped Dispatch Reveal ✦
   const toggleStickyNote = (index) => {
@@ -188,7 +192,7 @@ export default function FAQAndMarqueeCTA() {
       });
       if (noteRefs.current[prevIdx]) {
         gsap.to(noteRefs.current[prevIdx], {
-          rotate: faqNotes[prevIdx].defaultRotate,
+          rotate: getRotate(prevIdx),
           rotateX: 0,
           scale: 1,
           y: 0,
@@ -281,7 +285,7 @@ export default function FAQAndMarqueeCTA() {
       noteRefs.current.forEach((el, i) => {
         if (!el) return;
         gsap.to(el, {
-          rotate: faqNotes[i].defaultRotate,
+          rotate: getRotate(i),
           rotateX: 0,
           scale: 1,
           y: 0,
@@ -315,7 +319,7 @@ export default function FAQAndMarqueeCTA() {
     if (!el) return;
 
     gsap.to(el, {
-      rotate: faqNotes[index].defaultRotate,
+      rotate: getRotate(index),
       scale: openIdx === index ? 1.03 : 1,
       y: 0,
       duration: 0.35,
@@ -356,7 +360,7 @@ export default function FAQAndMarqueeCTA() {
         y: 40,
         scale: 0.95,
         opacity: 0,
-        rotate: faqNotes[idx].defaultRotate,
+        rotate: getRotate(idx),
         force3D: true,
       });
     });
@@ -403,22 +407,24 @@ export default function FAQAndMarqueeCTA() {
           force3D: true,
           onComplete: () => {
             // ✦ Infinite Anti-Gravity Floating Levitation Loop ✦
-            noteRefs.current.forEach((el, idx) => {
-              if (!el) return;
-              const floatDist = 5 + (idx % 3) * 3;
-              const floatTime = 3.0 + (idx % 4) * 0.45;
-              
-              gsap.to(el, {
-                y: `-=${floatDist}`,
-                rotate: `+=${idx % 2 === 0 ? 1.2 : -1.2}`,
-                duration: floatTime,
-                repeat: -1,
-                yoyo: true,
-                ease: 'sine.inOut',
-                delay: idx * 0.15,
-                force3D: true,
-              });
-            });
+            if (window.innerWidth >= 1024) {
+                noteRefs.current.forEach((el, idx) => {
+                  if (!el) return;
+                  const floatDist = 5 + (idx % 3) * 3;
+                  const floatTime = 3.0 + (idx % 4) * 0.45;
+                  
+                  gsap.to(el, {
+                    y: `-=${floatDist}`,
+                    rotate: `+=${idx % 2 === 0 ? 1.2 : -1.2}`,
+                    duration: floatTime,
+                    repeat: -1,
+                    yoyo: true,
+                    ease: 'sine.inOut',
+                    delay: idx * 0.15,
+                    force3D: true,
+                  });
+                });
+            }
 
             // Floating loop for Rome & Kyoto Figma Cards
             polaroidRefs.current.forEach((el, idx) => {
@@ -444,6 +450,7 @@ export default function FAQAndMarqueeCTA() {
 
   // Hardware-Accelerated Dynamic Mouse Parallax
   const handleBoardMouseMove = (e) => {
+    if (window.innerWidth < 1024) return;
     const section = faqSectionRef.current;
     if (!section) return;
     const rect = section.getBoundingClientRect();
@@ -479,6 +486,7 @@ export default function FAQAndMarqueeCTA() {
   };
 
   const handleBoardMouseLeave = () => {
+    if (window.innerWidth < 1024) return;
     noteRefs.current.forEach((el, idx) => {
       if (!el || openIdx === idx) return;
       gsap.to(el, {
@@ -486,7 +494,7 @@ export default function FAQAndMarqueeCTA() {
         y: 0,
         rotateX: 0,
         rotateY: 0,
-        rotate: faqNotes[idx].defaultRotate,
+        rotate: getRotate(idx),
         duration: 0.5,
         ease: 'power2.out',
         force3D: true,
@@ -580,7 +588,7 @@ export default function FAQAndMarqueeCTA() {
 
   return (
     <div className="w-full relative">
-      <FigmaReveal id="section-faq" index={2} variant="light" direction="zoom">
+      <FigmaReveal id="section-faq" index={2} variant="light" direction="bottom">
         <section 
           ref={faqSectionRef} 
           onMouseMove={handleBoardMouseMove}
@@ -707,7 +715,7 @@ export default function FAQAndMarqueeCTA() {
                   <div
                     key={note.id}
                     ref={(el) => (noteRefs.current[i] = el)}
-                    className={`sticky-note-card group relative cursor-pointer transition-all duration-300 rounded-2xl p-6 md:p-7 will-change-transform transform-gpu ${
+                    className={`sticky-note-card group relative cursor-pointer transition-shadow duration-300 rounded-2xl p-6 md:p-7 will-change-transform transform-gpu ${
                       isOpen 
                         ? 'z-50 shadow-[0_30px_70px_-12px_rgba(255,91,29,0.3)] ring-2 ring-[#FF5B1D]' 
                         : 'z-20 shadow-[0_12px_30px_-8px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)]'
@@ -715,7 +723,6 @@ export default function FAQAndMarqueeCTA() {
                     style={{
                       backgroundColor: note.bg,
                       border: `1.5px solid ${note.borderColor}`,
-                      transform: `rotate(${isOpen ? 0 : note.defaultRotate}deg)`,
                       transformOrigin: 'top center',
                       opacity: openIdx === null || isOpen ? 1 : 0.5,
                       backfaceVisibility: 'hidden',
@@ -772,11 +779,9 @@ export default function FAQAndMarqueeCTA() {
 
                     <div
                       ref={(el) => (contentRefs.current[i] = el)}
-                      className={`overflow-hidden transition-all duration-300 ${
-                        isOpen ? 'opacity-100 mt-4' : 'h-0 opacity-0'
-                      }`}
+                      className="overflow-hidden h-0 opacity-0"
                     >
-                      <div className="pt-3 pb-1 border-t border-stone-800/10 text-stone-800 text-sm md:text-[15px] leading-relaxed font-medium">
+                      <div className="pt-3 pb-1 border-t border-stone-800/10 text-stone-800 text-sm md:text-[15px] leading-relaxed font-medium mt-4">
                         <p className="mb-3">{note.answer}</p>
                         
                         <div className="takeaway-badge px-3 py-1.5 rounded-lg bg-black/5 border border-black/5 font-mono text-[11px] font-bold text-stone-900 flex items-center gap-2 mb-3">
@@ -821,9 +826,9 @@ export default function FAQAndMarqueeCTA() {
       <FigmaReveal id="section-cta" index={3} variant="dark">
         <section
           ref={ctaContainerRef}
-          className="relative w-full bg-[#070709] py-32 md:py-44 overflow-hidden flex flex-col items-center justify-center text-center select-none"
+          className="relative w-full bg-[#070709] min-h-[80vh] md:min-h-0 py-24 md:py-44 overflow-hidden flex flex-col items-center justify-center text-center select-none"
         >
-          <TravelTelemetryBackground />
+        <TravelTelemetryBackground />
 
           <svg className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-30" viewBox="0 0 1200 600" preserveAspectRatio="none">
             <path d="M-100,500 Q 300,100 700,450 T 1300,100" fill="none" stroke="#FF5B1D" strokeWidth="2" strokeDasharray="8 8" className="animate-pulse" />
@@ -832,7 +837,7 @@ export default function FAQAndMarqueeCTA() {
 
           <div className="relative z-10 max-w-4xl mx-auto px-4 flex flex-col items-center">
             
-            <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white tracking-tight leading-none mb-10 md:mb-14 drop-shadow-lg">
+            <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white tracking-tight leading-none mb-12 md:mb-14 drop-shadow-lg">
             Stop planning.<br />
             <span className="bg-linear-to-r from-white via-orange-100 to-[#FF5B1D] bg-clip-text text-transparent animate-liquid-shimmer">
               Start traveling.
@@ -844,7 +849,7 @@ export default function FAQAndMarqueeCTA() {
               <button
                 ref={buttonRef}
                 onClick={handleFlyTransition}
-                className={`group relative inline-flex items-center justify-center px-8 sm:px-12 py-5 sm:py-6 rounded-full bg-[#FF5B1D] text-white font-extrabold text-lg sm:text-2xl tracking-wide shadow-[0_0_50px_rgba(249,115,22,0.4)] transition-shadow duration-300 cursor-pointer overflow-visible border border-white/20 ${isFlying ? 'scale-95 shadow-[0_0_80px_rgba(249,115,22,0.8)]' : 'hover:bg-[#ff6c34] hover:shadow-[0_0_80px_rgba(249,115,22,0.6)]'}`}
+                className={`group relative inline-flex items-center justify-center w-[85vw] max-w-[280px] sm:w-auto sm:max-w-none px-6 sm:px-12 py-4 sm:py-6 rounded-full bg-[#FF5B1D] text-white font-extrabold text-[15px] sm:text-2xl tracking-wide shadow-[0_0_50px_rgba(249,115,22,0.4)] transition-shadow duration-300 cursor-pointer overflow-visible border border-white/20 ${isFlying ? 'scale-95 shadow-[0_0_80px_rgba(249,115,22,0.8)]' : 'hover:bg-[#ff6c34] hover:shadow-[0_0_80px_rgba(249,115,22,0.6)]'}`}
               >
                 {/* Button inner highlight sheen */}
                 <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none">
@@ -852,10 +857,11 @@ export default function FAQAndMarqueeCTA() {
                 </div>
 
                 {/* Parallax Button Text */}
-                <span ref={buttonTextRef} className={`relative z-10 flex items-center gap-3 transition-colors duration-300 ${isFlying ? 'text-[#FF5B1D] opacity-0' : ''}`}>
-                  <span>[ Plan My Trip — It&apos;s Free ]</span>
+                <span ref={buttonTextRef} className={`relative z-10 flex items-center justify-center gap-2 sm:gap-3 transition-colors duration-300 w-full ${isFlying ? 'text-[#FF5B1D] opacity-0' : ''}`}>
+                  <span className="hidden sm:inline">[ Plan My Trip — It&apos;s Free ]</span>
+                  <span className="sm:hidden tracking-wider">Plan My Trip — Free</span>
                   <svg
-                    className={`w-6 h-6 transition-transform duration-300 ${isFlying ? 'translate-x-10 opacity-0' : 'group-hover:translate-x-1.5'}`}
+                    className={`w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 shrink-0 ${isFlying ? 'translate-x-10 opacity-0' : 'group-hover:translate-x-1.5'}`}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
