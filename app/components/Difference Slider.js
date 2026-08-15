@@ -16,6 +16,14 @@ export default function Destination() {
     const [isRevealed, setIsRevealed] = useState(true);
     const [isDragging, setIsDragging] = useState(false);
     const [headerVisible, setHeaderVisible] = useState(true);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     // Dynamic state values for the counting stats
     const [daysPlanned, setDaysPlanned] = useState(10);
@@ -135,11 +143,18 @@ export default function Destination() {
     }, [isRevealed]);
 
     // Drag calculation handlers (mouse/touch)
-    const handleMove = (clientX) => {
+    const handleMove = (clientX, clientY) => {
         if (!containerRef.current) return;
         const rect = containerRef.current.getBoundingClientRect();
-        const x = clientX - rect.left;
-        let percentage = (x / rect.width) * 100;
+        
+        let percentage;
+        if (isMobile && clientY !== undefined) {
+            const y = clientY - rect.top;
+            percentage = (y / rect.height) * 100;
+        } else {
+            const x = clientX - rect.left;
+            percentage = (x / rect.width) * 100;
+        }
 
         // Minimum position is 5%, maximum position is 95%
         if (percentage < 5) percentage = 5;
@@ -158,7 +173,7 @@ export default function Destination() {
     useEffect(() => {
         const handleMouseMove = (e) => {
             if (!isDragging) return;
-            handleMove(e.clientX);
+            handleMove(e.clientX, e.clientY);
         };
 
         const handleMouseUp = () => {
@@ -168,7 +183,7 @@ export default function Destination() {
         const handleTouchMove = (e) => {
             if (!isDragging) return;
             if (e.touches && e.touches[0]) {
-                handleMove(e.touches[0].clientX);
+                handleMove(e.touches[0].clientX, e.touches[0].clientY);
             }
         };
 
@@ -191,7 +206,7 @@ export default function Destination() {
         <section 
             ref={sectionRef} 
             id="ai-planner" 
-            className="relative w-full min-h-screen flex flex-col items-center justify-center select-none font-sans pt-24 md:pt-28 pb-12 md:pb-16 px-4 md:px-8 bg-transparent overflow-hidden scroll-mt-24"
+            className="relative w-full h-[100svh] flex flex-col items-center justify-start lg:justify-center select-none font-sans pt-24 md:pt-28 pb-6 lg:pb-12 px-4 md:px-8 bg-transparent overflow-hidden scroll-mt-24"
         >
             {/* Embedded styles for alternate tab jitter, blinking typewriter cursor, slow sticky notes wobble, and clicking frantic cursor */}
             <style>{`
@@ -273,10 +288,10 @@ export default function Destination() {
                 {/* Spaced Micro-Badge */}
                 <div 
                     ref={badgeRef}
-                    className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#FF5B1D]/10 text-[#FF5B1D] rounded-full font-mono text-[12px] font-bold tracking-wider uppercase mb-3 shadow-xs border border-[#FF5B1D]/20 select-none will-change-transform"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-1.5 bg-[#FF5B1D]/10 rounded-full font-mono text-xs font-bold tracking-wider uppercase mb-3 border border-[#FF5B1D]/20 select-none"
                 >
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D] animate-pulse" />
-                    ✦ TRIPWISE EXPERIENCE
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D] animate-pulse shrink-0" />
+                    <span className="text-[#FF5B1D] leading-none mt-[1px]">✦ TRIPWISE EXPERIENCE</span>
                 </div>
                 
                 <h2 className="text-3xl md:text-5xl font-extrabold text-brand-dark tracking-tight leading-tight uppercase font-serif">
@@ -310,12 +325,12 @@ export default function Destination() {
             {/* 3D Figma Perspective Canvas Artboard */}
             <div 
                 ref={artboardRef} 
-                className="relative w-full max-w-5xl flex flex-col items-center will-change-transform"
+                className="relative w-full max-w-5xl flex-1 pb-4 md:pb-0 flex flex-col items-center will-change-transform"
             >
-                {/* 500px Fixed Height Split Canvas */}
+                {/* Dynamic Height Split Canvas */}
                 <div
                     ref={containerRef}
-                    className="relative w-full h-125 rounded-3xl overflow-hidden border border-brand-dark/15 bg-transparent shadow-[0_25px_80px_-15px_rgba(254,119,23,0.12),_0_20px_50px_rgba(0,0,0,0.06)]"
+                    className="relative w-full h-full lg:min-h-[550px] rounded-3xl overflow-hidden border border-brand-dark/15 bg-transparent shadow-[0_25px_80px_-15px_rgba(254,119,23,0.12),_0_20px_50px_rgba(0,0,0,0.06)]"
                 >
                 {/* ========================================================
                     LEFT SIDE: THE OLD WAY (Chaotic Red-Black Slate)
@@ -433,18 +448,20 @@ export default function Destination() {
                     RIGHT SIDE: WITH TRIPWISE (Clip-path Reveal Gradient)
                    ======================================================== */}
                 <div
-                    className="absolute inset-0 w-full h-full bg-[#f0f4ff] flex flex-col justify-between p-4 md:p-6 overflow-hidden select-none z-20"
+                    className="absolute inset-0 w-full h-full bg-[#f0f4ff] flex flex-col justify-center p-4 md:p-6 overflow-hidden select-none z-20"
                     style={{
-                        clipPath: `inset(0 0 0 ${sliderPos}%)`
+                        clipPath: isMobile
+                            ? `inset(${sliderPos}% 0 0 0)` 
+                            : `inset(0 0 0 ${sliderPos}%)`
                     }}
                 >
                     {/* Badge */}
-                    <div className="absolute top-4 right-4 z-40 px-3 py-1 bg-[#FF5B1D] text-white rounded-full font-mono text-[9px] font-black uppercase tracking-widest leading-none">
+                    <div className="absolute bottom-4 lg:bottom-auto lg:top-4 right-4 z-40 px-3 py-1 bg-[#FF5B1D] text-white rounded-full font-mono text-[9px] font-black uppercase tracking-widest leading-none shadow-sm">
                         With TripWise
                     </div>
 
                     {/* Dashboard Layout panels */}
-                    <div className="w-full max-w-xl mx-auto flex flex-col gap-3.5 mt-6 select-none">
+                    <div className="w-full max-w-xl mx-auto flex flex-col gap-2.5 sm:gap-3.5 select-none scale-[0.85] sm:scale-100 origin-center">
                         
                         {/* 1. Search Bar Card */}
                         <div className="w-full bg-white border border-[#FF5B1D]/15 rounded-[10px] py-2 px-3 flex items-center justify-between shadow-sm shrink-0 select-none">
@@ -635,13 +652,13 @@ export default function Destination() {
                 <div
                     onMouseDown={handleMouseDown}
                     onTouchStart={handleTouchStart}
-                    className="absolute top-0 bottom-0 w-8 -ml-4 z-30 cursor-ew-resize flex items-center justify-center pointer-events-auto"
+                    className="absolute lg:top-0 lg:bottom-0 left-0 right-0 lg:left-auto lg:right-auto lg:w-8 h-8 lg:h-auto -mt-4 lg:-mt-0 lg:-ml-4 z-30 cursor-ns-resize lg:cursor-ew-resize flex flex-col lg:flex-row items-center justify-center pointer-events-auto touch-none"
                     style={{
-                        left: `${sliderPos}%`
+                        ...(isMobile ? { top: `${sliderPos}%` } : { left: `${sliderPos}%` })
                     }}
                 >
-                    {/* Visible 3px Divider Line */}
-                    <div className={`w-0.75 h-full transition-all duration-200 ${
+                    {/* Visible Divider Line */}
+                    <div className={`w-full h-1 lg:w-1 lg:h-full transition-all duration-200 ${
                         isDragging ? 'bg-[#FF5B1D] shadow-[0_0_12px_rgba(255,91,29,0.6)]' : 'bg-white'
                     }`} />
 
@@ -649,11 +666,11 @@ export default function Destination() {
                     <div className={`absolute w-10 h-10 bg-white border rounded-full flex items-center justify-center pointer-events-none z-40 transition-all duration-200 ${
                         isDragging ? 'border-[#FF5B1D] scale-105 shadow-[#FF5B1D]/20 shadow-lg' : 'border-gray-200 shadow-md'
                     }`}>
-                        {/* Gray chevron arrows left/right */}
-                        <svg viewBox="0 0 24 24" className={`w-5 h-5 fill-none transition-colors duration-200 ${
+                        {/* Gray chevron arrows */}
+                        <svg viewBox="0 0 24 24" className={`w-5 h-5 fill-none transition-colors duration-200 lg:-rotate-90 ${
                             isDragging ? 'stroke-[#FF5B1D]' : 'stroke-gray-400'
                         }`} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M 8 16 L 4 12 L 8 8 M 16 16 L 20 12 L 16 8" />
+                            <path d="M 16 8 L 12 4 L 8 8 M 16 16 L 12 20 L 8 16" />
                         </svg>
                     </div>
                 </div>
