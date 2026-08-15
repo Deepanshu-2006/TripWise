@@ -8,7 +8,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 const CardAvatar = ({ src, initials, name }) => {
     const [imgError, setImgError] = useState(false);
     return (
-        <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-white shadow-md bg-linear-to-br from-[#0D9488] via-[#14b8a6] to-[#FF5B1D] flex items-center justify-center text-white font-mono font-bold text-sm group-hover:scale-105 transition-transform duration-300">
+        <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden shrink-0 border-2 border-white shadow-md bg-linear-to-br from-[#0D9488] via-[#14b8a6] to-[#FF5B1D] flex items-center justify-center text-white font-mono font-bold text-sm group-hover:scale-105 transition-transform duration-300">
             {!imgError ? (
                 <img
                     src={src}
@@ -29,7 +29,7 @@ const PassportStamp = ({ stampText = "APPROVED", stampCode = "VERIFIED", color =
         className="passport-stamp absolute top-1/2 left-1/2 sm:left-3/5 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-20 flex items-center justify-center select-none opacity-0 transition-opacity duration-300 group-hover:opacity-25"
         style={{ color, transform: 'rotate(-15deg) scale(2)' }}
     >
-        <svg className="w-44 h-44 md:w-52 md:h-52 drop-shadow-sm" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg className="w-36 h-36 md:w-52 md:h-52 drop-shadow-sm" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
             {/* Outer rubber stamp ring with authentic distressed/uneven pattern */}
             <circle cx="80" cy="80" r="74" stroke="currentColor" strokeWidth="3.5" strokeDasharray="14 4 4 4 8 3 12 5" />
             <circle cx="80" cy="80" r="66" stroke="currentColor" strokeWidth="1.5" />
@@ -205,8 +205,10 @@ export default function PassportGrid() {
         if (!sectionRef.current) return;
         gsap.registerPlugin(ScrollTrigger);
 
-        const ctx = gsap.context(() => {
-            // Initial states for ScrollTrigger reveal
+        let mm = gsap.matchMedia();
+
+        mm.add("(min-width: 768px)", () => {
+            // DESKTOP: Initial states for ScrollTrigger vertical batch reveal
             gsap.set(".boarding-pass", { y: 60, opacity: 0, scale: 0.95 });
             gsap.set(".passport-stamp", { scale: 2.5, opacity: 0, rotation: -25 });
 
@@ -262,9 +264,6 @@ export default function PassportGrid() {
             });
 
             // 2. Natural Row-by-Row Split-Apart on Scroll (No Pinning, Natural Scrolling!)
-            // As the user scrolls down, they see Row 1 -> as they scroll past it, Row 1 splits apart.
-            // As they continue scrolling, they naturally see Row 2 -> as they scroll past it, Row 2 splits apart.
-            // As they continue scrolling, they naturally see Row 3 -> as they scroll past it, Row 3 splits apart.
             [1, 2, 3].forEach((rowNum) => {
                 const rowSelector = `.row-${rowNum}`;
                 
@@ -295,14 +294,60 @@ export default function PassportGrid() {
                     0
                 );
             });
+        });
 
-        }, sectionRef);
+        mm.add("(max-width: 767px)", () => {
+            // MOBILE: Pinned Horizontal Carousel with Figma-style sliding
+            
+            // Set initial state for stamps (since batch reveal doesn't run on mobile)
+            gsap.set(".passport-stamp", { scale: 1, opacity: 0.18, rotation: -15 });
+            gsap.set(".boarding-pass", { y: 0, opacity: 1, scale: 1, transformOrigin: "left center" });
 
-        return () => ctx.revert();
+            const container = document.querySelector('.carousel-container');
+            const cards = gsap.utils.toArray('.boarding-pass');
+            
+            // Calculate total horizontal scroll distance
+            const getScrollAmount = () => -(container.scrollWidth - window.innerWidth + 32); // 32px right padding
+            
+            const tween = gsap.to(container, {
+                x: getScrollAmount,
+                ease: "none",
+                scrollTrigger: {
+                    trigger: ".subtitle-trigger",
+                    start: "top 100px", // Pin when the subtitle reaches right below the fixed header
+                    end: () => `+=${container.scrollWidth}`, // Scroll duration equals container width
+                    pin: sectionRef.current, // Pin the entire section, allowing the title above to be scrolled off-screen
+                    scrub: 1,
+                    anticipatePin: 1,
+                    invalidateOnRefresh: true
+                }
+            });
+
+            // Figma-style overlapping: As cards exit to the left, scale them down and fade them
+            cards.forEach((card, i) => {
+                if (i < cards.length - 1) { // Last card doesn't need to exit
+                    gsap.to(card, {
+                        scale: 0.85,
+                        opacity: 0.2,
+                        xPercent: 30, // Lag behind to create stacking effect
+                        ease: "power1.inOut",
+                        scrollTrigger: {
+                            trigger: card,
+                            containerAnimation: tween,
+                            start: "left left", // When card hits left edge of screen
+                            end: "right left", // When card is fully off-screen
+                            scrub: true,
+                        }
+                    });
+                }
+            });
+        });
+
+        return () => mm.revert();
     }, []);
 
     return (
-        <section ref={sectionRef} className="py-28 md:py-36 bg-[#FFF8F5] relative overflow-hidden border-t border-brand-dark/5">
+        <section ref={sectionRef} className="pt-28 pb-4 md:py-36 bg-[#FFF8F5] relative overflow-hidden border-t border-brand-dark/5">
             {/* Ambient background glow decoration */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-1/3 left-1/4 -translate-y-1/2 w-96 h-96 rounded-full bg-[#0D9488]/5 blur-[140px]" />
@@ -311,7 +356,7 @@ export default function PassportGrid() {
 
             <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
                 {/* Section Header */}
-                <div className="text-center mb-16 md:mb-20 flex flex-col items-center section-header">
+                <div className="text-center mb-4 md:mb-20 flex flex-col items-center section-header">
                     {/* Micro-Badge */}
                     <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#0D9488]/10 text-[#0D9488] rounded-full font-mono text-[12px] font-black tracking-widest uppercase mb-4 shadow-2xs border border-[#0D9488]/20 select-none">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#0D9488] animate-pulse" />
@@ -319,7 +364,7 @@ export default function PassportGrid() {
                     </div>
 
                     {/* Section Title */}
-                    <h2 className="text-3xl md:text-5xl font-bold text-brand-dark tracking-tight leading-none font-serif uppercase">
+                    <h2 className="text-[32px] leading-tight md:text-5xl font-bold text-brand-dark tracking-tight font-serif uppercase">
                         Trusted by <span className="relative inline-block text-[#0D9488] select-none normal-case font-serif italic font-bold">
                             Modern Travelers
                             <svg className="absolute -bottom-1.5 left-0 w-full h-1.5 text-[#0D9488]/40" viewBox="0 0 100 10" preserveAspectRatio="none">
@@ -329,23 +374,24 @@ export default function PassportGrid() {
                     </h2>
 
                     {/* Subtitle */}
-                    <p className="text-sm md:text-base text-brand-dark/60 max-w-xl mt-5 tracking-wide select-none leading-relaxed">
+                    <p className="subtitle-trigger text-sm md:text-base text-brand-dark/60 max-w-xl mt-3 md:mt-5 tracking-wide select-none leading-relaxed">
                         See how TripWise is eliminating hours of open-tab research worldwide.
                     </p>
                 </div>
 
-                {/* Responsive 3-Column Bento Grid Wrapper with generous gaps (gap: 32px -> gap-8) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {cardsData.map((card) => {
-                        const isHorizontal = card.layout === "horizontal";
+                {/* Responsive Bento Grid Wrapper: Horizontal Carousel on Mobile, 3-Column Grid on Desktop */}
+                <div className="carousel-wrapper w-full overflow-hidden md:overflow-visible">
+                    <div className="carousel-container flex md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-8 w-max md:w-auto pr-4 md:pr-0">
+                        {cardsData.map((card) => {
+                            const isHorizontal = card.layout === "horizontal";
 
-                        return (
-                            <div
-                                key={card.id}
-                                className={`boarding-pass ${card.colSpanClass} ${card.rowClass} ${card.splitCol === "left" ? "split-left" : "split-right"} bg-white/95 backdrop-blur-md border border-[#4B4745]/15 hover:border-[#0D9488]/50 shadow-md hover:shadow-[0_20px_40px_rgba(13,148,136,0.12)] hover:-translate-y-2 transition-all duration-500 ease-out rounded-2xl flex ${
-                                    isHorizontal ? "flex-col sm:flex-row sm:items-center justify-between" : "flex-col"
-                                } relative overflow-hidden group`}
-                            >
+                            return (
+                                <div
+                                    key={card.id}
+                                    className={`boarding-pass w-[85vw] sm:w-[400px] md:w-auto shrink-0 md:shrink ${card.colSpanClass} ${card.rowClass} ${card.splitCol === "left" ? "split-left" : "split-right"} bg-white/95 backdrop-blur-md border border-[#4B4745]/15 hover:border-[#0D9488]/50 shadow-md hover:shadow-[0_20px_40px_rgba(13,148,136,0.12)] hover:-translate-y-2 transition-all duration-500 ease-out rounded-2xl flex ${
+                                        isHorizontal ? "flex-col sm:flex-row sm:items-center justify-between" : "flex-col"
+                                    } relative overflow-hidden group`}
+                                >
                                 {/* Subtle Top Shimmer Accent on Hover */}
                                 <div className="absolute top-0 inset-x-0 h-1 bg-linear-to-r from-transparent via-[#0D9488] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-30" />
 
@@ -353,7 +399,7 @@ export default function PassportGrid() {
                                 <PassportStamp stampText={card.stampText} stampCode={card.stampCode} color={card.stampColor} />
 
                                 {/* Main Body */}
-                                <div className="flex-1 p-6 md:p-7 flex flex-col justify-between relative z-10">
+                                <div className="flex-1 p-4 py-3 md:p-7 flex flex-col justify-between relative z-10">
                                     {/* Top Header: User info + Route Badge */}
                                     <div className={`flex ${isHorizontal ? "flex-col sm:flex-row sm:items-center justify-between" : "flex-col items-start"} gap-3.5 mb-4`}>
                                         <div className="flex items-center gap-3.5 min-w-0 max-w-full">
@@ -378,7 +424,7 @@ export default function PassportGrid() {
                                     </div>
 
                                     {/* Testimonial Quote */}
-                                    <p className="text-[#1C1B1B]/90 text-sm md:text-base leading-relaxed font-sans italic my-4 relative pl-2 group-hover:text-[#1C1B1B] transition-colors duration-300">
+                                    <p className="text-[#1C1B1B]/90 text-[13px] leading-snug md:text-base md:leading-relaxed font-sans italic my-2 md:my-4 relative pl-2 group-hover:text-[#1C1B1B] transition-colors duration-300">
                                         <span className="text-[#FF5B1D] font-serif text-3xl leading-none absolute -left-2 -top-1 select-none opacity-50">“</span>
                                         {card.quote}
                                         <span className="text-[#FF5B1D] font-serif text-3xl leading-none select-none opacity-50 ml-1">”</span>
@@ -417,7 +463,7 @@ export default function PassportGrid() {
                                 {/* Ticket Stub */}
                                 <div className={`ticket-stub ${
                                     isHorizontal ? "md:w-48 bg-[#FF5B1D]/3 md:bg-transparent" : "w-full bg-[#FF5B1D]/3"
-                                } p-5 md:p-6 flex flex-col justify-between items-center text-center relative shrink-0 z-10 group-hover:bg-[#FF5B1D]/6 transition-colors duration-300`}>
+                                } p-3 py-2 md:p-6 flex flex-col justify-between items-center text-center relative shrink-0 z-10 group-hover:bg-[#FF5B1D]/6 transition-colors duration-300`}>
                                     {/* Top Gate / Seat Info */}
                                     <div className="w-full flex items-center justify-between text-[9px] font-mono font-bold text-[#4B4745]/80 uppercase tracking-wider mb-2 pb-2 border-b border-[#4B4745]/10">
                                         <span>CLS: {card.classCode}</span>
@@ -437,8 +483,8 @@ export default function PassportGrid() {
                                         </span>
                                     </div>
 
-                                    {/* Bottom Barcode */}
-                                    <div className="w-full pt-3 border-t border-[#4B4745]/10 mt-2">
+                                    {/* Bottom Barcode (Hidden on mobile to save space) */}
+                                    <div className="hidden md:block w-full pt-3 border-t border-[#4B4745]/10 mt-2">
                                         <div className="w-full flex items-center justify-center gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity duration-300">
                                             {[2, 1, 3, 1, 1, 2, 4, 1, 2, 1, 3, 2, 1, 1, 2, 3, 1, 2, 1, 2].map((w, idx) => (
                                                 <div key={idx} className="h-5 bg-[#1C1B1B] rounded-3xs group-hover:bg-[#0D9488] transition-colors duration-300" style={{ width: `${w}px` }} />
@@ -452,6 +498,7 @@ export default function PassportGrid() {
                             </div>
                         );
                     })}
+                    </div>
                 </div>
             </div>
         </section>
