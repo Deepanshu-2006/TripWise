@@ -271,7 +271,7 @@ const Hero = () => {
             { x: 0, y: 0, rotation: 0, scale: 0.5, opacity: 0 },
             { x: window.innerWidth * 0.6, ease: "power2.out", duration: 1.2, opacity: 1 }, 0
         ).to(plane1Ref.current, 
-            { y: -window.innerHeight * 0.8, rotation: 75, scale: 2, ease: "power3.in", duration: 1.2 }, 0
+            { y: -window.innerHeight * 0.5, rotation: 75, scale: 2, ease: "power3.in", duration: 1.2 }, 0
         );
 
         // Plane 2: Swoops far right, lower
@@ -279,7 +279,7 @@ const Hero = () => {
             { x: 0, y: 0, rotation: 0, scale: 0.3, opacity: 0 },
             { x: window.innerWidth * 0.8, ease: "power1.out", duration: 1.4, opacity: 1 }, 0.1
         ).to(plane2Ref.current, 
-            { y: -window.innerHeight * 0.3, rotation: 85, scale: 1.2, ease: "power2.in", duration: 1.4 }, 0.1
+            { y: -window.innerHeight * 0.2, rotation: 85, scale: 1.2, ease: "power2.in", duration: 1.4 }, 0.1
         );
 
         // Plane 3: Swoops left and very high
@@ -287,7 +287,7 @@ const Hero = () => {
             { x: 0, y: 0, rotation: 0, scale: 0.4, opacity: 0 },
             { x: -window.innerWidth * 0.4, ease: "power2.out", duration: 1.3, opacity: 1 }, 0.05
         ).to(plane3Ref.current, 
-            { y: -window.innerHeight * 0.9, rotation: -45, scale: 1.5, ease: "power4.in", duration: 1.3 }, 0.05
+            { y: -window.innerHeight * 0.6, rotation: -45, scale: 1.5, ease: "power4.in", duration: 1.3 }, 0.05
         );
 
         // Cinematic Circle Wipe Transition
@@ -428,7 +428,7 @@ const Hero = () => {
     const loadingPercentage = Math.round((loadedCount / FRAME_COUNT) * 100);
 
     return (
-        <section ref={containerRef} id="hero-section" className="relative w-full h-[750vh] bg-brand-sand">
+        <section ref={containerRef} id="hero-section" className="relative w-full h-[400vh] md:h-[750vh] bg-brand-sand">
             {/* Sticky Viewport Container */}
             <div ref={stickyRef} className="sticky top-0 w-full h-screen overflow-hidden flex items-center justify-center">
                 {/* Background Frame Canvas (GPU Accelerated 60 FPS) */}
@@ -458,7 +458,7 @@ const Hero = () => {
                         >
                             {/* Premium Scroll prompt positioned at the absolute bottom */}
                             <div className="absolute -bottom-8 md:-bottom-18 flex flex-col items-center gap-2 animate-bounce">
-                                <span className="font-mono text-[10px] font-bold text-[#180F0F] uppercase tracking-[0.2em] bg-white/30 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/40 shadow-sm">
+                                <span className="font-mono text-[9px] md:text-[10px] font-bold text-[#180F0F] uppercase tracking-[0.2em] bg-white/30 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/40 shadow-sm text-center">
                                     Scroll to Explore
                                 </span>
                                 <svg className="w-4 h-4 text-[#180F0F]/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -472,10 +472,10 @@ const Hero = () => {
                             ref={stage2Ref}
                             className="absolute inset-x-0 bottom-12 md:bottom-20 flex flex-col items-center opacity-0 pointer-events-none transition-all duration-300 ease-out"
                         >
-                            <div className="flex items-center gap-4 px-7 py-3.5 bg-[#1C1B1B] backdrop-blur-md rounded-full shadow-lg border border-white/50 text-[#fe7717] font-mono text-lg md:text-md font-bold">
-                                <span className="flex h-4 w-4 md:h-5 md:w-5 relative shrink-0">
+                            <div className="flex items-center gap-2 md:gap-4 px-4 md:px-7 py-3 md:py-3.5 bg-[#1C1B1B] backdrop-blur-md rounded-full shadow-lg border border-white/50 text-[#fe7717] font-mono text-[10px] sm:text-xs md:text-base font-bold text-center">
+                                <span className="flex h-3 w-3 md:h-5 md:w-5 relative shrink-0">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#fe7717] opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-4 w-4 md:h-5 md:w-5 bg-[#fe7717] animate-pulse"></span>
+                                    <span className="relative inline-flex rounded-full h-3 w-3 md:h-5 md:w-5 bg-[#fe7717] animate-pulse"></span>
                                 </span>
                                 <span className="uppercase tracking-wide select-none">
                                     UNDERSTANDING YOUR DREAM TRIP
@@ -495,9 +495,9 @@ const Hero = () => {
                         {/* STAGE 3: Globe Spin-Up Hero Headline (Staggered words) */}
                         <div
                             ref={stage3Ref}
-                            className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none max-w-2xl transition-all duration-300 ease-out"
+                            className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none max-w-2xl transition-all duration-300 ease-out px-4"
                         >
-                            <h2 className="text-4xl md:text-6xl font-extrabold text-brand-dark tracking-tight leading-[1.15] mb-4 select-none">
+                            <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold text-brand-dark tracking-tight leading-[1.15] mb-4 select-none">
                                 {['Your', 'AI', 'Travel', 'Planner,', 'Reimagined.'].map((word, idx) => (
                                     <span
                                         key={idx}
@@ -511,7 +511,7 @@ const Hero = () => {
                                     </span>
                                 ))}
                             </h2>
-                            <p className="uppercase stage3-sub text-[11px] md:text-xs font-bold text-[#fe7717] px-6 py-2.5 bg-[#1C1B1B] backdrop-blur-md rounded-full shadow-lg border border-white/20 font-mono tracking-[0.16em] transition-all duration-300 ease-out mt-6">
+                            <p className="uppercase stage3-sub text-[9px] sm:text-[11px] md:text-xs font-bold text-[#fe7717] px-4 md:px-6 py-2 md:py-2.5 bg-[#1C1B1B] backdrop-blur-md rounded-full shadow-lg border border-white/20 font-mono tracking-[0.16em] transition-all duration-300 ease-out mt-4 md:mt-6 text-center">
                                 From a single sentence to a full itinerary
                             </p>
                         </div>
@@ -519,9 +519,9 @@ const Hero = () => {
                         {/* STAGE 4: Map Reveal (Staggered words) */}
                         <div
                             ref={stage4Ref}
-                            className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none max-w-3xl transition-all duration-300 ease-out translate-x-6 md:translate-x-20"
+                            className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none max-w-3xl transition-all duration-300 ease-out translate-x-2 sm:translate-x-6 md:translate-x-20 px-4"
                         >
-                            <h2 className="text-4xl md:text-6xl font-extrabold text-brand-dark tracking-tight leading-[1.15] select-none">
+                            <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold text-brand-dark tracking-tight leading-[1.15] select-none text-center">
                                 {['Real', 'Places.', 'Real', 'Plans.', 'Built', 'in', 'Seconds.'].map((word, idx) => (
                                     <span
                                         key={idx}
@@ -540,10 +540,10 @@ const Hero = () => {
                         {/* STAGE 5: Itinerary Cards Stacking & CTA */}
                         <div
                             ref={stage5Ref}
-                            className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none max-w-2xl transition-all duration-300 ease-out"
+                            className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none max-w-2xl transition-all duration-300 ease-out px-4 text-center"
                         >
                             <h2
-                                className="stage5-heading text-4xl md:text-5xl font-extrabold text-brand-dark tracking-tight mb-8 transition-all duration-300 ease-out select-none"
+                                className="stage5-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-brand-dark tracking-tight mb-6 md:mb-8 transition-all duration-300 ease-out select-none"
                                 style={{
                                     textShadow: '0 4px 20px rgba(255, 248, 245, 0.95), 0 2px 8px rgba(255, 248, 245, 0.9), 0 1px 2px rgba(255, 248, 245, 0.85)'
                                 }}
