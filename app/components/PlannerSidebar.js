@@ -228,14 +228,34 @@ const getDurationMinutes = (durationStr) => {
 // ─── RouteRow ─────────────────────────────────────────────────────────────────
 function RouteRow({ idx, dest, detail, onClick }) {
   const [hovered, setHovered] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   const nums = ['01', '02', '03'];
+
+  const handleClick = (e) => {
+    if (e) e.preventDefault();
+    if (isAnimating) return;
+    
+    setIsAnimating(true);
+    setHovered(true);
+    
+    // Delay the actual routing by 300ms so the tap animation can play fully on mobile
+    setTimeout(() => {
+      onClick();
+      setTimeout(() => {
+        setHovered(false);
+        setIsAnimating(false);
+      }, 50);
+    }, 300);
+  };
+
   return (
-    <button
+    <motion.button
       type="button"
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className="w-full flex items-center justify-between text-left p-3 rounded-xl bg-white border border-stone-200/70 cursor-pointer transition-colors duration-200 hover:border-[#FF6B2C]/40 hover:bg-[#FAF6F0]"
+      whileTap={{ scale: 0.97 }}
+      onClick={handleClick}
+      onMouseEnter={() => !isAnimating && setHovered(true)}
+      onMouseLeave={() => !isAnimating && setHovered(false)}
+      className={`w-full flex items-center justify-between text-left p-3 rounded-xl bg-white border cursor-pointer transition-colors duration-200 ${hovered ? 'border-[#FF6B2C]/40 bg-[#FAF6F0]' : 'border-stone-200/70 hover:border-[#FF6B2C]/40 hover:bg-[#FAF6F0]'}`}
       style={{ boxShadow: hovered ? '0 4px 16px rgba(255,107,44,0.08)' : '0 1px 3px rgba(0,0,0,0.04)', transition: 'box-shadow 0.25s ease, border-color 0.2s ease, background 0.2s ease' }}
     >
       {/* Index + text */}
@@ -296,7 +316,7 @@ function RouteRow({ idx, dest, detail, onClick }) {
           <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
         </svg>
       </div>
-    </button>
+    </motion.button>
   );
 }
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1070,7 +1090,11 @@ export default function PlannerSidebar({
     }
 
     if (!stream) {
-      setVoiceError('Microphone not available on this device.');
+      if (typeof window !== 'undefined' && window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+        setVoiceError('Phone testing blocked: Microphone requires HTTPS. Deploy the app or use an ngrok tunnel to test voice on your phone.');
+      } else {
+        setVoiceError('Microphone not available on this device.');
+      }
       return;
     }
 
@@ -1833,7 +1857,7 @@ export default function PlannerSidebar({
               </div>
 
               {/* Step pills row */}
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide snap-x">
                 {steps.map((s, idx) => {
                   const isCompleted = currentIdx > idx;
                   const isActive    = currentIdx === idx;
@@ -1841,7 +1865,7 @@ export default function PlannerSidebar({
                   return (
                     <motion.div
                       key={s.id}
-                      className={`relative flex-1 flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl cursor-default overflow-hidden select-none ${
+                      className={`relative flex-1 shrink-0 snap-center min-w-[95px] md:min-w-0 md:flex-1 flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl cursor-default overflow-hidden select-none ${
                         isActive    ? 'bg-[#FF6B2C]/10'
                       : isCompleted ? 'bg-[#2FA66A]/8'
                       : 'bg-stone-50'
@@ -1941,7 +1965,7 @@ export default function PlannerSidebar({
         })()}
       </div>
 
-      <div data-lenis-prevent="true" className="flex-1 overflow-y-auto overflow-x-hidden pr-2 -mr-3 scroll-smooth min-h-0">
+      <div data-lenis-prevent="true" className="flex-1 overflow-y-auto overflow-x-hidden pr-2 -mr-3 pb-20 scroll-smooth min-h-0">
         {/* STATE 0: Prompt Input Setup Page */}
         {step === 'input' && (
           <div className="space-y-8 animate-fade-in">
@@ -1965,7 +1989,7 @@ export default function PlannerSidebar({
                   }}
                   placeholder="e.g., 5 days in Kyoto during cherry blossom season… love historic temples, hidden gardens, authentic ramen shops, and boutique stays."
                   maxLength={400}
-                  className={`w-full h-36 pt-4 pb-12 px-4 md:px-5 rounded-xl bg-white border transition-all duration-300 resize-none font-sans leading-relaxed text-sm md:text-base text-stone-900 placeholder:text-stone-400/80 focus:outline-none shadow-xs ${
+                  className={`w-full h-36 pt-4 pb-12 px-4 md:px-5 rounded-2xl bg-white border transition-all duration-300 resize-none font-sans leading-relaxed text-[15px] md:text-base text-stone-900 placeholder:text-stone-400/80 focus:outline-none shadow-sm md:shadow-xs ${
                     isListeningVoice
                       ? 'border-[#FF6B2C] ring-4 ring-[#FF6B2C]/10 bg-[#FFF9F6] border-l-[4px] border-l-[#FF6B2C]'
                       : 'border-stone-200 border-l-[3px] border-l-[#FF6B2C] focus:border-[#FF6B2C]/50 focus:border-l-[#FF6B2C] focus:ring-2 focus:ring-[#FF6B2C]/10'
@@ -2147,13 +2171,13 @@ export default function PlannerSidebar({
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -2 }}
                       transition={{ duration: 0.15 }}
-                      className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[11px] font-sans text-stone-500"
+                      className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-x-4 gap-y-1.5 mt-3 text-[11.5px] font-sans text-stone-500"
                     >
-                      <span className="inline-flex items-center gap-1">
+                      <span className="inline-flex items-center gap-1.5">
                         <span>🏨</span>
                         <span className="font-semibold text-stone-700">Have a hotel?</span> We'll route around it.
                       </span>
-                      <span className="inline-flex items-center gap-1">
+                      <span className="inline-flex items-center gap-1.5">
                         <span>🎲</span>
                         <span className="font-semibold text-stone-600">Not sure yet?</span> We'll help you pick one later.
                       </span>
@@ -2168,7 +2192,7 @@ export default function PlannerSidebar({
                   <span className="font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-stone-400">Vibe Add-ons</span>
                   <div className="flex-1 h-px bg-stone-200" />
                 </div>
-                <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                <div className="flex flex-wrap justify-center sm:justify-start gap-x-2 gap-y-3 pt-2 pb-1 relative">
                   {[
                     "Hidden Local Gems",
                     "Michelin & Street Food",
@@ -2179,20 +2203,31 @@ export default function PlannerSidebar({
                   ].map((rawLabel, idx) => {
                     const tag = `➕ ${rawLabel}`;
                     const active = isTagActive(tag);
+                    
+                    // Controlled random scattered layout for mobile (stamps/stickers effect)
+                    const scatterTransform = [
+                      '-rotate-2 translate-y-1',
+                      'rotate-3 -translate-y-0.5',
+                      '-rotate-1 -translate-y-1.5',
+                      'rotate-2 translate-y-1',
+                      '-rotate-3 -translate-y-0.5',
+                      'rotate-1 translate-y-1.5'
+                    ][idx];
+
                     return (
                       <button
                         key={idx}
                         type="button"
                         onClick={() => toggleVibeEnhancer(tag)}
                         style={{
-                          transform: active ? 'rotate(1deg) scale(1.03)' : 'rotate(0deg) scale(1)',
-                          transition: 'transform 0.2s cubic-bezier(0.16,1,0.3,1), background 0.15s ease, color 0.15s ease',
+                          transition: 'all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
                         }}
-                        className={`px-3 py-1.5 rounded-sm text-[11px] font-mono font-bold border cursor-pointer active:scale-95 ${
-                          active
-                            ? 'bg-[#FF6B2C] text-white border-[#FF6B2C] shadow-sm'
-                            : 'bg-white hover:bg-[#FF6B2C]/8 hover:text-[#FF6B2C] hover:border-[#FF6B2C]/40 text-stone-600 border-stone-200'
-                        }`}
+                        className={`px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-[10px] sm:rounded-xl text-[9.5px] sm:text-xs font-mono font-bold border cursor-pointer select-none
+                          ${active 
+                            ? 'z-20 scale-105 !rotate-0 !translate-y-0 shadow-[0_8px_16px_rgba(255,107,44,0.25)] border-[#FF6B2C] bg-[#FF6B2C] text-white' 
+                            : `z-10 shadow-sm border-stone-200 bg-white text-stone-600 hover:text-[#FF6B2C] hover:border-[#FF6B2C]/30 hover:bg-[#FFF2EA] hover:scale-105 hover:!rotate-0 hover:z-20 md:!rotate-0 md:!translate-y-0 ${scatterTransform}`
+                          }
+                        `}
                       >
                         {active ? `✓ ${rawLabel}` : `+ ${rawLabel}`}
                       </button>
