@@ -11,6 +11,7 @@ function Header() {
     const { isSignedIn } = useAuth();
     const [isScrolled, setIsScrolled] = useState(false);
     const [isFlying, setIsFlying] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
     // Continuous Scroll Interpolation
     const { scrollY } = useScroll();
@@ -113,6 +114,7 @@ function Header() {
 
     // Removed duplicate unoptimized scroll listener.
     return (
+        <>
         <motion.header 
             style={{
                 top: headerTop,
@@ -203,7 +205,7 @@ function Header() {
                 </a>
 
                 {/* Right Side: Community, Avatar, Get Started */}
-                <div className={`flex items-center justify-end gap-8 lg:gap-10 shrink-0`}>
+                <div className={`flex items-center justify-end gap-4 md:gap-8 lg:gap-10 shrink-0`}>
                     
                     {/* Desktop Only Text Links */}
                     <div className="hidden md:flex items-center gap-8 lg:gap-10">
@@ -258,6 +260,18 @@ function Header() {
                         </div>
                     </div>
 
+                    {/* Mobile Navigation Toggle (Hamburger) */}
+                    <div className="md:hidden flex items-center">
+                        <button 
+                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            className={`p-2 focus:outline-none flex flex-col justify-center items-center gap-1.5 z-[10000]`}
+                        >
+                            <span className={`block w-6 h-[2px] rounded-full transition-transform duration-300 ${isMobileMenuOpen ? 'bg-white rotate-45 translate-y-[8px]' : (isLightPage ? 'bg-[#1F1F1F]' : 'bg-white')}`} />
+                            <span className={`block w-6 h-[2px] rounded-full transition-opacity duration-300 ${isMobileMenuOpen ? 'opacity-0' : (isLightPage ? 'bg-[#1F1F1F]' : 'bg-white')}`} />
+                            <span className={`block w-6 h-[2px] rounded-full transition-transform duration-300 ${isMobileMenuOpen ? 'bg-white -rotate-45 -translate-y-[8px]' : (isLightPage ? 'bg-[#1F1F1F]' : 'bg-white')}`} />
+                        </button>
+                    </div>
+
                     {/* CTA removed as per user request */}
                 </div>
             </motion.div>
@@ -265,9 +279,52 @@ function Header() {
             {/* Cinematic Circle Wipe Transition Overlay */}
             <div 
                 ref={wipeOverlayRef} 
-                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-[#0A0A0A] rounded-full z-99999 pointer-events-none opacity-0 origin-center" 
+                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-[#0A0A0A] rounded-full z-[99999] pointer-events-none opacity-0 origin-center" 
             />
         </motion.header>
+
+        {/* Mobile Menu Overlay */}
+        <div 
+            className={`md:hidden fixed inset-0 min-h-screen bg-[#070709]/98 backdrop-blur-3xl z-[9998] flex flex-col items-start justify-between pt-32 pb-12 px-8 overflow-y-auto transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto translate-y-0' : 'opacity-0 pointer-events-none -translate-y-4'}`}
+            style={{ left: 0, right: 0, top: 0, bottom: 0 }}
+        >
+            {/* Navigation Links */}
+            <div className="flex flex-col items-start gap-2 w-full mt-4">
+                {[
+                    { name: 'Destinations', path: '/destinations' },
+                    { name: 'AI Planner', path: '/ai-planner/new' },
+                    { name: 'Community', path: '/community' },
+                    ...(isSignedIn ? [{ name: 'My Trips', path: '/ai-planner' }] : [])
+                ].map((item, index) => (
+                    <a 
+                        key={item.name} 
+                        href={item.path}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="group flex flex-col w-full py-4 border-b border-white/5 active:bg-white/5 transition-colors"
+                    >
+                        <div className="flex items-start gap-4">
+                            <span className="font-mono text-[#FF5B1D] text-xs font-bold tracking-widest mt-1.5 opacity-80">0{index + 1}</span>
+                            <span className="text-4xl sm:text-5xl font-sans font-extrabold tracking-tighter uppercase text-white group-active:text-[#FF5B1D] transition-colors">{item.name}</span>
+                        </div>
+                    </a>
+                ))}
+            </div>
+
+            {/* Bottom Account Footer */}
+            <div className="w-full mt-12 pt-6 flex flex-col items-center justify-center">
+                {isSignedIn ? (
+                    <div className="flex items-center justify-between w-full px-2 py-4 bg-white/5 rounded-2xl border border-white/10">
+                        <span className="font-mono text-[10px] tracking-widest uppercase text-white/50 pl-4">Account</span>
+                        <div className="scale-110 origin-right pr-4"><ProfileDropdown isLightPage={false} isScrolled={true} /></div>
+                    </div>
+                ) : (
+                    <a href="/sign-in" className="w-full bg-[#FF5B1D] text-[#070709] text-center py-4.5 rounded-2xl font-bold text-lg transition-transform active:scale-95 shadow-[0_0_30px_rgba(255,91,29,0.2)] uppercase tracking-widest" onClick={() => setIsMobileMenuOpen(false)}>
+                        Sign In
+                    </a>
+                )}
+            </div>
+        </div>
+        </>
     )
 }
 
