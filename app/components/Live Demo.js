@@ -43,7 +43,14 @@ export default function RealTimeAdjuster() {
 
     // Setup Initial states & GSAP timeline choreography
     useEffect(() => {
-        const ctx = gsap.context(() => {
+        let mm = gsap.matchMedia();
+
+        mm.add({
+            isDesktop: "(min-width: 1024px)",
+            isMobile: "(max-width: 1023px)"
+        }, (context) => {
+            let { isDesktop } = context.conditions;
+
             // Set initial state of cursor
             gsap.set(cursorRef.current, {
                 x: 80,
@@ -90,13 +97,13 @@ export default function RealTimeAdjuster() {
             gsap.set('.timeline-card', {
                 opacity: 0,
                 scale: 0.84,
-                x: -85,
-                y: 15,
-                rotateY: -20,
-                rotateX: 4,
+                x: isDesktop ? -85 : 0,
+                y: isDesktop ? 15 : 150, // Start much lower (inside phone screen) on mobile
+                rotateY: isDesktop ? -20 : 0,
+                rotateX: isDesktop ? 4 : 25, // Tilted back on mobile
                 filter: 'blur(8px)',
                 transformPerspective: 1400,
-                transformOrigin: 'left center',
+                transformOrigin: isDesktop ? 'left center' : 'top center',
             });
 
             // Instantiate master timeline
@@ -109,7 +116,7 @@ export default function RealTimeAdjuster() {
             tl.to(phoneRef.current, {
                 y: 0,
                 rotateX: 0,
-                scale: 1,
+                scale: isDesktop ? 1 : 0.8,
                 opacity: 1,
                 filter: 'blur(0px)',
                 duration: 0.85,
@@ -195,7 +202,7 @@ export default function RealTimeAdjuster() {
 
             // Phone tilts in 3D to project cards out into spatial plane, sides intensely glow with TripWise Orange
             tl.to(phoneRef.current, {
-                scale: 1.03,
+                scale: isDesktop ? 1.03 : 0.83,
                 rotateY: 7,
                 rotateX: -3,
                 borderColor: '#FF5B1D',
@@ -232,32 +239,25 @@ export default function RealTimeAdjuster() {
                 rotateX: 0,
                 filter: 'blur(0px)',
                 stagger: 0.16,
-                duration: 0.7,
-                ease: 'back.out(1.3)',
+                duration: 0.85,
+                ease: 'back.out(1.1)',
             }, 5.4);
 
             // Phone settles back smoothly as cards lock into place, glow animates off
             tl.to(phoneRef.current, {
-                scale: 1,
+                scale: isDesktop ? 1 : 0.8,
                 rotateY: 0,
                 rotateX: 0,
                 borderColor: '#4A4950',
                 boxShadow: '0 0 0 1px rgba(44, 43, 48, 1), 0 0 0 4px rgba(18, 17, 20, 1), 0 30px 70px -15px rgba(0, 0, 0, 0.6), 0 0 60px 0px rgba(255, 91, 29, 0.12), inset 0 0 0px 0px rgba(255, 91, 29, 0)',
+                opacity: isDesktop ? 1 : 0.25,
                 duration: 0.8,
                 ease: 'power2.out',
             }, 5.95);
 
         }, sectionRef);
 
-        // Create a ScrollTrigger that fires when this section comes up fully (top edge hits top of screen)
-        ScrollTrigger.create({
-            trigger: sectionRef.current,
-            start: 'top top',
-            onEnter: () => setIsDelayed(true),
-            onLeaveBack: () => setIsDelayed(false),
-        });
-
-        return () => ctx.revert();
+        return () => mm.revert();
     }, []);
 
     // Control timeline based on state
@@ -344,10 +344,10 @@ export default function RealTimeAdjuster() {
                 <div className="absolute bottom-1/4 right-1/4 w-100 h-100 rounded-full bg-[#FF5B1D]/2 blur-[130px]" />
             </div>
 
-            <div ref={innerContainerRef} className="max-w-6xl mx-auto px-6 relative z-10 will-change-transform">
+            <div ref={innerContainerRef} className="max-w-6xl mx-auto px-6 relative z-10 will-change-transform overflow-hidden lg:overflow-visible">
                 {/* Header */}
                 <div className="text-center max-w-3xl mx-auto mb-6 md:mb-8">
-                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#FF5B1D]/10 border border-[#FF5B1D]/20 text-[#FF5B1D] font-mono text-[11px] font-bold tracking-wider uppercase rounded-full mb-3 shadow-2xs">
+                    <div className="hidden md:inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#FF5B1D]/10 border border-[#FF5B1D]/20 text-[#FF5B1D] font-mono text-[11px] font-bold tracking-wider uppercase rounded-full mb-3 shadow-2xs">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D] animate-pulse" />
                         ✦ TYPE &amp; MAGIC
                     </div>
@@ -359,11 +359,25 @@ export default function RealTimeAdjuster() {
                     </p>
                 </div>
 
+                {/* Mobile ONLY: Timeline Header moved above the grid so it doesn't overlap the phone */}
+                <div className="lg:hidden flex items-center justify-between border-b border-brand-dark/5 pb-3 mb-6 relative z-50">
+                    <div>
+                        <h3 className="font-extrabold text-brand-dark text-lg md:text-xl leading-tight">Tailored Rome Itinerary</h3>
+                        <p className="invisible text-[11px] text-secondary-text mt-0.5 font-medium">Prompt-compiled Day 1 routing</p>
+                    </div>
+                    <button
+                        onClick={handleToggleDelay}
+                        className="px-4 py-2 bg-brand-dark hover:bg-brand-dark/90 text-white font-mono text-[9px] font-bold uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-[0.98] select-none flex items-center gap-1.5 cursor-pointer pointer-events-auto"
+                    >
+                        <span>{isDelayed ? '⚡ RESET ITINERARY' : '🔥 Run Prompt'}</span>
+                    </button>
+                </div>
+
                 {/* Main Split Layout */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+                <div className="grid grid-cols-1 lg:grid-cols-12 lg:gap-12 items-start lg:items-center relative">
 
                     {/* Left Column: Realistic iPhone Titanium Frame */}
-                    <div className="lg:col-span-5 flex flex-col items-center justify-center py-2 relative">
+                    <div className="col-start-1 row-start-1 lg:col-span-5 flex flex-col items-center justify-center py-2 relative z-10 -mt-12 lg:mt-0">
                         {/* Ground Contact Shadow */}
                         <div
                             ref={phoneShadowRef}
@@ -535,9 +549,9 @@ export default function RealTimeAdjuster() {
                     </div>
 
                     {/* Right Column: Tailored Itinerary Timeline */}
-                    <div ref={timelineRef} className="lg:col-span-7 flex flex-col gap-4">
+                    <div ref={timelineRef} className="col-start-1 row-start-1 lg:col-start-auto lg:row-start-auto lg:col-span-7 flex flex-col gap-4 relative z-50 -mt-11 lg:mt-0 pointer-events-none lg:pointer-events-auto">
 
-                        <div className="flex items-center justify-between border-b border-brand-dark/5 pb-3">
+                        <div className="hidden lg:flex items-center justify-between border-b border-brand-dark/5 pb-3">
                             <div>
                                 <h3 className="font-extrabold text-brand-dark text-lg md:text-xl leading-tight">Tailored Rome Itinerary</h3>
                                 <p className="text-[11px] text-secondary-text mt-0.5 font-medium">Prompt-compiled Day 1 routing</p>
@@ -554,7 +568,7 @@ export default function RealTimeAdjuster() {
 
                         {/* Interactive Timeline List */}
                         <div 
-                            className="relative pl-7 flex flex-col gap-3"
+                            className="relative pl-7 flex flex-col gap-2.5 sm:gap-3"
                             style={{ perspective: '1400px', transformStyle: 'preserve-3d' }}
                         >
                             {/* Dotted Vertical Line Connector */}
@@ -573,7 +587,7 @@ export default function RealTimeAdjuster() {
                             {/* Event 1: Flight Landing */}
                             <div
                                 ref={el => { cardRefs.current[0] = el; }}
-                                className="timeline-card card-flight relative p-3.5 md:p-4 rounded-xl border border-brand-dark/10 bg-white/95 backdrop-blur-sm shadow-[0_4px_16px_rgba(0,0,0,0.03)] flex items-start justify-between gap-3 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md hover:border-[#FF5B1D]/35 will-change-transform cursor-default"
+                                className="timeline-card card-flight relative p-3 md:p-4 rounded-xl border border-brand-dark/10 bg-white/95 backdrop-blur-sm shadow-[0_4px_16px_rgba(0,0,0,0.03)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md hover:border-[#FF5B1D]/35 will-change-transform cursor-default"
                             >
                                 {/* Dot Icon */}
                                 <div className="absolute -left-9.5 top-4 w-5 h-5 rounded-full bg-[#FFF8F5] border-2 border-brand-dark/20 flex items-center justify-center z-10 text-[9px] font-black font-sans shadow-2xs">
@@ -581,12 +595,12 @@ export default function RealTimeAdjuster() {
                                 </div>
 
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
+                                    <div className="flex items-center gap-2 mb-0.5">
                                         <span className="time-flight text-[11px] font-mono font-bold leading-none text-[#FF5B1D]">09:30</span>
                                         <span className="text-[8.5px] font-sans font-bold text-secondary-text/50 uppercase tracking-widest leading-none">Arrival</span>
                                     </div>
-                                    <h4 className="text-xs md:text-sm font-extrabold text-brand-dark">Rome Fiumicino Airport (FCO) Arrival</h4>
-                                    <p className="text-[10.5px] text-secondary-text mt-0.5 leading-relaxed">Airport express train ticket automatically added to digital wallet.</p>
+                                    <h4 className="text-xs md:text-sm font-extrabold text-brand-dark leading-tight">Rome Fiumicino Airport (FCO) Arrival</h4>
+                                    <p className="text-[10.5px] text-secondary-text mt-0.5 leading-snug">Airport express train ticket automatically added to digital wallet.</p>
                                 </div>
 
                                 {/* Custom tag */}
@@ -598,18 +612,18 @@ export default function RealTimeAdjuster() {
                             {/* Event 2: Hotel Check-In */}
                             <div
                                 ref={el => { cardRefs.current[1] = el; }}
-                                className="timeline-card relative p-3.5 md:p-4 rounded-xl border border-brand-dark/10 bg-white/95 backdrop-blur-sm shadow-[0_4px_16px_rgba(0,0,0,0.03)] flex items-start justify-between gap-3 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md hover:border-[#FF5B1D]/35 will-change-transform cursor-default"
+                                className="timeline-card relative p-3 md:p-4 rounded-xl border border-brand-dark/10 bg-white/95 backdrop-blur-sm shadow-[0_4px_16px_rgba(0,0,0,0.03)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md hover:border-[#FF5B1D]/35 will-change-transform cursor-default"
                             >
                                 <div className="absolute -left-9.5 top-4 w-5 h-5 rounded-full bg-[#FFF8F5] border-2 border-brand-dark/20 flex items-center justify-center z-10 text-[9px] font-black font-sans shadow-2xs">
                                     02
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
+                                    <div className="flex items-center gap-2 mb-0.5">
                                         <span className="time-hotel text-[11px] font-mono font-bold leading-none text-green-600">12:30</span>
                                         <span className="text-[8.5px] font-sans font-bold text-secondary-text/50 uppercase tracking-widest leading-none">Hotel</span>
                                     </div>
-                                    <h4 className="text-xs md:text-sm font-extrabold text-brand-dark">Hotel check-in: Generator Rome</h4>
-                                    <p className="text-[10.5px] text-secondary-text mt-0.5 leading-relaxed">Highly rated budget accommodation selected near main transit hubs.</p>
+                                    <h4 className="text-xs md:text-sm font-extrabold text-brand-dark leading-tight">Hotel check-in: Generator Rome</h4>
+                                    <p className="text-[10.5px] text-secondary-text mt-0.5 leading-snug">Highly rated budget accommodation selected near main transit hubs.</p>
                                 </div>
 
                                 {/* Custom Budget tag */}
@@ -622,18 +636,18 @@ export default function RealTimeAdjuster() {
                             {/* Event 3: Colosseum Guided Tour */}
                             <div
                                 ref={el => { cardRefs.current[2] = el; }}
-                                className="timeline-card card-tour relative p-3.5 md:p-4 rounded-xl border border-brand-dark/10 bg-white/95 backdrop-blur-sm shadow-[0_4px_16px_rgba(0,0,0,0.03)] flex items-start justify-between gap-3 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md hover:border-[#FF5B1D]/35 will-change-transform cursor-default"
+                                className="timeline-card card-tour relative p-3 md:p-4 rounded-xl border border-brand-dark/10 bg-white/95 backdrop-blur-sm shadow-[0_4px_16px_rgba(0,0,0,0.03)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md hover:border-[#FF5B1D]/35 will-change-transform cursor-default"
                             >
                                 <div className="absolute -left-9.5 top-4 w-5 h-5 rounded-full bg-[#FFF8F5] border-2 border-brand-dark/20 flex items-center justify-center z-10 text-[9px] font-black font-sans shadow-2xs">
                                     03
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
+                                    <div className="flex items-center gap-2 mb-0.5">
                                         <span className="time-tour text-[11px] font-mono font-bold leading-none text-blue-600">15:00</span>
                                         <span className="text-[8.5px] font-sans font-bold text-secondary-text/50 uppercase tracking-widest leading-none">Activity</span>
                                     </div>
-                                    <h4 className="text-xs md:text-sm font-extrabold text-brand-dark">Colosseum Skip-the-Line Visit</h4>
-                                    <p className="text-[10.5px] text-secondary-text mt-0.5 leading-relaxed">Scheduled during low-crowd afternoon window to optimize walking route.</p>
+                                    <h4 className="text-xs md:text-sm font-extrabold text-brand-dark leading-tight">Colosseum Skip-the-Line Visit</h4>
+                                    <p className="text-[10.5px] text-secondary-text mt-0.5 leading-snug">Scheduled during low-crowd afternoon window to optimize walking route.</p>
                                 </div>
 
                                 {/* Optimized route badge */}
@@ -646,18 +660,18 @@ export default function RealTimeAdjuster() {
                             {/* Event 4: Trastevere Dinner Reservation */}
                             <div
                                 ref={el => { cardRefs.current[3] = el; }}
-                                className="timeline-card card-dinner relative p-3.5 md:p-4 rounded-xl border border-brand-dark/10 bg-white/95 backdrop-blur-sm shadow-[0_4px_16px_rgba(0,0,0,0.03)] flex items-start justify-between gap-3 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md hover:border-[#FF5B1D]/35 will-change-transform cursor-default"
+                                className="timeline-card card-dinner relative p-3 md:p-4 rounded-xl border border-brand-dark/10 bg-white/95 backdrop-blur-sm shadow-[0_4px_16px_rgba(0,0,0,0.03)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md hover:border-[#FF5B1D]/35 will-change-transform cursor-default"
                             >
                                 <div className="absolute -left-9.5 top-4 w-5 h-5 rounded-full bg-[#FFF8F5] border-2 border-brand-dark/20 flex items-center justify-center z-10 text-[9px] font-black font-sans shadow-2xs">
                                     04
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
+                                    <div className="flex items-center gap-2 mb-0.5">
                                         <span className="time-dinner text-[11px] font-mono font-bold leading-none text-[#FF5B1D]">19:30</span>
                                         <span className="text-[8.5px] font-sans font-bold text-secondary-text/50 uppercase tracking-widest leading-none">Dining</span>
                                     </div>
-                                    <h4 className="text-xs md:text-sm font-extrabold text-brand-dark">Dinner at Da Enzo Al 29</h4>
-                                    <p className="text-[10.5px] text-secondary-text mt-0.5 leading-relaxed">Hyper-local Trastevere dining spot serving authentic Roman pasta.</p>
+                                    <h4 className="text-xs md:text-sm font-extrabold text-brand-dark leading-tight">Dinner at Da Enzo Al 29</h4>
+                                    <p className="text-[10.5px] text-secondary-text mt-0.5 leading-snug">Hyper-local Trastevere dining spot serving authentic Roman pasta.</p>
                                 </div>
 
                                 {/* Custom Local Gem tag */}
