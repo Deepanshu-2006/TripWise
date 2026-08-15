@@ -56,10 +56,12 @@ export default function CustomDatePicker({ value, onChange, placeholder = "Selec
         top,
         bottom,
         left: isMobile ? '50%' : rect.left,
-        transform: isMobile ? 'translateX(-50%)' : 'none',
+        marginLeft: isMobile ? -150 : 0,
         zIndex: 999999,
         width: 300,
-        transformOrigin: isUpwards ? 'bottom left' : 'top left',
+        transformOrigin: isMobile 
+          ? (isUpwards ? 'bottom center' : 'top center') 
+          : (isUpwards ? 'bottom left' : 'top left'),
       });
     }
   };
