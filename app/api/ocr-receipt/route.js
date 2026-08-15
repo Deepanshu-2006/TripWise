@@ -63,9 +63,10 @@ Return JSON only in this exact schema:
     let text = response.text;
     if (typeof text === 'function') text = text(); // handle old and new SDKs just in case
     
-    // Strip markdown formatting if the model unexpectedly wraps the JSON
-    if (text.startsWith('```')) {
-      text = text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
+    // Extract JSON block using regex to avoid parsing errors from trailing/leading text
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      text = jsonMatch[0];
     }
     
     const parsed = JSON.parse(text);
