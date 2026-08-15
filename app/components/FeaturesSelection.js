@@ -15,18 +15,23 @@ function FeaturesSelection() {
     const maskPathRef = useRef(null);
     const svgRef = useRef(null);
     const contentWrapperRef = useRef(null);
+    const cardsContainerRef = useRef(null);
+
+
 
     useEffect(() => {
         if (!containerRef.current || !stickyRef.current) return;
         gsap.registerPlugin(ScrollTrigger);
 
-        const ctx = gsap.context(() => {
+        let mm = gsap.matchMedia();
+
+        mm.add("all", () => {
+            const ctx = gsap.context(() => {
             ScrollTrigger.create({
                 trigger: containerRef.current,
                 start: 'top top',
                 end: 'bottom bottom',
                 scrub: true,
-                pin: stickyRef.current,
                 onUpdate: (self) => {
                     const rawProgress = self.progress;
                     
@@ -52,195 +57,205 @@ function FeaturesSelection() {
                     else if (featureProgress >= 0.75) activePreviewIdx = 3;
                     setActivePreviewTab(activePreviewIdx);
 
-                    // Plane Flight Path Coordinate Calculation
-                    const logoEl = document.querySelector('.header-logo');
-                    const stickyRect = stickyRef.current.getBoundingClientRect();
-                    const cards = containerRef.current.querySelectorAll('.feature-card');
-                    const preview = containerRef.current.querySelector('.preview-outer-container');
-
-                    if (cards.length === 4 && preview && basePathRef.current && activePathRef.current && maskPathRef.current && planeRef.current) {
-                        const previewRect = preview.getBoundingClientRect();
-                        const previewLeftX = previewRect.left - stickyRect.left;
-
-                        // Logo position
-                        let logoX = stickyRect.width / 2;
-                        let logoY = -40; // fallback value above header
-                        if (logoEl) {
-                            const logoRect = logoEl.getBoundingClientRect();
-                            logoX = ((logoRect.left + logoRect.right) / 2 - stickyRect.left) + 25;
-                            logoY = (logoRect.top + logoRect.bottom) / 2 - stickyRect.top;
+                    const isDesktop = window.innerWidth >= 1024;
+                    
+                    if (!isDesktop) {
+                        if (cardsContainerRef.current) {
+                            const maxScroll = cardsContainerRef.current.scrollWidth - cardsContainerRef.current.clientWidth;
+                            cardsContainerRef.current.scrollLeft = maxScroll * featureProgress;
                         }
+                    } else {
+                        // Plane Flight Path Coordinate Calculation
+                        const logoEl = document.querySelector('.header-logo');
+                        const stickyRect = stickyRef.current.getBoundingClientRect();
+                        const cards = containerRef.current.querySelectorAll('.feature-card');
+                        const preview = containerRef.current.querySelector('.preview-outer-container');
 
-                        // Build serpentine flight points based on alternating Left/Right rows
-                        const points = [];
-                        
-                        // Point 0: Header Logo
-                        points.push({ x: logoX, y: logoY });
+                        if (cards.length === 4 && preview && basePathRef.current && activePathRef.current && maskPathRef.current && planeRef.current) {
+                            const previewRect = preview.getBoundingClientRect();
+                            const previewLeftX = previewRect.left - stickyRect.left;
 
-                        // Point 1: Card 0 (Row 0, Left)
-                        {
-                            const cardRect = cards[0].getBoundingClientRect();
-                            const iconEl = cards[0].querySelector('.feature-icon');
-                            let cardX, cardY;
-                            if (iconEl) {
-                                const iconRect = iconEl.getBoundingClientRect();
-                                cardX = iconRect.right - stickyRect.left;
-                                cardY = (iconRect.top + iconRect.bottom) / 2 - stickyRect.top;
-                            } else {
-                                cardX = cardRect.left + 40 - stickyRect.left;
-                                cardY = (cardRect.top + cardRect.bottom) / 2 - stickyRect.top;
+                            // Logo position
+                            let logoX = stickyRect.width / 2;
+                            let logoY = -40; // fallback value above header
+                            if (logoEl) {
+                                const logoRect = logoEl.getBoundingClientRect();
+                                logoX = ((logoRect.left + logoRect.right) / 2 - stickyRect.left) + 25;
+                                logoY = (logoRect.top + logoRect.bottom) / 2 - stickyRect.top;
                             }
-                            points.push({ x: cardX, y: cardY });
-                        }
 
-                        // Point 2: Preview 1 (Row 1, Right)
-                        {
-                            const cardRect = cards[1].getBoundingClientRect();
-                            const cardY = (cardRect.top + cardRect.bottom) / 2 - stickyRect.top;
-                            points.push({ x: previewLeftX, y: cardY });
-                        }
+                            const points = [];
+                            
+                            // Point 0: Header Logo
+                            points.push({ x: logoX, y: logoY });
 
-                        // Point 3: Card 2 (Row 2, Left)
-                        {
-                            const cardRect = cards[2].getBoundingClientRect();
-                            const iconEl = cards[2].querySelector('.feature-icon');
-                            let cardX, cardY;
-                            if (iconEl) {
-                                const iconRect = iconEl.getBoundingClientRect();
-                                cardX = iconRect.right - stickyRect.left;
-                                cardY = (iconRect.top + iconRect.bottom) / 2 - stickyRect.top;
-                            } else {
-                                cardX = cardRect.left + 40 - stickyRect.left;
-                                cardY = (cardRect.top + cardRect.bottom) / 2 - stickyRect.top;
+                            // Point 1: Card 0 (Row 0, Left)
+                            {
+                                const cardRect = cards[0].getBoundingClientRect();
+                                const iconEl = cards[0].querySelector('.feature-icon');
+                                let cardX, cardY;
+                                if (iconEl) {
+                                    const iconRect = iconEl.getBoundingClientRect();
+                                    cardX = iconRect.right - stickyRect.left;
+                                    cardY = (iconRect.top + iconRect.bottom) / 2 - stickyRect.top;
+                                } else {
+                                    cardX = cardRect.left + 40 - stickyRect.left;
+                                    cardY = (cardRect.top + cardRect.bottom) / 2 - stickyRect.top;
+                                }
+                                points.push({ x: cardX, y: cardY });
                             }
-                            points.push({ x: cardX, y: cardY });
-                        }
 
-                        // Point 4: Preview 3 (Row 3, Right)
-                        {
-                            const cardRect = cards[3].getBoundingClientRect();
-                            const cardY = (cardRect.top + cardRect.bottom) / 2 - stickyRect.top;
-                            points.push({ x: previewLeftX, y: cardY });
-                        }
-
-                        // Generate path string 'pathD'
-                        let pathD = `M ${points[0].x} ${points[0].y}`;
-
-                        // Segment 0: Logo to Card 0 S-curve (Swooping from Logo down-left to Card 0)
-                        {
-                            const p0 = points[0];
-                            const p1 = points[1];
-                            const cp1x = p0.x - (p0.x - p1.x) * 0.3;
-                            const cp1y = p0.y + (p1.y - p0.y) * 0.6;
-                            const cp2x = p1.x + 80;
-                            const cp2y = p1.y - 80;
-                            pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`;
-                        }
-
-                        // Segment 1: Card 0 to Preview 1 S-curve (Left to Right)
-                        {
-                            const p1 = points[1];
-                            const p2 = points[2];
-                            const cp1x = p1.x + 200;
-                            const cp1y = p1.y + (p2.y - p1.y) * 0.2;
-                            const cp2x = p2.x - 200;
-                            const cp2y = p2.y - (p2.y - p1.y) * 0.2;
-                            pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
-                        }
-
-                        // Segment 2: Preview 1 to Card 2 S-curve (Right to Left)
-                        {
-                            const p2 = points[2];
-                            const p3 = points[3];
-                            const cp1x = p2.x - 200;
-                            const cp1y = p2.y + (p3.y - p2.y) * 0.2;
-                            const cp2x = p3.x + 200;
-                            const cp2y = p3.y - (p3.y - p2.y) * 0.2;
-                            pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p3.x} ${p3.y}`;
-                        }
-
-                        // Segment 3: Card 2 to Preview 3 S-curve (Left to Right)
-                        {
-                            const p3 = points[3];
-                            const p4 = points[4];
-                            const cp1x = p3.x + 200;
-                            const cp1y = p3.y + (p4.y - p3.y) * 0.2;
-                            const cp2x = p4.x - 200;
-                            const cp2y = p4.y - (p4.y - p3.y) * 0.2;
-                            pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p4.x} ${p4.y}`;
-                        }
-
-                        // Apply the computed path dynamically
-                        basePathRef.current.setAttribute('d', pathD);
-                        activePathRef.current.setAttribute('d', pathD);
-                        maskPathRef.current.setAttribute('d', pathD);
-
-                        try {
-                            const pathLength = basePathRef.current.getTotalLength();
-                            const distance = pathLength * flightProgress;
-
-                            // Locate plane coordinates along path
-                            const point = basePathRef.current.getPointAtLength(distance);
-                            const x = point.x;
-                            const y = point.y;
-
-                            // Locate plane rotation angle along path
-                            const delta = 1;
-                            const checkDist = Math.max(0, Math.min(pathLength, distance + delta));
-                            const nextPoint = basePathRef.current.getPointAtLength(checkDist);
-                            const angle = Math.atan2(nextPoint.y - point.y, nextPoint.x - point.x) * (180 / Math.PI);
-
-                            // Reveal active trail behind plane
-                            maskPathRef.current.style.strokeDasharray = `${pathLength} ${pathLength}`;
-                            maskPathRef.current.style.strokeDashoffset = pathLength * (1 - flightProgress);
-
-                            planeRef.current.style.transform = `translate3d(${x - 16}px, ${y - 16}px, 0) rotate(${angle + 90}deg)`;
-                            planeRef.current.style.display = 'block';
-
-                            // --- FIGMA TRANSITION: Exit Layering when Plane animation finishes ---
-                            if (exitProgress > 0) {
-                                // Softly recede into background (scale to 0.95, fade to 0.35, gentle blur)
-                                if (contentWrapperRef.current) {
-                                    contentWrapperRef.current.style.opacity = Math.max(0.2, 1 - exitProgress * 0.75);
-                                    contentWrapperRef.current.style.transform = `translate3d(0, ${-exitProgress * 35}px, 0) scale(${1 - exitProgress * 0.04})`;
-                                    contentWrapperRef.current.style.filter = `blur(${exitProgress * 5}px)`;
-                                }
-                                // Plane fades out completely
-                                if (planeRef.current) {
-                                    planeRef.current.style.opacity = Math.max(0, 1 - exitProgress / 0.6);
-                                }
-                                if (svgRef.current) {
-                                    svgRef.current.style.opacity = Math.max(0.2, 1 - exitProgress * 0.75);
-                                }
-                            } else {
-                                if (contentWrapperRef.current) {
-                                    contentWrapperRef.current.style.opacity = 1;
-                                    contentWrapperRef.current.style.transform = 'translate3d(0, 0, 0) scale(1)';
-                                    contentWrapperRef.current.style.filter = 'blur(0px)';
-                                }
-                                if (svgRef.current) {
-                                    svgRef.current.style.opacity = 1;
-                                }
-                                let planeOpacity = 1;
-                                if (featureProgress < 0.02) {
-                                    planeOpacity = featureProgress / 0.02;
-                                }
-                                planeRef.current.style.opacity = planeOpacity;
+                            // Point 2: Preview 1 (Row 1, Right)
+                            {
+                                const cardRect = cards[1].getBoundingClientRect();
+                                const cardY = (cardRect.top + cardRect.bottom) / 2 - stickyRect.top;
+                                points.push({ x: previewLeftX, y: cardY });
                             }
-                        } catch (e) {
-                            console.error("SVG serpentine path computation error", e);
+
+                            // Point 3: Card 2 (Row 2, Left)
+                            {
+                                const cardRect = cards[2].getBoundingClientRect();
+                                const iconEl = cards[2].querySelector('.feature-icon');
+                                let cardX, cardY;
+                                if (iconEl) {
+                                    const iconRect = iconEl.getBoundingClientRect();
+                                    cardX = iconRect.right - stickyRect.left;
+                                    cardY = (iconRect.top + iconRect.bottom) / 2 - stickyRect.top;
+                                } else {
+                                    cardX = cardRect.left + 40 - stickyRect.left;
+                                    cardY = (cardRect.top + cardRect.bottom) / 2 - stickyRect.top;
+                                }
+                                points.push({ x: cardX, y: cardY });
+                            }
+
+                            // Point 4: Preview 3 (Row 3, Right)
+                            {
+                                const cardRect = cards[3].getBoundingClientRect();
+                                const cardY = (cardRect.top + cardRect.bottom) / 2 - stickyRect.top;
+                                points.push({ x: previewLeftX, y: cardY });
+                            }
+
+                            // Generate path string 'pathD'
+                            let pathD = `M ${points[0].x} ${points[0].y}`;
+
+                            // Segment 0: Logo to Card 0 S-curve (Swooping from Logo down-left to Card 0)
+                            {
+                                const p0 = points[0];
+                                const p1 = points[1];
+                                const cp1x = p0.x - (p0.x - p1.x) * 0.3;
+                                const cp1y = p0.y + (p1.y - p0.y) * 0.6;
+                                const cp2x = p1.x + 80;
+                                const cp2y = p1.y - 80;
+                                pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`;
+                            }
+
+                            // Segment 1: Card 0 to Preview 1 S-curve (Left to Right)
+                            {
+                                const p1 = points[1];
+                                const p2 = points[2];
+                                const cp1x = p1.x + 200;
+                                const cp1y = p1.y + (p2.y - p1.y) * 0.2;
+                                const cp2x = p2.x - 200;
+                                const cp2y = p2.y - (p2.y - p1.y) * 0.2;
+                                pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+                            }
+
+                            // Segment 2: Preview 1 to Card 2 S-curve (Right to Left)
+                            {
+                                const p2 = points[2];
+                                const p3 = points[3];
+                                const cp1x = p2.x - 200;
+                                const cp1y = p2.y + (p3.y - p2.y) * 0.2;
+                                const cp2x = p3.x + 200;
+                                const cp2y = p3.y - (p3.y - p2.y) * 0.2;
+                                pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p3.x} ${p3.y}`;
+                            }
+
+                            // Segment 3: Card 2 to Preview 3 S-curve (Left to Right)
+                            {
+                                const p3 = points[3];
+                                const p4 = points[4];
+                                const cp1x = p3.x + 200;
+                                const cp1y = p3.y + (p4.y - p3.y) * 0.2;
+                                const cp2x = p4.x - 200;
+                                const cp2y = p4.y - (p4.y - p3.y) * 0.2;
+                                pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p4.x} ${p4.y}`;
+                            }
+
+                            // Apply the computed path dynamically
+                            basePathRef.current.setAttribute('d', pathD);
+                            activePathRef.current.setAttribute('d', pathD);
+                            maskPathRef.current.setAttribute('d', pathD);
+
+                            try {
+                                const pathLength = basePathRef.current.getTotalLength();
+                                const distance = pathLength * flightProgress;
+
+                                // Locate plane coordinates along path
+                                const point = basePathRef.current.getPointAtLength(distance);
+                                const x = point.x;
+                                const y = point.y;
+
+                                // Locate plane rotation angle along path
+                                const delta = 1;
+                                const checkDist = Math.max(0, Math.min(pathLength, distance + delta));
+                                const nextPoint = basePathRef.current.getPointAtLength(checkDist);
+                                const angle = Math.atan2(nextPoint.y - point.y, nextPoint.x - point.x) * (180 / Math.PI);
+
+                                // Reveal active trail behind plane
+                                maskPathRef.current.style.strokeDasharray = `${pathLength} ${pathLength}`;
+                                maskPathRef.current.style.strokeDashoffset = pathLength * (1 - flightProgress);
+
+                                planeRef.current.style.transform = `translate3d(${x - 16}px, ${y - 16}px, 0) rotate(${angle + 90}deg)`;
+                                planeRef.current.style.display = 'block';
+                            } catch (e) {
+                                console.error("SVG serpentine path computation error", e);
+                            }
                         }
+                    }
+
+                    // --- FIGMA TRANSITION: Exit Layering when Plane animation finishes ---
+                    if (exitProgress > 0) {
+                        // Softly recede into background (scale to 0.95, fade to 0.35, gentle blur)
+                        if (contentWrapperRef.current) {
+                            contentWrapperRef.current.style.opacity = Math.max(0.2, 1 - exitProgress * 0.75);
+                            contentWrapperRef.current.style.transform = `translate3d(0, ${-exitProgress * 35}px, 0) scale(${1 - exitProgress * 0.04})`;
+                            contentWrapperRef.current.style.filter = `blur(${exitProgress * 5}px)`;
+                        }
+                        // Plane fades out completely
+                        if (planeRef.current) {
+                            planeRef.current.style.opacity = Math.max(0, 1 - exitProgress / 0.6);
+                        }
+                        if (svgRef.current) {
+                            svgRef.current.style.opacity = Math.max(0.2, 1 - exitProgress * 0.75);
+                        }
+                    } else {
+                        if (contentWrapperRef.current) {
+                            contentWrapperRef.current.style.opacity = 1;
+                            contentWrapperRef.current.style.transform = 'translate3d(0, 0, 0) scale(1)';
+                            contentWrapperRef.current.style.filter = 'blur(0px)';
+                        }
+                        if (svgRef.current) {
+                            svgRef.current.style.opacity = 1;
+                        }
+                        let planeOpacity = 1;
+                        if (featureProgress < 0.02) {
+                            planeOpacity = featureProgress / 0.02;
+                        }
+                        planeRef.current.style.opacity = planeOpacity;
                     }
                 }
             });
-        }, containerRef);
+            }, containerRef);
+            return () => ctx.revert();
+        });
 
-        return () => ctx.revert();
+        return () => mm.revert();
     }, []);
 
     const handleTabClick = (idx) => {
         if (!containerRef.current) return;
-        
+
         const rect = containerRef.current.getBoundingClientRect();
         const scrollTop = window.scrollY || document.documentElement.scrollTop;
         const containerStart = rect.top + scrollTop;
@@ -327,8 +342,8 @@ function FeaturesSelection() {
     ];
 
     return (
-        <section ref={containerRef} className="relative w-full h-[350vh] bg-[#FFF8F5]">
-            <div ref={stickyRef} className="sticky top-0 w-full h-screen overflow-hidden flex items-center justify-center">
+        <section ref={containerRef} className="relative w-full h-[400vh] lg:h-[350vh] bg-[#FFF8F5]">
+            <div ref={stickyRef} className="sticky top-0 z-10 w-full h-[100svh] lg:h-screen overflow-hidden flex flex-col lg:flex-row items-center justify-center">
                 {/* Background elements */}
                 <div className="absolute top-1/4 left-0 w-96 h-96 bg-[#fe7717]/5 rounded-full filter blur-[100px] pointer-events-none" />
                 <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-brand-teal/5 rounded-full filter blur-[100px] pointer-events-none" />
@@ -336,7 +351,7 @@ function FeaturesSelection() {
                 {/* SVG Dotted Trails */}
                 <svg
                     ref={svgRef}
-                    className="absolute inset-0 w-full h-full pointer-events-none z-30 transition-opacity duration-300"
+                    className="hidden lg:block absolute inset-0 w-full h-full pointer-events-none z-30 transition-opacity duration-300"
                     style={{ overflow: 'visible' }}
                 >
                     <defs>
@@ -376,7 +391,7 @@ function FeaturesSelection() {
                 {/* Small Plane Element */}
                 <div
                     ref={planeRef}
-                    className="absolute pointer-events-none z-45 transition-opacity duration-300"
+                    className="hidden lg:block absolute pointer-events-none z-45 transition-opacity duration-300"
                     style={{
                         width: '32px',
                         height: '32px',
@@ -394,7 +409,7 @@ function FeaturesSelection() {
 
                 <div 
                     ref={contentWrapperRef} 
-                    className="max-w-7xl mx-auto px-6 relative z-10 w-full h-full flex flex-col justify-start pt-12 md:pt-16 pb-4 will-change-transform transition-all"
+                    className="max-w-7xl mx-auto px-6 relative z-10 w-full h-full flex flex-col justify-start pt-[95px] sm:pt-[105px] lg:pt-16 pb-4 will-change-transform transition-all"
                 >
                     {/* Header Block */}
                     <div className="text-center max-w-3xl mx-auto mb-3">
@@ -407,19 +422,23 @@ function FeaturesSelection() {
                     </div>
 
                     {/* Features Split Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-center flex-1 min-h-0">
+                    <div className="flex flex-col lg:grid lg:grid-cols-12 gap-5 lg:gap-6 lg:items-center flex-1 min-h-0 w-full">
                         {/* Left Column: Interactive Selector List */}
-                        <div className="lg:col-span-5 flex flex-col gap-1.5 justify-center">
+                        <div 
+                            ref={cardsContainerRef}
+                            className="lg:col-span-5 flex flex-row lg:flex-col gap-4 lg:gap-1.5 overflow-hidden lg:overflow-visible pb-4 lg:pb-0 w-full order-last lg:order-first [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                        >
                             {features.map((feature, idx) => {
                                 const isActive = activeTab === idx;
                                 return (
                                     <div
                                         key={idx}
+                                        data-idx={idx}
                                         onClick={() => handleTabClick(idx)}
-                                        className={`feature-card relative overflow-hidden p-2 md:p-2.5 rounded-xl cursor-pointer transition-all duration-300 flex items-start gap-3 ${
+                                        className={`feature-card shrink-0 w-[85vw] sm:w-[350px] lg:w-auto relative overflow-hidden p-4 lg:p-2.5 rounded-2xl lg:rounded-xl cursor-pointer transition-all duration-300 flex items-start gap-4 lg:gap-3 ${
                                             isActive 
                                                 ? "bg-white shadow-lg shadow-brand-coral/5 scale-[1.01]" 
-                                                : "bg-transparent hover:bg-white/40 hover:scale-[1.005]"
+                                                : "bg-white/40 lg:bg-transparent hover:bg-white/40 hover:scale-[1.005]"
                                         }`}
                                     >
                                         {/* Perfect rounded left-side indicator border */}
@@ -472,8 +491,8 @@ function FeaturesSelection() {
                         </div>
 
                         {/* Right Column: Live Mock UI Preview */}
-                        <div className="preview-outer-container lg:col-span-7 flex items-center justify-center relative w-full h-125 lg:h-140 rounded-3xl overflow-hidden shadow-2xl">
-                            <div className="w-full h-full bg-[#1C1B1B] border border-white/15 rounded-3xl p-6 md:p-8 flex flex-col relative overflow-hidden shadow-2xl">
+                        <div className="preview-outer-container lg:col-span-7 flex items-center justify-center relative w-full flex-1 min-h-[280px] lg:flex-none lg:h-140 rounded-3xl overflow-hidden shadow-2xl mt-0 lg:mt-0 mb-2 lg:mb-0 order-first lg:order-last shrink-0 lg:shrink-none">
+                            <div className="w-full h-full bg-[#1C1B1B] border border-white/15 rounded-3xl p-4 sm:p-6 md:p-8 flex flex-col relative overflow-hidden shadow-2xl">
                                 
                                 {/* Inner Preview Window Shell */}
                                 <div className="flex items-center gap-1.5 border-b border-white/10 pb-4 mb-6">
@@ -553,7 +572,7 @@ function FeaturesSelection() {
                                         <span className="px-2 py-1 bg-[#fe7717]/20 text-[#fe7717] border border-[#fe7717]/30 rounded-full font-mono text-[10px] font-bold">120+ LOCAL CHEFS AGREE</span>
                                     </div>
 
-                                    <div className="flex-1 flex flex-col md:grid md:grid-cols-2 gap-3 items-center">
+                                    <div className="flex-1 flex flex-col md:grid md:grid-cols-2 gap-3 items-center overflow-y-auto pr-1 pb-1">
                                         {/* Left: Tourist Trap Card */}
                                         <div className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col relative opacity-60">
                                             <div className="absolute top-3 right-3 px-2 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded font-mono text-[8px] font-bold uppercase">Tourist Zone</div>
@@ -602,7 +621,7 @@ function FeaturesSelection() {
                                         <span className="px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full font-mono text-[10px] font-bold">$340 SAVED</span>
                                     </div>
 
-                                    <div className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-6 items-center">
+                                    <div className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-6 items-center overflow-y-auto pr-1 pb-1">
                                         {/* Left: Progress ring metric */}
                                         <div className="md:col-span-5 bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col items-center justify-center text-center w-full h-full">
                                             <div className="relative w-28 h-28 flex items-center justify-center mb-3">
