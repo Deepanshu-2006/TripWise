@@ -487,8 +487,10 @@ export default function InteractiveRouteMap({
   );
 
   const firstAct = validActivities[0];
-  const basecampLat = coordinates?.lat ? (coordinates.lat - 0.007) : (firstAct ? firstAct.coordinates.lat - 0.008 : 35.6762);
-  const basecampLng = coordinates?.lng ? (coordinates.lng - 0.007) : (firstAct ? firstAct.coordinates.lng - 0.008 : 139.6503);
+  let safeBaseLat = (typeof coordinates?.lat === 'number' && !isNaN(coordinates.lat)) ? coordinates.lat : (firstAct ? firstAct.coordinates.lat : 35.6762);
+  let safeBaseLng = (typeof coordinates?.lng === 'number' && !isNaN(coordinates.lng)) ? coordinates.lng : (firstAct ? firstAct.coordinates.lng : 139.6503);
+  const basecampLat = safeBaseLat - 0.007;
+  const basecampLng = safeBaseLng - 0.007;
 
   // Calculate live destination weather & local time telemetry overlay data
   useEffect(() => {
@@ -590,7 +592,7 @@ export default function InteractiveRouteMap({
     badge: 'Basecamp Hotel',
     category: 'hotel',
     time: 'Departure & Return Hub',
-    coordinates: basecampDetails.coordinates || { lat: basecampLat, lng: basecampLng },
+    coordinates: (typeof basecampDetails?.coordinates?.lat === 'number' && !isNaN(basecampDetails.coordinates.lat)) ? basecampDetails.coordinates : { lat: basecampLat, lng: basecampLng },
     image: dynamicBasecampImage || basecampDetails.image || basecampDetails.photoUrl || basecampDetails.thumbnail || (basecampDetails.photos?.length > 0 ? basecampDetails.photos[0] : null),
     photos: dynamicBasecampPhotos || basecampDetails.photos || [],
     rating: basecampDetails.rating || 4.8,
@@ -1022,7 +1024,12 @@ export default function InteractiveRouteMap({
       markersRef.current = {};
     }
 
-    const defaultCenter = coordinates ? [coordinates.lat, coordinates.lng] : [41.9028, 12.4964];
+    let cLat = coordinates?.lat;
+    let cLng = coordinates?.lng;
+    if (typeof cLat !== 'number' || isNaN(cLat)) cLat = activities?.[0]?.coordinates?.lat || 41.9028;
+    if (typeof cLng !== 'number' || isNaN(cLng)) cLng = activities?.[0]?.coordinates?.lng || 12.4964;
+    const defaultCenter = [cLat, cLng];
+
     const map = window.L.map(mapContainerRef.current, {
       zoomControl: false,
       attributionControl: false
