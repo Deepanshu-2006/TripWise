@@ -57,8 +57,15 @@ export default function AIPlannerPage() {
             try {
               const tripData = await getTripById(tripId);
               if (tripData && tripData.itinerary_data) {
-                setItinerary(tripData.itinerary_data);
-                localStorage.setItem('tripwise_itinerary', JSON.stringify(tripData.itinerary_data));
+                let parsedData = tripData.itinerary_data;
+                if (typeof parsedData === 'string') {
+                  try { parsedData = JSON.parse(parsedData); } catch(e) {}
+                }
+                if (typeof parsedData === 'string') {
+                  try { parsedData = JSON.parse(parsedData); } catch(e) {}
+                }
+                setItinerary(parsedData);
+                localStorage.setItem('tripwise_itinerary', JSON.stringify(parsedData));
               }
             } catch (e) {
               console.error("Failed to fetch shared trip from cloud", e);
@@ -76,7 +83,11 @@ export default function AIPlannerPage() {
           const stored = localStorage.getItem('tripwise_itinerary');
           if (stored) {
             try {
-              setItinerary(JSON.parse(stored));
+              let parsed = JSON.parse(stored);
+              if (typeof parsed === 'string') {
+                try { parsed = JSON.parse(parsed); } catch(e) {}
+              }
+              setItinerary(parsed);
             } catch (e) {
               console.error("Failed to parse itinerary from localStorage", e);
             }
