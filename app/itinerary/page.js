@@ -1139,9 +1139,16 @@ export default function ItineraryPage() {
               .maybeSingle();
 
             if (!error && tripRow && tripRow.itinerary_data && isMounted) {
-              setItinerary(tripRow.itinerary_data);
+              let parsedData = tripRow.itinerary_data;
+              if (typeof parsedData === 'string') {
+                try { parsedData = JSON.parse(parsedData); } catch(e) {}
+              }
+              if (typeof parsedData === 'string') {
+                try { parsedData = JSON.parse(parsedData); } catch(e) {}
+              }
+              setItinerary(parsedData);
               setActiveTripId(tripIdParam);
-              localStorage.setItem('tripwise_itinerary', JSON.stringify(tripRow.itinerary_data));
+              localStorage.setItem('tripwise_itinerary', JSON.stringify(parsedData));
               localStorage.setItem('tripwise_trip_id', tripIdParam);
               loadedFromUrl = true;
             }
@@ -1158,7 +1165,10 @@ export default function ItineraryPage() {
                 rawJsonStr = decodeURIComponent(rawJsonStr);
               } catch (e) { }
             }
-            const parsed = JSON.parse(rawJsonStr);
+            let parsed = JSON.parse(rawJsonStr);
+            if (typeof parsed === 'string') {
+              try { parsed = JSON.parse(parsed); } catch(e) {}
+            }
             if (parsed && parsed.days && isMounted) {
               setItinerary(parsed);
               localStorage.setItem('tripwise_itinerary', JSON.stringify(parsed));
@@ -1173,7 +1183,10 @@ export default function ItineraryPage() {
           const stored = localStorage.getItem('tripwise_itinerary');
           if (stored && isMounted) {
             try {
-              const parsed = JSON.parse(stored);
+              let parsed = JSON.parse(stored);
+              if (typeof parsed === 'string') {
+                try { parsed = JSON.parse(parsed); } catch(e) {}
+              }
               setItinerary(parsed);
             } catch (err) {
               console.error("Failed to parse stored itinerary:", err);
