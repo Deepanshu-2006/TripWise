@@ -2,16 +2,58 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import gsap from 'gsap'
-import { motion, useScroll, useTransform, useSpring, useMotionValueEvent } from 'framer-motion'
+import { motion, AnimatePresence, useScroll, useTransform, useSpring, useMotionValueEvent } from 'framer-motion'
 import { usePathname } from 'next/navigation'
 import { useAuth } from "@clerk/nextjs";
-import ProfileDropdown from './ProfileDropdown';
+import ProfileDropdown, { DropdownTripCard } from './ProfileDropdown';
+import { supabase } from '../../lib/supabase';
 
 function Header() {
-    const { isSignedIn } = useAuth();
+    const { isSignedIn, userId } = useAuth();
     const [isScrolled, setIsScrolled] = useState(false);
     const [isFlying, setIsFlying] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    
+    // For My Itinerary trips in mobile menu
+    const [userTrips, setUserTrips] = useState([]);
+    const [showMobileTrips, setShowMobileTrips] = useState(false);
+    const [isLoadingTrips, setIsLoadingTrips] = useState(false);
+    
+    useEffect(() => {
+        if (isMobileMenuOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isMobileMenuOpen]);
+
+    useEffect(() => {
+        if (isMobileMenuOpen && isSignedIn && userId && userTrips.length === 0) {
+            async function loadTrips() {
+                try {
+                    setIsLoadingTrips(true);
+                    const { data, error } = await supabase
+                        .from('trips')
+                        .select('id, destination_name, itinerary_data, created_at')
+                        .eq('user_id', userId)
+                        .order('created_at', { ascending: false })
+                        .limit(5);
+
+                    if (!error && data) {
+                        setUserTrips(data);
+                    }
+                } catch (e) {
+                    console.warn("Failed to load user trips:", e);
+                } finally {
+                    setIsLoadingTrips(false);
+                }
+            }
+            loadTrips();
+        }
+    }, [isMobileMenuOpen, isSignedIn, userId]);
     
     // Continuous Scroll Interpolation
     const { scrollY } = useScroll();
@@ -294,19 +336,77 @@ function Header() {
                     { name: 'Destinations', path: '/destinations' },
                     { name: 'AI Planner', path: '/ai-planner/new' },
                     { name: 'Community', path: '/community' },
-                    ...(isSignedIn ? [{ name: 'My Trips', path: '/ai-planner' }] : [])
+                    ...(isSignedIn ? [
+                        { name: 'My Trips', path: '/ai-planner' },
+                        { name: 'My Itinerary', action: 'toggleTrips' }
+                    ] : [])
                 ].map((item, index) => (
-                    <a 
-                        key={item.name} 
-                        href={item.path}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className="group flex flex-col w-full py-4 border-b border-white/5 active:bg-white/5 transition-colors"
-                    >
-                        <div className="flex items-start gap-4">
-                            <span className="font-mono text-[#FF5B1D] text-xs font-bold tracking-widest mt-1.5 opacity-80">0{index + 1}</span>
-                            <span className="text-4xl sm:text-5xl font-sans font-extrabold tracking-tighter uppercase text-white group-active:text-[#FF5B1D] transition-colors">{item.name}</span>
+                    item.action === 'toggleTrips' ? (
+                        <div key={item.name} className="w-full flex flex-col">
+                            <button 
+                                onClick={() => setShowMobileTrips(!showMobileTrips)}
+                                className="group flex flex-col w-full py-4 border-b border-white/5 active:bg-white/5 transition-colors text-left"
+                            >
+                                <div className="flex items-start justify-between w-full">
+                                    <div className="flex items-start gap-4">
+                                        <span className="font-mono text-[#FF5B1D] text-xs font-bold tracking-widest mt-1.5 opacity-80">0{index + 1}</span>
+                                        <span className="text-4xl sm:text-5xl font-sans font-extrabold tracking-tighter uppercase text-white group-active:text-[#FF5B1D] transition-colors">{item.name}</span>
+                                    </div>
+                                    <div className={`mt-2 transform transition-transform duration-300 ${showMobileTrips ? 'rotate-180' : ''}`}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF5B1D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                    </div>
+                                </div>
+                            </button>
+                            <AnimatePresence>
+                                {showMobileTrips && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="flex flex-col gap-3 pt-4 pl-4 overflow-hidden"
+                                    >
+                                        {isLoadingTrips ? (
+                                            <div className="text-white/60 font-mono text-sm pl-4 pb-4">Loading trips...</div>
+                                        ) : userTrips.length > 0 ? (
+                                            <div className="pb-4 flex flex-col gap-3">
+                                                {userTrips.map((trip, idx) => (
+                                                    <DropdownTripCard
+                                                        key={trip.id}
+                                                        trip={trip}
+                                                        idx={idx}
+                                                        onSelect={(t) => {
+                                                            if (typeof window !== 'undefined') {
+                                                                const actualData = typeof t.itinerary_data === 'string' ? t.itinerary_data : JSON.stringify(t.itinerary_data);
+                                                                localStorage.setItem('tripwise_itinerary', actualData);
+                                                                localStorage.setItem('tripwise_trip_id', t.id);
+                                                                window.location.href = `/itinerary?trip_id=${t.id}`;
+                                                            }
+                                                        }}
+                                                    />
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="text-white/60 font-mono text-sm pl-4 mb-4">
+                                                No active trips found. <a href="/ai-planner" className="text-[#FF6B2C] underline">Go to My Trips</a>.
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
-                    </a>
+                    ) : (
+                        <a 
+                            key={item.name} 
+                            href={item.path}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="group flex flex-col w-full py-4 border-b border-white/5 active:bg-white/5 transition-colors"
+                        >
+                            <div className="flex items-start gap-4">
+                                <span className="font-mono text-[#FF5B1D] text-xs font-bold tracking-widest mt-1.5 opacity-80">0{index + 1}</span>
+                                <span className="text-4xl sm:text-5xl font-sans font-extrabold tracking-tighter uppercase text-white group-active:text-[#FF5B1D] transition-colors">{item.name}</span>
+                            </div>
+                        </a>
+                    )
                 ))}
             </div>
 
@@ -315,7 +415,7 @@ function Header() {
                 {isSignedIn ? (
                     <div className="flex items-center justify-between w-full px-2 py-4 bg-white/5 rounded-2xl border border-white/10">
                         <span className="font-mono text-[10px] tracking-widest uppercase text-white/50 pl-4">Account</span>
-                        <div className="scale-110 origin-right pr-4"><ProfileDropdown isLightPage={false} isScrolled={true} /></div>
+                        <div className="scale-110 origin-right pr-4"><ProfileDropdown isLightPage={false} isScrolled={true} openUpwards={true} /></div>
                     </div>
                 ) : (
                     <a href="/sign-in" className="w-full bg-[#FF5B1D] text-[#070709] text-center py-4.5 rounded-2xl font-bold text-lg transition-transform active:scale-95 shadow-[0_0_30px_rgba(255,91,29,0.2)] uppercase tracking-widest" onClick={() => setIsMobileMenuOpen(false)}>
