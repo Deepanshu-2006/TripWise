@@ -108,7 +108,9 @@ const InviteModal = ({ isOpen, onClose, tripId, currentCollaborators = [] }) => 
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(shareLink);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(shareLink).catch(()=>{});
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
