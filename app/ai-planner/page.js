@@ -10,6 +10,7 @@ import { DESTINATIONS } from '../../lib/destinations';
 import { motion, AnimatePresence } from 'framer-motion';
 import AnimatedFlightMap from '../components/AnimatedFlightMap';
 import TripsCalendarView from '../components/TripsCalendarView';
+import InviteModal from '../components/InviteModal';
 import { getTrackingState, pollForPriceDrops } from '../../lib/priceTrackingApi';
 import Animated3DBackground from '../components/Animated3DBackground';
 
@@ -208,7 +209,10 @@ export default function AIPlannerDashboard() {
 
     const [activeTab, setActiveTab] = useState('All');
     const [activeSort, setActiveSort] = useState('Most Recent');
+    const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
     const [viewMode, setViewMode] = useState('grid');
+    const [inviteModalOpen, setInviteModalOpen] = useState(false);
+    const [selectedTripIdForInvite, setSelectedTripIdForInvite] = useState(null);
 
     useEffect(() => {
         async function fetchTrips() {
@@ -398,16 +402,11 @@ export default function AIPlannerDashboard() {
         }
     };
 
-    const handleShare = (e, tripId) => {
+    const handleShare = async (e, tripId) => {
         e.preventDefault();
         e.stopPropagation();
-        
-        const shareUrl = `${window.location.origin}/ai-planner/new?action=view&trip_id=${tripId}`;
-        
-        navigator.clipboard.writeText(shareUrl).then(() => {
-            setCopiedId(tripId);
-            setTimeout(() => setCopiedId(null), 2000);
-        });
+        setSelectedTripIdForInvite(tripId);
+        setInviteModalOpen(true);
     };
 
     const filteredAndSortedTrips = useMemo(() => {
@@ -472,14 +471,15 @@ export default function AIPlannerDashboard() {
                 <Header />
             </div>
             
-            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-12 md:pt-36 md:pb-20">
+            {/* Added pb-32 on mobile to allow scrolling past the fixed FAB */}
+            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-32 md:pt-36 md:pb-20">
                 
                 {/* Header Section */}
                 <div className="mb-10">
                     <div className="mb-4">
                         <span className="text-[10px] font-bold text-[#FF6B2C] uppercase tracking-[0.2em]">TRAVEL LOG — 2026</span>
                     </div>
-                    <h1 className="font-serif font-bold text-5xl md:text-6xl text-stone-900 mb-4 tracking-tight">Your Planning Sessions</h1>
+                    <h1 className="font-serif font-bold text-4xl sm:text-5xl md:text-6xl text-stone-900 mb-4 tracking-tight">Your Planning Sessions</h1>
                     <p className="text-xs md:text-sm font-mono text-stone-500 uppercase tracking-[0.2em] font-semibold">
                         Manage and review your AI trip drafts
                     </p>
@@ -527,7 +527,7 @@ export default function AIPlannerDashboard() {
                                     <button
                                         key={filter}
                                         onClick={() => setActiveTab(filter)}
-                                        className={`relative flex items-center justify-center flex-1 md:flex-none px-6 py-2.5 rounded-full text-[11px] font-mono uppercase font-bold transition-all duration-300 ${
+                                        className={`relative flex items-center justify-center flex-1 md:flex-none px-4 md:px-6 py-2 md:py-2.5 text-[10px] md:text-[11px] font-mono uppercase font-bold transition-all duration-300 ${
                                             isActive ? 'text-white' : 'text-stone-500 hover:text-stone-900 hover:bg-stone-100/50'
                                         }`}
                                     >
@@ -582,43 +582,103 @@ export default function AIPlannerDashboard() {
                     </div>
 
                     {/* Sort and New Trip */}
-                    <div className="flex items-center gap-4 w-full md:w-auto translate-y-0.75">
+                    <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto translate-y-0.75">
                         <div className={`relative w-full md:w-48 group ${viewMode === 'calendar' ? 'hidden' : ''}`}>
-                            <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400 group-hover:text-[#FF6B2C] transition-colors duration-300">
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400 group-hover:text-[#FF6B2C] transition-colors duration-300 z-10">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                     <line x1="4" y1="6" x2="20" y2="6"></line>
                                     <line x1="4" y1="12" x2="14" y2="12"></line>
                                     <line x1="4" y1="18" x2="8" y2="18"></line>
                                 </svg>
                             </div>
-                            <select 
-                                value={activeSort}
-                                onChange={(e) => setActiveSort(e.target.value)}
-                                className="w-full appearance-none bg-white/80 backdrop-blur-md shadow-sm border border-stone-200/60 hover:border-[#FF6B2C]/40 hover:shadow-md text-stone-600 hover:text-stone-900 text-[11px] font-mono font-bold uppercase rounded-full pl-10 pr-10 py-3 focus:outline-none focus:border-[#FF6B2C]/50 focus:ring-1 focus:ring-[#FF6B2C]/20 transition-all duration-300 cursor-pointer"
+                            <button 
+                                onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
+                                className="w-full flex items-center bg-white/80 backdrop-blur-md shadow-sm border border-stone-200/60 hover:border-[#FF6B2C]/40 hover:shadow-md text-stone-600 hover:text-stone-900 text-[11px] font-mono font-bold uppercase rounded-full pl-10 pr-10 py-3 focus:outline-none focus:border-[#FF6B2C]/50 focus:ring-1 focus:ring-[#FF6B2C]/20 transition-all duration-300 cursor-pointer text-left"
                             >
-                                {SORTS.map(sort => (
-                                    <option key={sort} value={sort}>{sort}</option>
-                                ))}
-                            </select>
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400 group-hover:text-[#FF6B2C] transition-colors duration-300">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <span className="flex-1 truncate">{activeSort}</span>
+                            </button>
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400 group-hover:text-[#FF6B2C] transition-colors duration-300 z-10">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-300 ${isSortDropdownOpen ? 'rotate-180' : ''}`}>
                                     <polyline points="6 9 12 15 18 9"></polyline>
                                 </svg>
                             </div>
+                            
+                            <AnimatePresence>
+                                {isSortDropdownOpen && (
+                                    <>
+                                        <div className="fixed inset-0 z-40" onClick={() => setIsSortDropdownOpen(false)} />
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-[0_15px_40px_-10px_rgba(0,0,0,0.1)] border border-stone-200 overflow-hidden z-50 flex flex-col p-2"
+                                        >
+                                            {SORTS.map(sort => (
+                                                <button
+                                                    key={sort}
+                                                    onClick={() => {
+                                                        setActiveSort(sort);
+                                                        setIsSortDropdownOpen(false);
+                                                    }}
+                                                    className={`text-left px-4 py-3 rounded-xl text-[11px] font-mono font-bold uppercase transition-all duration-200 flex items-center justify-between ${
+                                                        activeSort === sort 
+                                                            ? 'bg-[#FF6B2C]/10 text-[#FF6B2C]' 
+                                                            : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900'
+                                                    }`}
+                                                >
+                                                    {sort}
+                                                    {activeSort === sort && <Check size={14} strokeWidth={3} />}
+                                                </button>
+                                            ))}
+                                        </motion.div>
+                                    </>
+                                )}
+                            </AnimatePresence>
                         </div>
 
-                        <a 
+                        <motion.a 
                             href="/ai-planner/new"
-                            className="relative overflow-hidden hidden sm:flex group px-6 py-3 bg-linear-to-r from-[#FF8243] via-[#FF5A00] to-[#FF8243] bg-size-[200%_auto] hover:bg-position-[100%_0] text-white font-bold text-[11px] rounded-full transition-all duration-500 uppercase tracking-widest items-center justify-center gap-2 shadow-[0_8px_20px_-6px_rgba(255,107,44,0.6)] hover:shadow-[0_15px_30px_-6px_rgba(255,107,44,0.9)] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[0_4px_10px_-6px_rgba(255,107,44,0.5)] shrink-0 border border-white/30"
+                            className="relative overflow-hidden flex group px-6 py-3 w-full sm:w-auto bg-linear-to-r from-[#FF8243] via-[#FF5A00] to-[#FF8243] bg-size-[200%_auto] text-white font-bold text-[11px] rounded-full uppercase tracking-widest items-center justify-center gap-2 shadow-[0_8px_20px_-6px_rgba(255,107,44,0.6)] shrink-0 border border-white/30 block"
+                            animate={{ 
+                                backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+                                boxShadow: [
+                                    "0px 8px 20px -6px rgba(255,107,44,0.6)",
+                                    "0px 12px 25px -6px rgba(255,107,44,0.8)",
+                                    "0px 8px 20px -6px rgba(255,107,44,0.6)"
+                                ]
+                            }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                            whileHover={{ 
+                                scale: 1.04, 
+                                y: -2,
+                                boxShadow: "0px 15px 35px -5px rgba(255,107,44,0.9)",
+                                transition: { duration: 0.2 }
+                            }}
+                            whileTap={{ scale: 0.96 }}
                         >
-                            {/* Inner Shine sweep on hover */}
-                            <div className="absolute inset-0 w-[200%] h-full bg-linear-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" style={{ transform: 'skewX(-20deg)' }} />
+                            {/* Fast Bright Shine sweep that triggers ONLY on hover on desktop */}
+                            <div className="hidden md:block absolute inset-0 w-[200%] h-full bg-linear-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out z-0" style={{ transform: 'skewX(-20deg)' }} />
                             
-                            <div className="bg-white/20 backdrop-blur-md rounded-full p-0.5 group-hover:rotate-180 group-hover:scale-110 transition-all duration-500 shadow-[inset_0_1px_3px_rgba(255,255,255,0.4)] relative z-10">
-                                <Plus size={14} strokeWidth={3} className="text-white drop-shadow-md" />
-                            </div>
+                            {/* Continuous Subtle Inner Shine (mobile & ambient) */}
+                            <motion.div 
+                                className="absolute inset-0 w-[200%] h-full bg-linear-to-r from-transparent via-white/10 to-transparent pointer-events-none z-0" 
+                                style={{ transform: 'skewX(-20deg)' }}
+                                animate={{ x: ["-100%", "200%"] }}
+                                transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 1.5, ease: "easeInOut" }}
+                            />
+                            
+                            <motion.div 
+                                className="bg-white/20 backdrop-blur-md rounded-full p-0.5 shadow-[inset_0_1px_3px_rgba(255,255,255,0.4)] relative z-10"
+                                animate={{ rotate: [0, 90, 0] }}
+                                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                            >
+                                <div className="transition-all duration-500 md:group-hover:rotate-180 md:group-hover:scale-125">
+                                    <Plus size={14} strokeWidth={3} className="text-white drop-shadow-md" />
+                                </div>
+                            </motion.div>
                             <span className="relative z-10 drop-shadow-md">New Trip</span>
-                        </a>
+                        </motion.a>
                     </div>
                 </div>
 
@@ -634,7 +694,7 @@ export default function AIPlannerDashboard() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, ease: "easeOut" }}
-                        className="relative flex flex-col items-center justify-center py-32 px-6 rounded-[2.5rem] border border-stone-200/50 shadow-sm overflow-hidden bg-white/80 backdrop-blur-sm isolate"
+                        className="relative flex flex-col items-center justify-center py-20 md:py-32 px-6 rounded-[2.5rem] border border-stone-200/50 shadow-sm overflow-hidden bg-white/80 backdrop-blur-sm isolate"
                     >
                         <Animated3DBackground />
                         
@@ -692,7 +752,7 @@ export default function AIPlannerDashboard() {
                                     transition={{ duration: 0.3 }}
                                 >
                                     <Link 
-                                        href={trip.status === 'COMPLETED' ? `/ai-planner/new?action=new&destination=${encodeURIComponent(trip.destinationName)}` : `/ai-planner/new?action=view&trip_id=${trip.db_id}${trip.status === 'DRAFT' ? '&step=' + getNextStep(trip.lastCompletedStep) : ''}${priceDrops[trip.db_id] ? '&tab=tracking' : ''}`}
+                                        href={trip.status === 'COMPLETED' ? `/itinerary?trip_id=${trip.db_id}` : `/ai-planner/new?action=view&trip_id=${trip.db_id}${trip.status === 'DRAFT' ? '&step=' + getNextStep(trip.lastCompletedStep) : ''}${priceDrops[trip.db_id] ? '&tab=tracking' : ''}`}
                                         className={`flex group h-full flex-col bg-white rounded-4xl border transition-all duration-500 overflow-hidden cursor-pointer relative hover:-translate-y-2 ${trip.status === 'COMPLETED' ? 'opacity-[0.85] border-stone-200/50' : 'border-stone-200/50 shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(255,107,44,0.15)] hover:border-[#FF6B2C]/40'}`}
                                     >
                                         <div 
@@ -743,8 +803,8 @@ export default function AIPlannerDashboard() {
                                                 )}
                                             </div>
 
-                                            {/* Floating Quick Actions (Hover) */}
-                                            <div className="absolute right-5 bottom-5 z-20 flex items-center gap-2.5 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 ease-out">
+                                            {/* Floating Quick Actions (Hover & Mobile) */}
+                                            <div className="absolute right-5 bottom-5 z-20 flex items-center gap-2.5 opacity-100 translate-y-0 md:opacity-0 md:translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 ease-out">
                                                 <motion.button 
                                                     whileHover={{ scale: 1.05, y: -2 }}
                                                     whileTap={{ scale: 0.95, y: 1 }}
@@ -895,15 +955,63 @@ export default function AIPlannerDashboard() {
                                             <p className="text-[11px] font-mono uppercase tracking-[0.15em] text-stone-400 mt-2 font-semibold">Start a new draft</p>
                                         </Link>
                                     ) : (
-                                        <Link 
+                                        <Link
                                             href="/destinations"
-                                            className="h-full min-h-75 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm rounded-4xl border-2 border-stone-200/60 border-dashed hover:border-[#FF6B2C]/40 hover:bg-white hover:-translate-y-2 hover:shadow-xl hover:shadow-[#FF6B2C]/5 transition-all duration-500 group cursor-pointer"
+                                            className="relative h-full min-h-75 flex flex-col items-center justify-center bg-white/60 backdrop-blur-xl rounded-4xl border-2 border-dashed border-stone-200/80 hover:border-[#FF6B2C]/50 hover:bg-white transition-all duration-500 group cursor-pointer overflow-hidden shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(255,107,44,0.15)] hover:-translate-y-1"
                                         >
-                                            <div className="w-14 h-14 rounded-full bg-stone-100 flex items-center justify-center mb-5 group-hover:scale-110 group-hover:bg-[#FF6B2C] transition-all duration-500 shadow-sm group-hover:shadow-[0_8px_25px_rgba(255,107,44,0.4)]">
-                                                <Compass size={24} className="text-stone-400 group-hover:text-white transition-colors duration-300" />
-                                            </div>
-                                            <span className="font-serif font-bold text-xl text-stone-600 group-hover:text-[#FF6B2C] transition-colors duration-300">Browse Destinations</span>
-                                            <p className="text-[11px] font-mono uppercase tracking-[0.15em] text-stone-400 mt-2 font-semibold">Need inspiration?</p>
+                                            {/* Ambient Background Gradient that pulses */}
+                                            <motion.div 
+                                                className="absolute inset-0 bg-linear-to-br from-[#FF6B2C]/0 via-transparent to-[#FF6B2C]/10 opacity-50 pointer-events-none"
+                                                animate={{ opacity: [0.2, 0.8, 0.2] }}
+                                                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                            />
+                                            
+                                            {/* Floating Compass */}
+                                            <motion.div 
+                                                className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-5 shadow-[0_8px_20px_rgba(0,0,0,0.06)] border border-stone-100 z-10 group-hover:border-[#FF6B2C]/30 group-hover:bg-[#FF6B2C]/5"
+                                                animate={{ y: [0, -8, 0] }}
+                                                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+                                            >
+                                                <motion.div
+                                                    animate={{ rotate: [0, 15, -10, 5, 0] }}
+                                                    transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                                                >
+                                                    <Compass size={28} className="text-[#FF6B2C] opacity-80 group-hover:opacity-100 transition-opacity drop-shadow-sm" />
+                                                </motion.div>
+                                            </motion.div>
+                                            
+                                            <span className="font-serif font-bold text-2xl text-stone-800 group-hover:text-[#FF6B2C] transition-colors duration-300 z-10 relative">
+                                                Browse Destinations
+                                                {/* Decorative underline */}
+                                                <motion.div 
+                                                    className="absolute -bottom-1 left-0 right-0 h-[2px] bg-[#FF6B2C]/30 rounded-full"
+                                                    initial={{ scaleX: 0, opacity: 0 }}
+                                                    whileInView={{ scaleX: 1, opacity: 1 }}
+                                                    transition={{ duration: 1, delay: 0.5 }}
+                                                />
+                                            </span>
+                                            
+                                            <p className="text-[11px] font-mono uppercase tracking-[0.25em] text-stone-500 mt-3 font-bold z-10 relative">Need inspiration?</p>
+                                            
+                                            {/* Sparkles / Ambient Elements */}
+                                            <motion.div 
+                                                className="absolute top-8 right-8 text-[#FF6B2C] opacity-20 pointer-events-none"
+                                                animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.4, 0.1] }}
+                                                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                                            >
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M12 0l2 8 8 2-8 2-2 8-2-8-8-2 8-2z"/>
+                                                </svg>
+                                            </motion.div>
+                                            <motion.div 
+                                                className="absolute bottom-10 left-8 text-[#FF6B2C] opacity-10 pointer-events-none"
+                                                animate={{ scale: [1, 1.5, 1], opacity: [0.1, 0.3, 0.1] }}
+                                                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                            >
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M12 0l2 8 8 2-8 2-2 8-2-8-8-2 8-2z"/>
+                                                </svg>
+                                            </motion.div>
                                         </Link>
                                     )}
                                 </motion.div>
@@ -913,12 +1021,32 @@ export default function AIPlannerDashboard() {
                 )}
             </div>
             
-            {/* Mobile FAB for New Trip */}
+            {/* Mobile FAB for New Trip - using z-40 so it stays under the Header (which is z-50 wrapper) */}
             <Link 
                 href="/ai-planner/new?action=new"
-                className="sm:hidden fixed bottom-6 right-6 w-14 h-14 bg-[#FF6B2C] rounded-full shadow-xl flex items-center justify-center text-white z-50 hover:scale-105 active:scale-95 transition-all"
+                className="sm:hidden fixed bottom-6 right-6 z-40 block"
             >
-                <Plus size={24} />
+                <motion.div
+                    className="w-14 h-14 bg-linear-to-r from-[#FF8243] via-[#FF5A00] to-[#FF8243] bg-size-[200%_auto] rounded-full shadow-[0_8px_20px_-6px_rgba(255,107,44,0.6)] flex items-center justify-center text-white border border-white/20"
+                    animate={{ 
+                        y: [0, -6, 0],
+                        boxShadow: [
+                            "0px 8px 20px -6px rgba(255,107,44,0.6)",
+                            "0px 15px 25px -6px rgba(255,107,44,0.9)",
+                            "0px 8px 20px -6px rgba(255,107,44,0.6)"
+                        ],
+                        backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"]
+                    }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                    whileTap={{ scale: 0.9 }}
+                >
+                    <motion.div
+                        animate={{ rotate: [0, 90, 0] }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                    >
+                        <Plus size={24} strokeWidth={2.5} />
+                    </motion.div>
+                </motion.div>
             </Link>
 
             {/* Custom Delete Confirmation Modal */}
@@ -1032,6 +1160,15 @@ export default function AIPlannerDashboard() {
                     </motion.div>
                 )}
             </AnimatePresence>
+            
+            <InviteModal 
+                isOpen={inviteModalOpen} 
+                onClose={() => {
+                    setInviteModalOpen(false);
+                    setSelectedTripIdForInvite(null);
+                }} 
+                tripId={selectedTripIdForInvite} 
+            />
         </div>
     );
 }
