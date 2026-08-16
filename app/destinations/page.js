@@ -296,7 +296,7 @@ function CustomAIPlanConsole() {
 
         {/* Interactive Prompt Console Form */}
         <form onSubmit={handleSubmit} className="w-full max-w-2xl mt-7 flex flex-col sm:flex-row items-center gap-3 bg-[#1C1B1B] border border-stone-700 p-2.5 rounded-2xl sm:rounded-full shadow-2xl transition-all hover:border-[#FF5B1D]/60 focus-within:border-[#FF5B1D] focus-within:ring-2 focus-within:ring-[#FF5B1D]/30">
-          <div className="flex items-center gap-3 pl-4 flex-1 w-full text-left">
+          <div className="flex items-center gap-3 pl-4 py-2 sm:py-0 flex-1 w-full text-left">
             <span className="text-lg animate-bounce">✨</span>
             <input
               type="text"
@@ -374,33 +374,171 @@ function Stars({ rating }) {
   );
 }
 
-function FilterPill({ label, icon, active, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`group relative flex items-center gap-2 px-4 py-2 rounded-full text-xs md:text-sm transition-all duration-200 ease-out cursor-pointer whitespace-nowrap select-none ${
-        active
-          ? 'bg-[#FF5B1D] text-white border-2 border-[#FF5B1D] font-extrabold shadow-[0_6px_20px_rgba(255,91,29,0.35)] -translate-y-0.5'
-          : 'bg-white border border-stone-200/90 text-stone-700 font-semibold hover:border-[#FF5B1D]/60 hover:text-[#FF5B1D] hover:bg-[#FF5B1D]/[0.05] hover:shadow-[0_6px_16px_rgba(255,91,29,0.15)] hover:-translate-y-0.5 active:scale-95'
-      }`}
-    >
-      {icon && (
-        <span className={`transition-transform duration-200 ${
-          active 
-            ? 'text-white scale-110' 
-            : 'text-stone-400 group-hover:text-[#FF5B1D] group-hover:scale-110'
-        }`}>
-          {icon}
-        </span>
-      )}
-      <span>{label}</span>
+function SortDropdown({ value, onChange }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
-      {/* Active Dot Indicator */}
-      {active && (
-        <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse ml-0.5" />
-      )}
-    </button>
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const options = ['Most Popular', 'Highest Rated', 'Most Affordable', 'Newest'];
+
+  return (
+    <div className="relative inline-block text-left" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`group relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-200 ease-out cursor-pointer whitespace-nowrap select-none ${
+          isOpen 
+            ? 'bg-[#FF5B1D]/10 text-[#FF5B1D]' 
+            : 'text-stone-600 hover:bg-stone-200/50 hover:text-stone-900'
+        }`}
+      >
+        <svg className={`w-3.5 h-3.5 ${isOpen ? 'text-[#FF5B1D]' : 'text-stone-400 group-hover:text-stone-600 transition-colors'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="4" y1="6" x2="20" y2="6"></line>
+          <line x1="4" y1="12" x2="14" y2="12"></line>
+          <line x1="4" y1="18" x2="8" y2="18"></line>
+        </svg>
+        <span>{value}</span>
+        <svg
+          className={`w-3 h-3 transition-transform duration-200 ${
+            isOpen ? 'rotate-180 text-[#FF5B1D]' : 'text-stone-400 group-hover:text-stone-600'
+          }`}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="absolute right-0 top-full mt-2 z-50 w-44 rounded-xl bg-white shadow-[0_12px_40px_rgba(0,0,0,0.15)] border border-stone-200/80 overflow-hidden"
+          >
+            <div className="py-1.5">
+              {options.map((opt) => {
+                const isActive = value === opt;
+                return (
+                  <button
+                    key={opt}
+                    onClick={() => {
+                      onChange(opt);
+                      setIsOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 hover:bg-stone-50 transition-colors text-left text-xs font-semibold ${
+                      isActive ? 'text-[#FF5B1D] bg-[#FF5B1D]/[0.02]' : 'text-stone-600'
+                    }`}
+                  >
+                    <span>{opt}</span>
+                    {isActive && (
+                      <svg className="w-3.5 h-3.5 text-[#FF5B1D]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function FilterDropdown({ label, options, activeOptions, onToggle }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const activeCount = activeOptions.length;
+
+  return (
+    <div className="relative flex-1 sm:flex-none inline-block text-left" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-semibold transition-all duration-200 ease-out cursor-pointer whitespace-nowrap select-none flex-1 sm:flex-initial w-full ${
+          isOpen || activeCount > 0
+            ? 'bg-[#FF5B1D] text-white border-2 border-[#FF5B1D] shadow-[0_6px_20px_rgba(255,91,29,0.35)] -translate-y-0.5'
+            : 'bg-white border border-stone-200/90 text-stone-700 hover:border-[#FF5B1D]/60 hover:text-[#FF5B1D] hover:bg-[#FF5B1D]/[0.05] hover:shadow-[0_6px_16px_rgba(255,91,29,0.15)] hover:-translate-y-0.5'
+        }`}
+      >
+        <span>{label}</span>
+        {activeCount > 0 && (
+          <span className="flex items-center justify-center bg-white text-[#FF5B1D] w-5 h-5 rounded-full text-[10px] font-black">
+            {activeCount}
+          </span>
+        )}
+        <svg
+          className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="absolute left-0 z-50 mt-2 w-48 rounded-2xl bg-white shadow-[0_12px_40px_rgba(0,0,0,0.12)] border border-stone-200/80 overflow-hidden"
+          >
+            <div className="py-2 max-h-72 overflow-y-auto">
+              {options.map((opt) => {
+                const isActive = activeOptions.includes(opt.id);
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => onToggle(opt.id)}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-stone-50 transition-colors text-left"
+                  >
+                    <div className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-colors ${
+                      isActive 
+                        ? 'bg-[#FF5B1D] border-[#FF5B1D] text-white' 
+                        : 'border-stone-300 bg-white'
+                    }`}>
+                      {isActive && (
+                        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      )}
+                    </div>
+                    {opt.icon && <span className={isActive ? 'text-[#FF5B1D]' : 'text-stone-500'}>{opt.icon}</span>}
+                    <span className={`text-sm font-semibold flex-1 ${isActive ? 'text-stone-900' : 'text-stone-600'}`}>
+                      {opt.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -992,7 +1130,7 @@ export default function DestinationsPage() {
       <Header />
 
       {/* Hero */}
-      <section className="relative w-full h-137.5 md:h-162.5 bg-[#111] overflow-hidden flex items-center pt-17">
+      <section className="relative w-full h-[550px] md:h-[650px] bg-[#111] overflow-hidden flex items-center pt-[68px]">
         {/* Background Images Cross-Fade */}
         <AnimatePresence>
           <motion.img
@@ -1065,7 +1203,7 @@ export default function DestinationsPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-stone-200 overflow-hidden z-50 max-h-75 overflow-y-auto"
+                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-stone-200 overflow-hidden z-[100] max-h-[300px] overflow-y-auto"
                   >
                     {filteredDests.length > 0 ? (
                       filteredDests.slice(0, 5).map(dest => (
@@ -1134,44 +1272,49 @@ export default function DestinationsPage() {
               <div 
                 className="bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.08)] border border-[#ECE8E2]/80 flex flex-col transition-shadow hover:shadow-[0_16px_50px_rgba(0,0,0,0.12)]"
               >
-              <div className="px-5 pt-4 pb-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-                <div className="flex flex-wrap items-center gap-y-3 gap-x-2 min-w-max md:min-w-0">
-                  <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest shrink-0 mr-1">Vibe</span>
-                  {VIBE_FILTERS.map(f => (
-                    <FilterPill key={f.id} label={f.label} icon={f.icon} active={activeVibes.includes(f.id)} onClick={() => toggleFilter(f.id, setActiveVibes)} />
-                  ))}
-                <div className="hidden md:block h-6 w-px bg-stone-200 mx-2 shrink-0" />
-                
-                <div className="w-full md:hidden" /> {/* Force wrap on mobile */}
-                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest shrink-0 mr-1">Budget</span>
-                {BUDGET_FILTERS.map(f => (
-                  <FilterPill key={f.id} label={f.label} active={activeBudgets.includes(f.id)} onClick={() => toggleFilter(f.id, setActiveBudgets)} />
-                ))}
-                <div className="hidden md:block h-6 w-px bg-stone-200 mx-2 shrink-0" />
-                
-                <div className="w-full md:hidden" /> {/* Force wrap on mobile */}
-                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest shrink-0 mr-1">Region</span>
-                {REGION_FILTERS.map(f => (
-                  <FilterPill key={f.id} label={f.label} active={activeRegions.includes(f.id)} onClick={() => toggleFilter(f.id, setActiveRegions)} />
-                ))}
-                {hasFilters && (
-                  <>
-                    <div className="h-6 w-px bg-stone-200 mx-2 shrink-0" />
-                    <button 
-                      type="button" 
-                      onClick={clearAll} 
-                      className="text-[11px] font-mono font-bold text-stone-400 hover:text-[#FF5B1D] hover:bg-[#FF5B1D]/10 px-2.5 py-1 rounded-full transition-all duration-200 cursor-pointer whitespace-nowrap shrink-0"
-                    >
-                      Clear all ×
-                    </button>
-                  </>
-                )}
+              <div className="px-3 sm:px-5 pt-4 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-3 w-full sm:w-auto">
+                  <FilterDropdown 
+                    label="Vibes" 
+                    options={VIBE_FILTERS} 
+                    activeOptions={activeVibes} 
+                    onToggle={(id) => toggleFilter(id, setActiveVibes)} 
+                  />
+                  <FilterDropdown 
+                    label="Budget" 
+                    options={BUDGET_FILTERS} 
+                    activeOptions={activeBudgets} 
+                    onToggle={(id) => toggleFilter(id, setActiveBudgets)} 
+                  />
+                  <FilterDropdown 
+                    label="Region" 
+                    options={REGION_FILTERS} 
+                    activeOptions={activeRegions} 
+                    onToggle={(id) => toggleFilter(id, setActiveRegions)} 
+                  />
+                  
+                  {hasFilters && (
+                    <>
+                      <div className="h-6 w-px bg-stone-200 mx-1 shrink-0 hidden sm:block" />
+                      <button 
+                        type="button" 
+                        onClick={clearAll} 
+                        className="text-[11px] font-mono font-bold text-stone-400 hover:text-[#FF5B1D] hover:bg-[#FF5B1D]/10 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer whitespace-nowrap shrink-0 hidden sm:block"
+                      >
+                        Clear all filters ×
+                      </button>
+                    </>
+                  )}
+                </div>
+                <div className="hidden sm:flex items-center gap-3 shrink-0">
+                  <span className="text-[10px] font-mono font-bold text-stone-400 uppercase tracking-widest">Sort by</span>
+                  <SortDropdown value={sortOption} onChange={setSortOption} />
+                </div>
               </div>
-            </div>
             
-            {/* Active Chips & Sort Row */}
-            <div className="px-5 py-3 flex items-center justify-between border-t border-stone-100 bg-[#FAF8F5]/50 rounded-b-2xl">
-              <div className="flex items-center gap-2 overflow-x-auto flex-1 pr-4" style={{ scrollbarWidth: 'none' }}>
+            {/* Active Chips & Mobile Sort Row */}
+            <div className={`py-3 flex items-center justify-between border-t border-stone-100 bg-[#FAF8F5]/50 rounded-b-2xl ${!hasFilters ? 'sm:hidden' : ''}`}>
+              <div className="flex items-center gap-2 overflow-x-auto flex-1 pl-5 pr-2 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 {hasFilters ? (
                   <span className="text-[11px] font-bold text-[#FF5B1D] shrink-0">{filteredDests.length} destinations match</span>
                 ) : (
@@ -1189,25 +1332,8 @@ export default function DestinationsPage() {
                 ))}
               </div>
               
-              <div className="flex items-center gap-3 shrink-0">
-                <span className="text-[10px] font-mono font-bold text-stone-400 uppercase tracking-widest hidden sm:inline">Sort</span>
-                <div className="relative group">
-                  <select
-                    value={sortOption}
-                    onChange={(e) => setSortOption(e.target.value)}
-                    className="appearance-none bg-white border border-stone-200 text-stone-700 text-xs font-bold py-1.5 pl-3 pr-8 rounded-full shadow-2xs hover:border-[#FF5B1D]/60 hover:text-[#FF5B1D] hover:bg-[#FF5B1D]/[0.03] hover:shadow-[0_4px_14px_rgba(255,91,29,0.15)] hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#FF5B1D]/20 transition-all duration-200 cursor-pointer"
-                  >
-                    <option>Most Popular</option>
-                    <option>Highest Rated</option>
-                    <option>Most Affordable</option>
-                    <option>Newest</option>
-                  </select>
-                  <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400 group-hover:text-stone-600 transition-colors">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                  </div>
-                </div>
+              <div className="flex items-center shrink-0 pr-5 pl-2 sm:hidden">
+                <SortDropdown value={sortOption} onChange={setSortOption} />
               </div>
             </div>
             </div>
