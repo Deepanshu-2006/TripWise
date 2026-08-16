@@ -5,7 +5,7 @@ import { Map, User as UserIcon, Settings, LogOut, ChevronRight, Calendar, Sparkl
 import { supabase } from '../../lib/supabase';
 
 // ─── 3D Hover Itinerary Trip Card ──────────────────────────────────────────
-function DropdownTripCard({ trip, idx, onSelect }) {
+export function DropdownTripCard({ trip, idx, onSelect }) {
     const cardRef = useRef(null);
     const [hovered, setHovered] = useState(false);
 
@@ -173,7 +173,7 @@ function DropdownTripCard({ trip, idx, onSelect }) {
     );
 }
 
-export default function ProfileDropdown({ isLightPage, isScrolled }) {
+export default function ProfileDropdown({ isLightPage, isScrolled, openUpwards = false }) {
     const { user, isLoaded } = useUser();
     const { signOut } = useClerk();
     const [isOpen, setIsOpen] = useState(false);
@@ -238,7 +238,8 @@ export default function ProfileDropdown({ isLightPage, isScrolled }) {
     const handleSelectTrip = (trip) => {
         if (typeof window !== 'undefined') {
             if (trip.itinerary_data) {
-                localStorage.setItem('tripwise_itinerary', JSON.stringify(trip.itinerary_data));
+                const actualData = typeof trip.itinerary_data === 'string' ? trip.itinerary_data : JSON.stringify(trip.itinerary_data);
+                localStorage.setItem('tripwise_itinerary', actualData);
             }
             if (trip.id) {
                 localStorage.setItem('tripwise_trip_id', trip.id);
@@ -312,7 +313,7 @@ export default function ProfileDropdown({ isLightPage, isScrolled }) {
                                     animate={{ opacity: 0, z: startZ - 20 }}
                                     exit={{ opacity: 0, transition: { duration: 0 } }}
                                     transition={{ duration: 0.3, ease: "easeOut", delay: i * 0.03 }}
-                                    className="absolute top-[calc(100%+12px)] right-0 w-72 h-63.75 bg-[#0a0a0a]/98 ring-1 ring-white/10 rounded-2xl z-[9999] pointer-events-none will-change-transform"
+                                    className={`absolute ${openUpwards ? 'bottom-[calc(100%+12px)]' : 'top-[calc(100%+12px)]'} -right-6 w-72 h-63.75 bg-[#0a0a0a]/98 ring-1 ring-white/10 rounded-2xl z-[9999] pointer-events-none will-change-transform`}
                                 />
                             );
                         })}
@@ -326,7 +327,7 @@ export default function ProfileDropdown({ isLightPage, isScrolled }) {
                                 hidden: { 
                                     opacity: 0, 
                                     z: prefersReducedMotion ? 0 : -60,
-                                    y: prefersReducedMotion ? 0 : 12,
+                                    y: prefersReducedMotion ? 0 : (openUpwards ? -12 : 12),
                                     scale: prefersReducedMotion ? 1 : 0.9,
                                     boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
                                 },
@@ -350,8 +351,8 @@ export default function ProfileDropdown({ isLightPage, isScrolled }) {
                                     transition: { duration: 0.15, ease: "easeOut" } 
                                 }
                             }}
-                            style={{ transformOrigin: "top right" }}
-                            className="absolute top-[calc(100%+12px)] right-0 w-72 bg-[#0a0a0a]/98 ring-1 ring-white/10 rounded-2xl py-1.5 z-[10000] overflow-hidden backdrop-blur-3xl will-change-transform shadow-[0_30px_80px_rgba(0,0,0,0.8)]"
+                            style={{ transformOrigin: openUpwards ? "bottom right" : "top right" }}
+                            className={`absolute ${openUpwards ? 'bottom-[calc(100%+12px)]' : 'top-[calc(100%+12px)]'} -right-6 w-72 bg-[#0a0a0a]/98 ring-1 ring-white/10 rounded-2xl py-1.5 z-[10000] overflow-hidden backdrop-blur-3xl will-change-transform shadow-[0_30px_80px_rgba(0,0,0,0.8)]`}
                         >
                             
                             {/* Staggered Inner Content Wrapper */}
@@ -387,7 +388,7 @@ export default function ProfileDropdown({ isLightPage, isScrolled }) {
                                     className="py-1.5 flex flex-col gap-1"
                                 >
                                     {/* Main "My Itinerary" Button with Choices Dropdown Trigger */}
-                                    <div className="mx-2">
+                                    <div className="mx-2 hidden md:block">
                                         <button
                                             type="button"
                                             onClick={() => {
