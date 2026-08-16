@@ -143,20 +143,34 @@ export default function AnimatedFlightMap({ trips = [] }) {
     const pathD = generatePath(points);
     const shouldAnimate = !reducedMotion && isVisible && points.length >= 2;
 
+    const viewBoxX = useMemo(() => {
+        if (points.length === 0) return 0;
+        const minX = Math.min(...points.map(p => p.x));
+        const maxX = Math.max(...points.map(p => p.x));
+        let centerX = (minX + maxX) / 2;
+        
+        // Clamp centerX to prevent panning past the map edges on narrow screens
+        // The map width is 1440. Assume max visible width on mobile is ~400 SVG units.
+        centerX = Math.max(250, Math.min(centerX, 1190));
+        
+        // Return the min-x offset for the viewBox (center - 1440/2)
+        return centerX - 720;
+    }, [points]);
+
     return (
-        <div className="absolute inset-0 w-full h-112.5 overflow-hidden pointer-events-none z-0">
+        <div className="absolute inset-0 w-full h-[600px] md:h-[450px] overflow-hidden pointer-events-none z-0">
             {/* Subtle gradient band */}
             <div className="absolute inset-0 bg-linear-to-b from-[#FF6B2C]/5 to-transparent" />
             
             {/* World Map Silhouette (Real geographic line art) */}
-            <svg className="absolute inset-0 w-full h-full opacity-[0.16]" viewBox="0 0 1440 450" fill="none" preserveAspectRatio="xMidYMin slice">
+            <svg className="absolute inset-0 w-full h-full opacity-[0.16] transition-all duration-1000 ease-in-out" viewBox={`${viewBoxX} 0 1440 450`} fill="none" preserveAspectRatio="xMidYMin slice">
                 <g transform={`translate(${OFFSET_X}, ${OFFSET_Y})`}>
                     <path d={WORLD_MAP_PATH} stroke="#1E1C1A" strokeWidth="1.25" fill="none" />
                 </g>
             </svg>
 
             {/* Flight Path SVG */}
-            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1440 450" fill="none" preserveAspectRatio="xMidYMin slice">
+            <svg className="absolute inset-0 w-full h-full transition-all duration-1000 ease-in-out" viewBox={`${viewBoxX} 0 1440 450`} fill="none" preserveAspectRatio="xMidYMin slice">
                 {/* Drawn Path */}
                 {points.length >= 2 && (
                     <>
