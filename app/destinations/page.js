@@ -1426,16 +1426,16 @@ export default function DestinationsPage() {
               {/* Bento Showcase for Trending */}
               {!hasFilters && (
                 <section>
-                  <hr className="border-stone-300 mb-6" />
-                  <div className="flex items-center justify-between mb-5">
+                  <div className="w-full border-t border-stone-300 mb-6"></div>
+                  <div className="flex flex-col md:flex-row md:items-center items-start justify-between gap-4 md:gap-0 mb-5">
                     <div>
-                      <h2 className="text-sm font-bold text-[#FF6B2C] uppercase tracking-[0.2em] flex items-center gap-2">
+                      <h2 className="text-sm font-bold text-[#FF6B2C] uppercase tracking-[0.2em] flex flex-wrap items-center gap-2">
                         <span>FEATURED — ISSUE 47</span>
-                        <span className="text-[10px] font-mono font-bold bg-[#FF6B2C]/15 text-[#FF6B2C] px-2 py-0.5 rounded-full border border-[#FF6B2C]/30">Trending This Month</span>
+                        <span className="text-[10px] font-mono font-bold bg-[#FF6B2C]/15 text-[#FF6B2C] px-2 py-0.5 rounded-full border border-[#FF6B2C]/30 mt-1 sm:mt-0">Trending This Month</span>
                       </h2>
-                      <p className="text-xl font-extrabold text-[#1F1F1F] mt-1 tracking-tight">Top-selected AI destinations</p>
+                      <p className="text-lg md:text-xl font-extrabold text-[#1F1F1F] mt-1.5 tracking-tight">Top-selected AI destinations</p>
                     </div>
-                    <a href="#all-destinations" className="text-xs font-bold text-[#FF6B2C] hover:underline">Browse all below ↓</a>
+                    <a href="#all-destinations" className="text-xs font-bold text-[#FF6B2C] hover:underline self-start md:self-auto mt-1 md:mt-0">Browse all below ↓</a>
                   </div>
                   <BentoShowcase destinations={DESTINATIONS} onCardClick={handleUseTemplate} />
                 </section>
