@@ -457,7 +457,7 @@ function SortDropdown({ value, onChange }) {
   );
 }
 
-function FilterDropdown({ label, options, activeOptions, onToggle }) {
+function FilterDropdown({ label, options, activeOptions, onToggle, dropdownPosition = 'left' }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -505,7 +505,9 @@ function FilterDropdown({ label, options, activeOptions, onToggle }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute left-0 z-50 mt-2 w-48 rounded-2xl bg-white shadow-[0_12px_40px_rgba(0,0,0,0.12)] border border-stone-200/80 overflow-hidden"
+            className={`absolute ${
+              dropdownPosition === 'right' ? 'right-0 sm:left-0' : dropdownPosition === 'center' ? 'left-1/2 -translate-x-1/2 sm:translate-x-0 sm:left-0' : 'left-0'
+            } z-50 mt-2 w-48 rounded-2xl bg-white shadow-[0_12px_40px_rgba(0,0,0,0.12)] border border-stone-200/80 overflow-hidden`}
           >
             <div className="py-2 max-h-72 overflow-y-auto">
               {options.map((opt) => {
@@ -987,6 +989,8 @@ export default function DestinationsPage() {
   const [tickerIndex, setTickerIndex] = useState(0);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [isScrolledPastHero, setIsScrolledPastHero] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileFilterExpanded, setMobileFilterExpanded] = useState(false);
   const resultsRef = useRef(null);
 
   const scrollToResults = () => {
@@ -1029,6 +1033,19 @@ export default function DestinationsPage() {
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    handleResize(); // initial check
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (isScrolledPastHero) {
+      setMobileFilterExpanded(false);
+    }
+  }, [isScrolledPastHero]);
 
 
   const toggleFilter = (id, setter) => {
@@ -1266,79 +1283,132 @@ export default function DestinationsPage() {
       {viewMode === 'bento' && (
         <div className="sticky top-24 z-40">
           <OrigamiFilterBar>
-            <section className="max-w-6xl mx-auto w-full px-4 sm:px-6 -mt-8 mb-8">
+            <section className="max-w-6xl mx-auto w-full px-4 sm:px-6 -mt-8 mb-8 min-h-[180px] sm:min-h-[100px] relative pointer-events-none">
               {/* Solid sharp-cornered mask to hide scrolling content that peeks through the rounded corners */}
-              <div className={`absolute top-0 bottom-0 left-4 right-4 sm:left-6 sm:right-6 bg-[#FAF8F5] -z-10 transition-opacity duration-500 ${isScrolledPastHero ? 'opacity-100' : 'opacity-0'}`} />
-              <div 
-                className="bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.08)] border border-[#ECE8E2]/80 flex flex-col transition-shadow hover:shadow-[0_16px_50px_rgba(0,0,0,0.12)]"
-              >
-              <div className="px-3 sm:px-5 pt-4 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-3 w-full sm:w-auto">
-                  <FilterDropdown 
-                    label="Vibes" 
-                    options={VIBE_FILTERS} 
-                    activeOptions={activeVibes} 
-                    onToggle={(id) => toggleFilter(id, setActiveVibes)} 
-                  />
-                  <FilterDropdown 
-                    label="Budget" 
-                    options={BUDGET_FILTERS} 
-                    activeOptions={activeBudgets} 
-                    onToggle={(id) => toggleFilter(id, setActiveBudgets)} 
-                  />
-                  <FilterDropdown 
-                    label="Region" 
-                    options={REGION_FILTERS} 
-                    activeOptions={activeRegions} 
-                    onToggle={(id) => toggleFilter(id, setActiveRegions)} 
-                  />
-                  
-                  {hasFilters && (
-                    <>
-                      <div className="h-6 w-px bg-stone-200 mx-1 shrink-0 hidden sm:block" />
-                      <button 
-                        type="button" 
-                        onClick={clearAll} 
-                        className="text-[11px] font-mono font-bold text-stone-400 hover:text-[#FF5B1D] hover:bg-[#FF5B1D]/10 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer whitespace-nowrap shrink-0 hidden sm:block"
-                      >
-                        Clear all filters ×
-                      </button>
-                    </>
-                  )}
-                </div>
-                <div className="hidden sm:flex items-center gap-3 shrink-0">
-                  <span className="text-[10px] font-mono font-bold text-stone-400 uppercase tracking-widest">Sort by</span>
-                  <SortDropdown value={sortOption} onChange={setSortOption} />
-                </div>
-              </div>
-            
-            {/* Active Chips & Mobile Sort Row */}
-            <div className={`py-3 flex items-center justify-between border-t border-stone-100 bg-[#FAF8F5]/50 rounded-b-2xl ${!hasFilters ? 'sm:hidden' : ''}`}>
-              <div className="flex items-center gap-2 overflow-x-auto flex-1 pl-5 pr-2 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                {hasFilters ? (
-                  <span className="text-[11px] font-bold text-[#FF5B1D] shrink-0">{filteredDests.length} destinations match</span>
-                ) : (
-                  <span className="text-[11px] font-bold text-stone-400 shrink-0">Filter your perfect trip</span>
-                )}
-                {activeChips.length > 0 && <div className="h-3 w-px bg-stone-300 mx-1 shrink-0" />}
-                {activeChips.map(chip => (
-                  <button
-                    key={chip.id}
-                    onClick={() => removeFilter(chip.id, chip.type)}
-                    className="flex items-center gap-1.5 bg-[#FF5B1D]/10 border border-[#FF5B1D]/25 text-[#FF5B1D] px-2.5 py-1 rounded-full text-[10px] font-bold hover:bg-[#FF5B1D] hover:text-white hover:border-[#FF5B1D] hover:shadow-[0_4px_12px_rgba(255,91,29,0.25)] hover:-translate-y-0.5 transition-all duration-200 shrink-0 group cursor-pointer"
-                  >
-                    {chip.label} <span className="text-[#FF5B1D]/60 text-xs leading-none font-normal group-hover:text-white transition-colors">×</span>
-                  </button>
-                ))}
-              </div>
+              <div className={`absolute top-0 bottom-0 left-4 right-4 sm:left-6 sm:right-6 bg-[#FAF8F5] -z-10 transition-opacity duration-500 ${isScrolledPastHero ? 'opacity-100' : 'opacity-0'} sm:block hidden`} />
               
-              <div className="flex items-center shrink-0 pr-5 pl-2 sm:hidden">
-                <SortDropdown value={sortOption} onChange={setSortOption} />
-              </div>
-            </div>
-            </div>
-          </section>
-        </OrigamiFilterBar>
+              <AnimatePresence>
+                {isMobile && isScrolledPastHero && !mobileFilterExpanded ? (
+                  <motion.div
+                    key="filter-pill"
+                    layoutId="filter-bar-morph"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    className="mx-auto bg-white/90 backdrop-blur-md shadow-[0_12px_40px_rgba(0,0,0,0.08)] border border-[#ECE8E2]/80 hover:shadow-[0_16px_50px_rgba(0,0,0,0.12)] flex items-center justify-center gap-2 cursor-pointer overflow-hidden absolute left-0 right-0 pointer-events-auto"
+                    style={{ width: 140, height: 44, borderRadius: 9999, top: 12 }}
+                    onClick={() => setMobileFilterExpanded(true)}
+                  >
+                    <motion.div 
+                      layoutId="filter-content-morph"
+                      className="flex items-center gap-2 w-full h-full justify-center"
+                    >
+                      <svg className="w-4 h-4 text-[#FF5B1D]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                      </svg>
+                      <span className="text-xs font-bold text-stone-700 whitespace-nowrap">
+                        {activeVibes.length + activeBudgets.length + activeRegions.length > 0 ? `${activeVibes.length + activeBudgets.length + activeRegions.length} Filters` : 'Filters & Sort'}
+                      </span>
+                    </motion.div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="filter-full"
+                    layoutId="filter-bar-morph"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    className="w-full mx-auto absolute left-0 right-0 bg-white/90 backdrop-blur-md shadow-[0_12px_40px_rgba(0,0,0,0.08)] border border-[#ECE8E2]/80 flex flex-col pointer-events-auto"
+                    style={{ borderRadius: 16, top: 0 }}
+                  >
+                    <motion.div 
+                      layoutId="filter-content-morph"
+                      className="flex flex-col w-full origin-top"
+                    >
+                      <div className="px-3 sm:px-5 pt-4 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-3 w-full sm:w-auto">
+                          <FilterDropdown 
+                            label="Vibes" 
+                            options={VIBE_FILTERS} 
+                            activeOptions={activeVibes} 
+                            onToggle={(id) => toggleFilter(id, setActiveVibes)} 
+                            dropdownPosition="left"
+                          />
+                          <FilterDropdown 
+                            label="Budget" 
+                            options={BUDGET_FILTERS} 
+                            activeOptions={activeBudgets} 
+                            onToggle={(id) => toggleFilter(id, setActiveBudgets)} 
+                            dropdownPosition="center"
+                          />
+                          <FilterDropdown 
+                            label="Region" 
+                            options={REGION_FILTERS} 
+                            activeOptions={activeRegions} 
+                            onToggle={(id) => toggleFilter(id, setActiveRegions)} 
+                            dropdownPosition="right"
+                          />
+                          
+                          {(activeVibes.length > 0 || activeBudgets.length > 0 || activeRegions.length > 0) && (
+                            <>
+                              <div className="h-6 w-px bg-stone-200 mx-1 shrink-0 hidden sm:block" />
+                              <button 
+                                type="button" 
+                                onClick={clearAll} 
+                                className="text-[11px] font-mono font-bold text-stone-400 hover:text-[#FF5B1D] hover:bg-[#FF5B1D]/10 px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer whitespace-nowrap shrink-0 hidden sm:block"
+                              >
+                                Clear all filters ×
+                              </button>
+                            </>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto -mt-1 sm:mt-0">
+                          {isMobile && isScrolledPastHero && mobileFilterExpanded && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setMobileFilterExpanded(false);
+                              }}
+                              className="w-7 h-7 sm:hidden rounded-full bg-stone-100 flex items-center justify-center text-stone-500 hover:bg-stone-200"
+                            >
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          )}
+                          <div className="hidden sm:flex items-center gap-3">
+                            <span className="text-[10px] font-mono font-bold text-stone-400 uppercase tracking-widest">Sort by</span>
+                            <SortDropdown value={sortOption} onChange={setSortOption} />
+                          </div>
+                        </div>
+                      </div>
+                    
+                      {/* Active Chips & Mobile Sort Row */}
+                      <div className={`py-3 flex items-center justify-between border-t border-stone-100 bg-[#FAF8F5]/50 rounded-b-2xl ${!(activeVibes.length > 0 || activeBudgets.length > 0 || activeRegions.length > 0) ? 'sm:hidden' : ''}`}>
+                        <div className="flex items-center gap-2 overflow-x-auto flex-1 pl-5 pr-2 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                          {(activeVibes.length > 0 || activeBudgets.length > 0 || activeRegions.length > 0) ? (
+                            <span className="text-[11px] font-bold text-[#FF5B1D] shrink-0">Filtered destinations</span>
+                          ) : (
+                            <span className="text-[11px] font-bold text-stone-400 shrink-0">Filter your perfect trip</span>
+                          )}
+                          {(activeVibes.length > 0 || activeBudgets.length > 0 || activeRegions.length > 0) && <div className="h-3 w-px bg-stone-300 mx-1 shrink-0" />}
+                          {[...activeVibes.map(id => ({ id, label: VIBE_FILTERS.find(f => f.id === id)?.label, category: 'vibe' })), ...activeBudgets.map(id => ({ id, label: BUDGET_FILTERS.find(f => f.id === id)?.label, category: 'budget' })), ...activeRegions.map(id => ({ id, label: REGION_FILTERS.find(f => f.id === id)?.label, category: 'region' }))].map(chip => (
+                            <button
+                              key={chip.id}
+                              onClick={() => removeFilter(chip.id, chip.category)}
+                              className="flex items-center gap-1.5 bg-[#FF5B1D]/10 border border-[#FF5B1D]/25 text-[#FF5B1D] px-2.5 py-1 rounded-full text-[10px] font-bold hover:bg-[#FF5B1D] hover:text-white hover:border-[#FF5B1D] hover:shadow-[0_4px_12px_rgba(255,91,29,0.25)] hover:-translate-y-0.5 transition-all duration-200 shrink-0 group cursor-pointer"
+                            >
+                              {chip.label} <span className="text-[#FF5B1D]/60 text-xs leading-none font-normal group-hover:text-white transition-colors">×</span>
+                            </button>
+                          ))}
+                        </div>
+                        
+                        <div className="flex items-center shrink-0 pr-5 pl-2 sm:hidden">
+                          <SortDropdown value={sortOption} onChange={setSortOption} />
+                        </div>
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </section>
+          </OrigamiFilterBar>
         </div>
       )}
 
