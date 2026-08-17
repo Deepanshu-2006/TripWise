@@ -2,23 +2,21 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-async function fetchUnsplashFallback(query, count) {
+async function fetchWikipediaImage(query) {
   try {
-    const res = await fetch(`https://unsplash.com/napi/search/photos?query=${encodeURIComponent(query)}&per_page=${count}&orientation=landscape`, {
-      cache: 'no-store'
-    });
-    
+    const res = await fetch(`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query + ' landscape')}&gsrnamespace=6&gsrlimit=1&prop=imageinfo&iiprop=url&format=json`);
     if (res.ok) {
       const json = await res.json();
-      if (json.results && json.results.length > 0) {
-        const urls = json.results.map(img => img.urls?.small || img.urls?.regular).filter(Boolean);
-        if (urls.length > 0) {
-          return urls;
+      const pages = json.query?.pages;
+      if (pages) {
+        const pageId = Object.keys(pages)[0];
+        if (pageId && pageId !== '-1' && pages[pageId].imageinfo && pages[pageId].imageinfo.length > 0) {
+          return [pages[pageId].imageinfo[0].url];
         }
       }
     }
   } catch (e) {
-    console.error('Unsplash fallback error:', e);
+    console.error('Wikipedia fallback error:', e);
   }
   return null;
 }
@@ -77,10 +75,10 @@ export async function GET(req) {
     }
   }
 
-  // Fallback to Unsplash if Places API fails, returns no photos, or no API key
-  const unsplashUrls = await fetchUnsplashFallback(q, count);
-  if (unsplashUrls) {
-    return NextResponse.json({ images: unsplashUrls });
+  // Fallback to Wikipedia if Places API fails, returns no photos, or no API key
+  const wikipediaUrls = await fetchWikipediaImage(q);
+  if (wikipediaUrls) {
+    return NextResponse.json({ images: wikipediaUrls });
   }
 
   // Final fallback

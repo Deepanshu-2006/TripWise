@@ -255,6 +255,7 @@ export default function AIPlannerDashboard() {
                         tripObj = {
                             db_id: t.id, 
                             destinationName: actualData.destinationName || t.destination_name || "Draft Trip",
+                            imageUrl: actualData.imageUrl,
                             status: actualData.status || "DRAFT", 
                             lastCompletedStep: actualData.lastCompletedStep || 'review',
                             days: actualData.days || [],
@@ -282,7 +283,7 @@ export default function AIPlannerDashboard() {
                         return {
                             ...dt,
                             country: destInfo.country || parsedCountry || 'Destination',
-                            imageUrl: destInfo.imageUrl || `/api/image?q=${encodeURIComponent(dt.destinationName)}`,
+                            imageUrl: dt.imageUrl || `/api/image?q=${encodeURIComponent(dt.destinationName)}`,
                             gradient: destInfo.gradient,
                             dateRange: formatDates(dt.startDate, dt.endDate)
                         };

@@ -13,9 +13,13 @@ import { usePreferenceEngine } from '../../hooks/usePreferenceEngine';
 // Separate component so useSearchParams is inside a Suspense boundary
 function PromptSeeder({ onPrompt }) {
   const searchParams = useSearchParams();
+  const hasSeeded = React.useRef(false);
   useEffect(() => {
     const urlPrompt = searchParams.get('prompt');
-    if (urlPrompt) onPrompt(urlPrompt);
+    if (urlPrompt && !hasSeeded.current) {
+      onPrompt(urlPrompt);
+      hasSeeded.current = true;
+    }
   }, [searchParams, onPrompt]);
   return null;
 }
@@ -243,6 +247,10 @@ export default function AIPlannerPage() {
                 setSelectedStopIdx(null);
                 if (typeof window !== 'undefined') {
                   localStorage.removeItem('tripwise_itinerary');
+                  const url = new URL(window.location);
+                  url.searchParams.delete('prompt');
+                  url.searchParams.delete('action');
+                  window.history.replaceState({}, '', url);
                 }
               }}
               onGenerate={handleGenerate}
