@@ -9,78 +9,37 @@ import OrigamiFilterBar from '../components/OrigamiFilterBar';
 import BentoShowcase from '../components/BentoShowcase';
 import AtlasRadarMap from '../components/AtlasRadarMap';
 import { DESTINATIONS } from '../../lib/destinations';
+import {
+  ForkKnife,
+  Bank,
+  Tree,
+  Martini,
+  Palette,
+  ShoppingBag,
+  MagnifyingGlass,
+  Star,
+  ArrowRight,
+  Globe,
+  Sparkle,
+  AirplaneTilt,
+  MapPin,
+  FlowerLotus,
+  Snowflake,
+  Wine,
+  Faders
+} from '@phosphor-icons/react';
 
 // ─── Icon Components (match PlannerSidebar exactly) ────────────────────────
-const FoodieIcon = () => (
-  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
-    <path d="M7 2v20" />
-    <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
-  </svg>
-);
-
-const HistoryIcon = () => (
-  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 22h18" />
-    <path d="M6 18v-7" /><path d="M10 18v-7" /><path d="M14 18v-7" /><path d="M18 18v-7" />
-    <path d="M12 2 2 7h20L12 2Z" />
-  </svg>
-);
-
-const NatureIcon = () => (
-  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.4 19 2c1 2 2 4.1 2 11.5a8.5 8.5 0 0 1-10 6.5Z" />
-    <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
-  </svg>
-);
-
-const NightlifeIcon = () => (
-  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M8 22h8" /><path d="M12 11v11" /><path d="m19 3-7 8-7-8Z" />
-  </svg>
-);
-
-const ArtIcon = () => (
-  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
-    <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
-    <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
-    <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
-    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2Z" />
-  </svg>
-);
-
-const ShoppingIcon = () => (
-  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="6" y="10" width="12" height="11" rx="2" />
-    <path d="M10 10V6a2 2 0 0 1 4 0v4" />
-  </svg>
-);
-
-const SearchIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-  </svg>
-);
-
-const StarIcon = ({ filled }) => (
-  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill={filled ? '#FF6B2C' : 'none'} stroke="#FF6B2C" strokeWidth="2">
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-  </svg>
-);
-
-const ArrowRightIcon = () => (
-  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
-  </svg>
-);
-
-const GlobeIcon = () => (
-  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" />
-    <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-  </svg>
-);
+const FoodieIcon = () => <ForkKnife className="w-3.5 h-3.5" weight="duotone" />;
+const HistoryIcon = () => <Bank className="w-3.5 h-3.5" weight="duotone" />;
+const NatureIcon = () => <Tree className="w-3.5 h-3.5" weight="duotone" />;
+const NightlifeIcon = () => <Martini className="w-3.5 h-3.5" weight="duotone" />;
+const ArtIcon = () => <Palette className="w-3.5 h-3.5" weight="duotone" />;
+const ShoppingIcon = () => <ShoppingBag className="w-3.5 h-3.5" weight="duotone" />;
+const SearchIcon = () => <MagnifyingGlass className="w-5 h-5" weight="bold" />;
+const StarIcon = ({ filled }) => <Star className="w-3.5 h-3.5 text-[#FF6B2C]" weight={filled ? "fill" : "bold"} />;
+const ArrowRightIcon = () => <ArrowRight className="w-3.5 h-3.5" weight="bold" />;
+const GlobeIcon = () => <Globe className="w-3.5 h-3.5" weight="duotone" />;
 
 // ─── Filter Data ────────────────────────────────────────────────────────────
 const VIBE_FILTERS = [
@@ -117,10 +76,10 @@ function CustomAIPlanConsole() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const samplePrompts = [
-    { label: '🇮🇹 Amalfi Coast', prompt: '7 Days in Amalfi Coast with sunset boat tour, lemon grove walks & luxury pasta masterclasses' },
-    { label: '🌸 Spring in Kyoto', prompt: '5 Days in Kyoto during Cherry Blossom season with tea ceremonies & bamboo forest' },
-    { label: '❄️ Iceland Lights', prompt: '6 Days in Iceland for Northern Lights, Blue Lagoon geothermal spa & glacier hikes' },
-    { label: '🍷 Tuscan Wine', prompt: '4 Days in Tuscany with wine tasting, truffle hunting & villa stay' },
+    { label: 'Amalfi Coast', icon: <MapPin weight="duotone" className="w-3.5 h-3.5 text-emerald-500" />, prompt: '7 Days in Amalfi Coast with sunset boat tour, lemon grove walks & luxury pasta masterclasses' },
+    { label: 'Spring in Kyoto', icon: <FlowerLotus weight="duotone" className="w-3.5 h-3.5 text-pink-400" />, prompt: '5 Days in Kyoto during Cherry Blossom season with tea ceremonies & bamboo forest' },
+    { label: 'Iceland Lights', icon: <Snowflake weight="duotone" className="w-3.5 h-3.5 text-sky-400" />, prompt: '6 Days in Iceland for Northern Lights, Blue Lagoon geothermal spa & glacier hikes' },
+    { label: 'Tuscan Wine', icon: <Wine weight="duotone" className="w-3.5 h-3.5 text-red-500" />, prompt: '4 Days in Tuscany with wine tasting, truffle hunting & villa stay' },
   ];
 
   const placeholderPhrases = [
@@ -163,9 +122,76 @@ function CustomAIPlanConsole() {
   };
 
   return (
-    <section className="rounded-3xl bg-[#141416] border border-stone-800 p-8 sm:p-12 shadow-2xl relative overflow-hidden">
-      {/* Architectural Global Airport Blueprint Grid with Flowing Flight Stream Animations */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-35 select-none" viewBox="0 0 1000 360" preserveAspectRatio="none">
+    <section className="rounded-3xl bg-[#141416] border border-stone-800 px-6 py-12 sm:p-12 shadow-2xl relative overflow-hidden">
+      {/* Mobile Architectural Blueprint Grid (Visible only on Mobile) */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-35 select-none block sm:hidden" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice">
+        {/* Vertical and Horizontal Grid Mesh */}
+        <g stroke="#3f3f46" strokeWidth="0.75" fill="none" opacity="0.4">
+          <line x1="100" y1="0" x2="100" y2="800" strokeDasharray="4 6" />
+          <line x1="200" y1="0" x2="200" y2="800" strokeDasharray="4 6" />
+          <line x1="300" y1="0" x2="300" y2="800" strokeDasharray="4 6" />
+          
+          <line x1="0" y1="150" x2="400" y2="150" strokeDasharray="4 6" />
+          <line x1="0" y1="350" x2="400" y2="350" strokeDasharray="4 6" />
+          <line x1="0" y1="550" x2="400" y2="550" strokeDasharray="4 6" />
+          <line x1="0" y1="750" x2="400" y2="750" strokeDasharray="4 6" />
+        </g>
+
+        {/* Animated Flight Lines for Mobile */}
+        <g stroke="#FF5B1D" strokeWidth="1.25" opacity="0.55" fill="none">
+          <motion.polyline
+            points="50,100 250,300 150,600"
+            strokeDasharray="8 8"
+            animate={{ strokeDashoffset: [0, -100] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+          />
+          <motion.polyline
+            points="350,150 150,450 250,700"
+            strokeDasharray="8 8"
+            animate={{ strokeDashoffset: [0, 100] }}
+            transition={{ duration: 7, repeat: Infinity, ease: "linear" }}
+          />
+        </g>
+
+        {/* Mobile Radar Crosshair */}
+        <motion.g
+          animate={{ x: [50, 250, 150, 350, 150, 50], y: [100, 300, 600, 150, 450, 100] }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <circle r="12" fill="none" stroke="#FF5B1D" strokeWidth="1" strokeDasharray="2 3" opacity="0.8" />
+          <line x1="-16" y1="0" x2="16" y2="0" stroke="#FF5B1D" strokeWidth="0.75" opacity="0.6" />
+          <line x1="0" y1="-16" x2="0" y2="16" stroke="#FF5B1D" strokeWidth="0.75" opacity="0.6" />
+        </motion.g>
+
+        {/* Mobile Coordinate Pins */}
+        {[
+          { x: 50, y: 100, code: 'NYC' },
+          { x: 250, y: 300, code: 'PAR' },
+          { x: 150, y: 600, code: 'TYO' },
+          { x: 350, y: 150, code: 'LHR' },
+          { x: 150, y: 450, code: 'DXB' },
+        ].map((hub, i) => (
+          <g key={i}>
+            <motion.circle
+              cx={hub.x}
+              cy={hub.y}
+              r="10"
+              fill="none"
+              stroke="#FF5B1D"
+              strokeWidth="1"
+              animate={{ scale: [0.8, 2], opacity: [0.8, 0] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut", delay: i * 0.4 }}
+            />
+            <circle cx={hub.x} cy={hub.y} r="2.5" fill="#FF5B1D" />
+            <text x={hub.x + 6} y={hub.y - 6} fill="#a1a1aa" fontSize="8" fontFamily="monospace" fontWeight="bold">
+              {hub.code}
+            </text>
+          </g>
+        ))}
+      </svg>
+
+      {/* Architectural Global Airport Blueprint Grid with Flowing Flight Stream Animations (Hidden on Mobile) */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-35 select-none hidden sm:block" viewBox="0 0 1000 360" preserveAspectRatio="none">
         {/* Fine Architectural Grid Mesh */}
         <g stroke="#3f3f46" strokeWidth="0.75" fill="none" opacity="0.4">
           <line x1="0" y1="60" x2="1000" y2="60" strokeDasharray="4 6" />
@@ -231,11 +257,11 @@ function CustomAIPlanConsole() {
       </svg>
 
       {/* Perforated Ticket Side Notches */}
-      <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#0A0A0B] border-r border-stone-800 z-20 pointer-events-none" />
-      <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#0A0A0B] border-l border-stone-800 z-20 pointer-events-none" />
+      <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#FAF8F5] border-r border-stone-800 z-20 pointer-events-none" />
+      <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#FAF8F5] border-l border-stone-800 z-20 pointer-events-none" />
 
       {/* Floating 3D Passport Stamp Badges */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden select-none hidden md:block">
         {/* Stamp 1: Top-Left Tokyo Passport Entry */}
         <motion.div
           className="absolute -top-3 left-6 sm:left-12 bg-[#1C1B1B] border border-stone-800 p-2.5 rounded-xl text-left shadow-md opacity-50"
@@ -297,7 +323,7 @@ function CustomAIPlanConsole() {
         {/* Interactive Prompt Console Form */}
         <form onSubmit={handleSubmit} className="w-full max-w-2xl mt-7 flex flex-col sm:flex-row items-center gap-3 bg-[#1C1B1B] border border-stone-700 p-2.5 rounded-2xl sm:rounded-full shadow-2xl transition-all hover:border-[#FF5B1D]/60 focus-within:border-[#FF5B1D] focus-within:ring-2 focus-within:ring-[#FF5B1D]/30">
           <div className="flex items-center gap-3 pl-4 py-2 sm:py-0 flex-1 w-full text-left">
-            <span className="text-lg animate-bounce">✨</span>
+            <span className="text-xl text-[#FF5B1D] animate-bounce"><Sparkle weight="fill" /></span>
             <input
               type="text"
               value={promptText}
@@ -316,15 +342,11 @@ function CustomAIPlanConsole() {
               <span>Generate Trip</span>
             </span>
             <div className="relative z-10 w-4 h-4 overflow-hidden flex items-center justify-center shrink-0">
-              <span className="inline-block transform rotate-45 group-hover:translate-x-6 group-hover:-translate-y-6 transition-all duration-300 ease-in text-white">
-                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                  <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" />
-                </svg>
+              <span className="inline-block transform group-hover:translate-x-6 group-hover:-translate-y-6 transition-all duration-300 ease-in text-white">
+                <AirplaneTilt weight="fill" className="w-4 h-4" />
               </span>
-              <span className="absolute inline-block transform rotate-45 -translate-x-6 translate-y-6 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-300 ease-out text-white delay-75">
-                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                  <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" />
-                </svg>
+              <span className="absolute inline-block transform -translate-x-6 translate-y-6 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-300 ease-out text-white delay-75">
+                <AirplaneTilt weight="fill" className="w-4 h-4" />
               </span>
             </div>
           </button>
@@ -340,15 +362,16 @@ function CustomAIPlanConsole() {
               onClick={() => {
                 setPromptText(item.prompt);
               }}
-              className="text-[11px] font-medium text-stone-300 bg-stone-900/90 hover:bg-[#FF5B1D] hover:text-white border border-stone-800 hover:border-[#FF5B1D] px-3.5 py-1.5 rounded-full transition-all duration-200 cursor-pointer shadow-xs hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(255,91,29,0.3)]"
+              className="text-[11px] font-medium text-stone-300 bg-stone-900/90 hover:bg-[#FF5B1D] hover:text-white border border-stone-800 hover:border-[#FF5B1D] px-3.5 py-1.5 rounded-full transition-all duration-200 cursor-pointer shadow-xs hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(255,91,29,0.3)] flex items-center gap-1.5 group"
             >
-              {item.label}
+              {item.icon}
+              <span>{item.label}</span>
             </button>
           ))}
         </div>
 
         {/* Live TripWise AI Telemetry Bar */}
-        <div className="mt-6 pt-4 border-t border-stone-800/80 flex items-center justify-center gap-4 text-[9px] font-mono text-stone-500">
+        <div className="mt-6 pt-4 border-t border-stone-800/80 flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-[8px] sm:text-[9px] font-mono text-stone-500">
           <span className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             ENGINE: TRIPWISE V4.2
@@ -1301,9 +1324,7 @@ export default function DestinationsPage() {
                       layoutId="filter-content-morph"
                       className="flex items-center gap-2 w-full h-full justify-center"
                     >
-                      <svg className="w-4 h-4 text-[#FF5B1D]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                      </svg>
+                      <Faders className="w-4 h-4 text-[#FF5B1D]" weight="bold" />
                       <span className="text-xs font-bold text-stone-700 whitespace-nowrap">
                         {activeVibes.length + activeBudgets.length + activeRegions.length > 0 ? `${activeVibes.length + activeBudgets.length + activeRegions.length} Filters` : 'Filters & Sort'}
                       </span>
