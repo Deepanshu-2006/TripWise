@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import { useUser } from '@clerk/nextjs';
-import { getUserTrips } from '../actions/trips';
+import { getUserTrips, publishTrip } from '../actions/trips';
 import { DESTINATIONS } from '../../lib/destinations';
 
 export default function CommunityCTA() {
@@ -15,29 +15,74 @@ export default function CommunityCTA() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishSuccess, setPublishSuccess] = useState(false);
 
+  // Parallax Animation State
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const springConfig = { damping: 25, stiffness: 100, mass: 0.5 };
+  const springX = useSpring(mouseX, springConfig);
+  const springY = useSpring(mouseY, springConfig);
+
+  const x1 = useTransform(springX, [-0.5, 0.5], [-40, 40]);
+  const y1 = useTransform(springY, [-0.5, 0.5], [-40, 40]);
+  
+  const x2 = useTransform(springX, [-0.5, 0.5], [25, -25]);
+  const y2 = useTransform(springY, [-0.5, 0.5], [25, -25]);
+
+  const x3 = useTransform(springX, [-0.5, 0.5], [-15, 15]);
+  const y3 = useTransform(springY, [-0.5, 0.5], [15, -15]);
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    mouseX.set(x);
+    mouseY.set(y);
+  };
+
   useEffect(() => {
     const loadTrips = async () => {
       if (user?.id && isModalOpen) {
         setIsLoadingTrips(true);
         try {
           const rawTrips = await getUserTrips();
+          const unsharedTrips = (rawTrips || []).filter(t => !t.is_public);
           
-          const mappedTrips = (rawTrips || []).map(t => {
+          const mappedTrips = await Promise.all(unsharedTrips.map(async t => {
             const actualData = typeof t.itinerary_data === 'string' ? JSON.parse(t.itinerary_data) : (t.itinerary_data || {});
             const destName = actualData.destinationName || t.destination_name;
             const destSearchName = destName?.split(',')[0].trim().toLowerCase();
             const destInfo = DESTINATIONS.find(d => d.name.toLowerCase() === destSearchName) || {};
             
+            let finalImageUrl = actualData.imageUrl || destInfo.imageUrl || null;
+            
+            // Dynamically fetch a relatable image if none exists
+            if (!finalImageUrl && destName) {
+              try {
+                // Remove generic terms from search to get better images
+                const searchQuery = destName.replace(/\(Demo Mode\)/g, '').trim();
+                const res = await fetch(`/api/images?q=${encodeURIComponent(searchQuery)}&count=1`);
+                if (res.ok) {
+                  const data = await res.json();
+                  if (data.images && data.images.length > 0) {
+                    finalImageUrl = data.images[0];
+                  }
+                }
+              } catch (e) {
+                console.error('Failed to fetch image for:', destName, e);
+              }
+            }
+            
             return {
               db_id: t.id,
               destinationName: destName,
-              imageUrl: actualData.imageUrl || destInfo.imageUrl || null,
+              imageUrl: finalImageUrl,
               days: actualData.days || [],
               dateRange: actualData.dateRange || null
             };
-          }).filter(t => t.destinationName);
+          }));
           
-          setTrips(mappedTrips);
+          setTrips(mappedTrips.filter(t => t.destinationName));
         } catch (error) {
           console.error('Failed to load trips:', error);
         } finally {
@@ -51,18 +96,28 @@ export default function CommunityCTA() {
     }
   }, [user, isLoaded, isModalOpen]);
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (!selectedTrip) return;
     setIsPublishing(true);
-    setTimeout(() => {
-      setIsPublishing(false);
+    
+    try {
+      await publishTrip(selectedTrip);
       setPublishSuccess(true);
+      
+      // Dispatch an event so CommunityFeed knows to refresh its data
+      document.dispatchEvent(new CustomEvent('trip-published'));
+      
       setTimeout(() => {
         setPublishSuccess(false);
         setIsModalOpen(false);
         setSelectedTrip(null);
       }, 2000);
-    }, 1500);
+    } catch (err) {
+      console.error("Error publishing trip:", err);
+      alert("Failed to publish trip. " + err.message);
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   return (
@@ -70,17 +125,42 @@ export default function CommunityCTA() {
       <div className="bg-[#FAF6F0] py-24 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto">
           {/* Dark Container */}
-          <div className="relative rounded-4xl overflow-hidden bg-[#1E1C1A] px-8 py-16 md:px-16 md:py-24 shadow-2xl border border-stone-800">
+          <div 
+            onMouseMove={handleMouseMove}
+            onMouseLeave={() => { mouseX.set(0); mouseY.set(0); }}
+            className="relative rounded-4xl overflow-hidden bg-[#1E1C1A] px-8 py-16 md:px-16 md:py-24 shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-stone-800 transition-shadow duration-700 hover:shadow-[0_30px_60px_rgba(30,28,26,0.6)]"
+          >
             
             {/* Background Soft Collage (Real Trips) */}
-            <div className="absolute inset-0 pointer-events-none opacity-30 overflow-hidden hidden md:block">
-              <img src="https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&q=80&w=600" className="absolute -top-10 -right-10 w-72 h-72 object-cover rounded-3xl rotate-6 blur-[1px]" alt="Travel 1" />
-              <img src="https://images.unsplash.com/photo-1504150558240-0b4fd8946624?auto=format&fit=crop&q=80&w=600" className="absolute bottom-10 right-40 w-80 h-56 object-cover rounded-3xl -rotate-6 blur-[1px]" alt="Travel 2" />
-              <img src="https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&q=80&w=600" className="absolute top-20 right-80 w-64 h-80 object-cover rounded-3xl rotate-[-10deg] blur-sm" alt="Travel 3" />
+            <div className="absolute inset-0 pointer-events-none opacity-40 overflow-hidden hidden md:block">
+              {/* Premium Film Grain Overlay */}
+              <div 
+                className="absolute inset-0 z-20 opacity-[0.03] mix-blend-overlay"
+                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}
+              ></div>
+
+              <motion.img 
+                style={{ x: x1, y: y1 }}
+                src="https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&q=80&w=600" 
+                className="absolute -top-10 -right-10 w-72 h-72 object-cover rounded-3xl blur-[1px] rotate-6" 
+                alt="Travel 1" 
+              />
+              <motion.img 
+                style={{ x: x2, y: y2 }}
+                src="https://images.unsplash.com/photo-1504150558240-0b4fd8946624?auto=format&fit=crop&q=80&w=600" 
+                className="absolute bottom-10 right-40 w-80 h-56 object-cover rounded-3xl blur-[1px] -rotate-6" 
+                alt="Travel 2" 
+              />
+              <motion.img 
+                style={{ x: x3, y: y3 }}
+                src="https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&q=80&w=600" 
+                className="absolute top-20 right-80 w-64 h-80 object-cover rounded-3xl blur-sm -rotate-12" 
+                alt="Travel 3" 
+              />
               
-              {/* Gradient Overlays for smooth blending */}
-              <div className="absolute inset-0 bg-linear-to-r from-[#1E1C1A] via-[#1E1C1A]/95 to-transparent"></div>
-              <div className="absolute inset-0 bg-linear-to-b from-[#1E1C1A]/50 via-transparent to-[#1E1C1A]/50"></div>
+              {/* Premium Gradients for smooth blending */}
+              <div className="absolute inset-0 bg-linear-to-r from-[#1E1C1A] via-[#1E1C1A]/95 to-transparent z-10"></div>
+              <div className="absolute inset-0 bg-linear-to-b from-[#1E1C1A]/60 via-transparent to-[#1E1C1A]/60 z-10"></div>
             </div>
 
             <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-8 items-center">
