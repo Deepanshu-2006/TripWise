@@ -487,3 +487,37 @@ html.lenis, html.lenis body {
   animation: marquee-scroll-right 40s linear infinite;
   will-change: transform;
 }
+
+@keyframes marquee-scroll-up {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, -50%, 0);
+  }
+}
+
+@keyframes marquee-scroll-down {
+  0% {
+    transform: translate3d(0, -50%, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-marquee-up {
+  display: flex;
+  flex-direction: column;
+  height: max-content;
+  animation: marquee-scroll-up 40s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-down {
+  display: flex;
+  flex-direction: column;
+  height: max-content;
+  animation: marquee-scroll-down 40s linear infinite;
+  will-change: transform;
+}
