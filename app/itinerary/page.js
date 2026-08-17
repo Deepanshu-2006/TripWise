@@ -395,7 +395,8 @@ const getAlternativeSuggestions = (act, idx = 0) => {
 
   const category = (act?.category || '').toLowerCase();
   const title = (act?.title || '').toLowerCase();
-  const location = (act?.location || '').toLowerCase();
+  const locationStr = typeof act?.location === 'object' ? act.location?.name : act?.location;
+  const location = (locationStr || '').toLowerCase();
   const stopIndex = typeof idx === 'number' ? idx : 0;
   const dayIndex = act?.dayNumber || 1;
   const hash = (stopIndex + dayIndex * 2) % 4;
@@ -499,12 +500,13 @@ const Sparkline = () => (
 
 const getContextAwareTip = (act, idx, summary) => {
   const title = (act?.title || '').toLowerCase();
+  const locationStr = typeof act?.location === 'object' ? act.location?.name : act?.location;
 
   // Non-overlapping logistics advice instead of repeating crowd timing (which lives in custom insight)
-  let logisticsNote = act?.location ? `Main entry via ${act.location}. Walk-ins & digital passes verified at express security check.` : `Easily reached on foot or short local transit from previous stop. Walk-ins accepted; verify ticket barcode before security scan.`;
+  let logisticsNote = locationStr ? `Main entry via ${locationStr}. Walk-ins & digital passes verified at express security check.` : `Easily reached on foot or short local transit from previous stop. Walk-ins accepted; verify ticket barcode before security scan.`;
 
   if (title.includes('colosseum') || title.includes('forum') || title.includes('vatican') || title.includes('temple') || title.includes('castle') || title.includes('museum')) {
-    logisticsNote = `Main gate entry at ${act?.location || 'Central Security Checkpoint'}. Present digital barcode or mobile reservation directly at priority turnstile.`;
+    logisticsNote = `Main gate entry at ${locationStr || 'Central Security Checkpoint'}. Present digital barcode or mobile reservation directly at priority turnstile.`;
   }
 
   // Pull exact forecast from trip data (e.g. 32°C 🌤 or 31°C ☀️)
@@ -3352,7 +3354,7 @@ export default function ItineraryPage() {
                                             </span>
                                           </div>
                                           <p className="font-serif text-xs text-[#4A443E] leading-relaxed">
-                                            {act.location || `${cleanName}, ${cleanDest}`} — {isBasecampConfirmed ? `approx. ${prox.distKm} km from your basecamp stay at ${basecampName}.` : 'easily reached on foot or short local transit.'}
+                                            {(typeof act.location === 'object' ? act.location?.name : act.location) || `${cleanName}, ${cleanDest}`} — {isBasecampConfirmed ? `approx. ${prox.distKm} km from your basecamp stay at ${basecampName}.` : 'easily reached on foot or short local transit.'}
                                           </p>
                                         </div>
                                       </div>

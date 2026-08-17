@@ -39,6 +39,7 @@ const getCoordinatesForDestination = (name) => {
   if (lower.includes("swiss") || lower.includes("alps")) return { lat: 46.8182, lng: 8.2275 };
   if (lower.includes("london")) return { lat: 51.5074, lng: -0.1278 };
   if (lower.includes("paris")) return { lat: 48.8566, lng: 2.3522 };
+  if (lower.includes("argentina") || lower.includes("patagonia") || lower.includes("buenos")) return { lat: -34.6037, lng: -58.3816 };
   return { lat: 35.0116, lng: 135.7681 };
 };
 
@@ -146,6 +147,32 @@ export default function LiveTripDashboard({
   const displayDest = itinerary?.destinationName || destination || "Global View";
   const currentDay = itinerary?.days?.[selectedDayIndex] || null;
   const activities = currentDay?.activities || [];
+  
+  // Resolve valid coordinates, falling back to destination map coordinates if invalid (e.g. 0,0)
+  const isInvalidCoords = (coords) => !coords || (coords.lat === 0 && coords.lng === 0);
+  const safeCoordinates = !isInvalidCoords(itinerary?.coordinates) 
+    ? itinerary.coordinates 
+    : getCoordinatesForDestination(displayDest);
+
+  const routeActivities = activities.map((act, index) => {
+    let actCoords = act.coordinates || act.location;
+    let actLocationName = typeof act.location === 'object' ? (act.location?.name || '') : act.location;
+
+    if (isInvalidCoords(actCoords)) {
+      // Synthesize realistic coordinates around the basecamp so the map can draw a route
+      const angle = (index / Math.max(1, activities.length)) * Math.PI * 2;
+      const radius = 0.005 + (index * 0.001); // Roughly 500m - 1km radius
+      return {
+        ...act,
+        location: actLocationName,
+        coordinates: {
+          lat: safeCoordinates.lat + (Math.sin(angle) * radius),
+          lng: safeCoordinates.lng + (Math.cos(angle) * radius)
+        }
+      };
+    }
+    return { ...act, location: actLocationName, coordinates: actCoords };
+  });
 
   return (
     <div className="w-full h-full bg-[#FFFFFF] text-[#1F1F1F] relative overflow-hidden flex flex-col p-4 md:p-5 select-none transition-colors duration-500">
@@ -228,11 +255,11 @@ export default function LiveTripDashboard({
             {/* Content: Route Map filling exact remaining vertical space */}
             <div className="w-full flex-1 min-h-0">
               <InteractiveRouteMap
-                activities={activities}
+                activities={routeActivities}
                 allDays={itinerary?.days || []}
                 selectedDayIndex={selectedDayIndex || 0}
                 destinationName={displayDest}
-                coordinates={itinerary?.coordinates || { lat: 41.9028, lng: 12.4964 }}
+                coordinates={safeCoordinates}
                 basecampHotel={itinerary?.basecampHotelDetails || itinerary?.basecampHotel || itinerary?.preferences?.basecamp}
                 hoveredStopIdx={hoveredStopIdx}
                 onHoverStop={setHoveredStopIdx}
@@ -261,7 +288,7 @@ export default function LiveTripDashboard({
               isTransitioning={isTransitioning}
               activeStepText={GENERATION_STEPS[activeStepIndex]}
               destinationName={displayDest}
-              targetCoordinates={itinerary?.coordinates || getCoordinatesForDestination(displayDest)}
+              targetCoordinates={safeCoordinates}
               onSelectPrompt={onSelectPrompt}
             />
           </div>

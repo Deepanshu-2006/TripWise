@@ -483,7 +483,7 @@ export default function InteractiveRouteMap({
 
   // Create looped Basecamp / Hotel hub (Stop 0) and full day stop list
   const validActivities = (activities || []).filter(
-    act => act?.coordinates && typeof act.coordinates.lat === 'number' && !isNaN(act.coordinates.lat) && typeof act.coordinates.lng === 'number' && !isNaN(act.coordinates.lng)
+    act => act?.coordinates && typeof act.coordinates.lat === 'number' && !isNaN(act.coordinates.lat) && typeof act.coordinates.lng === 'number' && !isNaN(act.coordinates.lng) && !(act.coordinates.lat === 0 && act.coordinates.lng === 0)
   );
 
   const firstAct = validActivities[0];
