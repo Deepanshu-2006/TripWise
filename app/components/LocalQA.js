@@ -1,73 +1,57 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getQAThreads, askQuestion, addReply, seedQA } from '../actions/qa';
 
-const MOCK_THREADS = [
-  {
-    id: 1,
-    destination: 'Kyoto',
-    question: 'Are there any temples open late for evening photography that aren\'t overcrowded?',
-    asker: 'lenscrafter9',
-    timestamp: '2 hours ago',
-    replies: [
-      {
-        id: 101,
-        author: 'Kenji S.',
-        isVerified: true,
-        text: 'Yes! Check out Kodai-ji during their illumination events. Also, Yasaka Shrine is open 24/7 and the lanterns look incredible at night. Shoren-in is another hidden gem that stays quiet.'
-      },
-      {
-        id: 102,
-        author: 'travelbug22',
-        isVerified: false,
-        text: 'Fushimi Inari is open 24 hours too, but go really late to avoid the crowds.'
-      }
-    ]
-  },
-  {
-    id: 2,
-    destination: 'Rome',
-    question: 'Where can I find the most authentic cacio e pepe away from the tourist traps?',
-    asker: 'pasta_hunter',
-    timestamp: '5 hours ago',
-    replies: [
-      {
-        id: 201,
-        author: 'Elena R.',
-        isVerified: true,
-        text: 'Head to Testaccio! Flavio al Velavevodetto is fantastic, but my personal favorite is Da Felice. You must book in advance though.'
-      }
-    ]
-  },
-  {
-    id: 3,
-    destination: 'Patagonia',
-    question: 'Do I need to book campsites in Torres del Paine months in advance for the W Trek?',
-    asker: 'hiker_dan',
-    timestamp: '1 day ago',
-    replies: [
-      {
-        id: 301,
-        author: 'Sam Rivera',
-        isVerified: true,
-        text: 'Absolutely. The CONAF, Fantastico Sur, and Vertice sites fill up up to 6 months in advance for the high season (Dec-Feb). Do not arrive without reservations.'
-      },
-      {
-        id: 302,
-        author: 'mountaingirl',
-        isVerified: false,
-        text: 'Can confirm. I had to change my entire trip last year because I waited too long to book.'
-      }
-    ]
-  }
-];
+function timeAgo(dateString) {
+  const date = new Date(dateString);
+  const seconds = Math.floor((new Date() - date) / 1000);
+  let interval = seconds / 31536000;
+  if (interval > 1) return Math.floor(interval) + " years ago";
+  interval = seconds / 2592000;
+  if (interval > 1) return Math.floor(interval) + " months ago";
+  interval = seconds / 86400;
+  if (interval > 1) return Math.floor(interval) + " days ago";
+  interval = seconds / 3600;
+  if (interval > 1) return Math.floor(interval) + " hours ago";
+  interval = seconds / 60;
+  if (interval > 1) return Math.floor(interval) + " mins ago";
+  return Math.floor(seconds) + " seconds ago";
+}
 
 export default function LocalQA() {
-  const [threads, setThreads] = useState(MOCK_THREADS);
+  const [threads, setThreads] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [replyInputs, setReplyInputs] = useState({});
+  const [newDest, setNewDest] = useState('');
+  const [newQuestion, setNewQuestion] = useState('');
+  const [isPosting, setIsPosting] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
+
+  useEffect(() => {
+    async function loadThreads() {
+      const data = await getQAThreads();
+      setThreads(data || []);
+      setIsLoading(false);
+    }
+    loadThreads();
+  }, []);
+
+  const handleSeed = async () => {
+    setIsSeeding(true);
+    try {
+      await seedQA();
+      const data = await getQAThreads();
+      setThreads(data || []);
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setIsSeeding(false);
+    }
+  };
 
   const toggleExpand = (id) => {
     setExpandedId(prev => prev === id ? null : id);
@@ -81,26 +65,50 @@ export default function LocalQA() {
     setReplyInputs(prev => ({ ...prev, [threadId]: `@${username} ` }));
   };
 
-  const submitReply = (threadId) => {
+  const submitReply = async (threadId) => {
     const text = replyInputs[threadId];
     if (!text || text.trim() === '') return;
 
-    setThreads(prev => prev.map(thread => {
-      if (thread.id === threadId) {
-        return {
-          ...thread,
-          replies: [...thread.replies, {
-            id: Date.now(),
-            author: 'You',
-            isVerified: false,
-            text: text.trim()
-          }]
-        };
-      }
-      return thread;
-    }));
+    // Optimistic UI update
+    const tempReply = {
+      id: Date.now().toString(),
+      author_name: 'You',
+      is_verified: false,
+      text: text.trim(),
+      created_at: new Date().toISOString()
+    };
     
+    setThreads(prev => prev.map(t => 
+      t.id === threadId ? { ...t, replies: [...(t.replies || []), tempReply] } : t
+    ));
     setReplyInputs(prev => ({ ...prev, [threadId]: '' }));
+
+    try {
+      await addReply(threadId, text.trim());
+      const data = await getQAThreads();
+      setThreads(data || []);
+    } catch (e) {
+      alert(e.message);
+      const data = await getQAThreads();
+      setThreads(data || []);
+    }
+  };
+
+  const handleAskQuestion = async () => {
+    if (!newDest.trim() || !newQuestion.trim()) return;
+    setIsPosting(true);
+    try {
+      await askQuestion(newDest.trim(), newQuestion.trim());
+      setIsModalOpen(false);
+      setNewDest('');
+      setNewQuestion('');
+      const data = await getQAThreads();
+      setThreads(data || []);
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setIsPosting(false);
+    }
   };
 
   return (
@@ -135,7 +143,16 @@ export default function LocalQA() {
 
       {/* Thread List */}
       <div className="flex flex-col space-y-6">
-        {threads.map(thread => {
+        {isLoading ? (
+          <div className="py-10 text-center text-stone-400 font-mono text-sm animate-pulse">Loading community questions...</div>
+        ) : threads.length === 0 ? (
+          <div className="py-10 text-center text-stone-400 font-mono text-sm flex flex-col items-center gap-4">
+            No questions yet. Be the first to ask!
+            <button onClick={handleSeed} disabled={isSeeding} className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-lg text-xs font-bold transition-colors">
+              {isSeeding ? 'Seeding...' : 'Seed Sample Questions'}
+            </button>
+          </div>
+        ) : threads.map(thread => {
           const isExpanded = expandedId === thread.id;
           return (
             <div key={thread.id} className="group/card relative bg-white/80 backdrop-blur-xl rounded-4xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(244,112,60,0.15)] hover:-translate-y-1.5 transition-all duration-500 border border-white overflow-hidden">
@@ -156,7 +173,7 @@ export default function LocalQA() {
                       {thread.destination}
                     </div>
                     <span className="text-stone-400 text-xs font-mono">
-                      Asked by <span className="text-stone-500 font-bold">@{thread.asker}</span> &middot; {thread.timestamp}
+                      Asked by <span className="text-stone-500 font-bold">@{thread.asker_name}</span> &middot; {timeAgo(thread.created_at)}
                     </span>
                   </div>
                   <h4 className="text-xl md:text-2xl font-serif font-bold text-stone-900 group-hover/card:text-[#F4703C] transition-colors duration-300 leading-snug">
@@ -170,7 +187,7 @@ export default function LocalQA() {
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover/card:-scale-x-100 transition-transform duration-300">
                       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                     </svg>
-                    {thread.replies.length}
+                    {thread.replies?.length || 0}
                   </div>
                   <motion.div animate={{ rotate: isExpanded ? 180 : 0 }}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -190,7 +207,7 @@ export default function LocalQA() {
                     className="overflow-hidden bg-stone-50 border-t border-stone-100"
                   >
                     <div className="p-6 md:p-8 pl-12 md:pl-16 space-y-6">
-                      {thread.replies.map((reply, index) => (
+                      {(thread.replies || []).map((reply, index) => (
                         <div key={reply.id} className="relative group/reply">
                           {/* Top connector for the very first reply to connect to the question */}
                           {index === 0 && (
@@ -198,7 +215,7 @@ export default function LocalQA() {
                           )}
 
                           {/* Thread connector line going down */}
-                          <div className={`absolute -left-7 md:-left-8 top-8 w-px ${index === thread.replies.length - 1 ? '-bottom-6 bg-stone-200' : '-bottom-10 bg-stone-200'}`} />
+                          <div className={`absolute -left-7 md:-left-8 top-8 w-px ${index === (thread.replies?.length || 0) - 1 ? '-bottom-6 bg-stone-200' : '-bottom-10 bg-stone-200'}`} />
                           
                           {/* Avatar connector curve */}
                           <div className="absolute -left-7 md:-left-8 top-4 w-6 md:w-8 h-4 border-l border-b border-stone-200 rounded-bl-xl" />
@@ -206,14 +223,14 @@ export default function LocalQA() {
                           <div className="flex items-start gap-3 md:gap-4">
                             {/* Author Avatar */}
                             <div className="relative shrink-0 w-8 h-8 rounded-full bg-linear-to-br from-stone-200 to-stone-300 flex items-center justify-center text-stone-600 font-bold font-serif text-sm border-2 border-white shadow-sm z-10 group-hover/reply:shadow-md transition-shadow">
-                              {reply.author.charAt(0)}
+                              {reply.author_name ? reply.author_name.charAt(0).toUpperCase() : '?'}
                             </div>
                             
                             {/* Message Bubble */}
                             <div className="grow bg-white border border-stone-100 p-4 md:p-5 rounded-2xl rounded-tl-sm shadow-[0_2px_10px_rgba(0,0,0,0.02)] group-hover/reply:shadow-[0_8px_20px_rgba(0,0,0,0.06)] transition-all duration-300 relative group/bubble">
                               <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-2">
-                                <span className="font-bold text-sm text-stone-900">{reply.author}</span>
-                                {reply.isVerified && (
+                                <span className="font-bold text-sm text-stone-900">{reply.author_name}</span>
+                                {reply.is_verified && (
                                   <span className="bg-linear-to-r from-emerald-50 to-teal-50 text-emerald-700 border border-emerald-200/60 px-2 py-0.5 rounded-full flex items-center gap-1.5 text-[9px] font-mono font-bold uppercase tracking-widest shadow-sm">
                                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500">
                                       <polyline points="20 6 9 17 4 12"></polyline>
@@ -221,6 +238,9 @@ export default function LocalQA() {
                                     Verified Local
                                   </span>
                                 )}
+                                <span className="text-stone-400 text-xs font-mono ml-auto">
+                                  {timeAgo(reply.created_at)}
+                                </span>
                               </div>
                               <p className="text-stone-600 text-sm md:text-base leading-relaxed">
                                 {reply.text}
@@ -228,7 +248,7 @@ export default function LocalQA() {
                               
                               {/* Reply Button on Hover */}
                               <button 
-                                onClick={() => handleReplyToUser(thread.id, reply.author)}
+                                onClick={() => handleReplyToUser(thread.id, reply.author_name)}
                                 className="absolute top-4 right-4 text-[10px] font-bold uppercase tracking-wider text-stone-400 hover:text-[#F4703C] opacity-0 group-hover/bubble:opacity-100 transition-opacity flex items-center gap-1 bg-white px-2 py-1 rounded-md shadow-sm border border-stone-100"
                               >
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 10 20 15 15 20"></polyline><path d="M4 4v7a4 4 0 0 0 4 4h12"></path></svg>
@@ -307,17 +327,20 @@ export default function LocalQA() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-mono font-bold uppercase tracking-widest text-stone-500 mb-2">Destination</label>
-                  <select className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#F4703C] focus:ring-1 focus:ring-[#F4703C]/20 transition-all">
-                    <option>Select a destination...</option>
-                    <option>Kyoto</option>
-                    <option>Rome</option>
-                    <option>Patagonia</option>
-                  </select>
+                  <input 
+                    type="text"
+                    value={newDest}
+                    onChange={(e) => setNewDest(e.target.value)}
+                    placeholder="e.g. Kyoto, Japan"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#F4703C] focus:ring-1 focus:ring-[#F4703C]/20 transition-all"
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-mono font-bold uppercase tracking-widest text-stone-500 mb-2">Your Question</label>
                   <textarea 
                     rows={4}
+                    value={newQuestion}
+                    onChange={(e) => setNewQuestion(e.target.value)}
                     placeholder="e.g. What are the best hidden cafes in..."
                     className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#F4703C] focus:ring-1 focus:ring-[#F4703C]/20 transition-all resize-none"
                   />
@@ -325,15 +348,17 @@ export default function LocalQA() {
                 <div className="flex justify-end gap-3 pt-4">
                   <button 
                     onClick={() => setIsModalOpen(false)}
-                    className="px-5 py-2.5 text-stone-500 hover:text-stone-700 text-sm font-bold transition-colors"
+                    disabled={isPosting}
+                    className="px-5 py-2.5 text-stone-500 hover:text-stone-700 text-sm font-bold transition-colors disabled:opacity-50"
                   >
                     Cancel
                   </button>
                   <button 
-                    onClick={() => setIsModalOpen(false)}
-                    className="px-6 py-2.5 bg-[#F4703C] hover:bg-[#E25C27] text-white font-bold text-sm rounded-full shadow-sm transition-all"
+                    onClick={handleAskQuestion}
+                    disabled={isPosting || !newDest.trim() || !newQuestion.trim()}
+                    className="px-6 py-2.5 bg-[#F4703C] hover:bg-[#E25C27] text-white font-bold text-sm rounded-full shadow-sm transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Post Question
+                    {isPosting ? 'Posting...' : 'Post Question'}
                   </button>
                 </div>
               </div>
