@@ -1,61 +1,39 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-const MOCK_GEMS = [
-  {
-    id: 1,
-    imageUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&auto=format&fit=crop&q=80',
-    description: 'A tiny basement speakeasy serving the best natural wines.',
-    location: 'Shibuya, Tokyo',
-    username: 'wanderlust99',
-    upvotes: 124,
-    height: 'h-64',
-  },
-  {
-    id: 2,
-    imageUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=80',
-    description: 'Family-run trattoria tucked away in a quiet alley.',
-    location: 'Trastevere, Rome',
-    username: 'pasta_lover',
-    upvotes: 89,
-    height: 'h-80',
-  },
-  {
-    id: 3,
-    imageUrl: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=600&auto=format&fit=crop&q=80',
-    description: 'Secret sunset viewing spot with panoramic city views.',
-    location: 'Montmartre, Paris',
-    username: 'sunset_chaser',
-    upvotes: 210,
-    height: 'h-72',
-  },
-  {
-    id: 4,
-    imageUrl: 'https://images.unsplash.com/photo-1473081556163-2a17de81fc97?w=600&auto=format&fit=crop&q=80',
-    description: 'Abandoned botanical garden reclaimed by nature.',
-    location: 'Sintra, Portugal',
-    username: 'green_explorer',
-    upvotes: 342,
-    height: 'h-96',
-  },
-  {
-    id: 5,
-    imageUrl: 'https://images.unsplash.com/photo-1521017432531-fbd92d768814?w=600&auto=format&fit=crop&q=80',
-    description: 'Underground indie bookstore with rare first editions.',
-    location: 'Brooklyn, NY',
-    username: 'bookworm_travels',
-    upvotes: 56,
-    height: 'h-64',
-  }
-];
+import { getGems, submitGem, upvoteGem, seedGems } from '../actions/gems';
 
 export default function HiddenGemsWall() {
-  const [gems, setGems] = useState(MOCK_GEMS);
+  const [gems, setGems] = useState([]);
   const [upvotedGems, setUpvotedGems] = useState(new Set());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newGem, setNewGem] = useState({ location: '', description: '', imageUrl: '' });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSeeding, setIsSeeding] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    async function loadGems() {
+      const data = await getGems();
+      setGems(data || []);
+      setIsLoading(false);
+    }
+    loadGems();
+  }, []);
+
+  const handleSeed = async () => {
+    setIsSeeding(true);
+    try {
+      await seedGems();
+      const data = await getGems();
+      setGems(data || []);
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setIsSeeding(false);
+    }
+  };
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -68,43 +46,66 @@ export default function HiddenGemsWall() {
     }
   };
 
-  const handleUpvote = (e, gemId) => {
+  const handleUpvote = async (e, gemId) => {
     e.stopPropagation();
+    const isUpvoted = upvotedGems.has(gemId);
+    const incrementBy = isUpvoted ? -1 : 1;
+
+    // Optimistic UI update
     setGems(prevGems => prevGems.map(gem => {
       if (gem.id === gemId) {
-        const isUpvoted = upvotedGems.has(gemId);
-        const nextUpvotes = isUpvoted ? gem.upvotes - 1 : gem.upvotes + 1;
-        
-        const newUpvoted = new Set(upvotedGems);
-        if (isUpvoted) {
-          newUpvoted.delete(gemId);
-        } else {
-          newUpvoted.add(gemId);
-        }
-        setUpvotedGems(newUpvoted);
-        
-        return { ...gem, upvotes: nextUpvotes };
+        return { ...gem, upvotes: gem.upvotes + incrementBy };
       }
       return gem;
     }));
+
+    const newUpvoted = new Set(upvotedGems);
+    if (isUpvoted) {
+      newUpvoted.delete(gemId);
+    } else {
+      newUpvoted.add(gemId);
+    }
+    setUpvotedGems(newUpvoted);
+
+    try {
+      await upvoteGem(gemId, incrementBy);
+    } catch (err) {
+      console.error(err);
+      // Revert optimistic update on error
+      setGems(prevGems => prevGems.map(gem => {
+        if (gem.id === gemId) {
+          return { ...gem, upvotes: gem.upvotes - incrementBy };
+        }
+        return gem;
+      }));
+      const revertedUpvoted = new Set(newUpvoted);
+      if (isUpvoted) revertedUpvoted.add(gemId);
+      else revertedUpvoted.delete(gemId);
+      setUpvotedGems(revertedUpvoted);
+    }
   };
 
-  const handleSubmitGem = () => {
+  const handleSubmitGem = async () => {
     if (!newGem.location || !newGem.description) return;
     
-    const submittedGem = {
-      id: Date.now(),
-      imageUrl: newGem.imageUrl || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&auto=format&fit=crop&q=80',
-      description: newGem.description,
-      location: newGem.location,
-      username: 'You',
-      upvotes: 1,
-      height: ['h-64', 'h-72', 'h-80', 'h-96'][Math.floor(Math.random() * 4)],
-    };
-    
-    setGems(prev => [submittedGem, ...prev]);
-    setIsModalOpen(false);
-    setNewGem({ location: '', description: '', imageUrl: '' });
+    setIsSubmitting(true);
+    try {
+      const height = ['h-64', 'h-72', 'h-80', 'h-96'][Math.floor(Math.random() * 4)];
+      const fallbackImage = 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&auto=format&fit=crop&q=80';
+      const finalImage = newGem.imageUrl || fallbackImage;
+      
+      await submitGem(newGem.location, newGem.description, finalImage, height);
+      
+      setIsModalOpen(false);
+      setNewGem({ location: '', description: '', imageUrl: '' });
+      
+      const data = await getGems();
+      setGems(data || []);
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -139,20 +140,39 @@ export default function HiddenGemsWall() {
         </button>
       </div>
 
-      {/* Masonry/Columns Grid */}
-      <div className="columns-1 sm:columns-2 lg:columns-3 gap-6">
+      {/* Masonry Grid Area */}
+      {isLoading ? (
+        <div className="py-20 flex justify-center items-center h-96">
+          <div className="text-stone-400 font-mono text-sm animate-pulse flex flex-col items-center gap-4">
+            Loading hidden gems...
+          </div>
+        </div>
+      ) : gems.length === 0 ? (
+        <div className="py-20 flex justify-center items-center h-96">
+          <div className="text-stone-400 font-mono text-sm flex flex-col items-center gap-4">
+            No gems found. Be the first to share one!
+            <button onClick={handleSeed} disabled={isSeeding} className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-lg text-xs font-bold transition-colors">
+              {isSeeding ? 'Seeding...' : 'Seed Sample Gems'}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
         {gems.map((gem) => (
-          <div 
-            key={gem.id} 
-            className="break-inside-avoid mb-6 relative group rounded-3xl overflow-hidden bg-stone-900 cursor-pointer shadow-lg hover:shadow-2xl hover:shadow-[#F4703C]/30 hover:-translate-y-2 transition-all duration-500 border border-stone-200/50"
+          <motion.div 
+            key={gem.id}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            whileHover={{ y: -5 }}
+            transition={{ duration: 0.5 }}
+            className={`relative rounded-3xl overflow-hidden group cursor-pointer ${gem.height} bg-stone-200 mb-6 break-inside-avoid shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.12)]`}
           >
-            {/* Full Image Background */}
-            <div className={`relative w-full ${gem.height}`}>
-              <img 
-                src={gem.imageUrl} 
-                alt={gem.location}
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-              />
+            <img 
+              src={gem.image_url || gem.imageUrl} 
+              alt={gem.location}
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
               
               {/* Darkening Overlay & Gradients */}
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-500 z-10" />
@@ -163,10 +183,10 @@ export default function HiddenGemsWall() {
               <div className="absolute top-4 left-4 right-4 flex items-start justify-between z-20">
                 <div className="flex items-center gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -translate-y-2 group-hover:translate-y-0">
                   <div className="w-7 h-7 rounded-full bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center text-white text-[10px] font-bold font-mono uppercase shadow-sm">
-                    {gem.username.charAt(0)}
+                    {gem.submitter_name?.charAt(0)}
                   </div>
                   <span className="text-white/90 text-[10px] font-mono font-bold uppercase tracking-wider drop-shadow-md">
-                    @{gem.username}
+                    @{gem.submitter_name}
                   </span>
                 </div>
                 
@@ -203,10 +223,11 @@ export default function HiddenGemsWall() {
                   "{gem.description}"
                 </h4>
               </div>
-            </div>
-          </div>
+            
+          </motion.div>
         ))}
       </div>
+      )}
 
       {/* Submit Modal */}
       <AnimatePresence>
@@ -291,7 +312,7 @@ export default function HiddenGemsWall() {
                   </button>
                   <button 
                     onClick={handleSubmitGem}
-                    disabled={!newGem.location || !newGem.description}
+                    disabled={isSubmitting || !newGem.location || !newGem.description}
                     className="px-6 py-2.5 bg-[#F4703C] hover:bg-[#E25C27] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold rounded-full shadow-sm transition-all"
                   >
                     Post Gem
