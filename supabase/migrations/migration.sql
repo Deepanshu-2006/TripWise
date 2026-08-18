@@ -57,13 +57,26 @@ USING (user_id = auth.uid()::text);
 CREATE POLICY "Collaborators can view trips"
 ON public.trips FOR SELECT
 USING (
-    user_id = auth.uid()::text
-    OR
+    user_id = auth.uid()::text 
+    OR 
     EXISTS (
-        SELECT 1 FROM public.trip_collaborators tc
-        WHERE tc.trip_id = trips.id AND tc.user_id = auth.uid()::text
+        SELECT 1 FROM public.trip_collaborators tc 
+        WHERE tc.trip_id = id AND tc.user_id = auth.uid()::text
     )
 );
+
+-- Add is_public column to trips if it doesn't exist
+ALTER TABLE public.trips ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT false;
+
+-- Allow anyone to view public trips
+CREATE POLICY "Anyone can view public trips" 
+ON public.trips FOR SELECT 
+USING (is_public = true);
+
+-- Allow server actions to toggle is_public
+CREATE POLICY "Server actions can update public status"
+ON public.trips FOR UPDATE
+USING (true) WITH CHECK (true);
 
 CREATE POLICY "Editors can update trips"
 ON public.trips FOR UPDATE
@@ -128,3 +141,58 @@ USING (
         WHERE t.id = trip_invites.trip_id AND t.user_id = auth.uid()::text
     )
 );
+
+-- 5. Community Q&A Tables
+CREATE TABLE IF NOT EXISTS public.community_questions (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    destination TEXT NOT NULL,
+    question TEXT NOT NULL,
+    asker_id TEXT NOT NULL,
+    asker_name TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.community_replies (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    question_id UUID REFERENCES public.community_questions(id) ON DELETE CASCADE,
+    author_id TEXT NOT NULL,
+    author_name TEXT NOT NULL,
+    is_verified BOOLEAN DEFAULT false,
+    text TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE public.community_questions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.community_replies ENABLE ROW LEVEL SECURITY;
+
+-- Anyone can read questions and replies
+CREATE POLICY "Anyone can read community questions" ON public.community_questions FOR SELECT USING (true);
+CREATE POLICY "Anyone can read community replies" ON public.community_replies FOR SELECT USING (true);
+
+-- Only authenticated users can insert questions and replies
+CREATE POLICY "Authenticated users can post questions" ON public.community_questions FOR INSERT WITH CHECK (true);
+CREATE POLICY "Authenticated users can post replies" ON public.community_replies FOR INSERT WITH CHECK (true);
+
+-- 6. Community Hidden Gems Table
+CREATE TABLE IF NOT EXISTS public.community_gems (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    image_url TEXT NOT NULL,
+    description TEXT NOT NULL,
+    location TEXT NOT NULL,
+    submitter_id TEXT NOT NULL,
+    submitter_name TEXT NOT NULL,
+    upvotes INTEGER DEFAULT 1,
+    height TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE public.community_gems ENABLE ROW LEVEL SECURITY;
+
+-- Anyone can read gems
+CREATE POLICY "Anyone can read community gems" ON public.community_gems FOR SELECT USING (true);
+
+-- Server actions can insert gems
+CREATE POLICY "Server actions can post gems" ON public.community_gems FOR INSERT WITH CHECK (true);
+
+-- Server actions can update upvotes
+CREATE POLICY "Server actions can update gem upvotes" ON public.community_gems FOR UPDATE USING (true) WITH CHECK (true);
