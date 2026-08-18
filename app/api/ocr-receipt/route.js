@@ -24,20 +24,26 @@ export async function POST(request) {
     // Clean base64 string
     const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
-      contents: [
-        {
-          role: 'user',
-          parts: [
+    const modelsToTry = ['gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash', 'gemini-1.5-flash'];
+    let response = null;
+    let lastError = null;
+
+    for (const modelName of modelsToTry) {
+      try {
+        response = await ai.models.generateContent({
+          model: modelName,
+          contents: [
             {
-              inlineData: {
-                data: cleanBase64,
-                mimeType: 'image/jpeg'
-              }
-            },
-            {
-              text: `Analyze this receipt photo image carefully and extract:
+              role: 'user',
+              parts: [
+                {
+                  inlineData: {
+                    data: cleanBase64,
+                    mimeType: 'image/jpeg'
+                  }
+                },
+                {
+                  text: `Analyze this receipt photo image carefully and extract:
 1. Exact total amount paid (numeric value only, e.g. 41.29). Look for Total, Amount Due, or Grand Total.
 2. Merchant / Restaurant / Store name (e.g. Fish & Chips Fast Foods).
 3. Currency code (USD, EUR, GBP, JPY, CAD, AUD, INR, CHF). Default to EUR if Euro symbol (€) is found.
@@ -51,14 +57,26 @@ Return JSON only in this exact schema:
   "category": "Food & Dining",
   "confidence": 95
 }`
+                }
+              ]
             }
-          ]
+          ],
+          config: {
+            responseMimeType: 'application/json'
+          }
+        });
+        if (response && response.text) {
+          break;
         }
-      ],
-      config: {
-        responseMimeType: 'application/json'
+      } catch (err) {
+        console.warn(`Model ${modelName} failed for OCR:`, err.message || err);
+        lastError = err;
       }
-    });
+    }
+
+    if (!response || !response.text) {
+      throw new Error(`All Gemini models failed for OCR: ${lastError?.message || 'Unknown error'}`);
+    }
 
     let text = response.text;
     if (typeof text === 'function') text = text(); // handle old and new SDKs just in case

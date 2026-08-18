@@ -24,51 +24,45 @@ export async function POST(request) {
     const cleanBase64 = audioBase64.includes(',') ? audioBase64.split(',')[1] : audioBase64;
     const cleanMimeType = (mimeType || 'audio/webm').split(';')[0];
 
-    let response;
-    try {
-      response = await ai.models.generateContent({
-        model: 'gemini-3.5-flash',
-        config: {
-          systemInstruction: 'You are an accurate automatic speech recognition (ASR) engine. Transcribe the audio verbatim. Output ONLY the exact transcribed words spoken in the audio. Do not repeat instructions, do not add commentary, quotes, or markdown.'
-        },
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              {
-                inlineData: {
-                  data: cleanBase64,
-                  mimeType: cleanMimeType || 'audio/webm'
+    const modelsToTry = ['gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash', 'gemini-1.5-flash'];
+    let response = null;
+    let lastError = null;
+
+    for (const modelName of modelsToTry) {
+      try {
+        response = await ai.models.generateContent({
+          model: modelName,
+          config: {
+            systemInstruction: 'You are an accurate automatic speech recognition (ASR) engine. Transcribe the audio verbatim. Output ONLY the exact transcribed words spoken in the audio. Do not repeat instructions, do not add commentary, quotes, or markdown.'
+          },
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                {
+                  inlineData: {
+                    data: cleanBase64,
+                    mimeType: cleanMimeType || 'audio/webm'
+                  }
+                },
+                {
+                  text: 'Transcribe the audio speech verbatim.'
                 }
-              },
-              {
-                text: 'Transcribe the audio speech verbatim.'
-              }
-            ]
-          }
-        ]
-      });
-    } catch (modelErr) {
-      console.warn('[Transcribe API] Fallback to gemini-3.5-flash:', modelErr.message);
-      response = await ai.models.generateContent({
-        model: 'gemini-3.5-flash',
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              {
-                inlineData: {
-                  data: cleanBase64,
-                  mimeType: cleanMimeType || 'audio/webm'
-                }
-              },
-              {
-                text: 'Transcribe the audio speech verbatim.'
-              }
-            ]
-          }
-        ]
-      });
+              ]
+            }
+          ]
+        });
+        if (response && response.text) {
+          break;
+        }
+      } catch (modelErr) {
+        console.warn(`[Transcribe API] Model ${modelName} failed:`, modelErr.message);
+        lastError = modelErr;
+      }
+    }
+
+    if (!response || !response.text) {
+      throw new Error(`All transcription models failed: ${lastError?.message || 'Unknown error'}`);
     }
 
     let transcript = response.text?.trim() || '';

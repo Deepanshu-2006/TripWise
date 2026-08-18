@@ -38,7 +38,7 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
       rotateY: -5,
       transformPerspective: 2400,
       transformOrigin: 'left center',
-      boxShadow: '-35px 0 85px -15px rgba(0,0,0,0.22), -12px 0 32px -5px rgba(0,0,0,0.14), -3px 0 18px rgba(255,91,29,0.55), inset 1px 0 0 rgba(255,255,255,0.98)'
+      boxShadow: '-35px 0 85px -15px rgba(0,0,0,0.22), -12px 0 32px -5px rgba(0,0,0,0.14), inset 1px 0 0 rgba(255,255,255,0.98)'
     });
 
     const ctx = gsap.context(() => {
@@ -107,8 +107,13 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
           window.dispatchEvent(new CustomEvent('slide-overlay-progress', { detail: progress }));
 
           // Fade out the leading edge of the slide sheet as it hits the left edge of the screen
+          // Initially hidden at 0, ramps up quickly, then fades out
           if (leftBeamRef.current) {
-            leftBeamRef.current.style.opacity = Math.max(0, 1 - (progress * 1.5));
+            let opacity = 0;
+            if (progress > 0) {
+                opacity = Math.min(1, progress * 20) * Math.max(0, 1 - (progress * 1.5));
+            }
+            leftBeamRef.current.style.opacity = opacity;
           }
           if (slideSheetRef.current) {
              slideSheetRef.current.style.borderColor = `rgba(255, 91, 29, ${Math.max(0, 1 - (progress * 1.5))})`;
@@ -186,7 +191,7 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
         <div
           ref={leftBeamRef}
           aria-hidden="true"
-          className="hidden lg:block absolute top-0 bottom-0 left-0 w-[3.5px] pointer-events-none z-50"
+          className="hidden lg:block absolute top-0 bottom-0 left-0 w-[3.5px] pointer-events-none z-50 opacity-0"
           style={{
             background: 'linear-gradient(180deg, #FF5B1D 0%, rgba(255,91,29,0.85) 35%, rgba(255,91,29,0.2) 80%, transparent 100%)',
             boxShadow: '-4px 0 24px 4px rgba(255, 91, 29, 0.9), -2px 0 28px 6px rgba(255, 91, 29, 0.55)',
