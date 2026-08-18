@@ -123,192 +123,91 @@ function CustomAIPlanConsole() {
 
   return (
     <section className="rounded-3xl bg-[#141416] border border-stone-800 px-6 py-12 sm:p-12 shadow-2xl relative overflow-hidden">
-      {/* Mobile Architectural Blueprint Grid (Visible only on Mobile) */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-35 select-none block sm:hidden" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice">
-        {/* Vertical and Horizontal Grid Mesh */}
-        <g stroke="#3f3f46" strokeWidth="0.75" fill="none" opacity="0.4">
-          <line x1="100" y1="0" x2="100" y2="800" strokeDasharray="4 6" />
-          <line x1="200" y1="0" x2="200" y2="800" strokeDasharray="4 6" />
-          <line x1="300" y1="0" x2="300" y2="800" strokeDasharray="4 6" />
-          
-          <line x1="0" y1="150" x2="400" y2="150" strokeDasharray="4 6" />
-          <line x1="0" y1="350" x2="400" y2="350" strokeDasharray="4 6" />
-          <line x1="0" y1="550" x2="400" y2="550" strokeDasharray="4 6" />
-          <line x1="0" y1="750" x2="400" y2="750" strokeDasharray="4 6" />
-        </g>
+      {/* Background Marquee of Trip Cards for Mobile */}
+      <div 
+        className="absolute inset-0 flex sm:hidden justify-center gap-4 opacity-[0.4] pointer-events-none overflow-hidden select-none px-4 blur-[1px]"
+        style={{ 
+          WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)',
+          maskImage: 'linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)' 
+        }}
+      >
+        {/* Left Column: Top to Bottom (Down) */}
+        <div className="flex animate-marquee-down gap-4 pb-4 w-1/2 max-w-[140px]" style={{ animationDuration: '45s' }}>
+          {[...DESTINATIONS, ...DESTINATIONS].map((dest, i) => (
+            <div key={`bg-card-mob-1-${i}`} className="w-full h-40 bg-[#1A1A1A] rounded-2xl overflow-hidden border border-white/10 shrink-0 shadow-2xl flex flex-col">
+              <div className="h-24 bg-stone-900 relative">
+                <img src={dest.imageUrl} alt="" className="w-full h-full object-cover opacity-80" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-transparent" />
+              </div>
+              <div className="p-3 flex-1 flex flex-col justify-end bg-[#1A1A1A]">
+                <div className="text-white font-serif font-bold mb-0.5 truncate text-sm tracking-wide">{dest.name}</div>
+                <div className="text-[#FF5B1D] text-[8px] font-mono tracking-widest uppercase font-semibold">{dest.country}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {/* Right Column: Bottom to Top (Up) */}
+        <div className="flex animate-marquee-up gap-4 pb-4 w-1/2 max-w-[140px] mt-16" style={{ animationDuration: '65s' }}>
+          {[...DESTINATIONS].reverse().concat([...DESTINATIONS].reverse()).map((dest, i) => (
+            <div key={`bg-card-mob-2-${i}`} className="w-full h-40 bg-[#1A1A1A] rounded-2xl overflow-hidden border border-white/10 shrink-0 shadow-2xl flex flex-col">
+              <div className="h-24 bg-stone-900 relative">
+                <img src={dest.imageUrl} alt="" className="w-full h-full object-cover opacity-80" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-transparent" />
+              </div>
+              <div className="p-3 flex-1 flex flex-col justify-end bg-[#1A1A1A]">
+                <div className="text-white font-serif font-bold mb-0.5 truncate text-sm tracking-wide">{dest.name}</div>
+                <div className="text-[#FF5B1D] text-[8px] font-mono tracking-widest uppercase font-semibold">{dest.country}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-        {/* Animated Flight Lines for Mobile */}
-        <g stroke="#FF5B1D" strokeWidth="1.25" opacity="0.55" fill="none">
-          <motion.polyline
-            points="50,100 250,300 150,600"
-            strokeDasharray="8 8"
-            animate={{ strokeDashoffset: [0, -100] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-          />
-          <motion.polyline
-            points="350,150 150,450 250,700"
-            strokeDasharray="8 8"
-            animate={{ strokeDashoffset: [0, 100] }}
-            transition={{ duration: 7, repeat: Infinity, ease: "linear" }}
-          />
-        </g>
-
-        {/* Mobile Radar Crosshair */}
-        <motion.g
-          animate={{ x: [50, 250, 150, 350, 150, 50], y: [100, 300, 600, 150, 450, 100] }}
-          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <circle r="12" fill="none" stroke="#FF5B1D" strokeWidth="1" strokeDasharray="2 3" opacity="0.8" />
-          <line x1="-16" y1="0" x2="16" y2="0" stroke="#FF5B1D" strokeWidth="0.75" opacity="0.6" />
-          <line x1="0" y1="-16" x2="0" y2="16" stroke="#FF5B1D" strokeWidth="0.75" opacity="0.6" />
-        </motion.g>
-
-        {/* Mobile Coordinate Pins */}
-        {[
-          { x: 50, y: 100, code: 'NYC' },
-          { x: 250, y: 300, code: 'PAR' },
-          { x: 150, y: 600, code: 'TYO' },
-          { x: 350, y: 150, code: 'LHR' },
-          { x: 150, y: 450, code: 'DXB' },
-        ].map((hub, i) => (
-          <g key={i}>
-            <motion.circle
-              cx={hub.x}
-              cy={hub.y}
-              r="10"
-              fill="none"
-              stroke="#FF5B1D"
-              strokeWidth="1"
-              animate={{ scale: [0.8, 2], opacity: [0.8, 0] }}
-              transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut", delay: i * 0.4 }}
-            />
-            <circle cx={hub.x} cy={hub.y} r="2.5" fill="#FF5B1D" />
-            <text x={hub.x + 6} y={hub.y - 6} fill="#a1a1aa" fontSize="8" fontFamily="monospace" fontWeight="bold">
-              {hub.code}
-            </text>
-          </g>
-        ))}
-      </svg>
-
-      {/* Architectural Global Airport Blueprint Grid with Flowing Flight Stream Animations (Hidden on Mobile) */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-35 select-none hidden sm:block" viewBox="0 0 1000 360" preserveAspectRatio="none">
-        {/* Fine Architectural Grid Mesh */}
-        <g stroke="#3f3f46" strokeWidth="0.75" fill="none" opacity="0.4">
-          <line x1="0" y1="60" x2="1000" y2="60" strokeDasharray="4 6" />
-          <line x1="0" y1="180" x2="1000" y2="180" strokeDasharray="4 6" />
-          <line x1="0" y1="300" x2="1000" y2="300" strokeDasharray="4 6" />
-          <line x1="200" y1="0" x2="200" y2="360" strokeDasharray="4 6" />
-          <line x1="500" y1="0" x2="500" y2="360" strokeDasharray="4 6" />
-          <line x1="800" y1="0" x2="800" y2="360" strokeDasharray="4 6" />
-        </g>
-
-        {/* Animated Flowing Flight Data Stream Lines */}
-        <g stroke="#FF5B1D" strokeWidth="1.25" opacity="0.55" fill="none">
-          <motion.polyline
-            points="150,90 480,70 820,110"
-            strokeDasharray="8 8"
-            animate={{ strokeDashoffset: [0, -100] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-          />
-          <motion.polyline
-            points="850,290 520,220 220,180"
-            strokeDasharray="8 8"
-            animate={{ strokeDashoffset: [0, 100] }}
-            transition={{ duration: 7, repeat: Infinity, ease: "linear" }}
-          />
-        </g>
-
-        {/* Scanning Radar Crosshair Reticle tracking across Airport Hubs */}
-        <motion.g
-          animate={{ x: [150, 480, 820, 520, 220, 150], y: [90, 70, 110, 220, 180, 90] }}
-          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <circle r="12" fill="none" stroke="#FF5B1D" strokeWidth="1" strokeDasharray="2 3" opacity="0.8" />
-          <line x1="-16" y1="0" x2="16" y2="0" stroke="#FF5B1D" strokeWidth="0.75" opacity="0.6" />
-          <line x1="0" y1="-16" x2="0" y2="16" stroke="#FF5B1D" strokeWidth="0.75" opacity="0.6" />
-        </motion.g>
-
-        {/* City Hub Coordinate Pins & Labels */}
-        {[
-          { x: 150, y: 90, code: 'NYC 40.71°N' },
-          { x: 480, y: 70, code: 'PAR 48.85°N' },
-          { x: 820, y: 110, code: 'TYO 35.67°N' },
-          { x: 220, y: 180, code: 'LHR 51.50°N' },
-          { x: 520, y: 220, code: 'DXB 25.20°N' },
-          { x: 850, y: 290, code: 'SYD 33.86°S' },
-        ].map((hub, i) => (
-          <g key={i}>
-            <motion.circle
-              cx={hub.x}
-              cy={hub.y}
-              r="10"
-              fill="none"
-              stroke="#FF5B1D"
-              strokeWidth="1"
-              animate={{ scale: [0.8, 2], opacity: [0.8, 0] }}
-              transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut", delay: i * 0.4 }}
-            />
-            <circle cx={hub.x} cy={hub.y} r="2.5" fill="#FF5B1D" />
-            <text x={hub.x + 6} y={hub.y - 6} fill="#a1a1aa" fontSize="8" fontFamily="monospace" fontWeight="bold">
-              {hub.code}
-            </text>
-          </g>
-        ))}
-      </svg>
+      {/* Background Marquee of Trip Cards for Desktop */}
+      <div 
+        className="absolute -inset-12 hidden sm:flex flex-col justify-center gap-8 opacity-[0.4] pointer-events-none overflow-hidden select-none -rotate-2 scale-[1.02] blur-[1px]"
+        style={{ 
+          WebkitMaskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)',
+          maskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)' 
+        }}
+      >
+        {/* Top Row: Left to Right */}
+        <div className="flex animate-marquee-right gap-6 pr-6" style={{ animationDuration: '65s' }}>
+          {[...DESTINATIONS, ...DESTINATIONS].map((dest, i) => (
+            <div key={`bg-card-1-${i}`} className="w-48 h-56 bg-[#1A1A1A] rounded-3xl overflow-hidden border border-white/10 shrink-0 shadow-2xl flex flex-col">
+              <div className="h-32 bg-stone-900 relative">
+                <img src={dest.imageUrl} alt="" className="w-full h-full object-cover opacity-80" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-transparent" />
+              </div>
+              <div className="p-4 flex-1 flex flex-col justify-end bg-[#1A1A1A]">
+                <div className="text-white font-serif font-bold mb-0.5 truncate text-lg tracking-wide">{dest.name}</div>
+                <div className="text-[#FF5B1D] text-[9px] font-mono tracking-widest uppercase font-semibold">{dest.country}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {/* Bottom Row: Right to Left */}
+        <div className="flex animate-marquee-left gap-6 pr-6 ml-16" style={{ animationDuration: '45s' }}>
+          {[...DESTINATIONS].reverse().concat([...DESTINATIONS].reverse()).map((dest, i) => (
+            <div key={`bg-card-2-${i}`} className="w-48 h-56 bg-[#1A1A1A] rounded-3xl overflow-hidden border border-white/10 shrink-0 shadow-2xl flex flex-col">
+              <div className="h-32 bg-stone-900 relative">
+                <img src={dest.imageUrl} alt="" className="w-full h-full object-cover opacity-80" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-transparent" />
+              </div>
+              <div className="p-4 flex-1 flex flex-col justify-end bg-[#1A1A1A]">
+                <div className="text-white font-serif font-bold mb-0.5 truncate text-lg tracking-wide">{dest.name}</div>
+                <div className="text-[#FF5B1D] text-[9px] font-mono tracking-widest uppercase font-semibold">{dest.country}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Perforated Ticket Side Notches */}
       <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#FAF8F5] border-r border-stone-800 z-20 pointer-events-none" />
       <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#FAF8F5] border-l border-stone-800 z-20 pointer-events-none" />
-
-      {/* Floating 3D Passport Stamp Badges */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden select-none hidden md:block">
-        {/* Stamp 1: Top-Left Tokyo Passport Entry */}
-        <motion.div
-          className="absolute -top-3 left-6 sm:left-12 bg-[#1C1B1B] border border-stone-800 p-2.5 rounded-xl text-left shadow-md opacity-50"
-          animate={{ rotate: [-5, 2, -5], y: [0, -8, 0] }}
-          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <div className="flex items-center gap-1.5 text-[9px] font-mono font-bold text-[#FF5B1D] uppercase">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D]" />
-            <span>NRT ENTRY • 2026</span>
-          </div>
-          <p className="text-[10px] font-extrabold text-stone-300 font-mono tracking-widest mt-0.5">TOKYO IMMIGRATION</p>
-        </motion.div>
-
-        {/* Stamp 2: Top-Right Boarding Pass TW-808 */}
-        <motion.div
-          className="absolute top-4 right-6 sm:right-12 bg-[#1C1B1B] border border-stone-800 p-2.5 rounded-xl text-right shadow-md opacity-50"
-          animate={{ rotate: [5, -3, 5], y: [0, 10, 0] }}
-          transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        >
-          <div className="text-[9px] font-mono font-extrabold text-stone-400 uppercase tracking-widest">FIRST CLASS • TW-808</div>
-          <div className="flex items-center justify-end gap-1 mt-1">
-            <span className="w-8 h-2 bg-stone-700/60 rounded-xs inline-block" />
-            <span className="text-[8px] font-mono text-stone-500">GATE B4</span>
-          </div>
-        </motion.div>
-
-        {/* Stamp 3: Bottom-Left Amalfi Customs Stamp */}
-        <motion.div
-          className="absolute bottom-4 left-6 sm:left-16 bg-[#1C1B1B] border border-stone-800 p-2 rounded-full text-center shadow-md opacity-45"
-          animate={{ rotate: [-10, -2, -10], y: [0, -6, 0] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-        >
-          <div className="w-14 h-14 rounded-full border border-dashed border-stone-700 flex flex-col items-center justify-center p-1">
-            <span className="text-[7px] font-mono font-bold text-[#FF5B1D] uppercase">APPROVED</span>
-            <span className="text-[9px] font-extrabold text-white font-serif">AMALFI</span>
-          </div>
-        </motion.div>
-
-        {/* Stamp 4: Bottom-Right VIP Lounge Access */}
-        <motion.div
-          className="absolute -bottom-2 right-8 sm:right-20 bg-[#1C1B1B] border border-stone-800 px-3 py-1.5 rounded-lg text-left shadow-md opacity-45"
-          animate={{ rotate: [6, 0, 6], y: [0, 8, 0] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
-        >
-          <span className="text-[8px] font-mono font-bold text-amber-500 uppercase tracking-widest">★ VIP LOUNGE ACCESS</span>
-        </motion.div>
-      </div>
 
       <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center text-center">
         {/* Headline */}
