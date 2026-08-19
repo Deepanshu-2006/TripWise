@@ -19,7 +19,7 @@ export default function CommunityPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
         
         {/* 2-Column Layout */}
-        <div className="flex flex-col lg:flex-row gap-12 relative">
+        <div className="flex flex-col-reverse lg:flex-row gap-12 relative">
           
           {/* Main Content Column */}
           <div className="w-full lg:w-2/3 flex flex-col space-y-24">

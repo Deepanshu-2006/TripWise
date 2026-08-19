@@ -14,6 +14,7 @@ export default function CommunityCTA() {
   const [selectedTrip, setSelectedTrip] = useState(null);
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishSuccess, setPublishSuccess] = useState(false);
+  const [isShareClicked, setIsShareClicked] = useState(false);
 
   // Parallax Animation State
   const mouseX = useMotionValue(0);
@@ -120,6 +121,17 @@ export default function CommunityCTA() {
     }
   };
 
+  const handleShareClick = () => {
+    // If it's a touch device, we want to play the animation first
+    // We can detect touch by checking if it's already hovering, but doing it for all clicks is safer and looks cool.
+    setIsShareClicked(true);
+    setTimeout(() => {
+      setIsModalOpen(true);
+      // Reset after a short delay so the animation can reverse when modal closes
+      setTimeout(() => setIsShareClicked(false), 500);
+    }, 400); // 400ms delay to let the liquid swipe animation play
+  };
+
   return (
     <>
       <div className="bg-[#FAF6F0] py-24 px-4 sm:px-6">
@@ -128,7 +140,7 @@ export default function CommunityCTA() {
           <div 
             onMouseMove={handleMouseMove}
             onMouseLeave={() => { mouseX.set(0); mouseY.set(0); }}
-            className="relative rounded-4xl overflow-hidden bg-[#1E1C1A] px-8 py-16 md:px-16 md:py-24 shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-stone-800 transition-shadow duration-700 hover:shadow-[0_30px_60px_rgba(30,28,26,0.6)]"
+            className="relative rounded-4xl overflow-hidden bg-[#1E1C1A] px-6 py-12 md:px-16 md:py-24 shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-stone-800 transition-shadow duration-700 hover:shadow-[0_30px_60px_rgba(30,28,26,0.6)]"
           >
             
             {/* Background Soft Collage (Real Trips) */}
@@ -166,39 +178,39 @@ export default function CommunityCTA() {
             <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-8 items-center">
               
               {/* Left Column: Text and Button */}
-              <div className="text-left">
+              <div className="text-center md:text-left flex flex-col items-center md:items-start">
                 {/* Brand Eyebrow Tag */}
-                <div className="flex items-center gap-3 mb-6">
+                <div className="flex items-center justify-center md:justify-start gap-3 mb-6">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B2C]"></span>
-                  <span className="text-[#FF6B2C] font-mono text-[11px] font-bold uppercase tracking-[0.2em] pt-0.5">
+                  <span className="text-[#FF6B2C] font-mono text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.2em] pt-0.5">
                     Community Driven
                   </span>
                 </div>
 
                 {/* Headline */}
-                <h3 className="text-4xl md:text-5xl lg:text-6xl font-serif text-white mb-6 leading-tight tracking-tight">
+                <h3 className="text-4xl sm:text-4xl md:text-5xl lg:text-6xl font-serif text-white mb-4 md:mb-6 leading-tight tracking-tight">
                   Your trip could inspire <br className="hidden md:block" /> the next traveler.
                 </h3>
 
                 {/* Subtext */}
-                <p className="text-[#A39D98] font-sans text-lg md:text-xl mb-10 max-w-md leading-relaxed">
+                <p className="text-[#A39D98] font-sans text-base md:text-xl mb-8 md:mb-10 max-w-md leading-relaxed">
                   Join our growing collective of modern explorers sharing real itineraries, discovering hidden gems, and offering honest advice.
                 </p>
 
                 {/* Unique Liquid Swipe Button */}
                 <button 
-                  onClick={() => setIsModalOpen(true)}
-                  className="group relative inline-flex items-center gap-8 pl-8 pr-2 py-2 bg-[#2A2724] border border-white/5 rounded-full overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(255,107,44,0.2)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B2C] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1E1C1A]"
+                  onClick={handleShareClick}
+                  className={`group relative inline-flex items-center gap-8 pl-8 pr-2 py-2 bg-[#2A2724] border border-white/5 rounded-full overflow-hidden transition-all duration-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B2C] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1E1C1A] ${isShareClicked ? '!-translate-y-1 !shadow-[0_12px_24px_rgba(255,107,44,0.2)]' : 'hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(255,107,44,0.2)]'}`}
                 >
                   {/* Liquid Swipe Background */}
-                  <div className="absolute inset-0 bg-[#FF6B2C] translate-x-[101%] group-hover:translate-x-0 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] rounded-full"></div>
+                  <div className={`absolute inset-0 bg-[#FF6B2C] translate-x-[101%] group-hover:translate-x-0 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] rounded-full ${isShareClicked ? '!translate-x-0' : ''}`}></div>
                   
-                  <span className="relative z-10 font-sans font-bold text-base text-stone-200 group-hover:text-white transition-colors duration-300">
+                  <span className={`relative z-10 font-sans font-bold text-base text-stone-200 group-hover:text-white transition-colors duration-300 ${isShareClicked ? '!text-white' : ''}`}>
                     Share Your Itinerary
                   </span>
                   
-                  <div className="relative z-10 w-11 h-11 rounded-full bg-[#FF6B2C] group-hover:bg-white flex items-center justify-center text-white group-hover:text-[#FF6B2C] transition-colors duration-500 shadow-lg">
-                    <svg className="w-5 h-5 transition-transform duration-500 group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <div className={`relative z-10 w-11 h-11 rounded-full bg-[#FF6B2C] group-hover:bg-white flex items-center justify-center text-white group-hover:text-[#FF6B2C] transition-colors duration-500 shadow-lg ${isShareClicked ? '!bg-white !text-[#FF6B2C]' : ''}`}>
+                    <svg className={`w-5 h-5 transition-transform duration-500 group-hover:translate-x-0.5 ${isShareClicked ? '!translate-x-0.5' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                     </svg>
                   </div>
@@ -206,8 +218,8 @@ export default function CommunityCTA() {
               </div>
 
               {/* Right Column: Social Proof Visuals */}
-              <div className="flex justify-start md:justify-end md:items-center">
-                <div className="flex flex-col items-start md:items-end gap-4 mt-8 md:mt-0">
+              <div className="flex justify-center md:justify-end md:items-center mt-2 md:mt-0">
+                <div className="flex flex-col items-center md:items-end gap-3 md:gap-4">
                    
                    {/* Avatar Stack */}
                    <div className="flex -space-x-3 shadow-2xl">

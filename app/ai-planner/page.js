@@ -256,10 +256,17 @@ export default function AIPlannerDashboard() {
                             end.setDate(end.getDate() + duration - 1);
                         }
 
+                        let dbImageUrl = actualData.imageUrl;
+                        if (!dbImageUrl) {
+                            dbImageUrl = `/api/image?q=${encodeURIComponent((actualData.destinationName || t.destination_name || 'beautiful travel destination') + ' landmark')}`;
+                        } else if (dbImageUrl.startsWith('/api/image') && !dbImageUrl.includes('landmark')) {
+                            dbImageUrl = dbImageUrl + encodeURIComponent(' landmark');
+                        }
+
                         tripObj = {
                             db_id: t.id, 
                             destinationName: actualData.destinationName || t.destination_name || "Draft Trip",
-                            imageUrl: actualData.imageUrl,
+                            imageUrl: dbImageUrl,
                             status: actualData.status || "DRAFT", 
                             lastCompletedStep: actualData.lastCompletedStep || 'review',
                             days: actualData.days || [],
@@ -284,10 +291,17 @@ export default function AIPlannerDashboard() {
                         const destInfo = DESTINATIONS.find(d => d.name.toLowerCase() === destSearchName) || {};
                         const parsedCountry = dt.destinationName.split(',')[1]?.trim();
                         
+                        let finalImageUrl = dt.imageUrl;
+                        if (!finalImageUrl) {
+                            finalImageUrl = `/api/image?q=${encodeURIComponent((dt.destinationName || 'beautiful travel destination') + ' landmark')}`;
+                        } else if (finalImageUrl.startsWith('/api/image') && !finalImageUrl.includes('landmark')) {
+                            finalImageUrl = finalImageUrl + encodeURIComponent(' landmark');
+                        }
+
                         return {
                             ...dt,
                             country: destInfo.country || parsedCountry || 'Destination',
-                            imageUrl: dt.imageUrl || `/api/image?q=${encodeURIComponent(dt.destinationName)}`,
+                            imageUrl: finalImageUrl,
                             gradient: destInfo.gradient,
                             dateRange: formatDates(dt.startDate, dt.endDate)
                         };
@@ -766,7 +780,7 @@ export default function AIPlannerDashboard() {
                                         >
                                             {/* Photo or Gradient */}
                                             {trip.imageUrl ? (
-                                                <Image src={trip.imageUrl} alt={trip.destinationName} fill className="object-cover transition-all duration-700 group-hover:scale-105" style={{ filter: `saturate(${saturation})` }} sizes="(max-width: 768px) 100vw, 50vw" />
+                                                <img src={trip.imageUrl} alt={trip.destinationName} className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105" style={{ filter: `saturate(${saturation})` }} />
                                             ) : (
                                                 <>
                                                     <div className="absolute inset-0 opacity-[0.15] mix-blend-overlay pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
@@ -1078,7 +1092,7 @@ export default function AIPlannerDashboard() {
                                     {/* Modal Header with Trip Image */}
                                     <div className="h-44 relative bg-stone-100 w-full overflow-hidden">
                                         {trip?.imageUrl ? (
-                                            <Image src={trip.imageUrl} alt={trip.destinationName} fill className="object-cover" sizes="50vw" />
+                                            <img src={trip.imageUrl} alt={trip.destinationName} className="w-full h-full object-cover" />
                                         ) : (
                                             <div className="absolute inset-0" style={generateGradient(trip?.destinationName)}></div>
                                         )}
