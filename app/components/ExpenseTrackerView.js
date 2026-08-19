@@ -232,10 +232,10 @@ export default function ExpenseTrackerView({
       // If the current logged in user IS the invited partner, show the Trip Creator as partner
       if (currentName && (currentName.toLowerCase().includes(collabName.toLowerCase()) || collabName.toLowerCase().includes(currentName.toLowerCase()))) {
         return {
-          name: 'Deepanshu Khatri',
-          firstName: 'Deepanshu',
-          photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-          email: 'creator@tripwise.com'
+          name: 'Trip Creator',
+          firstName: 'Creator',
+          photoURL: null,
+          email: ''
         };
       }
       
@@ -255,6 +255,20 @@ export default function ExpenseTrackerView({
       email: 'sarah@example.com'
     };
   }, [user, supabaseCollaborators, collaborators, localCollaborators]);
+
+  // Dynamic array of all known trip members (for splitting)
+  const tripMembers = useMemo(() => {
+    const members = new Set(['Me']);
+    
+    // Only add people who have actually been involved in an expense!
+    expenses.forEach(e => {
+      if (e.paidBy && e.paidBy !== 'Shared 50/50' && e.paidBy !== 'Split Equally' && e.paidBy !== 'Partner / Friend') {
+        members.add(e.paidBy);
+      }
+    });
+    
+    return Array.from(members);
+  }, [expenses]);
 
   const collaboratorFirstName = primaryCollaborator?.firstName || (primaryCollaborator?.name ? primaryCollaborator.name.split(' ')[0] : 'Partner');
 
@@ -706,70 +720,94 @@ export default function ExpenseTrackerView({
 
       {/* REAL COLLABORATOR IDENTITY IN GROUP EXPENSE SETTLEMENT CARD */}
       {(() => {
-        const paidByPartnerUSD = expenses
-          .filter(e => e.paidBy === primaryCollaborator.name || e.paidBy === 'Partner / Friend')
-          .reduce((acc, e) => acc + convertCurrency(e.amount, e.currency, homeCurrency), 0);
+        const totalGroupCost = expenses.reduce((acc, e) => acc + convertCurrency(e.amount, e.currency, homeCurrency), 0);
+        
+        // Members who are part of the settlement (everyone who paid + 'Me')
+        const activeMembers = tripMembers.filter(m => m !== 'Shared 50/50' && m !== 'Split Equally' && m !== 'Partner / Friend');
+        if (!activeMembers.includes('Me')) activeMembers.unshift('Me'); 
+        
+        // Treat 'Partner / Friend' alias as primary collaborator
+        const partnerAlias = primaryCollaborator.name !== 'Trip Creator' ? primaryCollaborator.name : 'Partner';
+        if (!activeMembers.includes(partnerAlias) && expenses.some(e => e.paidBy === 'Partner / Friend')) {
+            activeMembers.push(partnerAlias);
+        }
 
-        const shared50USD = expenses
-          .filter(e => e.paidBy === 'Shared 50/50')
-          .reduce((acc, e) => acc + convertCurrency(e.amount, e.currency, homeCurrency), 0);
+        const numMembers = Math.max(2, activeMembers.length); 
+        const fairShare = totalGroupCost / numMembers;
 
-        const myDirectUSD = expenses
-          .filter(e => !e.paidBy || e.paidBy === 'Me')
-          .reduce((acc, e) => acc + convertCurrency(e.amount, e.currency, homeCurrency), 0);
+        // Calculate how much each person actually paid
+        const paidAmounts = {};
+        activeMembers.forEach(m => paidAmounts[m] = 0);
+        
+        expenses.forEach(e => {
+           let amount = convertCurrency(e.amount, e.currency, homeCurrency);
+           let payer = e.paidBy || 'Me';
+           if (payer === 'Shared 50/50' || payer === 'Split Equally') {
+               let splitAmount = amount / numMembers;
+               activeMembers.forEach(m => {
+                   paidAmounts[m] += splitAmount;
+               });
+           } else {
+               if (payer === 'Partner / Friend') payer = partnerAlias;
+               if (!paidAmounts[payer]) paidAmounts[payer] = 0;
+               paidAmounts[payer] += amount;
+           }
+        });
 
-        const netOwed = (paidByPartnerUSD / 2) - (myDirectUSD / 2);
+        const balances = activeMembers.map(m => {
+           const paid = paidAmounts[m] || 0;
+           const net = paid - fairShare;
+           return { name: m, paid, net };
+        });
+
+        balances.sort((a, b) => b.net - a.net);
 
         return (
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.22 }}
-            className="p-4 sm:p-5 rounded-2xl bg-white border border-[#E6DFD5] shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+            className="p-4 sm:p-5 rounded-2xl bg-white border border-[#E6DFD5] shadow-2xs flex flex-col gap-4"
           >
-            <div className="flex items-center gap-3">
-              <div className="relative shrink-0">
-                {primaryCollaborator.photoURL ? (
-                  <img 
-                    src={primaryCollaborator.photoURL} 
-                    alt={primaryCollaborator.name} 
-                    className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-xs" 
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-[#FF6B2C] text-white flex items-center justify-center font-bold text-xs shadow-xs">
-                    {getInitials(primaryCollaborator.name)}
-                  </div>
-                )}
-                <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
+            <div className="flex items-center gap-3 pb-3 border-b border-[#E6DFD5]">
+              <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                <Users className="w-5 h-5" />
               </div>
-
               <div>
-                <span className="text-xs font-sans font-bold text-[#1E1C1A] block">
-                  Group Settlement with {primaryCollaborator.name}
+                <span className="text-sm font-serif font-black text-[#1E1C1A] block">
+                  Group Settlement
                 </span>
                 <span className="text-xs font-sans text-[#7A7268]">
-                  You paid: {formatCurrencyRounded(myDirectUSD, homeCurrency)} • {collaboratorFirstName} paid: {formatCurrencyRounded(paidByPartnerUSD, homeCurrency)} • Shared 50/50: {formatCurrencyRounded(shared50USD, homeCurrency)}
+                  Total Trip Cost: {formatCurrencyRounded(totalGroupCost, homeCurrency)} • Split equally among {numMembers} people
                 </span>
               </div>
             </div>
 
-            <motion.div 
-              animate={{ scale: [1, 1.02, 1] }}
-              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-              className="px-3.5 py-1.5 rounded-full bg-[#FAF6F0] border border-[#E6DFD5] text-xs font-mono font-bold text-[#1E1C1A] shrink-0 shadow-2xs flex items-center gap-2"
-            >
-              {netOwed > 0 ? (
-                <>
-                  <span>You owe {collaboratorFirstName} {formatCurrencyRounded(Math.abs(netOwed), homeCurrency)}</span>
-                </>
-              ) : netOwed < 0 ? (
-                <>
-                  <span className="text-emerald-700">{collaboratorFirstName} owes You {formatCurrencyRounded(Math.abs(netOwed), homeCurrency)}</span>
-                </>
-              ) : (
-                <span>Settled Up ({formatCurrency(0, homeCurrency)} balance)</span>
-              )}
-            </motion.div>
+            <div className="flex flex-col gap-2">
+              {balances.map((b, idx) => (
+                <div key={idx} className="flex items-center justify-between text-sm font-sans">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-stone-300"></span>
+                    <span className="font-bold text-[#1E1C1A]">{b.name}</span>
+                    <span className="text-xs text-[#7A7268] hidden sm:inline">(Paid: {formatCurrencyRounded(b.paid, homeCurrency)})</span>
+                  </div>
+                  
+                  {b.net > 1 ? (
+                    <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-100">
+                      is owed {formatCurrencyRounded(b.net, homeCurrency)}
+                    </span>
+                  ) : b.net < -1 ? (
+                    <span className="px-2.5 py-1 rounded-full bg-orange-50 text-orange-700 font-bold text-xs border border-orange-100">
+                      owes {formatCurrencyRounded(Math.abs(b.net), homeCurrency)}
+                    </span>
+                  ) : (
+                    <span className="px-2.5 py-1 rounded-full bg-stone-100 text-stone-500 font-bold text-xs border border-stone-200">
+                      Settled Up
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
           </motion.div>
         );
       })()}
@@ -1226,18 +1264,23 @@ export default function ExpenseTrackerView({
                 </div>
 
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">Paid By (Group Settlement)</label>
+                  <label className="block font-bold text-gray-700 mb-1">Paid By (Who paid the bill?)</label>
                   <div className="relative">
-                    <select
+                    <input
+                      type="text"
+                      list="trip-members"
                       value={paidBy}
                       onChange={(e) => setPaidBy(e.target.value)}
-                      className="w-full px-3.5 py-2.5 pr-10 rounded-xl bg-white border border-[#E6DFD5] text-xs font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C] appearance-none"
-                    >
-                      <option value="Me">Me (Direct Expense)</option>
-                      <option value={primaryCollaborator.name}>{primaryCollaborator.name} (Partner Paid)</option>
-                      <option value="Shared 50/50">Shared 50/50 Split</option>
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+                      placeholder="e.g. Me, John, Alice"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E6DFD5] text-xs font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C]"
+                    />
+                    <datalist id="trip-members">
+                      <option value="Me" />
+                      <option value="Split Equally" />
+                      {tripMembers.filter(m => m !== 'Me' && m !== 'Split Equally' && m !== 'Shared 50/50').map(m => (
+                        <option key={m} value={m} />
+                      ))}
+                    </datalist>
                   </div>
                 </div>
 
