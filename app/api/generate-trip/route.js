@@ -259,7 +259,8 @@ CRITICAL RULES FOR SPEED & QUALITY:
 5. Include custom badges like "MUST SEE", "LOCAL GEM", "OPTIMIZED ROUTE", or "BUDGET MATCH".
 6. For EVERY activity, you MUST provide the EXACT REAL-WORLD local time (e.g. "09:00 AM"), exact realistic visit duration (e.g. "2 hrs" or "1.5 hrs"), and exact verified real-world ticket price or average meal cost in local currency/USD/EUR/GBP (e.g. "£34.80 entry ticket", "€32.00 Colosseum pass", "¥3,500 lunch", or "Free admission"). NEVER use generic guesses or placeholders.
 7. Fill out the \`preferenceReasoning\` field for every activity.
-8. Accurately tag EVERY activity as "Indoor" or "Outdoor" in the \`indoorOutdoor\` field.`;
+8. Accurately tag EVERY activity as "Indoor" or "Outdoor" in the \`indoorOutdoor\` field.
+9. The \`estimatedCost\` field MUST represent the TOTAL estimated budget for the entire trip for one person, strictly INCLUDING estimated accommodation/hotel costs, local transportation, and all activities/dining.`;
 
     const modelsToTry = ['gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
     let response = null;

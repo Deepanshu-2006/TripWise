@@ -83,6 +83,23 @@ export async function GET(req) {
     }
   }
 
-  // Fallback to a transparent pixel if Google Places is missing or failed
+  // Fallback to Unsplash API if Google Places is missing, failed, or over query limit
+  try {
+    const unsplashRes = await fetch(`https://unsplash.com/napi/search/photos?query=${encodeURIComponent(q + ' landmark')}&per_page=3&orientation=landscape`);
+    if (unsplashRes.ok) {
+      const unsplashData = await unsplashRes.json();
+      if (unsplashData.results && unsplashData.results.length > 0) {
+        // Redirect to the first Unsplash image
+        const photoUrl = unsplashData.results[0].urls.regular || unsplashData.results[0].urls.small;
+        if (photoUrl) {
+          return NextResponse.redirect(photoUrl);
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching from Unsplash fallback:', err);
+  }
+
+  // Final fallback to a transparent pixel if everything fails
   return getTransparentResponse();
 }

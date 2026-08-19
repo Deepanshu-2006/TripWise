@@ -2,17 +2,21 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import Header from '../components/Header';
 import { useUser } from '@clerk/nextjs';
 import { Compass, Plus, MapPin, Calendar, ArrowRight, Loader2, Trash2, Share2, Check, Map, LayoutGrid } from 'lucide-react';
 import { getUserTrips, deleteTrip } from '../actions/trips';
 import { DESTINATIONS } from '../../lib/destinations';
+import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
-import AnimatedFlightMap from '../components/AnimatedFlightMap';
-import TripsCalendarView from '../components/TripsCalendarView';
 import InviteModal from '../components/InviteModal';
 import { getTrackingState, pollForPriceDrops } from '../../lib/priceTrackingApi';
-import Animated3DBackground from '../components/Animated3DBackground';
+
+// Dynamically import heavy canvas/3D components to optimize initial load
+const AnimatedFlightMap = dynamic(() => import('../components/AnimatedFlightMap'));
+const TripsCalendarView = dynamic(() => import('../components/TripsCalendarView'));
+const Animated3DBackground = dynamic(() => import('../components/Animated3DBackground'), { ssr: false });
 
 
 const PLANNING_STAGES = [
@@ -762,7 +766,7 @@ export default function AIPlannerDashboard() {
                                         >
                                             {/* Photo or Gradient */}
                                             {trip.imageUrl ? (
-                                                <img src={trip.imageUrl} alt={trip.destinationName} className="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-105" style={{ filter: `saturate(${saturation})` }} />
+                                                <Image src={trip.imageUrl} alt={trip.destinationName} fill className="object-cover transition-all duration-700 group-hover:scale-105" style={{ filter: `saturate(${saturation})` }} sizes="(max-width: 768px) 100vw, 50vw" />
                                             ) : (
                                                 <>
                                                     <div className="absolute inset-0 opacity-[0.15] mix-blend-overlay pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
@@ -1074,7 +1078,7 @@ export default function AIPlannerDashboard() {
                                     {/* Modal Header with Trip Image */}
                                     <div className="h-44 relative bg-stone-100 w-full overflow-hidden">
                                         {trip?.imageUrl ? (
-                                            <img src={trip.imageUrl} alt={trip.destinationName} className="absolute inset-0 w-full h-full object-cover" />
+                                            <Image src={trip.imageUrl} alt={trip.destinationName} fill className="object-cover" sizes="50vw" />
                                         ) : (
                                             <div className="absolute inset-0" style={generateGradient(trip?.destinationName)}></div>
                                         )}

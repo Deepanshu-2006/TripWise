@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion';
+import Image from 'next/image';
 
 // Star rating helper
 function Stars({ rating, theme = 'light' }) {
@@ -111,7 +112,7 @@ function StickyCard({ dest, index, totalCards, handleClick, formatBudget, getCro
           className="absolute inset-[-15%] w-[130%] h-[130%] pointer-events-none"
           style={{ y: imageY }}
         >
-          <img src={dest.imageUrl} alt={dest.name} className="w-full h-full object-cover" />
+          <Image src={dest.imageUrl} alt={dest.name} fill className="object-cover" sizes="25vw" />
         </motion.div>
         
         {/* Gradients for text protection */}
@@ -294,10 +295,12 @@ export default function BentoShowcase({ destinations, onCardClick }) {
         >
           {coverDest.imageUrl && (
             <motion.div className="absolute inset-[-10%] w-[120%] h-[120%] will-change-transform" style={{ y: yParallax }}>
-              <img 
+              <Image 
                 src={coverDest.imageUrl} 
                 alt={coverDest.name} 
-                className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-[1.03]"
+                fill
+                className="object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-[1.03]"
+                sizes="(max-width: 1024px) 100vw, 42vw"
               />
             </motion.div>
           )}
@@ -378,7 +381,7 @@ export default function BentoShowcase({ destinations, onCardClick }) {
             {/* Preload images to prevent black flashes during 3D rotation */}
             <div className="hidden">
               {megaOptions.map(dest => (
-                <img key={`preload-${dest.id}`} src={dest.imageUrl} alt="" />
+                <img key={`preload-${dest.id}`} src={dest.imageUrl} alt="" className="hidden" />
               ))}
             </div>
 
@@ -395,10 +398,12 @@ export default function BentoShowcase({ destinations, onCardClick }) {
                 style={{ transformStyle: 'preserve-3d', transformOrigin: 'center center -200px', backfaceVisibility: 'hidden' }}
               >
                 <motion.div className="absolute inset-[-10%] w-[120%] h-[120%] will-change-transform" style={{ y: yParallax }}>
-                  <img 
+                  <Image 
                     src={activeMegaDest.imageUrl} 
                     alt={activeMegaDest.name} 
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 58vw"
                   />
                 </motion.div>
                 
@@ -469,10 +474,12 @@ export default function BentoShowcase({ destinations, onCardClick }) {
                 >
                   {dest.imageUrl && (
                     <motion.div className="absolute inset-[-10%] w-[120%] h-[120%] will-change-transform" style={{ y: yParallax }}>
-                      <img 
+                      <Image 
                         src={dest.imageUrl} 
                         alt={dest.name} 
-                        className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-[1.04]"
+                        fill
+                        className="object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-[1.04]"
+                        sizes="(max-width: 1024px) 100vw, 29vw"
                       />
                     </motion.div>
                   )}

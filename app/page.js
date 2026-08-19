@@ -1,13 +1,16 @@
-import Destination from "./components/Difference Slider";
-import FeaturesSelection from "./components/FeaturesSelection";
+import dynamic from 'next/dynamic';
 import Header from "./components/Header";
 import Hero from "./components/Hero";
-import RealTimeAdjuster from "./components/Live Demo";
-import PassportGrid from "./components/PassportGrid";
-import FAQAndMarqueeCTA from "./components/FAQAndMarqueeCTA";
-import FigmaReveal from "./components/FigmaReveal";
-import FigmaPinnedSlide from "./components/FigmaPinnedSlide";
 import Intro from "./components/Intro";
+
+// Dynamically import heavy below-the-fold UI components to optimize initial load
+const Destination = dynamic(() => import("./components/Difference Slider"));
+const FeaturesSelection = dynamic(() => import("./components/FeaturesSelection"));
+const RealTimeAdjuster = dynamic(() => import("./components/Live Demo"));
+const PassportGrid = dynamic(() => import("./components/PassportGrid"));
+const FAQAndMarqueeCTA = dynamic(() => import("./components/FAQAndMarqueeCTA"));
+const FigmaReveal = dynamic(() => import("./components/FigmaReveal"));
+const FigmaPinnedSlide = dynamic(() => import("./components/FigmaPinnedSlide"));
 
 export default function Home() {
   return (
