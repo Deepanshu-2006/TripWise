@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import { getGems, submitGem, upvoteGem, seedGems } from '../actions/gems';
 
 export default function HiddenGemsWall() {
@@ -168,10 +169,12 @@ export default function HiddenGemsWall() {
             transition={{ duration: 0.5 }}
             className={`relative rounded-3xl overflow-hidden group cursor-pointer ${gem.height} bg-stone-200 mb-6 break-inside-avoid shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.12)]`}
           >
-            <img 
+            <Image 
               src={gem.image_url || gem.imageUrl} 
               alt={gem.location}
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              fill
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
               
               {/* Darkening Overlay & Gradients */}
@@ -284,7 +287,7 @@ export default function HiddenGemsWall() {
                     <div className="w-full bg-stone-50 border border-stone-200 border-dashed rounded-xl px-4 py-4 flex flex-col items-center justify-center text-stone-500 hover:border-[#F4703C] hover:text-[#F4703C] transition-colors group">
                       {newGem.imageUrl ? (
                         <div className="relative w-full h-32 rounded-lg overflow-hidden">
-                           <img src={newGem.imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                           <Image src={newGem.imageUrl} alt="Preview" fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white font-bold text-sm">
                              Click to change
                            </div>

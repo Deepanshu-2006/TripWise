@@ -11,7 +11,7 @@ import { useUser } from '@clerk/nextjs';
 import { getTripCollaborators } from '../actions/trips';
 import { 
   getTripExpenses, saveTripExpenses, syncPendingExpenses, 
-  SUPPORTED_CURRENCIES, convertCurrency, fetchExchangeRates, calculateDailyPace, getUserDisplayCurrency 
+  SUPPORTED_CURRENCIES, convertCurrency, fetchExchangeRates, calculateDailyPace, getUserDisplayCurrency, getConvertedEstimatedCostNumber
 } from '../../lib/expenseApi';
 // OCR Receipt Extraction Helper
 async function extractReceiptData(imageDataUrl) {
@@ -318,7 +318,7 @@ export default function ExpenseTrackerView({
     }, 0);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expenses, ratesReady]);
-  const budgetGoalBase = convertCurrency(parseFloat(estBudget.toString().replace(/[^0-9.]/g, '')) || 1450, 'USD', homeCurrency);
+  const budgetGoalBase = getConvertedEstimatedCostNumber(estBudget, homeCurrency);
   const elapsedDays = 1; // Current active trip day
   const dailyPaceBase = totalSpentBase / Math.max(1, elapsedDays);
   const projectedTotalBase = dailyPaceBase * (parseInt(daysCount) || 3);

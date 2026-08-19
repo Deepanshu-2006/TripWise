@@ -24,6 +24,13 @@ const detectDestination = (prompt) => {
     if (cleanCity.length > 2) return cleanCity;
   }
 
+  if (prompt.includes(',')) {
+    const firstPart = prompt.split(',')[0].trim();
+    if (firstPart.length > 2 && firstPart.length < 30) {
+      return firstPart;
+    }
+  }
+
   if (prompt.length < 30 && !lower.includes("days")) {
     return prompt.trim();
   }

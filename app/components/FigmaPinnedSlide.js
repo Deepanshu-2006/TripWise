@@ -49,8 +49,8 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
           start: 'top top',
           end: '+=150%',
           pin: true,
-          scrub: 1,
-          anticipatePin: 1,
+          scrub: true,
+          pinType: 'fixed',
           invalidateOnRefresh: true,
         },
       });

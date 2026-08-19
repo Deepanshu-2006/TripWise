@@ -9,7 +9,17 @@ export function getGooglePlacesQuery(title, destination = '') {
 }
 
 // 1. Get Activity Thumbnail (Point 2)
-export function getActivityThumbnail(act, destinationNameClean = '', idx = 0) {
+export function getActivityThumbnail(act, arg2, arg3) {
+  let destinationNameClean = '';
+  let idx = 0;
+  
+  if (typeof arg2 === 'number') {
+    idx = arg2;
+  } else if (typeof arg2 === 'string') {
+    destinationNameClean = arg2;
+    if (typeof arg3 === 'number') idx = arg3;
+  }
+
   if (act?.thumbnail || act?.imageUrl || act?.image) {
     return act.thumbnail || act.imageUrl || act.image;
   }
@@ -319,10 +329,13 @@ export function formatCost(actOrCost, category = '') {
     return { title: '💰 Free Entry', subtitle: 'Public Access Included' };
   }
   const rawStr = String(raw);
-  const match = rawStr.match(/([€$£¥₹]?\d+(?:\.\d{2})?)/);
+  // Match currency symbol (if any) followed by a number that might contain commas
+  const match = rawStr.match(/([€$£¥₹]?[\s]*\d+(?:,\d{3})*(?:\.\d{2})?)/);
   if (match) {
-    const priceStr = match[0].startsWith('€') || match[0].startsWith('$') ? match[0] : `€${match[0]}`;
-    let subtext = rawStr.replace(match[0], '').replace(/^[+-\s\/\w:]*/, '').trim();
+    const rawMatchStr = match[0];
+    const hasSymbol = /^[€$£¥₹]/.test(rawMatchStr.trim());
+    const priceStr = hasSymbol ? rawMatchStr.trim() : `€${rawMatchStr.trim()}`;
+    let subtext = rawStr.replace(rawMatchStr, '').replace(/^[+-\s\/\w:]*/, '').trim();
     if (!subtext || subtext.length < 3) {
       if (rawStr.toLowerCase().includes('vip')) subtext = 'VIP Arena Access Included';
       else if (rawStr.toLowerCase().includes('ticket')) subtext = 'Priority Entry Included';
@@ -337,19 +350,65 @@ export function formatCost(actOrCost, category = '') {
 // 8. Get Day Summary Stats (Point 11 & 12)
 export function getDaySummary(day, idx = 0, allDays = []) {
   const dayNum = day?.dayNumber || idx + 1;
-  const stopsCount = day?.activities?.length || (idx === 0 ? 4 : idx === 1 ? 5 : 3);
+  const stopsCount = day?.activities?.length || 0;
   
   // Smart day themes
   const themes = [
-    { title: '🏛 Ancient Rome & Icons', emoji: '🏛️', temp: '32°C', weather: '🌤', dist: '6.7 km', hours: '8 Hours', cost: '€61' },
-    { title: '🍝 Food Trail & Piazzas', emoji: '🍝', temp: '31°C', weather: '☀️', dist: '5.2 km', hours: '7.5 Hours', cost: '€78' },
-    { title: '🌅 Vatican & Hidden Gems', emoji: '🌅', temp: '30°C', weather: '🌤', dist: '4.8 km', hours: '6.5 Hours', cost: '€45' },
-    { title: '🛍 Shopping & Artisan Alleys', emoji: '🛍️', temp: '29°C', weather: '⛅', dist: '5.5 km', hours: '7 Hours', cost: '€52' },
-    { title: '🏰 Castles & Sunset Terraces', emoji: '🏰', temp: '31°C', weather: '☀️', dist: '6.0 km', hours: '8 Hours', cost: '€55' }
+    { title: '🏛 Ancient Rome & Icons', emoji: '🏛️', temp: '32°C', weather: '🌤' },
+    { title: '🍝 Food Trail & Piazzas', emoji: '🍝', temp: '31°C', weather: '☀️' },
+    { title: '🌅 Vatican & Hidden Gems', emoji: '🌅', temp: '30°C', weather: '🌤' },
+    { title: '🛍 Shopping & Artisan Alleys', emoji: '🛍️', temp: '29°C', weather: '⛅' },
+    { title: '🏰 Castles & Sunset Terraces', emoji: '🏰', temp: '31°C', weather: '☀️' }
   ];
 
   const safeIdx = (typeof idx === 'number' && !isNaN(idx) && idx >= 0) ? idx : 0;
   const theme = day?.title ? { ...themes[safeIdx % themes.length], title: day.title } : themes[safeIdx % themes.length];
+
+  // Calculate dynamic stats from activities
+  let totalMins = 0;
+  let totalCost = 0;
+  let currencySymbol = '€'; // default
+  
+  if (day?.activities && Array.isArray(day.activities)) {
+    day.activities.forEach(act => {
+      // Parse duration
+      if (act.duration) {
+        const hrMatch = act.duration.match(/(\d+(?:\.\d+)?)\s*h/i);
+        const minMatch = act.duration.match(/(\d+)\s*m/i);
+        if (hrMatch) totalMins += parseFloat(hrMatch[1]) * 60;
+        if (minMatch) totalMins += parseInt(minMatch[1], 10);
+        if (!hrMatch && !minMatch && act.duration.match(/^\d+$/)) {
+           // fallback if just a number, assume minutes if > 10, else hours
+           const v = parseInt(act.duration, 10);
+           totalMins += v > 10 ? v : v * 60;
+        }
+      }
+      
+      // Parse cost
+      if (act.cost) {
+        // Extract currency symbol if present
+        const currMatch = String(act.cost).match(/^[^\d\s]+/);
+        if (currMatch) currencySymbol = currMatch[0];
+
+        // Parse number ignoring commas
+        const costStr = String(act.cost).replace(/,/g, '');
+        const costMatch = costStr.match(/\d+(?:\.\d+)?/);
+        if (costMatch) {
+          totalCost += parseFloat(costMatch[0]);
+        }
+      }
+    });
+  }
+
+  // Format hours
+  const hours = totalMins > 0 ? (totalMins / 60).toFixed(1).replace(/\.0$/, '') + ' Hours' : (stopsCount > 0 ? `${(stopsCount * 1.5).toFixed(1).replace(/\.0$/, '')} Hours` : '0 Hours');
+  
+  // Format cost
+  const formattedTotalCost = totalCost % 1 !== 0 ? totalCost.toFixed(2) : totalCost;
+  const cost = totalCost > 0 ? `${currencySymbol}${formattedTotalCost}` : (stopsCount > 0 ? `${currencySymbol}${stopsCount * 15}` : `${currencySymbol}0`);
+
+  // Estimate distance (rough approximation based on stops)
+  const distance = stopsCount > 0 ? `${(stopsCount * 1.8).toFixed(1)} km` : '0 km';
 
   return {
     dayNum,
@@ -359,9 +418,9 @@ export function getDaySummary(day, idx = 0, allDays = []) {
     stopsText: `${stopsCount} Stops`,
     stats: {
       stops: `${stopsCount} Stops`,
-      hours: theme.hours,
-      distance: theme.dist,
-      cost: theme.cost,
+      hours: hours,
+      distance: distance,
+      cost: cost,
       weather: `${theme.weather} ${theme.temp}`
     }
   };
