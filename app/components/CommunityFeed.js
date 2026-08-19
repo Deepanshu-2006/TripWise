@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion';
 import TripCard from './TripCard';
 import { getPublicTrips, seedPublicTrips, clonePublicTrip, unsavePublicTrip } from '../actions/trips';
 
@@ -64,6 +64,57 @@ const MOCK_TRIPS_SEED = [
 
 const FILTERS = ['Trending', 'Recent', 'Most Saved'];
 const DESTINATIONS = ['All Destinations', 'Italy', 'Argentina', 'Japan', 'Portugal', 'Denmark', 'Scotland'];
+
+function StickyTripCard({ trip, index, totalCards, showcaseProgress, children }) {
+  const containerRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
+  const { scrollYProgress: rawStackProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "start -100%"]
+  });
+  const stackProgress = useSpring(rawStackProgress, { stiffness: 100, damping: 20, restDelta: 0.001 });
+
+  const stackScale = useTransform(stackProgress, [0, 1], [1, 0.88]);
+  const stackOpacity = useTransform(stackProgress, [0, 1], [1, 0.3]);
+  const stackRotateX = useTransform(stackProgress, [0, 1], [0, -12]);
+  const stackY = useTransform(stackProgress, [0, 1], [0, -30]);
+  
+  // Calculate final fan angle safely bounded
+  const normalizedIndex = totalCards > 1 ? (index / (totalCards - 1)) * 2 - 1 : 0; // -1 to 1
+  const targetRotate = normalizedIndex * 15; // Max 15 degrees tilt
+  const rotate = useTransform(showcaseProgress, [0, 1], [0, targetRotate]);
+  
+  // Dynamic offset: 90px on mobile, 180px on desktop
+  const baseOffset = isMobile ? 90 : 180;
+  const stickyTop = baseOffset + index * (isMobile ? 12 : 20);
+
+  return (
+    <motion.div
+      ref={containerRef}
+      className="sticky w-full mb-10"
+      style={{
+        top: `${stickyTop}px`,
+        zIndex: index + 10,
+        scale: stackScale,
+        opacity: stackOpacity,
+        rotateX: stackRotateX,
+        y: stackY,
+        rotate,
+        transformOrigin: "bottom center"
+      }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 function CustomDropdown({ options, activeOption, onSelect }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -135,6 +186,12 @@ export default function CommunityFeed() {
   const [trips, setTrips] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSeeding, setIsSeeding] = useState(false);
+  const feedRef = useRef(null);
+  const { scrollYProgress: rawFeedProgress } = useScroll({
+    target: feedRef,
+    offset: ["start start", "end end"]
+  });
+  const showcaseProgress = useSpring(rawFeedProgress, { stiffness: 100, damping: 20, restDelta: 0.001 });
 
   const fetchTrips = async () => {
     setIsLoading(true);
@@ -240,14 +297,14 @@ export default function CommunityFeed() {
 
           <div className="flex flex-col sm:flex-row flex-wrap items-center gap-4 w-full xl:w-auto shrink-0">
             {/* Pill Filters */}
-            <div className="flex p-1.5 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.04)] rounded-full border border-stone-200/60 w-full sm:w-auto shrink-0 relative overflow-hidden">
+            <div className="flex p-1.5 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.04)] rounded-full border border-stone-200/60 w-full sm:w-auto shrink-0 relative overflow-x-auto hide-scrollbar snap-x snap-mandatory">
               {FILTERS.map(filter => {
                 const isActive = activeFilter === filter;
                 return (
                   <button
                     key={filter}
                     onClick={() => setActiveFilter(filter)}
-                    className={`relative flex items-center justify-center flex-1 sm:flex-none px-5 py-2.5 rounded-full text-xs font-mono uppercase font-bold transition-all duration-300 ${
+                    className={`relative flex items-center justify-center flex-none px-5 py-2.5 rounded-full text-xs font-mono uppercase font-bold transition-all duration-300 snap-start ${
                       isActive ? 'text-white' : 'text-stone-500 hover:text-stone-900 hover:bg-stone-50'
                     }`}
                   >
@@ -292,7 +349,7 @@ export default function CommunityFeed() {
         </div>
 
         {/* Grid */}
-        <AnimatePresence mode="popLayout">
+        <div className="relative" ref={feedRef}>
           {isLoading ? (
             <motion.div 
               key="loader"
@@ -334,28 +391,34 @@ export default function CommunityFeed() {
           ) : (
             <motion.div 
               key="grid"
-              layout
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+              className="relative w-full max-w-4xl mx-auto flex flex-col pb-32"
               style={{ perspective: 1200 }}
             >
-              {filteredTrips.map(trip => (
-                <TripCard
-                  key={trip.id}
-                  authorName={trip.authorName}
-                  authorAvatar={trip.authorAvatar}
-                  destination={trip.destination}
-                  duration={trip.duration}
-                  coverImage={trip.coverImage}
-                  tags={trip.tags}
-                  saveCount={trip.bookmarks || 0}
-                  upvoteCount={trip.upvotes}
-                  onSave={() => clonePublicTrip(trip.id)}
-                  onUnsave={(clonedTripId) => unsavePublicTrip(trip.id, clonedTripId)}
-                />
+              {filteredTrips.map((trip, idx) => (
+                <StickyTripCard 
+                  key={trip.id} 
+                  trip={trip} 
+                  index={idx} 
+                  totalCards={filteredTrips.length} 
+                  showcaseProgress={showcaseProgress}
+                >
+                  <TripCard
+                    authorName={trip.authorName}
+                    authorAvatar={trip.authorAvatar}
+                    destination={trip.destination}
+                    duration={trip.duration}
+                    coverImage={trip.coverImage}
+                    tags={trip.tags}
+                    saveCount={trip.bookmarks || 0}
+                    upvoteCount={trip.upvotes}
+                    onSave={() => clonePublicTrip(trip.id)}
+                    onUnsave={(clonedTripId) => unsavePublicTrip(trip.id, clonedTripId)}
+                  />
+                </StickyTripCard>
               ))}
             </motion.div>
           )}
-        </AnimatePresence>
+        </div>
       </div>
     </div>
   );

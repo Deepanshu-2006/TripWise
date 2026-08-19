@@ -108,15 +108,15 @@ export default function TopContributors() {
             </div>
           </div>
 
-          <div className={`flex flex-col max-h-105 overflow-y-auto overflow-x-hidden custom-scrollbar pr-4 relative z-10 ${visibleContributors.length > 5 ? 'mask-[linear-gradient(to_bottom,black_calc(100%-40px),transparent_100%)] pb-8' : 'pb-2'}`}>
+          <div className={`flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-hidden overflow-y-hidden lg:overflow-y-auto lg:max-h-105 custom-scrollbar pr-4 pb-4 lg:pb-0 gap-4 lg:gap-0 snap-x snap-mandatory relative z-10 ${visibleContributors.length > 5 ? 'lg:mask-[linear-gradient(to_bottom,black_calc(100%-40px),transparent_100%)] lg:pb-8' : 'pb-2'}`}>
             {visibleContributors.map((user, index) => (
-              <div key={user.id} className="relative group/row">
+              <div key={user.id} className="relative group/row shrink-0 w-[280px] lg:w-auto snap-start">
                 {/* Custom separator line with subtle gradient fade */}
                 {index !== 0 && (
-                  <div className="absolute top-0 left-4 right-4 h-px bg-linear-to-r from-transparent via-stone-700/50 to-transparent" />
+                  <div className="hidden lg:block absolute top-0 left-4 right-4 h-px bg-linear-to-r from-transparent via-stone-700/50 to-transparent" />
                 )}
                 
-                <div className="relative flex items-center justify-between py-4 px-3 rounded-2xl shrink-0 transition-all duration-300 hover:bg-stone-800/40 hover:scale-[1.02] cursor-pointer z-10 overflow-hidden">
+                <div className="relative flex items-center justify-between py-4 px-3 rounded-2xl transition-all duration-300 hover:bg-stone-800/40 hover:scale-[1.02] cursor-pointer z-10 overflow-hidden bg-stone-800/20 lg:bg-transparent border border-stone-700/50 lg:border-transparent">
                   {/* Subtle sweep background on hover */}
                   <div className="absolute inset-0 bg-linear-to-r from-[#F4703C]/0 via-[#F4703C]/5 to-transparent -translate-x-full group-hover/row:translate-x-0 transition-transform duration-500 ease-out z-0" />
                   
