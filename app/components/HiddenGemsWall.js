@@ -1,8 +1,60 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion';
 import Image from 'next/image';
+
+function StickyGemCard({ gem, index, totalCards, showcaseProgress, children }) {
+  const containerRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
+  const { scrollYProgress: rawStackProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "start -100%"]
+  });
+  const stackProgress = useSpring(rawStackProgress, { stiffness: 100, damping: 20, restDelta: 0.001 });
+
+  const stackScale = useTransform(stackProgress, [0, 1], [1, 0.88]);
+  const stackOpacity = useTransform(stackProgress, [0, 1], [1, 0.3]);
+  const stackRotateX = useTransform(stackProgress, [0, 1], [0, -12]);
+  const stackY = useTransform(stackProgress, [0, 1], [0, -30]);
+  
+  // Calculate final fan angle safely bounded. 
+  // Restore dramatic 15 degree fan-out to match CommunityFeed!
+  const normalizedIndex = totalCards > 1 ? (index / (totalCards - 1)) * 2 - 1 : 0; // -1 to 1
+  const targetRotate = normalizedIndex * 15; 
+  const rotate = useTransform(showcaseProgress, [0, 1], [0, targetRotate]);
+  
+  // Dynamic offset: 90px on mobile, 180px on desktop
+  const baseOffset = isMobile ? 90 : 180;
+  const stickyTop = baseOffset + index * (isMobile ? 8 : 20); // tighter vertical stacking on mobile
+
+  return (
+    <motion.div
+      ref={containerRef}
+      className="sticky w-full mb-10"
+      style={{
+        top: `${stickyTop}px`,
+        zIndex: index + 10,
+        scale: stackScale,
+        opacity: stackOpacity,
+        rotateX: stackRotateX,
+        y: stackY,
+        rotate,
+        transformOrigin: "top center"
+      }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 import { getGems, submitGem, upvoteGem, seedGems } from '../actions/gems';
 
 export default function HiddenGemsWall() {
@@ -13,6 +65,13 @@ export default function HiddenGemsWall() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSeeding, setIsSeeding] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const feedRef = useRef(null);
+  const { scrollYProgress: rawFeedProgress } = useScroll({
+    target: feedRef,
+    offset: ["start start", "end end"]
+  });
+  const showcaseProgress = useSpring(rawFeedProgress, { stiffness: 100, damping: 20, restDelta: 0.001 });
 
   useEffect(() => {
     async function loadGems() {
@@ -141,7 +200,8 @@ export default function HiddenGemsWall() {
         </button>
       </div>
 
-      {/* Masonry Grid Area */}
+      {/* Main Content */}
+      <div className="relative" ref={feedRef}>
       {isLoading ? (
         <div className="py-20 flex justify-center items-center h-96">
           <div className="text-stone-400 font-mono text-sm animate-pulse flex flex-col items-center gap-4">
@@ -158,17 +218,23 @@ export default function HiddenGemsWall() {
           </div>
         </div>
       ) : (
-        <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
-        {gems.map((gem) => (
-          <motion.div 
-            key={gem.id}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            whileHover={{ y: -5 }}
-            transition={{ duration: 0.5 }}
-            className={`relative rounded-3xl overflow-hidden group cursor-pointer ${gem.height} bg-stone-200 mb-6 break-inside-avoid shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.12)]`}
-          >
+        <div className="relative w-full max-w-4xl mx-auto flex flex-col pb-32" style={{ perspective: 1200 }}>
+          {gems.map((gem, idx) => (
+            <StickyGemCard 
+              key={gem.id} 
+              gem={gem} 
+              index={idx} 
+              totalCards={gems.length} 
+              showcaseProgress={showcaseProgress}
+            >
+              <motion.div 
+                initial={{ opacity: 0, rotateX: -40, y: 40 }}
+                animate={{ opacity: 1, rotateX: 0, y: 0 }}
+                exit={{ opacity: 0, rotateX: 40, y: 40 }}
+                transition={{ duration: 0.7, type: 'spring', bounce: 0.4 }}
+                whileHover={{ y: -5 }}
+                className={`relative rounded-3xl overflow-hidden group cursor-pointer h-80 sm:h-96 md:h-[450px] bg-stone-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.12)]`}
+              >
             <Image 
               src={gem.image_url || gem.imageUrl} 
               alt={gem.location}
@@ -227,10 +293,12 @@ export default function HiddenGemsWall() {
                 </h4>
               </div>
             
-          </motion.div>
-        ))}
-      </div>
+              </motion.div>
+            </StickyGemCard>
+          ))}
+          </div>
       )}
+      </div>
 
       {/* Submit Modal */}
       <AnimatePresence>

@@ -29,11 +29,10 @@ export default function TripCard({
   return (
     <>
       <motion.div
-        layout
-        initial={{ opacity: 0, x: -60, y: 40, rotate: -8, scale: 0.8 }}
-        animate={{ opacity: 1, x: 0, y: 0, rotate: 0, scale: 1 }}
-        exit={{ opacity: 0, x: 60, y: 40, rotate: 8, scale: 0.8 }}
-        transition={{ duration: 0.5, type: 'spring', bounce: 0.4 }}
+        initial={{ opacity: 0, rotateX: -40, y: 40 }}
+        animate={{ opacity: 1, rotateX: 0, y: 0 }}
+        exit={{ opacity: 0, rotateX: 40, y: 40 }}
+        transition={{ duration: 0.7, type: 'spring', bounce: 0.4 }}
         className="relative group flex flex-col bg-stone-900 rounded-4xl overflow-hidden shadow-xl shadow-stone-200/50 hover:shadow-2xl hover:shadow-[#F4703C]/20 hover:-translate-y-1 transition-all duration-300 border border-stone-800"
       >
         {/* Full-Bleed Cover Image */}
