@@ -3391,7 +3391,7 @@ export default function PlannerSidebar({
                                 {/* Point 2: Activity Thumbnail (80-100px) */}
                                 <div className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-[#ECE8E2] shadow-2xs group/thumb">
                                   <img
-                                    src={getActivityThumbnail(act, idx)}
+                                    src={getActivityThumbnail(act, itinerary?.destinationName || '', idx)}
                                     alt={act.title}
                                     className="w-full h-full object-cover transition-transform duration-500 group-hover/thumb:scale-110"
                                     loading="lazy"

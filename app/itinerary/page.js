@@ -1501,7 +1501,7 @@ export default function ItineraryPage() {
                   : { scale: 1.25, filter: "saturate(1) brightness(1)" }
             }
             transition={{ duration: 1.5, ease: "easeOut" }}
-            src={itinerary.heroImage || `/api/image?q=${encodeURIComponent(destinationNameClean || 'beautiful travel destination')}`}
+            src={itinerary.heroImage || `/api/image?q=${encodeURIComponent((destinationNameClean || 'beautiful travel destination') + ' landmark')}`}
             alt={destinationNameClean}
             className="w-full h-full object-cover object-[center_30%] pointer-events-none"
           />

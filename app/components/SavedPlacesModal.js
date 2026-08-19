@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Bookmark, MapPin, ExternalLink, Clock } from 'lucide-react';
+import { getActivityThumbnail } from './itineraryHelpers';
 
 export default function SavedPlacesModal({ isOpen, onClose, savedStops, itinerary }) {
   if (!isOpen) return null;
@@ -134,22 +135,13 @@ export default function SavedPlacesModal({ isOpen, onClose, savedStops, itinerar
           ) : (
             savedActivities.map(act => (
               <div key={act.key} className="bg-white rounded-2xl p-4 border border-[#E6DFD5] shadow-sm flex flex-col sm:flex-row gap-4 group hover:border-[#FF6B2C]/40 transition-colors">
-                {act.thumbnailUrl ? (
-                  <div className="w-full sm:w-28 h-32 sm:h-24 rounded-xl shrink-0 overflow-hidden bg-stone-100 relative">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={act.thumbnailUrl} alt={act.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-md text-white text-[9px] font-bold uppercase tracking-wider">
-                      Day {act.dayNum}
-                    </div>
+                <div className="w-full sm:w-28 h-32 sm:h-24 rounded-xl shrink-0 overflow-hidden bg-stone-100 relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={getActivityThumbnail(act, itinerary?.destinationName || '', act.stopNum - 1)} alt={act.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-md text-white text-[9px] font-bold uppercase tracking-wider">
+                    Day {act.dayNum}
                   </div>
-                ) : (
-                  <div className="w-full sm:w-28 h-32 sm:h-24 rounded-xl shrink-0 bg-stone-100 flex items-center justify-center border border-[#E6DFD5]/50 relative">
-                    <MapPin className="w-6 h-6 text-[#C8BFB2]" />
-                    <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-white border border-[#E6DFD5] text-[#7A7268] text-[9px] font-bold uppercase tracking-wider">
-                      Day {act.dayNum}
-                    </div>
-                  </div>
-                )}
+                </div>
                 
                 <div className="flex-1 flex flex-col justify-center min-w-0">
                   <div className="flex items-start justify-between gap-2 mb-1">

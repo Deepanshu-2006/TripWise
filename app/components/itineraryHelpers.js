@@ -386,12 +386,18 @@ export function getDaySummary(day, idx = 0, allDays = []) {
       
       // Parse cost
       if (act.cost) {
-        // Extract currency symbol if present
-        const currMatch = String(act.cost).match(/^[^\d\s]+/);
+        // Extract currency symbol if present, but ignore words like 'Free'
+        const costString = String(act.cost);
+        if (costString.toLowerCase().includes('free')) {
+            // It's free, don't update cost or currency symbol
+            return;
+        }
+        
+        const currMatch = costString.match(/^[^\d\s\w]+/); // Only match symbols, not words/letters like 'Free'
         if (currMatch) currencySymbol = currMatch[0];
 
         // Parse number ignoring commas
-        const costStr = String(act.cost).replace(/,/g, '');
+        const costStr = costString.replace(/,/g, '');
         const costMatch = costStr.match(/\d+(?:\.\d+)?/);
         if (costMatch) {
           totalCost += parseFloat(costMatch[0]);
