@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import { 
   Book, 
   MapPin, 
@@ -284,7 +285,7 @@ export default function JournalView({ tripId, itinerary, onEntriesChange }) {
                     }`}>
                       {entry.photoUrls.map((url, idx) => (
                         <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden shadow-sm border border-[#E6DFD5]">
-                          <img src={url} alt={`Journal photo ${idx + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                          <Image src={url} alt={`Journal photo ${idx + 1}`} fill className="object-cover hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 50vw" />
                         </div>
                       ))}
                     </div>
@@ -336,7 +337,7 @@ export default function JournalView({ tripId, itinerary, onEntriesChange }) {
                           {/* Modal Header with Entry Image */}
                           <div className="h-44 relative bg-stone-100 w-full overflow-hidden">
                               {entry?.photoUrls && entry.photoUrls.length > 0 ? (
-                                  <img src={entry.photoUrls[0]} alt="Journal Entry" className="absolute inset-0 w-full h-full object-cover" />
+                                  <Image src={entry.photoUrls[0]} alt="Journal Entry" fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
                               ) : (
                                   <div className="absolute inset-0 bg-[linear-gradient(135deg,hsl(25,85%,65%)_0%,hsl(45,90%,50%)_100%)]"></div>
                               )}

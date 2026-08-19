@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import Link from 'next/link';
 import { 
   Bell, Plane, Hotel, Building2, Bed, BedDouble, AlertCircle, TrendingDown, TrendingUp, Minus, Clock, MapPin, 
@@ -269,8 +270,7 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                           <span className="text-xs font-bold text-[#7A7268]">Total Airfare</span>
                           <span className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A]">{formatCurrency(convertCurrency(item.price, 'USD', displayCurrency), displayCurrency)}</span>
                         </div>
-                        <div className="text-[11px] text-[#A89F91]">
-                          {isLowest ? (
+                        <div className="text-[11px] text-[#A89F91]">{isLowest ? (
                             <span className="text-emerald-700 font-bold flex items-center gap-1">
                               <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Lowest fare available on this route
                             </span>
@@ -345,7 +345,7 @@ function ComparisonModal({ isOpen, onClose, items = [], type = 'flight', onSelec
                   ) : (
                     <div>
                       <div className="relative h-24 sm:h-28 rounded-xl overflow-hidden mb-3 border border-[#E6DFD5] shadow-2xs">
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-200 group-hover/card:scale-105" />
+                        <Image src={item.image} alt={item.name} fill className="object-cover transition-transform duration-200 group-hover/card:scale-105" sizes="(max-width: 768px) 100vw, 25vw" />
                         <div className="absolute top-2 right-2 bg-black/75 backdrop-blur-xs text-white text-[11px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
                           <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {item.rating}.0
                         </div>
@@ -540,7 +540,7 @@ function HotelMapView({ hotels = [], itinerary, selectedHotel, onSelectHotel, st
       {activeMapHotel && (
         <div className="p-4 bg-[#FAF6F0] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
-            <img src={activeMapHotel.image} alt={activeMapHotel.name} className="w-16 h-16 rounded-xl object-cover border border-[#E6DFD5]" />
+            <Image src={activeMapHotel.image} alt={activeMapHotel.name} width={64} height={64} className="rounded-xl object-cover border border-[#E6DFD5]" />
             <div>
               <div className="flex items-center gap-2 mb-0.5">
                 <h4 className="font-bold text-sm text-[#1E1C1A]">{activeMapHotel.name}</h4>
@@ -1573,7 +1573,7 @@ export default function PriceTracker({
                     <div className="space-y-4">
                       <div className="bg-white rounded-2xl border border-[#FF6B2C] p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
                         <div className="flex items-center gap-4">
-                          <img src={trackingState.selectedHotel.image} alt="Hotel" className="w-20 h-20 rounded-xl object-cover border border-[#E6DFD5]" />
+                          <Image src={trackingState.selectedHotel.image} alt="Hotel" width={80} height={80} className="rounded-xl object-cover border border-[#E6DFD5]" />
                           <div>
                             <div className="flex items-center gap-2 mb-1">
                               <span className="bg-[#FF6B2C] text-white text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-sm">Selected Hotel</span>
@@ -1819,13 +1819,12 @@ export default function PriceTracker({
                                     </button>
 
                                     <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-[#F5F0E8] shrink-0 border border-[#E6DFD5]">
-                                      <img 
+                                      <Image 
                                         src={hotel.image} 
-                                        alt={hotel.name} 
-                                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                                        onError={(e) => {
-                                          e.currentTarget.src = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=500&h=350&fit=crop';
-                                        }}
+                                        alt={hotel.name}
+                                        fill
+                                        className="object-cover transition-transform duration-300 hover:scale-105"
+                                        sizes="(max-width: 768px) 100vw, 33vw"
                                       />
                                     </div>
                                     <div className="flex-1">

@@ -484,6 +484,24 @@ function PlanButton({ disabled, onClick }) {
 
 
 
+const renderHighlightedText = (text, highlight) => {
+  if (!highlight || !highlight.trim()) return <>{text}</>;
+  // Escape regex special characters from highlight string just in case
+  const safeHighlight = highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const parts = text.split(new RegExp(`(${safeHighlight})`, 'gi'));
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.toLowerCase() === highlight.toLowerCase() ? (
+          <span key={i} className="text-[#FF6B2C] font-black bg-[#FF6B2C]/10 rounded-[3px] px-[2px]">{part}</span>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
+};
+
 export default function PlannerSidebar({
   currentStep = 'destination',
   onStepChange = () => { },
@@ -980,8 +998,11 @@ export default function PlannerSidebar({
   useEffect(() => {
     if (itinerary?.basecampHotelDetails?.name || itinerary?.basecampHotel) {
       setBasecamp(itinerary?.basecampHotelDetails?.name || itinerary?.basecampHotel);
+    } else if (!itinerary) {
+      setBasecamp('');
+      setBasecampDetails(null);
     }
-  }, [itinerary?.basecampHotelDetails?.name, itinerary?.basecampHotel]);
+  }, [itinerary?.basecampHotelDetails?.name, itinerary?.basecampHotel, itinerary]);
   const [isSearchingBasecamp, setIsSearchingBasecamp] = useState(false);
   const [showBasecampDropdown, setShowBasecampDropdown] = useState(false);
   const [isListeningVoice, setIsListeningVoice] = useState(false);
@@ -1252,38 +1273,79 @@ export default function PlannerSidebar({
 
 
 
-  const fetchBasecampSuggestions = async (query) => {
-    if (!query || query.trim().length < 3) {
+  const fetchBasecampSuggestions = async (query, forceFetch = false) => {
+    let effectiveDest = parsedIntent?.destination || extracted?.destination || itinerary?.destinationName || userPromptInput || "";
+
+    if ((!query || query.trim().length === 0) && !forceFetch) {
       setBasecampSuggestions([]);
       setShowBasecampDropdown(false);
       return;
     }
+    
+    let searchQuery = query || "";
+    
+    // If it's empty, we want to fetch generic hotel suggestions for the destination
+    const isEmptyQuery = !query || query.trim().length === 0;
+    
+    if (isEmptyQuery) {
+      if (!effectiveDest || effectiveDest.trim().length === 0) {
+        setBasecampSuggestions([]);
+        setIsSearchingBasecamp(false);
+        setShowBasecampDropdown(true);
+        return;
+      }
+      searchQuery = `hotels in ${effectiveDest}`;
+    } else {
+      // Auto-append destination to restrict to that city
+      if (effectiveDest && effectiveDest.trim().length > 0 && !searchQuery.toLowerCase().includes(effectiveDest.toLowerCase())) {
+          searchQuery = `${searchQuery} in ${effectiveDest}`.trim();
+      }
+    }
+
     setIsSearchingBasecamp(true);
+    setShowBasecampDropdown(true);
 
     // 1. Google Places API (Requires NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in .env.local)
     if (typeof window !== 'undefined' && window.google && window.google.maps && window.google.maps.places) {
-      const service = new window.google.maps.places.AutocompleteService();
-      // 'lodging' type strictly returns hotels, motels, and accommodations
-      service.getPlacePredictions({ input: query, types: ['lodging'] }, (predictions, status) => {
-        setIsSearchingBasecamp(false);
-        if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
-          setBasecampSuggestions(predictions.map(p => ({
-            place_id: p.place_id,
-            name: p.structured_formatting.main_text,
-            display_name: p.description
-          })));
-          setShowBasecampDropdown(true);
-        } else {
-          setBasecampSuggestions([]);
-          setShowBasecampDropdown(false);
-        }
-      });
+      if (isEmptyQuery) {
+        // Use textSearch for categorical queries like "hotels in Kyoto"
+        const dummyNode = document.createElement('div');
+        const placesService = new window.google.maps.places.PlacesService(dummyNode);
+        placesService.textSearch({ query: searchQuery, type: 'lodging' }, (results, status) => {
+          setIsSearchingBasecamp(false);
+          if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
+            setBasecampSuggestions(results.slice(0, 8).map(p => ({
+              place_id: p.place_id,
+              name: p.name,
+              display_name: p.formatted_address || p.name
+            })));
+          } else {
+            setBasecampSuggestions([]);
+          }
+        });
+      } else {
+        const service = new window.google.maps.places.AutocompleteService();
+        // 'lodging' type strictly returns hotels, motels, and accommodations
+        service.getPlacePredictions({ input: searchQuery, types: ['lodging'] }, (predictions, status) => {
+          setIsSearchingBasecamp(false);
+          if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+            setBasecampSuggestions(predictions.map(p => ({
+              place_id: p.place_id,
+              name: p.structured_formatting.main_text,
+              display_name: p.description
+            })));
+          } else {
+            setBasecampSuggestions([]);
+          }
+        });
+      }
       return;
     }
 
     // 2. Fallback: Highly optimized Nominatim strict hotel search
     try {
-      const searchUrl = `https://nominatim.openstreetmap.org/search?q=hotel+${encodeURIComponent(query)}&format=json&limit=8`;
+      const finalNominatimQuery = isEmptyQuery ? searchQuery : `hotel ${searchQuery}`;
+      const searchUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(finalNominatimQuery)}&format=json&limit=8`;
       const res = await fetch(searchUrl);
       const data = await res.json();
 
@@ -1295,9 +1357,9 @@ export default function PlannerSidebar({
 
       const finalSuggestions = hotels.length > 0 ? hotels : data;
       setBasecampSuggestions(finalSuggestions);
-      setShowBasecampDropdown(finalSuggestions.length > 0);
     } catch (err) {
       console.error("Autocomplete error:", err);
+      setBasecampSuggestions([]);
     } finally {
       setIsSearchingBasecamp(false);
     }
@@ -1307,14 +1369,21 @@ export default function PlannerSidebar({
     const val = e.target.value;
     setBasecamp(val);
     setBasecampDetails(null); // User is typing manually, clear any previously selected details
+    
+    // Provide instant UI feedback on every character typed
+    setIsSearchingBasecamp(true);
+    setShowBasecampDropdown(true);
+
     if (basecampSearchTimeoutRef.current) clearTimeout(basecampSearchTimeoutRef.current);
     if (val.trim().length === 0) {
-      setShowBasecampDropdown(false);
+      basecampSearchTimeoutRef.current = setTimeout(() => {
+        fetchBasecampSuggestions('', true);
+      }, 300);
       return;
     }
     basecampSearchTimeoutRef.current = setTimeout(() => {
       fetchBasecampSuggestions(val);
-    }, 500);
+    }, 300);
   };
 
   const handleAddCustomStop = () => {
@@ -2098,94 +2167,6 @@ export default function PlannerSidebar({
                 </div>
               )}
 
-              {/* Basecamp Input (Secondary, Mode-Branching Detail) */}
-              <div className="relative">
-                <div className="relative flex items-center">
-                  <div className="absolute left-3 flex items-center justify-center pointer-events-none z-10">
-                    {isSearchingBasecamp ? (
-                      <div className="w-3.5 h-3.5 border-2 border-[#FF6B2C] border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <MapPin className="w-3.5 h-3.5 text-stone-400" />
-                    )}
-                  </div>
-                  <input
-                    type="text"
-                    value={basecamp}
-                    onChange={handleBasecampChange}
-                    onFocus={() => { if (basecampSuggestions.length > 0) setShowBasecampDropdown(true); }}
-                    onBlur={() => setTimeout(() => setShowBasecampDropdown(false), 200)}
-                    placeholder="Where are you staying? (Optional basecamp hotel)"
-                    className="w-full py-2.5 pl-9 pr-3 rounded-xl bg-stone-50/70 hover:bg-white focus:bg-white border border-stone-200/80 focus:border-[#FF6B2C] focus:ring-2 focus:ring-[#FF6B2C]/15 text-xs sm:text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none shadow-2xs transition-all duration-150 font-medium"
-                  />
-                </div>
-
-                {/* Autocomplete Dropdown */}
-                {showBasecampDropdown && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border border-stone-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
-                    {basecampSuggestions.map((place, idx) => {
-                      const hotelName = place.name || place.display_name?.split(',')[0] || '';
-                      const hotelAddress = place.display_name || '';
-                      return (
-                        <div
-                          key={place.place_id || idx}
-                          className="px-3 py-2.5 hover:bg-[#FFF5EF] cursor-pointer border-b border-stone-100 last:border-0 transition-colors flex items-center gap-2.5"
-                          onClick={() => {
-                            setBasecamp(hotelName);
-                            setBasecampDetails(place); // Store FULL place object for coordinate-aware generation
-                            setShowBasecampDropdown(false);
-                            setBasecampSuggestions([]);
-                          }}
-                        >
-                          <div className="shrink-0 w-7 h-7 rounded-lg bg-[#FFF2EA] border border-[#FDDCC7] flex items-center justify-center text-[13px]">
-                            🏨
-                          </div>
-                          <div className="min-w-0">
-                            <div className="font-semibold text-stone-800 text-xs sm:text-sm truncate">{hotelName}</div>
-                            <div className="text-[10px] text-stone-400 truncate mt-0.5">{hotelAddress}</div>
-                          </div>
-                          <div className="ml-auto shrink-0 text-[10px] font-bold text-[#FF6B2C] bg-[#FFF2EA] px-1.5 py-0.5 rounded-md">Select</div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* Structured Micro-Format Helper & Live Mode Indicator */}
-                <AnimatePresence mode="wait">
-                  {basecamp && basecamp.trim() ? (
-                    <motion.div
-                      key="active-basecamp-mode"
-                      initial={{ opacity: 0, y: -4, scale: 0.98 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -4, scale: 0.98 }}
-                      transition={{ duration: 0.15 }}
-                      className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-[11px] font-bold shadow-2xs"
-                    >
-                      <span className="w-3.5 h-3.5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[9px] font-black shrink-0">✓</span>
-                      <span>Basecamp mode: We'll optimize your itinerary around <strong className="font-extrabold text-emerald-950">{basecamp.trim()}</strong></span>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="undecided-mode-helper"
-                      initial={{ opacity: 0, y: -2 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -2 }}
-                      transition={{ duration: 0.15 }}
-                      className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-x-4 gap-y-1.5 mt-3 text-[11.5px] font-sans text-stone-500"
-                    >
-                      <span className="inline-flex items-center gap-1.5">
-                        <span>🏨</span>
-                        <span className="font-semibold text-stone-700">Have a hotel?</span> We'll route around it.
-                      </span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <span>🎲</span>
-                        <span className="font-semibold text-stone-600">Not sure yet?</span> We'll help you pick one later.
-                      </span>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
               {/* ── Vibe Enhancer Chips ── */}
               <div className="space-y-2.5">
                 <div className="flex items-center gap-3">
@@ -2234,6 +2215,140 @@ export default function PlannerSidebar({
                     );
                   })}
                 </div>
+              </div>
+
+              {/* Basecamp Input (Secondary, Mode-Branching Detail) */}
+              <div className="relative">
+                <div className="relative flex items-center">
+                  <div className="absolute left-3 flex items-center justify-center pointer-events-none z-10">
+                    {isSearchingBasecamp ? (
+                      <div className="w-3.5 h-3.5 border-2 border-[#FF6B2C] border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <MapPin className="w-3.5 h-3.5 text-stone-400" />
+                    )}
+                  </div>
+                  <input
+                    type="text"
+                    value={basecamp}
+                    onChange={handleBasecampChange}
+                    onFocus={() => { 
+                      if (basecampSuggestions.length > 0) {
+                        setShowBasecampDropdown(true);
+                      } else {
+                        fetchBasecampSuggestions(basecamp, true);
+                        setShowBasecampDropdown(true);
+                      }
+                    }}
+                    onBlur={() => setTimeout(() => setShowBasecampDropdown(false), 200)}
+                    placeholder="Where are you staying? (Optional basecamp hotel)"
+                    className="w-full py-2.5 pl-9 pr-3 rounded-xl bg-stone-50/70 hover:bg-white focus:bg-white border border-stone-200/80 focus:border-[#FF6B2C] focus:ring-2 focus:ring-[#FF6B2C]/15 text-xs sm:text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none shadow-2xs transition-all duration-150 font-medium"
+                  />
+                </div>
+
+                {/* Autocomplete Dropdown */}
+                {showBasecampDropdown && (
+                  <div className="absolute z-50 w-full mt-2 bg-white/95 backdrop-blur-xl border border-stone-200/60 rounded-2xl shadow-[0_12px_40px_-12px_rgba(0,0,0,0.15)] overflow-hidden">
+                    {basecampSuggestions.length > 0 ? (
+                      <div className="max-h-[280px] overflow-y-auto p-1.5 scrollbar-thin scrollbar-thumb-stone-200 scrollbar-track-transparent">
+                        {basecampSuggestions.map((place, idx) => {
+                          const hotelName = place.name || place.display_name?.split(',')[0] || '';
+                          const hotelAddress = place.display_name || '';
+                          const isRecommended = idx < 2 && !basecamp.trim();
+                          
+                          return (
+                            <div
+                              key={place.place_id || idx}
+                              className="group flex items-center gap-3.5 px-3 py-2.5 rounded-xl hover:bg-stone-50 cursor-pointer transition-all duration-200"
+                              onClick={() => {
+                                setBasecamp(hotelName);
+                                setBasecampDetails(place);
+                                setShowBasecampDropdown(false);
+                                setBasecampSuggestions([]);
+                              }}
+                            >
+                              <div className="shrink-0 w-9 h-9 rounded-full bg-stone-100 border border-stone-200/60 flex items-center justify-center text-stone-500 group-hover:bg-[#FFF2EA] group-hover:text-[#FF6B2C] group-hover:border-[#FDDCC7] transition-colors">
+                                <Building2 className="w-4 h-4" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                  <div className="font-bold text-stone-800 text-[13px] truncate group-hover:text-[#FF6B2C] transition-colors">
+                                    {renderHighlightedText(hotelName, basecamp)}
+                                  </div>
+                                  {isRecommended && (
+                                    <span className="shrink-0 text-[8px] font-black uppercase tracking-wider text-[#FF6B2C] bg-[#FFF2EA] px-1.5 py-0.5 rounded-[4px]">Recommended</span>
+                                  )}
+                                </div>
+                                <div className="text-[10.5px] text-stone-400 truncate mt-0.5 font-medium">
+                                  {renderHighlightedText(hotelAddress, basecamp)}
+                                </div>
+                              </div>
+                              <div className="shrink-0 text-[10px] font-bold text-stone-300 group-hover:text-[#FF6B2C] transition-colors">
+                                <CornerDownLeft className="w-3.5 h-3.5" />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="px-4 py-8 text-center flex flex-col items-center justify-center gap-2">
+                        {isSearchingBasecamp ? (
+                          <>
+                            <div className="w-5 h-5 border-2 border-[#FF6B2C] border-t-transparent rounded-full animate-spin" />
+                            <div className="text-[11px] font-medium text-stone-400">Finding best stays...</div>
+                          </>
+                        ) : (
+                          <>
+                            <Building2 className="w-6 h-6 text-stone-300" />
+                            <div className="text-[11px] font-medium text-stone-400">
+                               {(!basecamp && !parsedIntent?.destination && !userPromptInput && !itinerary?.destinationName) 
+                                 ? "Enter a destination above to see hotel suggestions, or type to search."
+                                 : !basecamp.trim()
+                                 ? `Type to search for hotels ${parsedIntent?.destination || itinerary?.destinationName || userPromptInput ? `in ${parsedIntent?.destination || itinerary?.destinationName || userPromptInput}` : 'for your trip'}`
+                                 : basecamp.trim().length > 0 && basecamp.trim().length < 4
+                                 ? "Keep typing to find your hotel..."
+                                 : "No hotels found. Try a different search."}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Structured Micro-Format Helper & Live Mode Indicator */}
+                <AnimatePresence mode="wait">
+                  {basecamp && basecamp.trim() ? (
+                    <motion.div
+                      key="active-basecamp-mode"
+                      initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                      transition={{ duration: 0.15 }}
+                      className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-[11px] font-bold shadow-2xs"
+                    >
+                      <span className="w-3.5 h-3.5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[9px] font-black shrink-0">✓</span>
+                      <span>Basecamp mode: We'll optimize your itinerary around <strong className="font-extrabold text-emerald-950">{basecamp.trim()}</strong></span>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="undecided-mode-helper"
+                      initial={{ opacity: 0, y: -2 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -2 }}
+                      transition={{ duration: 0.15 }}
+                      className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-x-4 gap-y-1.5 mt-3 text-[11.5px] font-sans text-stone-500"
+                    >
+                      <span className="inline-flex items-center gap-1.5">
+                        <span>🏨</span>
+                        <span className="font-semibold text-stone-700">Have a hotel?</span> We'll route around it.
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <span>🎲</span>
+                        <span className="font-semibold text-stone-600">Not sure yet?</span> We'll help you pick one later.
+                      </span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* ── Quick Start Routes ── */}
