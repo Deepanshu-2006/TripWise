@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '../components/Header';
@@ -40,6 +41,23 @@ const SearchIcon = () => <MagnifyingGlass className="w-5 h-5" weight="bold" />;
 const StarIcon = ({ filled }) => <Star className="w-3.5 h-3.5 text-[#FF6B2C]" weight={filled ? "fill" : "bold"} />;
 const ArrowRightIcon = () => <ArrowRight className="w-3.5 h-3.5" weight="bold" />;
 const GlobeIcon = () => <Globe className="w-3.5 h-3.5" weight="duotone" />;
+
+const renderHighlightedText = (text, highlight) => {
+  if (!highlight || !highlight.trim() || !text) return <>{text}</>;
+  const safeHighlight = highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const parts = text.split(new RegExp(`(${safeHighlight})`, 'gi'));
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.toLowerCase() === highlight.toLowerCase() ? (
+          <span key={i} className="text-[#FF6B2C] font-black bg-[#FF6B2C]/10 rounded-[3px] px-[2px]">{part}</span>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
+};
 
 // ─── Filter Data ────────────────────────────────────────────────────────────
 const VIBE_FILTERS = [
@@ -136,7 +154,7 @@ function CustomAIPlanConsole() {
           {[...DESTINATIONS, ...DESTINATIONS].map((dest, i) => (
             <div key={`bg-card-mob-1-${i}`} className="w-full h-40 bg-[#1A1A1A] rounded-2xl overflow-hidden border border-white/10 shrink-0 shadow-2xl flex flex-col">
               <div className="h-24 bg-stone-900 relative">
-                <img src={dest.imageUrl} alt="" className="w-full h-full object-cover opacity-80" />
+                <Image src={dest.imageUrl} alt="" fill className="object-cover opacity-80" sizes="(max-width: 768px) 100vw, 50vw" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-transparent" />
               </div>
               <div className="p-3 flex-1 flex flex-col justify-end bg-[#1A1A1A]">
@@ -152,7 +170,7 @@ function CustomAIPlanConsole() {
           {[...DESTINATIONS].reverse().concat([...DESTINATIONS].reverse()).map((dest, i) => (
             <div key={`bg-card-mob-2-${i}`} className="w-full h-40 bg-[#1A1A1A] rounded-2xl overflow-hidden border border-white/10 shrink-0 shadow-2xl flex flex-col">
               <div className="h-24 bg-stone-900 relative">
-                <img src={dest.imageUrl} alt="" className="w-full h-full object-cover opacity-80" />
+                <Image src={dest.imageUrl} alt="" fill className="object-cover opacity-80" sizes="(max-width: 768px) 100vw, 50vw" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-transparent" />
               </div>
               <div className="p-3 flex-1 flex flex-col justify-end bg-[#1A1A1A]">
@@ -177,7 +195,7 @@ function CustomAIPlanConsole() {
           {[...DESTINATIONS, ...DESTINATIONS].map((dest, i) => (
             <div key={`bg-card-1-${i}`} className="w-48 h-56 bg-[#1A1A1A] rounded-3xl overflow-hidden border border-white/10 shrink-0 shadow-2xl flex flex-col">
               <div className="h-32 bg-stone-900 relative">
-                <img src={dest.imageUrl} alt="" className="w-full h-full object-cover opacity-80" />
+                <Image src={dest.imageUrl} alt="" fill className="object-cover opacity-80" sizes="(max-width: 768px) 100vw, 50vw" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-transparent" />
               </div>
               <div className="p-4 flex-1 flex flex-col justify-end bg-[#1A1A1A]">
@@ -193,7 +211,7 @@ function CustomAIPlanConsole() {
           {[...DESTINATIONS].reverse().concat([...DESTINATIONS].reverse()).map((dest, i) => (
             <div key={`bg-card-2-${i}`} className="w-48 h-56 bg-[#1A1A1A] rounded-3xl overflow-hidden border border-white/10 shrink-0 shadow-2xl flex flex-col">
               <div className="h-32 bg-stone-900 relative">
-                <img src={dest.imageUrl} alt="" className="w-full h-full object-cover opacity-80" />
+                <Image src={dest.imageUrl} alt="" fill className="object-cover opacity-80" sizes="(max-width: 768px) 100vw, 50vw" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-transparent" />
               </div>
               <div className="p-4 flex-1 flex flex-col justify-end bg-[#1A1A1A]">
@@ -744,7 +762,7 @@ function TrendingCard({ dest, onClick, isHighlighted }) {
             />
           </motion.svg>
         {dest.imageUrl && (
-          <img src={dest.imageUrl} alt={dest.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+          <Image src={dest.imageUrl} alt={dest.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" sizes="(max-width: 768px) 100vw, 33vw" />
         )}
         <div className={`absolute inset-0 bg-linear-to-t ${dest.gradient}`} />
         <div className="absolute bottom-0 left-0 right-0 p-4 pt-8 bg-linear-to-t from-black/80 via-black/30 to-transparent">
@@ -1155,10 +1173,14 @@ export default function DestinationsPage() {
                           }}
                           className="flex items-center gap-3 p-3 hover:bg-stone-50 cursor-pointer transition-colors border-b border-stone-100 last:border-0"
                         >
-                          <img src={dest.imageUrl} alt={dest.name} className="w-10 h-10 rounded-lg object-cover" />
+                          <Image src={dest.imageUrl} alt={dest.name} width={40} height={40} className="rounded-lg object-cover" />
                           <div>
-                            <h4 className="text-sm font-bold text-[#1F1F1F]">{dest.name}, {dest.country}</h4>
-                            <p className="text-xs text-stone-500 truncate">{dest.tagline}</p>
+                            <h4 className="text-sm font-bold text-[#1F1F1F]">
+                              {renderHighlightedText(`${dest.name}, ${dest.country}`, searchQuery)}
+                            </h4>
+                            <p className="text-xs text-stone-500 truncate">
+                              {renderHighlightedText(dest.tagline, searchQuery)}
+                            </p>
                           </div>
                         </div>
                       ))
@@ -1182,7 +1204,7 @@ export default function DestinationsPage() {
               onClick={() => handleGlobePinClick(HERO_IMAGES[bgIndex].destId)}
               className="group cursor-pointer relative w-full h-100 rounded-3xl overflow-hidden bg-stone-900 shadow-[0_16px_48px_rgba(0,0,0,0.5)] border border-white/20 flex flex-col justify-between p-5"
             >
-              <img src={HERO_IMAGES[bgIndex].url} alt="Featured" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
+              <Image src={HERO_IMAGES[bgIndex].url} alt="Featured" fill className="object-cover group-hover:scale-105 transition-transform duration-1000" sizes="100vw" priority />
               <div className="absolute inset-0 bg-linear-to-t from-stone-950 via-stone-900/40 to-black/20" />
               
               <div className="relative z-10 self-start bg-[#FF6B2C] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">

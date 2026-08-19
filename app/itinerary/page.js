@@ -8,13 +8,13 @@ import ImageCarousel from '../components/ImageCarousel';
 import { generatePackingList } from '../../lib/packingListLogic';
 import { fetchVisaRequirements } from '../../lib/visaApi';
 import { updateTrip } from '../actions/trips';
-import ExpenseTrackerView from '../components/ExpenseTrackerView';
+const ExpenseTrackerView = dynamic(() => import('../components/ExpenseTrackerView'));
 import { useLiveAssistant } from '../hooks/useLiveAssistant';
 import LiveAssistantNudge from '../components/LiveAssistantNudge';
 import WeatherNudge from '../components/WeatherNudge';
-import LiveAssistantProposalModal from '../components/LiveAssistantProposalModal';
+const LiveAssistantProposalModal = dynamic(() => import('../components/LiveAssistantProposalModal'));
 import { usePreferenceEngine } from '../hooks/usePreferenceEngine';
-import { getTripExpenses, convertCurrency, getUserDisplayCurrency, formatCurrency, fetchExchangeRates } from '../../lib/expenseApi';
+import { getTripExpenses, convertCurrency, getUserDisplayCurrency, formatCurrency, fetchExchangeRates, getConvertedEstimatedCost } from '../../lib/expenseApi';
 import Link from 'next/link';
 import {
   Download,
@@ -88,13 +88,13 @@ const TicketPassModal = dynamic(() => import('../components/TicketPassModal'), {
 import InlineDiningReservation from '../components/InlineDiningReservation';
 import PriceTracker from '../components/PriceTracker';
 import { getTrackingState, saveTrackingState } from '../../lib/priceTrackingApi';
-import EmergencyInfoView from '../components/EmergencyInfoView';
-import EmergencyModal from '../components/EmergencyModal';
+const EmergencyInfoView = dynamic(() => import('../components/EmergencyInfoView'));
+const EmergencyModal = dynamic(() => import('../components/EmergencyModal'));
 import OfflineTripManager from '../components/OfflineTripManager';
-import JournalView from '../components/JournalView';
-import JournalEntryModal from '../components/JournalEntryModal';
+const JournalView = dynamic(() => import('../components/JournalView'));
+const JournalEntryModal = dynamic(() => import('../components/JournalEntryModal'));
 import TripRecapBanner from '../components/TripRecapBanner';
-import TripRecapModal from '../components/TripRecapModal';
+const TripRecapModal = dynamic(() => import('../components/TripRecapModal'));
 import { getTripJournalEntries, saveTripJournalEntries, addJournalEntry } from '../../lib/journalApi';
 
 const toRomanNumeral = (num) => {
@@ -134,17 +134,7 @@ const getPacingLabel = (activities = []) => {
   return 'Active Pacing (Comprehensive Daylight Exploration)';
 };
 
-const parseEstimatedCostSafe = (costStr) => {
-  if (!costStr) return 1450;
-  const str = String(costStr);
-  // Prefer extracting USD equivalent if provided in the string
-  const usdMatch = str.match(/\$[\s]*([\d,]+(\.\d+)?)/);
-  if (usdMatch) return parseFloat(usdMatch[1].replace(/,/g, ''));
-  // Fallback to the first contiguous number
-  const match = str.match(/[\d,]+(\.\d+)?/);
-  if (match) return parseFloat(match[0].replace(/,/g, ''));
-  return 1450;
-};
+// Removed parseEstimatedCostSafe, using getConvertedEstimatedCost from expenseApi
 
 const getStopEndTimeMinutes = (timeStr, durationStr) => {
   const startMins = parseTimeToMinutes(timeStr);
@@ -546,9 +536,9 @@ const getDistanceAndProximity = (p1, p2, basecampName = 'Basecamp') => {
   const mins = Math.max(15, Math.round(distMeters / 600 + 5));
   return { label: `${mins} min transit from ${basecampName}`, distKm };
 };
-import HiddenGemsWall from '../components/HiddenGemsWall';
-import FeaturesSelection from '../components/FeaturesSelection';
-import SavedPlacesModal from '../components/SavedPlacesModal';
+const HiddenGemsWall = dynamic(() => import('../components/HiddenGemsWall'));
+const FeaturesSelection = dynamic(() => import('../components/FeaturesSelection'));
+const SavedPlacesModal = dynamic(() => import('../components/SavedPlacesModal'));
 import { getPlaceDetails } from '@/app/actions/hotels';
 import NoDossierState from '../components/NoDossierState';
 import { supabase } from '../../lib/supabase';
@@ -1651,10 +1641,10 @@ export default function ItineraryPage() {
                 {(() => {
                   if (typeof window === 'undefined') return itinerary.estimatedCost || '$1,450';
                   const currentExp = getTripExpenses(itinerary?.id || itinerary?.db_id || activeTripId || 'default-trip');
-                  if (currentExp.length === 0) return formatCurrency(convertCurrency(parseEstimatedCostSafe(itinerary.estimatedCost), 'USD', userCurrency), userCurrency);
+                  if (currentExp.length === 0) return getConvertedEstimatedCost(itinerary.estimatedCost, userCurrency);
                   const spentTotal = currentExp.reduce((acc, e) => acc + convertCurrency(e.amount, e.currency, userCurrency), 0);
-                  const budgetNum = parseEstimatedCostSafe(itinerary.estimatedCost);
-                  return `${formatCurrency(spentTotal, userCurrency)} of ${formatCurrency(convertCurrency(budgetNum, 'USD', userCurrency), userCurrency)}`;
+                  
+                  return `${formatCurrency(spentTotal, userCurrency)} of ${getConvertedEstimatedCost(itinerary.estimatedCost, userCurrency)}`;
                 })()}
               </span>
             </div>
@@ -2267,7 +2257,7 @@ export default function ItineraryPage() {
                       </div>
                       <div className="flex flex-col gap-1">
                         <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Estimated Cost</span>
-                        <span className="text-2xl sm:text-3xl font-serif font-black text-[#FF6B2C]">{itinerary.estimatedCost || '$1,450'}</span>
+                        <span className="text-2xl sm:text-3xl font-serif font-black text-[#FF6B2C]">{getConvertedEstimatedCost(itinerary.estimatedCost, userCurrency)}</span>
                       </div>
                     </div>
 
@@ -3047,7 +3037,7 @@ export default function ItineraryPage() {
                 <ExpenseTrackerView
                   tripId={itinerary?.id || itinerary?.db_id || activeTripId || 'default-trip'}
                   userCurrency={userCurrency}
-                  estBudget={parseEstimatedCostSafe(itinerary?.estimatedCost)}
+                  estBudget={itinerary?.estimatedCost}
                   destination={itinerary?.destinationName || 'Rome, Italy'}
                   daysCount={itinerary?.days?.length || 3}
                   onShowToast={showToast}
@@ -3743,7 +3733,7 @@ export default function ItineraryPage() {
               <span>•</span>
               <span>{totalStopsCount} Curated Stops</span>
               <span>•</span>
-              <span>Est. Budget: {itinerary.estimatedCost || '$1,450'}</span>
+              <span>Est. Budget: {getConvertedEstimatedCost(itinerary.estimatedCost, userCurrency)}</span>
             </div>
           </header>
 
@@ -3971,7 +3961,7 @@ export default function ItineraryPage() {
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Estimated Cost</span>
-                <span className="text-2xl font-serif font-black text-[#FF6B2C]">{itinerary.estimatedCost || '$1,450'}</span>
+                <span className="text-2xl font-serif font-black text-[#FF6B2C]">{getConvertedEstimatedCost(itinerary.estimatedCost, userCurrency)}</span>
               </div>
             </div>
 

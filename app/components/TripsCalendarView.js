@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, MapPin, Loader2, X, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { DESTINATIONS } from '../../lib/destinations';
 
@@ -181,7 +182,7 @@ export default function TripsCalendarView({ trips }) {
                 >
                     <div className="flex items-center min-w-0 flex-1">
                         {isStart && trip.imageUrl && (
-                            <img src={trip.imageUrl} alt={destName} className="w-5 h-5 rounded-full object-cover shrink-0 mr-2 shadow-sm" />
+                            <Image src={trip.imageUrl} alt={destName} width={20} height={20} className="rounded-full object-cover shrink-0 mr-2 shadow-sm" />
                         )}
                         <span className="truncate tracking-wide">{isStart ? destName : '→ ' + destName}</span>
                         {isNearest && daysUntil !== null && (
@@ -560,7 +561,7 @@ export default function TripsCalendarView({ trips }) {
                     >
                         <div className="relative h-32 w-full bg-stone-100">
                             {selectedTripPopover.trip?.imageUrl ? (
-                                <img src={selectedTripPopover.trip.imageUrl} alt={selectedTripPopover.trip.destinationName} className="w-full h-full object-cover" />
+                                <Image src={selectedTripPopover.trip.imageUrl} alt={selectedTripPopover.trip.destinationName} fill className="object-cover" sizes="33vw" />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center bg-stone-200">
                                     <MapPin size={24} className="text-stone-400" />
