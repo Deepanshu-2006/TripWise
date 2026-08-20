@@ -62,57 +62,60 @@ function PriceDistributionBar({ items = [], type = 'flight', selectedId = null, 
 
   return (
     <div className="bg-white/80 backdrop-blur-xs border border-[#E6DFD5] rounded-2xl p-4 mb-5 shadow-xs">
-      <div className="flex items-center justify-between text-xs mb-2.5">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs mb-3 gap-2 sm:gap-0">
         <span className="font-bold text-[#1E1C1A] flex items-center gap-1.5">
           <DollarSign className="w-3.5 h-3.5 text-[#FF6B2C]" />
           <span>Price Distribution ({items.length} {type}s)</span>
         </span>
-        <div className="flex items-center gap-3 text-[11px] font-medium text-[#7A7268]">
-          <span>Min: <strong className="text-[#1E1C1A]">{formatCurrency(convertCurrency(minPrice, 'USD', displayCurrency), displayCurrency)}</strong></span>
-          <span>Avg: <strong className="text-[#1E1C1A]">{formatCurrency(convertCurrency(avgPrice, 'USD', displayCurrency), displayCurrency)}</strong></span>
-          <span>Max: <strong className="text-[#1E1C1A]">{formatCurrency(convertCurrency(maxPrice, 'USD', displayCurrency), displayCurrency)}</strong></span>
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[10px] sm:text-[11px] font-medium text-[#7A7268]">
+          <span className="bg-[#FAF6F0] px-1.5 py-0.5 rounded border border-[#E6DFD5]">Min: <strong className="text-[#1E1C1A]">{formatCurrency(convertCurrency(minPrice, 'USD', displayCurrency), displayCurrency)}</strong></span>
+          <span className="bg-[#FAF6F0] px-1.5 py-0.5 rounded border border-[#E6DFD5]">Avg: <strong className="text-[#1E1C1A]">{formatCurrency(convertCurrency(avgPrice, 'USD', displayCurrency), displayCurrency)}</strong></span>
+          <span className="bg-[#FAF6F0] px-1.5 py-0.5 rounded border border-[#E6DFD5]">Max: <strong className="text-[#1E1C1A]">{formatCurrency(convertCurrency(maxPrice, 'USD', displayCurrency), displayCurrency)}</strong></span>
         </div>
       </div>
 
       {/* Histogram Bars */}
-      <div className="flex items-end gap-1.5 h-10 w-full px-1 pt-1">
+      <div className="flex items-end gap-1 sm:gap-1.5 h-16 w-full px-1 pt-2">
         {buckets.map((bucket, bIdx) => {
-          const heightPct = Math.max(15, Math.round((bucket.count / maxCount) * 100));
+          const heightPct = Math.max(8, Math.round((bucket.count / maxCount) * 100));
           const hasSelected = bucket.items.some(it => it.id === selectedId);
           const isMinBucket = bucket.items.some(it => it.price === minPrice);
 
           return (
             <div 
               key={bIdx} 
-              className="flex-1 flex flex-col items-center group relative cursor-pointer"
+              className="flex-1 flex flex-col items-center group relative cursor-pointer h-full justify-end"
               title={`${bucket.count} option(s) in this range`}
             >
-              <div 
-                className={`w-full rounded-t-md transition-all duration-300 ${
+              <motion.div 
+                initial={{ height: '0%', opacity: 0 }}
+                animate={{ height: `${heightPct}%`, opacity: 1 }}
+                transition={{ duration: 0.6, delay: bIdx * 0.04, type: "spring", stiffness: 200, damping: 20 }}
+                className={`w-full rounded-t-md transition-colors duration-300 ${
                   hasSelected 
-                    ? 'bg-[#FF6B2C] ring-2 ring-[#FF6B2C]/40 shadow-xs' 
+                    ? 'bg-gradient-to-t from-[#FF6B2C] to-[#ff8c5a] shadow-[0_0_12px_rgba(255,107,44,0.4)] border-t border-[#FF6B2C]' 
                     : isMinBucket 
-                    ? 'bg-emerald-500 hover:bg-emerald-600' 
-                    : 'bg-[#E6DFD5] hover:bg-[#D5CBBF]'
+                    ? 'bg-gradient-to-t from-emerald-500 to-emerald-400 hover:brightness-110 shadow-[0_0_8px_rgba(16,185,129,0.3)] border-t border-emerald-400' 
+                    : 'bg-gradient-to-t from-[#E6DFD5] to-[#F0EAE1] hover:from-[#D5CBBF] hover:to-[#E6DFD5] border-t border-[#D5CBBF]'
                 }`}
-                style={{ height: `${heightPct}%` }}
               />
 
               {/* Tooltip on hover */}
-              <div className="absolute bottom-full mb-1 hidden group-hover:flex flex-col items-center z-10">
-                <div className="bg-[#1E1C1A] text-white text-[10px] font-mono px-2 py-0.5 rounded shadow-md whitespace-nowrap">
+              <div className="absolute bottom-full mb-1.5 hidden group-hover:flex flex-col items-center z-10">
+                <div className="bg-[#1E1C1A] text-white text-[10px] font-mono px-2.5 py-1 rounded-md shadow-lg whitespace-nowrap">
                   {bucket.count} option{bucket.count !== 1 ? 's' : ''}
                 </div>
+                <div className="w-0 h-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-4 border-t-[#1E1C1A]" />
               </div>
             </div>
           );
         })}
       </div>
 
-      <div className="flex items-center justify-between text-[10px] text-[#7A7268] font-mono mt-1.5 border-t border-[#E6DFD5]/50 pt-1">
-        <span className="text-emerald-700 font-bold">Cheapest: ${minPrice}</span>
-        <span>Spread: ${maxPrice - minPrice}</span>
-        <span>Highest: ${maxPrice}</span>
+      <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] text-[#7A7268] font-mono mt-2 border-t border-[#E6DFD5]/50 pt-2">
+        <span className="text-emerald-700 font-bold">Low: {formatCurrency(convertCurrency(minPrice, 'USD', displayCurrency), displayCurrency)}</span>
+        <span className="hidden sm:inline">Spread: {formatCurrency(convertCurrency(maxPrice - minPrice, 'USD', displayCurrency), displayCurrency)}</span>
+        <span>High: {formatCurrency(convertCurrency(maxPrice, 'USD', displayCurrency), displayCurrency)}</span>
       </div>
     </div>
   );
@@ -597,6 +600,8 @@ export default function PriceTracker({
   const [trackingState, setTrackingState] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isActivating, setIsActivating] = useState(false);
+  const [isAnimatingStart, setIsAnimatingStart] = useState(false);
+  const [isAnimatingStop, setIsAnimatingStop] = useState(false);
   const [config, setConfig] = useState({ trackFlights: true, trackHotels: true, origin: 'JFK' });
   const [airportSearchInput, setAirportSearchInput] = useState('JFK');
   const [isAirportDropdownOpen, setIsAirportDropdownOpen] = useState(false);
@@ -793,7 +798,11 @@ export default function PriceTracker({
   const handleStartTracking = async () => {
     if (!config.trackFlights && !config.trackHotels) return;
     
+    setIsAnimatingStart(true);
+    await new Promise(resolve => setTimeout(resolve, 650));
+    
     setIsActivating(true);
+    setIsAnimatingStart(false);
     setError(null);
     try {
       const state = await activateTracking(tripId, destinationName, {
@@ -808,7 +817,11 @@ export default function PriceTracker({
     }
   };
 
-  const handleStopTracking = () => {
+  const handleStopTracking = async () => {
+    setIsAnimatingStop(true);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setIsAnimatingStop(false);
+
     if (typeof window !== 'undefined') {
       localStorage.removeItem(`tw_price_tracking_${tripId}`);
     }
@@ -1029,7 +1042,7 @@ export default function PriceTracker({
     return (
       <div className="w-full max-w-4xl mx-auto space-y-6 relative pb-16">
         {/* Requirement 2 & 3: PERSISTENT STICKY TRIP CONTEXT & LIVE BUDGET HEADER */}
-        <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border border-[#E6DFD5] rounded-2xl p-4 shadow-sm transition-all mb-4">
+        <div className="relative sm:sticky sm:top-20 z-30 bg-white/95 backdrop-blur-md border border-[#E6DFD5] rounded-2xl p-4 shadow-sm transition-all mb-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
@@ -1066,9 +1079,9 @@ export default function PriceTracker({
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-2xl font-serif font-black text-[#1E1C1A] tracking-tight">Active Price Tracking</h2>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs">
                 <span className="relative flex h-1.5 w-1.5">
@@ -1090,27 +1103,28 @@ export default function PriceTracker({
             whileTap={{ scale: 0.96, y: 1 }}
             transition={{ type: "spring", stiffness: 450, damping: 25 }}
             onClick={handleStopTracking}
-            className="group/stop relative px-4 py-2 rounded-full bg-white/95 hover:bg-white text-[#5F5E5A] hover:text-red-600 border border-[#E6DFD5] hover:border-red-200/90 shadow-[0_2px_8px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_8px_24px_-4px_rgba(239,68,68,0.22)] transition-all duration-200 cursor-pointer flex items-center gap-2.5 font-sans text-xs font-bold overflow-hidden"
+            data-clicked={isAnimatingStop}
+            className="group/stop relative px-4 py-3 sm:py-2 rounded-full sm:rounded-full bg-white/95 hover:bg-white active:bg-white data-[clicked=true]:bg-white text-[#5F5E5A] hover:text-red-600 active:text-red-600 data-[clicked=true]:text-red-600 border border-[#E6DFD5] hover:border-red-200/90 active:border-red-200/90 data-[clicked=true]:border-red-200/90 shadow-[0_2px_8px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_8px_24px_-4px_rgba(239,68,68,0.22)] active:shadow-[0_8px_24px_-4px_rgba(239,68,68,0.22)] data-[clicked=true]:shadow-[0_8px_24px_-4px_rgba(239,68,68,0.22)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 font-sans text-sm sm:text-xs font-bold overflow-hidden w-full sm:w-auto mt-2 sm:mt-0"
           >
-            {/* Soft ambient red wash on hover */}
-            <div className="absolute inset-0 bg-red-500/[0.05] opacity-0 group-hover/stop:opacity-100 transition-opacity duration-200" />
+            {/* Soft ambient red wash on hover/tap */}
+            <div className="absolute inset-0 bg-red-500/[0.05] opacity-0 group-hover/stop:opacity-100 group-active/stop:opacity-100 group-data-[clicked=true]/stop:opacity-100 transition-opacity duration-200" />
             
-            {/* Sliding light sheen reflection on hover */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover/stop:translate-x-full transition-transform duration-600 ease-out" />
+            {/* Sliding light sheen reflection on hover/tap */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover/stop:translate-x-full group-active/stop:translate-x-full group-data-[clicked=true]/stop:translate-x-full transition-transform duration-600 ease-out" />
 
-            {/* Live radar beacon core that transitions to pulsing red on hover */}
-            <div className="relative flex h-2.5 w-2.5 items-center justify-center">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-0 group-hover/stop:opacity-85 transition-opacity duration-200" />
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#8C827A] group-hover/stop:bg-red-500 group-hover/stop:shadow-[0_0_8px_#ef4444] transition-all duration-200" />
+            {/* Live radar beacon core that transitions to pulsing red on hover/tap */}
+            <div className="relative flex h-3 w-3 sm:h-2.5 sm:w-2.5 items-center justify-center shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-0 group-hover/stop:opacity-85 group-active/stop:opacity-85 group-data-[clicked=true]/stop:opacity-85 transition-opacity duration-200" />
+              <span className="relative inline-flex rounded-full h-2 w-2 sm:h-1.5 sm:w-1.5 bg-[#8C827A] group-hover/stop:bg-red-500 group-active/stop:bg-red-500 group-data-[clicked=true]/stop:bg-red-500 group-hover/stop:shadow-[0_0_8px_#ef4444] group-active/stop:shadow-[0_0_8px_#ef4444] group-data-[clicked=true]/stop:shadow-[0_0_8px_#ef4444] transition-all duration-200" />
             </div>
 
             <span className="relative z-10 tracking-tight transition-colors">Stop Tracking</span>
 
-            {/* Smooth rotating power/stop glyph on hover */}
+            {/* Smooth rotating power/stop glyph on hover/tap */}
             <motion.div 
-              className="relative z-10 text-[#A89F91] group-hover/stop:text-red-500 transition-colors duration-200 pl-0.5"
+              className="relative z-10 text-[#A89F91] group-hover/stop:text-red-500 group-active/stop:text-red-500 group-data-[clicked=true]/stop:text-red-500 transition-colors duration-200 pl-0.5 shrink-0"
             >
-              <Power className="w-3.5 h-3.5 group-hover/stop:rotate-90 group-hover/stop:scale-110 transition-all duration-300 ease-out" />
+              <Power className="w-4 h-4 sm:w-3.5 sm:h-3.5 group-hover/stop:rotate-90 group-active/stop:rotate-90 group-data-[clicked=true]/stop:rotate-90 group-hover/stop:scale-110 group-active/stop:scale-110 group-data-[clicked=true]/stop:scale-110 transition-all duration-300 ease-out" />
             </motion.div>
           </motion.button>
         </div>
@@ -1212,7 +1226,7 @@ export default function PriceTracker({
                         <SlidersHorizontal className="w-3 h-3 text-[#FF6B2C]" />
                         <span>Sort:</span>
                       </div>
-                      <div className="bg-[#F0EAE1]/90 p-1 rounded-full border border-[#E6DFD5] flex items-center gap-1 shadow-2xs">
+                      <div className="bg-[#F0EAE1]/90 p-1 rounded-full border border-[#E6DFD5] flex items-center gap-0 sm:gap-1 shadow-2xs">
                         {[
                           { id: 'price', label: 'Cheapest' },
                           { id: 'duration', label: 'Fastest' },
@@ -1222,7 +1236,7 @@ export default function PriceTracker({
                             key={tab.id}
                             type="button"
                             onClick={() => setFlightSort(tab.id)}
-                            className="relative px-4 py-1.5 rounded-full text-xs font-sans font-bold transition-all cursor-pointer"
+                            className="relative px-2.5 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-sans font-bold transition-all cursor-pointer whitespace-nowrap"
                           >
                             {flightSort === tab.id && (
                               <motion.div
@@ -1247,7 +1261,7 @@ export default function PriceTracker({
                         <Plane className="w-3 h-3 text-[#FF6B2C]" />
                         <span>Stops:</span>
                       </div>
-                      <div className="bg-[#F0EAE1]/90 p-1 rounded-full border border-[#E6DFD5] flex items-center gap-1 shadow-2xs">
+                      <div className="bg-[#F0EAE1]/90 p-1 rounded-full border border-[#E6DFD5] flex items-center gap-0 sm:gap-1 shadow-2xs">
                         {[
                           { id: 'any', label: 'All' },
                           { id: 'nonstop', label: 'Nonstop' },
@@ -1257,7 +1271,7 @@ export default function PriceTracker({
                             key={tab.id}
                             type="button"
                             onClick={() => setFlightStops(tab.id)}
-                            className="relative px-4 py-1.5 rounded-full text-xs font-sans font-bold transition-all cursor-pointer"
+                            className="relative px-2.5 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-sans font-bold transition-all cursor-pointer whitespace-nowrap"
                           >
                             {flightStops === tab.id && (
                               <motion.div
@@ -1397,21 +1411,22 @@ export default function PriceTracker({
                             </div>
 
                             <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 border-[#E6DFD5]/60 pt-3 md:pt-0">
-                              <div className="text-right">
-                                <div className="text-2xl font-serif font-black text-[#1E1C1A]">{formatCurrency(convertCurrency(flight.price, 'USD', displayCurrency), displayCurrency)}</div>
+                              <div className="text-left sm:text-right flex-1 sm:flex-none">
+                                <div className="text-xl sm:text-2xl font-serif font-black text-[#1E1C1A]">{formatCurrency(convertCurrency(flight.price, 'USD', displayCurrency), displayCurrency)}</div>
                                 <div className="text-[10px] text-[#7A7268] uppercase font-bold tracking-wider">Round Trip</div>
                               </div>
                               {isSelected ? (
-                                <button onClick={() => handleClearSelection('flight')} className="group/btn bg-[#FF6B2C] text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-1.5 shadow-sm hover:bg-[#e0591e] active:scale-[0.97] transition-all cursor-pointer">
+                                <button onClick={() => handleClearSelection('flight')} className="group/btn bg-[#FF6B2C] text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-sm hover:bg-[#e0591e] active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap">
                                   <CheckCircle2 className="w-4 h-4" /> Selected
                                 </button>
                               ) : (
                                 <button 
                                   onClick={() => handleSelectFlight(flight)} 
-                                  className="group/btn relative overflow-hidden bg-[#FAF6F0] hover:bg-[#1E1C1A] active:scale-[0.97] text-[#1E1C1A] hover:text-white px-4.5 py-2.5 rounded-xl text-sm font-bold border border-[#E6DFD5] hover:border-[#1E1C1A] transition-all duration-200 ease-out shadow-2xs hover:shadow-md flex items-center gap-2 cursor-pointer"
+                                  className="group/btn relative overflow-hidden bg-[#FAF6F0] hover:bg-[#1E1C1A] active:scale-[0.97] text-[#1E1C1A] hover:text-white px-3 sm:px-4.5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-[#E6DFD5] hover:border-[#1E1C1A] transition-all duration-200 ease-out shadow-2xs hover:shadow-md flex items-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap"
                                 >
                                   <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-500 ease-out bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
-                                  <span className="transition-transform duration-200 group-hover/btn:translate-x-0.5">Select Flight</span>
+                                  <span className="transition-transform duration-200 group-hover/btn:translate-x-0.5 hidden sm:inline">Select Flight</span>
+                                  <span className="transition-transform duration-200 group-hover/btn:translate-x-0.5 sm:hidden">Select</span>
                                   <ArrowRight className="w-3.5 h-3.5 text-[#FF6B2C] group-hover/btn:text-white transition-all duration-200 group-hover/btn:translate-x-1" />
                                 </button>
                               )}
@@ -1472,7 +1487,7 @@ export default function PriceTracker({
                       <button 
                         onClick={() => handleRedirect('hotel', basecampLinkInfo)}
                         disabled={redirectingType === 'hotel'}
-                        className="group/redirect-btn relative overflow-hidden w-full md:w-auto bg-gradient-to-r from-[#1E1C1A] via-[#2A2724] to-[#1E1C1A] hover:bg-black text-white px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold border border-white/10 hover:border-[#FF6B2C]/60 transition-all duration-300 ease-out shadow-md hover:shadow-xl hover:shadow-black/30 active:scale-[0.98] flex items-center justify-between gap-3 disabled:opacity-75 cursor-pointer"
+                        className="group/redirect-btn relative overflow-hidden w-full md:w-auto bg-gradient-to-r from-[#1E1C1A] via-[#2A2724] to-[#1E1C1A] hover:bg-black text-white px-4 sm:px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold border border-white/10 hover:border-[#FF6B2C]/60 transition-all duration-300 ease-out shadow-md hover:shadow-xl hover:shadow-black/30 active:scale-[0.98] flex items-center justify-center sm:justify-between gap-3 disabled:opacity-75 cursor-pointer"
                       >
                         {/* Ambient Light Beam Sweep on Hover */}
                         <div className="absolute inset-0 -translate-x-full group-hover/redirect-btn:translate-x-full transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none" />
@@ -1484,7 +1499,7 @@ export default function PriceTracker({
                           </div>
                         ) : (
                           <>
-                            <span className="transition-transform duration-300 group-hover/redirect-btn:translate-x-0.5 relative z-10 font-bold tracking-tight text-white group-hover/redirect-btn:text-[#FAF6F0]">
+                            <span className="transition-transform duration-300 group-hover/redirect-btn:translate-x-0.5 relative z-10 font-bold tracking-tight text-white group-hover/redirect-btn:text-[#FAF6F0] line-clamp-1">
                               {basecampLinkInfo.buttonText}
                             </span>
                             <div className="relative flex items-center justify-center shrink-0 z-10">
@@ -1585,16 +1600,16 @@ export default function PriceTracker({
                           </div>
                         </div>
 
-                        <div className="flex flex-col items-end gap-1.5 w-full md:w-auto">
-                          <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
-                            <div className="text-right">
+                        <div className="flex flex-col sm:items-end gap-3 w-full md:w-auto mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-[#E6DFD5]/60">
+                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+                            <div className="text-left sm:text-right flex-1 sm:flex-none">
                               <div className="text-2xl font-serif font-black text-[#1E1C1A]">{formatCurrency(convertCurrency(trackingState.selectedHotel.price, 'USD', displayCurrency), displayCurrency)}</div>
                               <div className="text-[10px] text-[#7A7268] uppercase font-bold tracking-wider">Per Night</div>
                             </div>
                             <button 
                               onClick={() => handleRedirect('hotel', hotelLinkInfo)}
                               disabled={redirectingType === 'hotel'}
-                              className="group/redirect-btn relative overflow-hidden bg-gradient-to-r from-[#1E1C1A] via-[#2A2724] to-[#1E1C1A] hover:bg-black text-white px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold border border-white/10 hover:border-[#FF6B2C]/60 transition-all duration-300 ease-out shadow-md hover:shadow-xl hover:shadow-black/30 active:scale-[0.98] flex items-center justify-between gap-3 disabled:opacity-75 cursor-pointer"
+                              className="group/redirect-btn relative overflow-hidden bg-gradient-to-r from-[#1E1C1A] via-[#2A2724] to-[#1E1C1A] hover:bg-black text-white px-4 sm:px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold border border-white/10 hover:border-[#FF6B2C]/60 transition-all duration-300 ease-out shadow-md hover:shadow-xl hover:shadow-black/30 active:scale-[0.98] flex items-center justify-center sm:justify-between gap-3 disabled:opacity-75 cursor-pointer w-full sm:w-auto"
                             >
                               {/* Ambient Light Beam Sweep on Hover */}
                               <div className="absolute inset-0 -translate-x-full group-hover/redirect-btn:translate-x-full transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none" />
@@ -1606,7 +1621,7 @@ export default function PriceTracker({
                                 </div>
                               ) : (
                                 <>
-                                  <span className="transition-transform duration-300 group-hover/redirect-btn:translate-x-0.5 relative z-10 font-bold tracking-tight text-white group-hover/redirect-btn:text-[#FAF6F0]">
+                                  <span className="transition-transform duration-300 group-hover/redirect-btn:translate-x-0.5 relative z-10 font-bold tracking-tight text-white group-hover/redirect-btn:text-[#FAF6F0] line-clamp-1">
                                     {hotelLinkInfo.buttonText}
                                   </span>
                                   <div className="relative flex items-center justify-center shrink-0 z-10">
@@ -1629,17 +1644,17 @@ export default function PriceTracker({
                       </div>
 
                       {/* Re-optimize Itinerary Prompt Banner */}
-                      <div className="bg-[#FFF9F5] rounded-2xl border-2 border-[#FF6B2C] p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-md">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-[#FF6B2C]/10 rounded-xl flex items-center justify-center text-xl shrink-0 font-bold">
+                      <div className="bg-[#FFF9F5] rounded-2xl border-2 border-[#FF6B2C] p-4 sm:p-5 flex flex-col md:flex-row items-start sm:items-center justify-between gap-4 shadow-md">
+                        <div className="flex items-start sm:items-center gap-3">
+                          <div className="w-10 h-10 bg-[#FF6B2C]/10 rounded-xl flex items-center justify-center text-xl shrink-0 font-bold mt-1 sm:mt-0">
                             ⚡
                           </div>
                           <div>
                             <h4 className="text-sm font-bold text-[#1E1C1A]">
                               Selected: {trackingState.selectedHotel.name}
                             </h4>
-                            <p className="text-xs text-[#7A7268] mt-0.5">
-                              Want us to re-optimize your itinerary activities and routing around {trackingState.selectedHotel.name}?
+                            <p className="text-xs text-[#7A7268] mt-0.5 leading-relaxed">
+                              Want us to re-optimize your itinerary activities and routing around this hotel?
                             </p>
                           </div>
                         </div>
@@ -1653,17 +1668,18 @@ export default function PriceTracker({
                             }
                           }}
                           disabled={isReoptimizing}
-                          className="w-full md:w-auto bg-[#FF6B2C] hover:bg-[#e0591e] text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 shrink-0 disabled:opacity-75 cursor-pointer"
+                          className="w-full md:w-auto bg-[#FF6B2C] hover:bg-[#e0591e] text-white px-5 py-3 sm:py-2.5 rounded-xl text-sm sm:text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 shrink-0 disabled:opacity-75 cursor-pointer"
                         >
                           {isReoptimizing ? (
                             <>
                               <Loader2 className="w-4 h-4 animate-spin text-white" />
-                              <span>Re-optimizing your itinerary...</span>
+                              <span>Re-optimizing...</span>
                             </>
                           ) : (
                             <>
                               <Sparkles className="w-4 h-4" />
-                              <span>Re-optimize Itinerary Around Hotel</span>
+                              <span className="hidden sm:inline">Re-optimize Itinerary Around Hotel</span>
+                              <span className="sm:hidden">Re-optimize Itinerary</span>
                             </>
                           )}
                         </button>
@@ -1680,7 +1696,7 @@ export default function PriceTracker({
                           <SlidersHorizontal className="w-3 h-3 text-[#FF6B2C]" />
                           <span>Sort:</span>
                         </div>
-                        <div className="bg-[#F0EAE1]/90 p-1 rounded-full border border-[#E6DFD5] flex items-center gap-1 shadow-2xs">
+                        <div className="bg-[#F0EAE1]/90 p-1 rounded-full border border-[#E6DFD5] flex items-center gap-0 sm:gap-1 shadow-2xs">
                           {[
                             { id: 'price', label: 'Cheapest' },
                             { id: 'rating', label: 'Top Rated' },
@@ -1690,7 +1706,7 @@ export default function PriceTracker({
                               key={tab.id}
                               type="button"
                               onClick={() => setHotelSort(tab.id)}
-                              className="relative px-4 py-1.5 rounded-full text-xs font-sans font-bold transition-all cursor-pointer"
+                              className="relative px-2.5 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-sans font-bold transition-all cursor-pointer whitespace-nowrap"
                             >
                               {hotelSort === tab.id && (
                                 <motion.div
@@ -1715,7 +1731,7 @@ export default function PriceTracker({
                           <Star className="w-3 h-3 text-[#FF6B2C]" />
                           <span>Rating:</span>
                         </div>
-                        <div className="bg-[#F0EAE1]/90 p-1 rounded-full border border-[#E6DFD5] flex items-center gap-1 shadow-2xs">
+                        <div className="bg-[#F0EAE1]/90 p-1 rounded-full border border-[#E6DFD5] flex items-center gap-0 sm:gap-1 shadow-2xs">
                           {[
                             { id: 'any', label: 'All' },
                             { id: '4', label: '4.0+ ★' },
@@ -1725,7 +1741,7 @@ export default function PriceTracker({
                               key={tab.id}
                               type="button"
                               onClick={() => setHotelRating(tab.id)}
-                              className="relative px-4 py-1.5 rounded-full text-xs font-sans font-bold transition-all cursor-pointer"
+                              className="relative px-2.5 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-sans font-bold transition-all cursor-pointer whitespace-nowrap"
                             >
                               {hotelRating === tab.id && (
                                 <motion.div
@@ -2307,45 +2323,46 @@ export default function PriceTracker({
       </div>
       
       {/* ── 4. Grand Editorial Title & Subtitle ── */}
-      <div className="relative z-10 mb-7">
-        <h2 className="text-3xl sm:text-4xl font-serif font-black text-[#1E1C1A] tracking-tight mb-2.5">
+      <div className="relative z-10 mb-6 sm:mb-7">
+        <h2 className="text-[26px] sm:text-4xl font-serif font-black text-[#1E1C1A] tracking-tight mb-2.5">
           Search & Track Prices
         </h2>
-        <div className="max-w-xl mx-auto space-y-1">
-          <p className="text-[#3F3A34] text-sm sm:text-base font-serif font-medium leading-relaxed">
+        <div className="max-w-xl mx-auto space-y-1.5 sm:space-y-1">
+          <p className="text-[#3F3A34] text-[13px] sm:text-base font-serif font-medium leading-relaxed px-2 sm:px-0">
             Continuous 24/7 radar scanning nonstop airfares and boutique stays for{' '}
             <strong className="font-bold text-[#1E1C1A] underline decoration-[#FF6B2C]/40 decoration-2 underline-offset-4">
               {destinationName?.replace(/\s*\(Demo Mode\)/i, '') || 'Rome, Italy'}
             </strong>.
           </p>
-          <p className="text-[#7A7268] text-xs sm:text-[13px] font-sans font-normal tracking-wide">
+          <p className="text-[#7A7268] text-[11px] sm:text-[13px] font-sans font-normal tracking-wide px-4 sm:px-0">
             Instant price drop alerts delivered the moment rates fall below historical baselines.
           </p>
         </div>
       </div>
 
       {/* ── 5. Main Spacious Control Suite: Full-Length Departure + Next-Line Watchdogs ── */}
-      <div className="relative z-10 space-y-4 text-left mb-12 sm:mb-14 max-w-2xl mx-auto">
+      <div className="relative z-10 space-y-4 text-left mb-10 sm:mb-14 max-w-2xl mx-auto px-4 sm:px-0">
         {/* Full-Length Hero Departure Terminal with Ambient Glass Sheen */}
         <motion.div 
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="relative z-50 bg-[#FFFFFF] border border-[#EAE3D9] rounded-[28px] p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-black/[0.02] space-y-5 group"
+          className="relative z-50 bg-[#FFFFFF] border border-[#EAE3D9] rounded-[24px] sm:rounded-[28px] p-4 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-black/[0.02] space-y-4 sm:space-y-5 group"
         >
           {/* Subtle Ambient Radar Sweep Glow */}
-          <div className="absolute top-0 right-0 w-72 h-32 bg-gradient-to-bl from-[#FF6B2C]/[0.03] via-[#FF6B2C]/[0.01] to-transparent pointer-events-none rounded-tr-[28px] overflow-hidden transition-opacity duration-700 opacity-50 group-hover:opacity-100" />
+          <div className="absolute top-0 right-0 w-72 h-32 bg-gradient-to-bl from-[#FF6B2C]/[0.03] via-[#FF6B2C]/[0.01] to-transparent pointer-events-none rounded-tr-[24px] sm:rounded-tr-[28px] overflow-hidden transition-opacity duration-700 opacity-50 group-hover:opacity-100" />
 
           {/* Header with Animated Airplane & Live Radar Beacon */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
-            <span className="text-[10px] font-sans font-bold text-[#FF6B2C] uppercase tracking-[0.2em] flex items-center gap-2.5">
+          <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 relative z-10">
+            <span className="text-[10px] font-sans font-bold text-[#FF6B2C] uppercase tracking-[0.2em] flex items-center gap-1.5 sm:gap-2.5 shrink min-w-0">
               <motion.div
                 animate={{ x: [-1, 3, -1], y: [-0.5, 0.5, -0.5] }}
                 transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                className="shrink-0"
               >
-                <Plane className="w-4 h-4" />
+                <Plane className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </motion.div>
-              <span>Departure Terminal</span>
+              <span className="truncate min-w-0">Departure Terminal</span>
             </span>
             
             {/* Live Origin Radar Beacon Badge (Cinematic Pill) */}
@@ -2357,15 +2374,17 @@ export default function PriceTracker({
                   initial={{ scale: 0.95, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   whileHover={{ scale: 1.02 }}
-                  className="flex items-center gap-2.5 text-xs font-sans font-medium text-[#1E1C1A] bg-[#FDFBF9] px-3.5 py-1.5 rounded-xl border border-[#F0EAE1] shadow-[inset_0_1px_2px_rgba(255,255,255,0.8),0_2px_4px_rgba(0,0,0,0.02)] shrink-0 cursor-default"
+                  className="flex items-center gap-1.5 sm:gap-2.5 text-xs font-sans font-medium text-[#1E1C1A] bg-[#FDFBF9] px-2 sm:px-3.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border border-[#F0EAE1] shadow-[inset_0_1px_2px_rgba(255,255,255,0.8),0_2px_4px_rgba(0,0,0,0.02)] shrink min-w-0 cursor-default"
                 >
-                  <span className="relative flex h-2 w-2">
+                  <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2 shrink-0">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"></span>
                   </span>
-                  <span className="font-semibold text-[13px]">{confirmedAirport ? `${confirmedAirport.city}, ${confirmedAirport.country}` : config.origin}</span>
-                  <div className="w-px h-3 bg-[#EAE3D9] mx-0.5"></div>
-                  <span className="font-mono font-bold text-[#8C827A] text-[11px] tracking-wide">
+                  <span className="font-semibold text-[11px] sm:text-[13px] truncate shrink min-w-0">
+                    {confirmedAirport ? `${confirmedAirport.city}, ${confirmedAirport.country}` : config.origin}
+                  </span>
+                  <div className="w-px h-2.5 sm:h-3 bg-[#EAE3D9] mx-0.5 shrink-0"></div>
+                  <span className="font-mono font-bold text-[#8C827A] text-[10px] sm:text-[11px] tracking-wide shrink-0">
                     {config.origin}
                   </span>
                 </motion.div>
@@ -2377,7 +2396,7 @@ export default function PriceTracker({
           <div className="relative z-50">
             <div className="relative group cursor-text" onClick={() => setIsAirportDropdownOpen(true)}>
               <div className="absolute inset-0 bg-gradient-to-b from-[#FAF8F5] to-white rounded-2xl border border-[#EAE3D9] group-hover:border-[#D8CFBF] transition-colors duration-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]" />
-              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#A89F91] group-focus-within:text-[#FF6B2C] group-focus-within:scale-110 transition-all duration-300 pointer-events-none z-10" />
+              <MapPin className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-[#A89F91] group-focus-within:text-[#FF6B2C] group-focus-within:scale-110 transition-all duration-300 pointer-events-none z-10" />
               <input 
                 type="text" 
                 value={airportSearchInput}
@@ -2386,13 +2405,13 @@ export default function PriceTracker({
                 onBlur={() => setTimeout(() => setIsAirportDropdownOpen(false), 240)}
                 onKeyDown={handleAirportKeyDown}
                 onChange={(e) => handleAirportInputChange(e.target.value)}
-                className="w-full pl-12 pr-14 py-4 relative z-10 bg-transparent text-base sm:text-lg font-serif font-bold text-[#1E1C1A] focus:outline-none placeholder:text-[#B5AC9E] placeholder:font-sans placeholder:font-medium placeholder:text-[15px]"
+                className="w-full pl-10 sm:pl-12 pr-12 sm:pr-14 py-3 sm:py-4 relative z-10 bg-transparent text-[15px] sm:text-lg font-serif font-bold text-[#1E1C1A] focus:outline-none placeholder:text-[#B5AC9E] placeholder:font-sans placeholder:font-medium placeholder:text-[14px] sm:placeholder:text-[15px]"
                 placeholder="Search departure city or airport..."
               />
               {/* Focus Ring */}
               <div className="absolute inset-0 rounded-2xl ring-4 ring-transparent group-focus-within:ring-[#FF6B2C]/10 transition-all duration-300 pointer-events-none" />
               
-              <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5 z-20">
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 z-20">
                 {airportSearchInput ? (
                   <motion.button
                     type="button"
@@ -2511,13 +2530,13 @@ export default function PriceTracker({
           </div>
 
           {/* Quick Hubs Switcher & Benchmark in 1 Clean Row */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-5 border-t border-[#F0EAE1] relative z-10">
-            <div className="flex items-center gap-2.5 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 hide-scrollbar">
-              <span className="text-[10px] font-sans font-bold text-[#A89F91] uppercase tracking-[0.15em] shrink-0 mr-1">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 pt-4 sm:pt-5 border-t border-[#F0EAE1] relative z-10">
+            <div className="flex items-center gap-2.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 hide-scrollbar -mx-2 px-2 sm:mx-0 sm:px-0">
+              <span className="text-[9px] sm:text-[10px] font-sans font-bold text-[#A89F91] uppercase tracking-[0.15em] shrink-0 mr-1">
                 Popular
               </span>
               {/* Premium Segmented Control for Hubs */}
-              <div className="flex items-center gap-0.5 bg-[#FDFBF9] p-1 rounded-xl border border-[#F0EAE1] shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)] shrink-0">
+              <div className="flex items-center gap-0.5 bg-[#FDFBF9] p-1 rounded-lg sm:rounded-xl border border-[#F0EAE1] shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)] shrink-0">
                 {['DEL', 'JFK', 'LHR', 'DXB', 'SIN', 'HND'].map((code) => {
                   const isActive = config.origin === code;
                   return (
@@ -2525,7 +2544,7 @@ export default function PriceTracker({
                       key={code}
                       type="button"
                       onClick={() => handleSelectAirport({ code })}
-                      className={`relative px-3 py-1.5 rounded-[8px] text-[11px] font-mono font-bold text-center transition-colors duration-200 cursor-pointer z-10 shrink-0 ${
+                      className={`relative px-2 sm:px-3 py-1 sm:py-1.5 rounded-[6px] sm:rounded-[8px] text-[10px] sm:text-[11px] font-mono font-bold text-center transition-colors duration-200 cursor-pointer z-10 shrink-0 ${
                         isActive 
                           ? 'text-[#FF6B2C]' 
                           : 'text-[#8C827A] hover:text-[#1E1C1A]'
@@ -2534,7 +2553,7 @@ export default function PriceTracker({
                       {isActive && (
                         <motion.div
                           layoutId="activeHubBg"
-                          className="absolute inset-0 bg-white rounded-[8px] shadow-sm border border-[#EAE3D9] z-[-1]"
+                          className="absolute inset-0 bg-white rounded-[6px] sm:rounded-[8px] shadow-sm border border-[#EAE3D9] z-[-1]"
                           transition={{ type: "spring", stiffness: 400, damping: 30 }}
                         />
                       )}
@@ -2545,54 +2564,54 @@ export default function PriceTracker({
               </div>
             </div>
 
-            <div className="flex items-center gap-4 text-xs font-sans text-[#7A7268] w-full sm:w-auto justify-between sm:justify-end shrink-0">
-              <span className="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-4 text-[10px] sm:text-xs font-sans text-[#7A7268] w-full sm:w-auto justify-start sm:justify-end shrink-0 mt-1 sm:mt-0">
+              <span className="flex items-center gap-1 sm:gap-1.5 shrink-0 whitespace-nowrap">
                 Typical: <strong className="font-mono font-bold text-[#1E1C1A]">{formatCurrency(convertCurrency(480, 'USD', displayCurrency), displayCurrency)}–{formatCurrency(convertCurrency(690, 'USD', displayCurrency), displayCurrency)}</strong>
               </span>
               <motion.span 
                 whileHover={{ scale: 1.05 }}
-                className="text-emerald-700 font-semibold flex items-center gap-1.5 bg-emerald-50/80 border border-emerald-200/50 px-2.5 py-1 rounded-md cursor-default shadow-xs shrink-0 whitespace-nowrap"
+                className="text-emerald-700 font-semibold flex items-center gap-1 sm:gap-1.5 bg-emerald-50/80 border border-emerald-200/50 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded sm:rounded-md cursor-default shadow-xs shrink-0 whitespace-nowrap text-[9px] sm:text-xs"
               >
-                <TrendingDown className="w-3.5 h-3.5" /> Low: <strong className="font-mono font-bold">{formatCurrency(convertCurrency(410, 'USD', displayCurrency), displayCurrency)}</strong>
+                <TrendingDown className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Low: <strong className="font-mono font-bold">{formatCurrency(convertCurrency(410, 'USD', displayCurrency), displayCurrency)}</strong>
               </motion.span>
             </div>
           </div>
         </motion.div>
 
         {/* Next Line: Side-by-Side Luxury Watchdog Toggles with Micro-Hover Motion */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4">
           {/* Flights Watchdog Card */}
           <motion.div 
             whileHover={{ y: -3, scale: 1.015 }}
             whileTap={{ scale: 0.985 }}
             onClick={() => setConfig({ ...config, trackFlights: !config.trackFlights })}
-            className={`flex items-center justify-between p-4.5 rounded-3xl border transition-all duration-300 cursor-pointer ${
+            className={`flex items-center justify-between p-3 sm:p-4.5 rounded-[20px] sm:rounded-3xl border transition-all duration-300 cursor-pointer ${
               config.trackFlights 
                 ? 'bg-gradient-to-b from-white to-[#FFF9F5] border-[#FF6B2C]/40 shadow-xs' 
                 : 'bg-white/60 border-[#E6DFD5] opacity-70 hover:opacity-100'
             }`}
           >
-            <div className="flex items-center gap-3.5">
+            <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 pr-2 sm:pr-3">
               <motion.div 
                 animate={config.trackFlights ? { rotate: [0, 360], scale: [1, 1.15, 1] } : {}}
                 transition={{ duration: 0.5, ease: "easeOut" }}
-                className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-colors ${
+                className={`w-9 h-9 sm:w-11 sm:h-11 shrink-0 rounded-xl sm:rounded-2xl flex items-center justify-center transition-colors ${
                   config.trackFlights ? 'bg-[#FF6B2C] text-white shadow-xs' : 'bg-[#E6DFD5] text-[#7A7268]'
                 }`}
               >
-                <Plane className="w-5 h-5" />
+                <Plane className="w-4 h-4 sm:w-5 sm:h-5" />
               </motion.div>
-              <div>
-                <p className="text-sm font-serif font-bold text-[#1E1C1A]">Flights & Airfare</p>
-                <p className="text-xs text-[#7A7268]">Monitors nonstop routes & fare drops</p>
+              <div className="min-w-0">
+                <p className="text-[13px] sm:text-sm font-serif font-bold text-[#1E1C1A] truncate">Flights & Airfare</p>
+                <p className="text-[10px] sm:text-xs text-[#7A7268] leading-snug truncate">Monitors nonstop routes & fare drops</p>
               </div>
             </div>
             {/* iOS Style Spring Switch */}
-            <div className={`w-11 h-6 shrink-0 rounded-full transition-colors duration-200 relative ${config.trackFlights ? 'bg-[#FF6B2C]' : 'bg-[#D8D0C5]'}`}>
+            <div className={`w-9 sm:w-11 h-5 sm:h-6 shrink-0 rounded-full transition-colors duration-200 relative ${config.trackFlights ? 'bg-[#FF6B2C]' : 'bg-[#D8D0C5]'}`}>
               <motion.div 
                 layout
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                className={`absolute top-0.5 left-0.5 bg-white w-5 h-5 rounded-full shadow-sm ${config.trackFlights ? 'translate-x-5' : 'translate-x-0'}`} 
+                className={`absolute top-0.5 left-0.5 bg-white w-4 h-4 sm:w-5 sm:h-5 rounded-full shadow-sm ${config.trackFlights ? 'translate-x-4 sm:translate-x-5' : 'translate-x-0'}`} 
               />
             </div>
           </motion.div>
@@ -2602,33 +2621,33 @@ export default function PriceTracker({
             whileHover={{ y: -3, scale: 1.015 }}
             whileTap={{ scale: 0.985 }}
             onClick={() => setConfig({ ...config, trackHotels: !config.trackHotels })}
-            className={`flex items-center justify-between p-4.5 rounded-3xl border transition-all duration-300 cursor-pointer ${
+            className={`flex items-center justify-between p-3 sm:p-4.5 rounded-[20px] sm:rounded-3xl border transition-all duration-300 cursor-pointer ${
               config.trackHotels 
                 ? 'bg-gradient-to-b from-white to-[#FFF9F5] border-[#FF6B2C]/40 shadow-xs' 
                 : 'bg-white/60 border-[#E6DFD5] opacity-70 hover:opacity-100'
             }`}
           >
-            <div className="flex items-center gap-3.5">
+            <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 pr-2 sm:pr-3">
               <motion.div 
                 animate={config.trackHotels ? { scale: [1, 1.2, 0.95, 1], y: [-2, 0] } : {}}
                 transition={{ duration: 0.45, ease: "easeOut" }}
-                className={`w-11 h-11 shrink-0 rounded-2xl flex items-center justify-center transition-colors ${
+                className={`w-9 h-9 sm:w-11 sm:h-11 shrink-0 rounded-xl sm:rounded-2xl flex items-center justify-center transition-colors ${
                   config.trackHotels ? 'bg-[#FF6B2C] text-white shadow-xs' : 'bg-[#E6DFD5] text-[#7A7268]'
                 }`}
               >
-                <Hotel className="w-5 h-5" />
+                <Hotel className="w-4 h-4 sm:w-5 sm:h-5" />
               </motion.div>
-              <div>
-                <p className="text-sm font-serif font-bold text-[#1E1C1A]">Hotels & Boutique Stays</p>
-                <p className="text-xs text-[#7A7268]">Monitors suites & nightly rates</p>
+              <div className="min-w-0">
+                <p className="text-[13px] sm:text-sm font-serif font-bold text-[#1E1C1A] truncate">Hotels & Boutique Stays</p>
+                <p className="text-[10px] sm:text-xs text-[#7A7268] leading-snug truncate">Monitors suites & nightly rates</p>
               </div>
             </div>
             {/* iOS Style Spring Switch */}
-            <div className={`w-11 h-6 shrink-0 rounded-full transition-colors duration-200 relative ${config.trackHotels ? 'bg-[#FF6B2C]' : 'bg-[#D8D0C5]'}`}>
+            <div className={`w-9 sm:w-11 h-5 sm:h-6 shrink-0 rounded-full transition-colors duration-200 relative ${config.trackHotels ? 'bg-[#FF6B2C]' : 'bg-[#D8D0C5]'}`}>
               <motion.div 
                 layout
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                className={`absolute top-0.5 left-0.5 bg-white w-5 h-5 rounded-full shadow-sm ${config.trackHotels ? 'translate-x-5' : 'translate-x-0'}`} 
+                className={`absolute top-0.5 left-0.5 bg-white w-4 h-4 sm:w-5 sm:h-5 rounded-full shadow-sm ${config.trackHotels ? 'translate-x-4 sm:translate-x-5' : 'translate-x-0'}`} 
               />
             </div>
           </motion.div>
@@ -2654,13 +2673,14 @@ export default function PriceTracker({
           whileTap={{ scale: 0.98, y: 1 }}
           onClick={handleStartTracking}
           disabled={isActivating || (!config.trackFlights && !config.trackHotels)}
-          className="group/btn relative w-full bg-[#181614] hover:bg-[#0D0C0B] text-white py-4 px-8 rounded-2xl shadow-[0_10px_25px_-5px_rgba(24,22,20,0.35)] hover:shadow-[0_16px_36px_-6px_rgba(255,107,44,0.3),0_4px_12px_rgba(0,0,0,0.5)] transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-3 cursor-pointer border-t border-white/22 border-x border-[#2E2A26] border-b border-black overflow-hidden font-sans font-bold text-sm tracking-wide"
+          data-clicked={isAnimatingStart}
+          className="group/btn relative w-full bg-[#181614] hover:bg-[#0D0C0B] active:bg-[#0D0C0B] data-[clicked=true]:bg-[#0D0C0B] text-white py-4 px-8 rounded-2xl shadow-[0_10px_25px_-5px_rgba(24,22,20,0.35)] hover:shadow-[0_16px_36px_-6px_rgba(255,107,44,0.3),0_4px_12px_rgba(0,0,0,0.5)] active:shadow-[0_16px_36px_-6px_rgba(255,107,44,0.3),0_4px_12px_rgba(0,0,0,0.5)] data-[clicked=true]:shadow-[0_16px_36px_-6px_rgba(255,107,44,0.3),0_4px_12px_rgba(0,0,0,0.5)] transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-3 cursor-pointer border-t border-white/22 border-x border-[#2E2A26] border-b border-black overflow-hidden font-sans font-bold text-sm tracking-wide"
         >
           {/* Subtle light sweep reflection across obsidian surface on hover */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.12] to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 ease-out" />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.12] to-transparent -translate-x-full group-hover/btn:translate-x-full group-active/btn:translate-x-full group-data-[clicked=true]/btn:translate-x-full transition-transform duration-700 ease-out" />
 
           {/* Warm coral bottom ambient edge line on hover */}
-          <div className="absolute bottom-0 inset-x-8 h-[1.5px] bg-gradient-to-r from-transparent via-[#FF6B2C] to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
+          <div className="absolute bottom-0 inset-x-8 h-[1.5px] bg-gradient-to-r from-transparent via-[#FF6B2C] to-transparent opacity-0 group-hover/btn:opacity-100 group-active/btn:opacity-100 group-data-[clicked=true]/btn:opacity-100 transition-opacity duration-300" />
 
           {isActivating ? (
             <div className="flex items-center gap-2.5">
@@ -2669,14 +2689,14 @@ export default function PriceTracker({
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <span className="group-hover/btn:text-[#FFF5EE] transition-colors duration-200">
+              <span className="group-hover/btn:text-[#FFF5EE] group-active/btn:text-[#FFF5EE] group-data-[clicked=true]/btn:text-[#FFF5EE] transition-colors duration-200">
                 Search & Track Prices
               </span>
               <div className="flex items-center gap-2">
                 {/* Dynamic Flight Jetstream & Ascending Airplane with Hover Acceleration */}
                 <div className="relative flex items-center">
                   {/* Expanding animated contrail behind airplane tail on hover */}
-                  <div className="w-3.5 group-hover/btn:w-6 h-[1.5px] bg-gradient-to-r from-transparent to-[#FF6B2C] relative overflow-hidden transition-all duration-300 ease-out mr-0.5">
+                  <div className="w-3.5 group-hover/btn:w-6 group-active/btn:w-6 group-data-[clicked=true]/btn:w-6 h-[1.5px] bg-gradient-to-r from-transparent to-[#FF6B2C] relative overflow-hidden transition-all duration-300 ease-out mr-0.5">
                     <motion.div 
                       className="absolute inset-0 w-full h-full"
                       style={{
@@ -2699,13 +2719,13 @@ export default function PriceTracker({
                       duration: 2.4, 
                       ease: "easeInOut" 
                     }}
-                    className="text-[#FF6B2C] drop-shadow-[0_0_10px_rgba(255,107,44,0.75)] group-hover/btn:translate-x-2 group-hover/btn:-translate-y-1 group-hover/btn:scale-115 group-hover/btn:rotate-[4deg] transition-all duration-300 ease-out flex items-center justify-center"
+                    className="text-[#FF6B2C] drop-shadow-[0_0_10px_rgba(255,107,44,0.75)] group-hover/btn:translate-x-2 group-active/btn:translate-x-2 group-data-[clicked=true]/btn:translate-x-2 group-hover/btn:-translate-y-1 group-active/btn:-translate-y-1 group-data-[clicked=true]/btn:-translate-y-1 group-hover/btn:scale-115 group-active/btn:scale-115 group-data-[clicked=true]/btn:scale-115 group-hover/btn:rotate-[4deg] group-active/btn:rotate-[4deg] group-data-[clicked=true]/btn:rotate-[4deg] transition-all duration-300 ease-out flex items-center justify-center"
                   >
                     <Plane className="w-4 h-4" />
                   </motion.div>
                 </div>
 
-                <ArrowRight className="w-4 h-4 text-[#A89F91] group-hover/btn:text-white group-hover/btn:translate-x-1.5 transition-all duration-300 ease-out" />
+                <ArrowRight className="w-4 h-4 text-[#A89F91] group-hover/btn:text-white group-active/btn:text-white group-data-[clicked=true]/btn:text-white group-hover/btn:translate-x-1.5 group-active/btn:translate-x-1.5 group-data-[clicked=true]/btn:translate-x-1.5 transition-all duration-300 ease-out" />
               </div>
             </div>
           )}
