@@ -5,6 +5,7 @@ import { motion, AnimatePresence, useScroll, useSpring, useTransform, useMotionV
 import dynamic from 'next/dynamic';
 import Header from '../components/Header';
 import ImageCarousel from '../components/ImageCarousel';
+import InviteModal from '../components/InviteModal';
 import { generatePackingList } from '../../lib/packingListLogic';
 import { fetchVisaRequirements } from '../../lib/visaApi';
 import { updateTrip } from '../actions/trips';
@@ -927,6 +928,7 @@ export default function ItineraryPage() {
 
   // Publish to Community State
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [publishForm, setPublishForm] = useState({ title: '', tags: '', coverPhoto: '' });
   const [isPublished, setIsPublished] = useState(false);
 
@@ -1249,22 +1251,7 @@ export default function ItineraryPage() {
   };
 
   const handleShareDossier = () => {
-    if (typeof window !== 'undefined') {
-      let shareUrl = window.location.href;
-      if (itinerary) {
-        try {
-          const jsonStr = JSON.stringify(itinerary);
-          const url = new URL(window.location.origin + window.location.pathname);
-          url.searchParams.set('dossier', jsonStr);
-          shareUrl = url.toString();
-        } catch (e) {
-          console.error("Failed to encode itinerary:", e);
-        }
-      }
-      navigator.clipboard?.writeText(shareUrl);
-      setShareCopied(true);
-      setTimeout(() => setShareCopied(false), 2500);
-    }
+    setIsInviteModalOpen(true);
   };
 
   const handlePrintOrDownload = () => {
@@ -4105,7 +4092,17 @@ export default function ItineraryPage() {
         onStatusChange={handleDiningBookingsChange}
       />
 
-      {/* Publish to Community Modal */}
+      {/* Invite Modal */}
+      <AnimatePresence>
+        {isInviteModalOpen && (
+          <InviteModal 
+            isOpen={isInviteModalOpen}
+            onClose={() => setIsInviteModalOpen(false)}
+            tripId={activeTripId || itinerary?.id || itinerary?.db_id || 'shared-trip'}
+          />
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {isPublishModalOpen && (
           <div className="fixed inset-0 z-100 flex items-center justify-center p-4">

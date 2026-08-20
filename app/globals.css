@@ -521,3 +521,13 @@ html.lenis, html.lenis body {
   animation: marquee-scroll-down 40s linear infinite;
   will-change: transform;
 }
+.animate-draw-mask {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: drawMask 3.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+@keyframes drawMask {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
