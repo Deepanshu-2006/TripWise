@@ -9,6 +9,11 @@ import Header from '../../components/Header';
 import LiveTripDashboard from '../../components/LiveTripDashboard';
 import { saveTrip, getTripById, updateTrip } from '../../actions/trips';
 import { usePreferenceEngine } from '../../hooks/usePreferenceEngine';
+import dynamic from 'next/dynamic';
+
+const CalendarSyncModal = dynamic(() => import('../../components/CalendarSyncModal'), { ssr: false });
+const NotificationsPanel = dynamic(() => import('../../components/NotificationsPanel'), { ssr: false });
+const TripSetupModal = dynamic(() => import('../../components/TripSetupModal'), { ssr: false });
 
 // Separate component so useSearchParams is inside a Suspense boundary
 function PromptSeeder({ onPrompt }) {
@@ -43,6 +48,9 @@ export default function AIPlannerPage() {
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const [hoveredStopIdx, setHoveredStopIdx] = useState(null);
   const [selectedStopIdx, setSelectedStopIdx] = useState(null);
+  const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
+  const [isNotificationsPanelOpen, setIsNotificationsPanelOpen] = useState(false);
+  const [isTripSetupOpen, setIsTripSetupOpen] = useState(false);
 
   useEffect(() => {
     async function loadSharedTrip() {
@@ -259,6 +267,8 @@ export default function AIPlannerPage() {
                   window.location.href = '/itinerary';
                 }
               }}
+              onOpenCalendar={() => setIsTripSetupOpen(true)}
+              onOpenNotifications={() => setIsTripSetupOpen(true)}
             />
           </div>
 
@@ -283,6 +293,26 @@ export default function AIPlannerPage() {
         </div>
       </div>
       </CollaborationProvider>
+
+      {/* Smart Trip Setup popup — shows only pending tasks */}
+      <TripSetupModal
+        isOpen={isTripSetupOpen}
+        onClose={() => setIsTripSetupOpen(false)}
+        itinerary={itinerary}
+        tripId={tripId}
+        onOpenCalendar={() => { setIsTripSetupOpen(false); setIsCalendarModalOpen(true); }}
+        onOpenNotifications={() => { setIsTripSetupOpen(false); setIsNotificationsPanelOpen(true); }}
+      />
+      <CalendarSyncModal
+        isOpen={isCalendarModalOpen}
+        onClose={() => setIsCalendarModalOpen(false)}
+        itinerary={itinerary}
+      />
+      <NotificationsPanel
+        isOpen={isNotificationsPanelOpen}
+        onClose={() => setIsNotificationsPanelOpen(false)}
+        itinerary={itinerary}
+      />
     </div>
   );
 }
