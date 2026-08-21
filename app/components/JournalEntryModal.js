@@ -155,7 +155,7 @@ export default function JournalEntryModal({
   return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 sm:p-6">
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-6">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -169,86 +169,91 @@ export default function JournalEntryModal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-            className="relative w-full max-w-xl bg-[#FAF6F0] rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+            className="relative w-full max-w-xl bg-[#FAF6F0] rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh] sm:max-h-[90vh]"
           >
             {/* Header */}
-            <div className="px-6 py-5 border-b border-[#E6DFD5] flex items-center justify-between bg-white relative z-10 shrink-0">
-              <div>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-[#FF6B2C] font-bold block mb-1">
+            <div className="px-4 sm:px-6 py-3.5 sm:py-5 border-b border-[#E6DFD5] flex items-center justify-between gap-3 bg-white relative z-10 shrink-0">
+              <div className="min-w-0 flex-1 pr-2">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-[#FF6B2C] font-bold block mb-0.5">
                   Day {dayNum} • Stop {stopNum}
                 </span>
-                <h3 className="text-xl font-serif font-black text-[#1E1C1A] truncate max-w-[280px] sm:max-w-sm">
+                <h3 className="text-base sm:text-xl font-serif font-black text-[#1E1C1A] truncate leading-tight">
                   {activity?.title || 'Journal Entry'}
                 </h3>
               </div>
-              <button
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                type="button"
                 onClick={onClose}
-                className="w-8 h-8 rounded-full bg-[#F5F0E8] border border-[#E6DFD5] flex items-center justify-center text-[#7A7268] hover:text-[#1E1C1A] hover:bg-white transition-all shadow-2xs"
+                className="w-8 h-8 rounded-full bg-[#F5F0E8] border border-[#E6DFD5] flex items-center justify-center text-[#7A7268] hover:text-[#1E1C1A] hover:bg-white transition-all shadow-2xs shrink-0 cursor-pointer"
+                title="Close"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </motion.button>
             </div>
 
             {/* Scrollable Form Content */}
-            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-6 space-y-6">
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4 sm:space-y-6">
               
               {/* Rating Section */}
-              <div className="flex flex-col items-center justify-center py-2">
-                <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268] font-bold mb-3">
+              <div className="flex flex-col items-center justify-center py-1 sm:py-2">
+                <span className="text-[11px] sm:text-xs font-sans uppercase tracking-widest text-[#7A7268] font-bold mb-2 sm:mb-3">
                   How was your experience?
                 </span>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <button
+                    <motion.button
+                      whileTap={{ scale: 1.25, rotate: 15 }}
                       key={star}
                       type="button"
                       onClick={() => setRating(star)}
                       onMouseEnter={() => setHoveredStar(star)}
                       onMouseLeave={() => setHoveredStar(0)}
-                      className="p-1 transition-transform hover:scale-110 focus:outline-none"
+                      className="p-1 transition-transform hover:scale-110 focus:outline-none cursor-pointer"
                     >
                       <Star 
-                        className={`w-8 h-8 ${
+                        className={`w-7 h-7 sm:w-8 sm:h-8 ${
                           (hoveredStar || rating) >= star 
                             ? 'fill-[#FF6B2C] text-[#FF6B2C]' 
                             : 'fill-transparent text-[#C8BFB2]'
                         } transition-colors duration-200`}
                         strokeWidth={1.5}
                       />
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               </div>
 
               {/* Note Section */}
               <div>
-                <label className="text-xs font-sans uppercase tracking-widest text-[#7A7268] font-bold mb-2 flex justify-between">
-                  <span>Reflections & Memories</span>
+                <label className="text-[11px] sm:text-xs font-sans uppercase tracking-widest text-[#7A7268] font-bold mb-2 flex justify-between">
+                  <span>Reflections &amp; Memories</span>
                   <span className="text-[#C8BFB2] font-normal lowercase">{note.length} chars</span>
                 </label>
                 <textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   placeholder="What stood out to you? Any hidden details or personal thoughts?"
-                  className="w-full h-32 p-4 rounded-2xl bg-white border border-[#E6DFD5] text-[#1E1C1A] font-serif text-sm focus:outline-none focus:border-[#FF6B2C] focus:ring-1 focus:ring-[#FF6B2C] resize-none shadow-inner placeholder:text-[#C8BFB2] leading-relaxed transition-all"
+                  className="w-full h-24 sm:h-32 p-3.5 sm:p-4 rounded-2xl bg-white border border-[#E6DFD5] text-[#1E1C1A] font-serif text-sm focus:outline-none focus:border-[#FF6B2C] focus:ring-1 focus:ring-[#FF6B2C] resize-none shadow-2xs placeholder:text-[#C8BFB2] leading-relaxed transition-all"
                 />
               </div>
 
               {/* Photos Section */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-sans uppercase tracking-widest text-[#7A7268] font-bold">
+                  <label className="text-[11px] sm:text-xs font-sans uppercase tracking-widest text-[#7A7268] font-bold">
                     Visuals ({photos.length}/5)
                   </label>
-                  <button 
+                  <motion.button 
+                    whileTap={{ scale: 0.94 }}
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={photos.length >= 5}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-[#E6DFD5] text-xs font-bold text-[#FF6B2C] hover:bg-[#FF6B2C]/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-[#E6DFD5] text-xs font-bold text-[#FF6B2C] hover:bg-[#FF6B2C]/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs cursor-pointer"
                   >
                     <Camera className="w-3.5 h-3.5" />
                     <span>Add Photos</span>
-                  </button>
+                  </motion.button>
                   <input 
                     type="file" 
                     ref={fileInputRef} 
@@ -260,7 +265,7 @@ export default function JournalEntryModal({
                 </div>
                 
                 {photos.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
                     <AnimatePresence>
                       {photos.map((url, idx) => (
                         <motion.div 
@@ -268,7 +273,7 @@ export default function JournalEntryModal({
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.8 }}
-                          className="relative aspect-square rounded-xl overflow-hidden border border-[#E6DFD5] group shadow-sm bg-white"
+                          className="relative aspect-square rounded-xl overflow-hidden border border-[#E6DFD5] group shadow-2xs bg-white"
                         >
                           <img src={url} alt={`Upload ${idx+1}`} className="w-full h-full object-cover" />
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -287,26 +292,26 @@ export default function JournalEntryModal({
                 ) : (
                   <div 
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full h-24 rounded-2xl border-2 border-dashed border-[#E6DFD5] bg-white/50 flex flex-col items-center justify-center text-[#C8BFB2] cursor-pointer hover:bg-white hover:border-[#FF6B2C]/40 hover:text-[#FF6B2C] transition-all group"
+                    className="w-full h-20 sm:h-24 rounded-2xl border-2 border-dashed border-[#E6DFD5] bg-white/50 flex flex-col items-center justify-center text-[#C8BFB2] cursor-pointer hover:bg-white hover:border-[#FF6B2C]/40 hover:text-[#FF6B2C] transition-all group"
                   >
-                    <ImageIcon className="w-6 h-6 mb-1.5 group-hover:scale-110 transition-transform" />
-                    <span className="text-xs font-sans font-medium">Tap to add captures</span>
+                    <ImageIcon className="w-5 h-5 sm:w-6 sm:h-6 mb-1 group-hover:scale-110 transition-transform" />
+                    <span className="text-[11px] sm:text-xs font-sans font-medium">Tap to add captures</span>
                   </div>
                 )}
               </div>
 
               {/* Privacy Toggle */}
-              <div className="p-4 rounded-2xl bg-white border border-[#E6DFD5] flex items-center justify-between shadow-2xs">
-                <div className="flex items-start gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${isPublic ? 'bg-[#FF6B2C]/15 text-[#FF6B2C]' : 'bg-stone-100 text-[#7A7268]'}`}>
-                    {isPublic ? <Globe className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-[#E6DFD5] flex items-center justify-between gap-3 shadow-2xs">
+                <div className="flex items-start gap-2.5 sm:gap-3 min-w-0">
+                  <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${isPublic ? 'bg-[#FF6B2C]/15 text-[#FF6B2C]' : 'bg-stone-100 text-[#7A7268]'}`}>
+                    {isPublic ? <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                   </div>
-                  <div>
-                    <h4 className="text-sm font-sans font-bold text-[#1E1C1A]">Share to Community Feed</h4>
-                    <p className="text-[11px] font-sans text-[#7A7268] mt-0.5 max-w-[250px]">
+                  <div className="min-w-0">
+                    <h4 className="text-xs sm:text-sm font-sans font-bold text-[#1E1C1A]">Share to Community Feed</h4>
+                    <p className="text-[10px] sm:text-[11px] font-sans text-[#7A7268] mt-0.5 leading-snug">
                       {isPublic 
-                        ? "This entry will be visible to other travelers exploring this destination." 
-                        : "Private entry. Only you and your trip collaborators can see this."}
+                        ? "Visible to travelers exploring this place." 
+                        : "Private entry for you & your group."}
                     </p>
                   </div>
                 </div>
@@ -314,14 +319,14 @@ export default function JournalEntryModal({
                 <button 
                   type="button"
                   onClick={() => setIsPublic(!isPublic)}
-                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B2C] focus-visible:ring-offset-2 ${isPublic ? 'bg-[#FF6B2C]' : 'bg-[#E6DFD5]'}`}
+                  className={`relative inline-flex h-5 w-9 sm:h-6 sm:w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isPublic ? 'bg-[#FF6B2C]' : 'bg-[#E6DFD5]'}`}
                 >
-                  <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${isPublic ? 'translate-x-5' : 'translate-x-0'}`} />
+                  <span className={`pointer-events-none inline-block h-4 w-4 sm:h-5 sm:w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${isPublic ? 'translate-x-4 sm:translate-x-5' : 'translate-x-0'}`} />
                 </button>
               </div>
 
               {/* Extra spacer for scroll padding at the bottom */}
-              <div className="h-4 w-full shrink-0"></div>
+              <div className="h-2 w-full shrink-0"></div>
             </div>
 
             {/* Error Banner */}
@@ -331,9 +336,9 @@ export default function JournalEntryModal({
                   initial={{ opacity: 0, y: 10, height: 0 }}
                   animate={{ opacity: 1, y: 0, height: 'auto' }}
                   exit={{ opacity: 0, y: 10, height: 0 }}
-                  className="px-6"
+                  className="px-4 sm:px-6"
                 >
-                  <div className="flex items-center gap-2 p-3 mb-4 rounded-xl bg-red-50 border border-red-100 text-red-600 text-xs font-bold shadow-sm">
+                  <div className="flex items-center gap-2 p-2.5 sm:p-3 mb-3 rounded-xl bg-red-50 border border-red-100 text-red-600 text-xs font-bold shadow-2xs">
                     <AlertCircle className="w-4 h-4 shrink-0" />
                     <span>{error}</span>
                   </div>
@@ -342,44 +347,38 @@ export default function JournalEntryModal({
             </AnimatePresence>
 
             {/* Footer Actions */}
-            <div className="px-6 py-4 border-t border-[#E6DFD5] bg-white flex items-center justify-between relative z-10 rounded-b-3xl shrink-0">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-[#E6DFD5] bg-white flex items-center justify-between gap-2 relative z-10 rounded-b-3xl shrink-0">
               {existingEntry ? (
                 <motion.button
-                  whileHover={{ y: -2 }}
-                  whileTap={{ y: 4, boxShadow: "0px 0px 0px #FCA5A5" }}
-                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                  whileTap={{ scale: 0.92 }}
                   type="button"
                   onClick={() => onDelete(existingEntry.id)}
-                  className="relative inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border-2 border-red-200 bg-white text-red-600 hover:bg-red-50 hover:border-red-300 hover:text-red-700 text-xs font-black shadow-[0_4px_0_#FECACA] cursor-pointer group whitespace-nowrap"
+                  className="relative inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl border border-red-200 bg-white text-red-600 hover:bg-red-50 text-xs font-bold shadow-2xs cursor-pointer shrink-0 whitespace-nowrap"
                 >
-                  <Trash2 className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform duration-300" />
-                  <span>Delete</span>
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Delete</span>
                 </motion.button>
               ) : (
-                <div /> // spacer
+                <div />
               )}
               
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 ml-auto">
                 <motion.button
-                  whileHover={{ y: -2 }}
-                  whileTap={{ y: 4, boxShadow: "0px 0px 0px #D8D1C7" }}
-                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                  whileTap={{ scale: 0.94 }}
                   type="button"
                   onClick={onClose}
-                  className="relative px-5 py-2.5 rounded-xl border-2 border-[#E6DFD5] bg-white text-[#7A7268] hover:border-[#C8BFB2] hover:text-[#1E1C1A] text-xs font-black shadow-[0_4px_0_#E6DFD5] cursor-pointer transition-colors whitespace-nowrap"
+                  className="relative px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl border border-[#E6DFD5] bg-white text-[#7A7268] hover:border-[#C8BFB2] hover:text-[#1E1C1A] text-xs font-bold shadow-2xs cursor-pointer transition-colors whitespace-nowrap"
                 >
                   <span>Cancel</span>
                 </motion.button>
                 <motion.button
-                  whileHover={{ y: -2 }}
-                  whileTap={{ y: 4, boxShadow: "0px 0px 0px #CC5522" }}
-                  transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                  whileTap={{ scale: 0.94 }}
                   type="button"
                   onClick={handleSave}
-                  className="relative inline-flex items-center gap-2 px-6 py-2.5 rounded-xl border-2 border-[#FF6B2C] bg-[#FF7744] text-white text-xs font-black shadow-[0_4px_0_#CC5522] cursor-pointer group whitespace-nowrap"
+                  className="relative inline-flex items-center justify-center gap-1.5 px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl border border-[#FF6B2C] bg-gradient-to-r from-[#FF6B2C] to-[#FF7744] text-white text-xs font-bold shadow-xs hover:brightness-105 cursor-pointer group whitespace-nowrap"
                 >
-                  <Save className="w-4 h-4 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300" />
-                  <span className="tracking-wide">{existingEntry ? 'Update Entry' : 'Save Entry'}</span>
+                  <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:scale-110 transition-transform duration-300" />
+                  <span className="tracking-wide">{existingEntry ? 'Update' : 'Save Entry'}</span>
                 </motion.button>
               </div>
             </div>

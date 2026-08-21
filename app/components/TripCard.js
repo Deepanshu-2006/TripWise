@@ -212,7 +212,7 @@ export default function TripCard({
         <AnimatePresence>
           {(isForking || isSuccess) && (
             <motion.div
-              className="fixed bottom-10 left-1/2 z-[9999] flex items-center justify-center pointer-events-none"
+              className="fixed bottom-20 sm:bottom-10 left-1/2 z-[9999] flex items-center justify-center pointer-events-none"
               initial={{ opacity: 0, y: 30, x: "-50%", scale: 0.95 }}
               animate={{ opacity: 1, y: 0, x: "-50%", scale: 1 }}
               exit={{ opacity: 0, y: 20, x: "-50%", scale: 0.95 }}

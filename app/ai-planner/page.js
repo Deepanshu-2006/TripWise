@@ -1148,26 +1148,28 @@ export default function AIPlannerDashboard() {
             <AnimatePresence>
                 {toast && (
                     <motion.div
-                        initial={{ x: 80, opacity: 0, y: 0, scale: 0.8, rotateX: -60, transformPerspective: 1000 }}
-                        animate={{ x: 0, opacity: 1, y: 0, scale: 1, rotateX: 0 }}
-                        exit={{ x: 80, opacity: 0, y: 0, scale: 0.8, rotateX: 60 }}
-                        transition={{ type: "spring", bounce: 0.35, duration: 0.7 }}
-                        className="fixed bottom-10 right-10 z-100 flex items-center gap-4 bg-stone-900/90 backdrop-blur-xl border border-white/10 text-white pl-5 pr-3 py-2.5 rounded-2xl shadow-[0_30px_60px_rgba(0,0,0,0.6)] overflow-hidden min-w-75 origin-right"
+                        initial={{ y: 40, opacity: 0, scale: 0.9 }}
+                        animate={{ y: 0, opacity: 1, scale: 1 }}
+                        exit={{ y: 20, opacity: 0, scale: 0.9 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                        className="fixed bottom-20 sm:bottom-10 left-4 right-4 sm:left-auto sm:right-10 z-[100002] flex items-center justify-between gap-3 bg-[#1E1C1A]/95 backdrop-blur-xl border border-white/15 text-white pl-3.5 sm:pl-5 pr-2 sm:pr-3 py-2.5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden max-w-sm sm:max-w-md mx-auto sm:mx-0"
                     >
                         <AnimatedTrashIcon />
                         
-                        <p className="text-[13px] text-stone-200 flex-1 truncate">
+                        <p className="text-xs sm:text-[13px] text-stone-200 flex-1 truncate min-w-0">
                             Deleted <strong className="text-white font-semibold">{toast.destinationName}</strong>
                         </p>
                         
-                        <div className="w-px h-4 bg-white/20 ml-2 shrink-0" />
+                        <div className="w-px h-4 bg-white/20 shrink-0" />
                         
-                        <button 
+                        <motion.button 
+                            whileTap={{ scale: 0.9 }}
+                            type="button"
                             onClick={handleUndo}
-                            className="px-3 py-1.5 hover:bg-white/10 rounded-lg text-[#FF6B2C] hover:text-[#FF8A4C] text-[11px] font-bold uppercase tracking-wider transition-all active:scale-95 shrink-0"
+                            className="px-2.5 sm:px-3 py-1.5 bg-[#FF6B2C]/15 hover:bg-[#FF6B2C]/25 text-[#FF6B2C] text-[11px] sm:text-xs font-bold uppercase tracking-wider rounded-xl transition-all shrink-0 cursor-pointer"
                         >
                             Undo
-                        </button>
+                        </motion.button>
                         
                         {/* Time remaining indicator */}
                         <motion.div 

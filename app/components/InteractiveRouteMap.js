@@ -1924,15 +1924,15 @@ export default function InteractiveRouteMap({
 
       {/* Save Toast Notification */}
       {saveToastName && (
-        <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-3 z-[6000] animate-[popIn_0.3s_ease-out]">
-          <Heart size={16} fill="currentColor" className="text-red-400" />
-          <span className="font-semibold text-sm">Saved &quot;{saveToastName}&quot; to your itinerary</span>
+        <div className="fixed bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 bg-[#1E1C1A]/95 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-full shadow-2xl flex items-center gap-2.5 z-[6000] animate-[popIn_0.3s_ease-out] w-[90%] sm:w-auto max-w-sm justify-center border border-white/10 backdrop-blur-md">
+          <Heart size={16} fill="currentColor" className="text-red-400 shrink-0" />
+          <span className="font-semibold text-xs sm:text-sm truncate">Saved &quot;{saveToastName}&quot; to your itinerary</span>
         </div>
       )}
 
       {/* Share/Export Toast Notification */}
       {showShareToast && (
-        <div className="absolute top-16 right-4 z-60 bg-[#1C1B1B] text-white px-4 py-2.5 rounded-2xl shadow-2xl border border-white/20 text-xs font-bold flex items-center gap-2 animate-bounce">
+        <div className="fixed top-20 sm:top-16 right-4 sm:right-6 z-[6000] bg-[#1E1C1A]/95 text-white px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl shadow-2xl border border-white/20 text-xs font-bold flex items-center gap-2 backdrop-blur-md">
           <span>✅</span>
           <span>Trip link copied to clipboard!</span>
         </div>
@@ -2604,32 +2604,32 @@ export default function InteractiveRouteMap({
               />
               <AnimatePresence>
                 {saveMessage && (
-                  <div className="fixed bottom-10 left-0 right-0 z-[200000] flex justify-center pointer-events-none">
+                  <div className="fixed bottom-20 sm:bottom-10 left-4 right-4 sm:left-0 sm:right-0 z-[200000] flex justify-center pointer-events-none">
                     <motion.div
                       initial={{ opacity: 0, y: 40, scale: 0.85 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 20, scale: 0.9 }}
                       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                      className="bg-white/95 backdrop-blur-xl border border-[#E6DFD5]/60 shadow-[0_12px_40px_-10px_rgba(0,0,0,0.15)] p-2 pr-6 rounded-full flex items-center gap-3 pointer-events-auto"
+                      className="bg-white/95 backdrop-blur-xl border border-[#E6DFD5]/80 shadow-[0_12px_40px_-10px_rgba(0,0,0,0.18)] p-2 pr-5 sm:pr-6 rounded-full flex items-center gap-3 pointer-events-auto max-w-[92vw] sm:max-w-md"
                     >
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-[0_4px_12px_rgba(255,107,44,0.3)] ${!saveMessage.isAdd ? 'bg-[#7A7268]' : 'bg-rose-500'}`}>
+                      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 shadow-[0_4px_12px_rgba(255,107,44,0.3)] ${!saveMessage.isAdd ? 'bg-[#7A7268]' : 'bg-rose-500'}`}>
                         <motion.div
                            initial={{ scale: 0, rotate: -45 }}
                            animate={{ scale: 1, rotate: 0 }}
                            transition={{ type: "spring", stiffness: 400, delay: 0.1 }}
                         >
                           {!saveMessage.isAdd ? (
-                             <Heart className="w-5 h-5 text-white stroke-[3px] ml-0.5" />
+                             <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-white stroke-[3px] ml-0.5" />
                           ) : (
-                             <Heart fill="currentColor" className="w-5 h-5 text-white stroke-[3px]" />
+                             <Heart fill="currentColor" className="w-4 h-4 sm:w-5 sm:h-5 text-white stroke-[3px]" />
                           )}
                         </motion.div>
                       </div>
-                      <div className="flex flex-col justify-center">
-                        <h4 className="text-[13px] font-sans font-bold text-[#1E1C1A] leading-none mb-1">
+                      <div className="flex flex-col justify-center min-w-0 flex-1">
+                        <h4 className="text-xs sm:text-[13px] font-sans font-bold text-[#1E1C1A] leading-tight mb-0.5">
                           {!saveMessage.isAdd ? 'Removed from saved' : 'Added to saved places'}
                         </h4>
-                        <p className="text-[11px] font-sans font-medium text-[#7A7268] truncate max-w-[200px] leading-none">
+                        <p className="text-[10.5px] sm:text-[11px] font-sans font-medium text-[#7A7268] truncate max-w-[180px] sm:max-w-[240px] leading-tight">
                           {saveMessage.title}
                         </p>
                       </div>
@@ -2658,32 +2658,32 @@ export default function InteractiveRouteMap({
               />
               <AnimatePresence>
                 {saveMessage && (
-                  <div className="fixed bottom-10 left-0 right-0 z-[200000] flex justify-center pointer-events-none">
+                  <div className="fixed bottom-20 sm:bottom-10 left-4 right-4 sm:left-0 sm:right-0 z-[200000] flex justify-center pointer-events-none">
                     <motion.div
                       initial={{ opacity: 0, y: 40, scale: 0.85 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 20, scale: 0.9 }}
                       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                      className="bg-white/95 backdrop-blur-xl border border-[#E6DFD5]/60 shadow-[0_12px_40px_-10px_rgba(0,0,0,0.15)] p-2 pr-6 rounded-full flex items-center gap-3 pointer-events-auto"
+                      className="bg-white/95 backdrop-blur-xl border border-[#E6DFD5]/80 shadow-[0_12px_40px_-10px_rgba(0,0,0,0.18)] p-2 pr-5 sm:pr-6 rounded-full flex items-center gap-3 pointer-events-auto max-w-[92vw] sm:max-w-md"
                     >
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-[0_4px_12px_rgba(255,107,44,0.3)] ${!saveMessage.isAdd ? 'bg-[#7A7268]' : 'bg-rose-500'}`}>
+                      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 shadow-[0_4px_12px_rgba(255,107,44,0.3)] ${!saveMessage.isAdd ? 'bg-[#7A7268]' : 'bg-rose-500'}`}>
                         <motion.div
                            initial={{ scale: 0, rotate: -45 }}
                            animate={{ scale: 1, rotate: 0 }}
                            transition={{ type: "spring", stiffness: 400, delay: 0.1 }}
                         >
                           {!saveMessage.isAdd ? (
-                             <Heart className="w-5 h-5 text-white stroke-[3px] ml-0.5" />
+                             <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-white stroke-[3px] ml-0.5" />
                           ) : (
-                             <Heart fill="currentColor" className="w-5 h-5 text-white stroke-[3px]" />
+                             <Heart fill="currentColor" className="w-4 h-4 sm:w-5 sm:h-5 text-white stroke-[3px]" />
                           )}
                         </motion.div>
                       </div>
-                      <div className="flex flex-col justify-center">
-                        <h4 className="text-[13px] font-sans font-bold text-[#1E1C1A] leading-none mb-1">
+                      <div className="flex flex-col justify-center min-w-0 flex-1">
+                        <h4 className="text-xs sm:text-[13px] font-sans font-bold text-[#1E1C1A] leading-tight mb-0.5">
                           {!saveMessage.isAdd ? 'Removed from saved' : 'Added to saved places'}
                         </h4>
-                        <p className="text-[11px] font-sans font-medium text-[#7A7268] truncate max-w-[200px] leading-none">
+                        <p className="text-[10.5px] sm:text-[11px] font-sans font-medium text-[#7A7268] truncate max-w-[180px] sm:max-w-[240px] leading-tight">
                           {saveMessage.title}
                         </p>
                       </div>

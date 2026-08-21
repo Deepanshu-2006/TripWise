@@ -1945,7 +1945,7 @@ export default function PriceTracker({
                   animate={{ y: 0, x: "-50%", opacity: 1, scale: 1 }}
                   exit={{ y: 100, x: "-50%", opacity: 0, scale: 0.92 }}
                   transition={{ type: "spring", stiffness: 450, damping: 28 }}
-                  className="fixed bottom-8 left-1/2 z-[9999] pointer-events-auto select-none"
+                  className="fixed bottom-20 sm:bottom-8 left-1/2 z-[9999] pointer-events-auto select-none max-w-[92vw] sm:max-w-none"
                 >
                   {/* Luxury Obsidian Flight Radar Capsule with Group Hover Reactions */}
                   <div className="group/dock bg-[#1E1C1A]/95 text-white pl-4 pr-2.5 py-2.5 rounded-full shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.15)] border border-white/15 hover:border-[#FF6B2C]/50 flex items-center gap-3.5 backdrop-blur-2xl transition-all duration-300">

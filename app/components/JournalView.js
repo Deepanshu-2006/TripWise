@@ -393,26 +393,28 @@ export default function JournalView({ tripId, itinerary, onEntriesChange }) {
       <AnimatePresence>
           {toast && (
               <motion.div
-                  initial={{ x: 80, opacity: 0, y: 0, scale: 0.8, rotateX: -60, transformPerspective: 1000 }}
-                  animate={{ x: 0, opacity: 1, y: 0, scale: 1, rotateX: 0 }}
-                  exit={{ x: 80, opacity: 0, y: 0, scale: 0.8, rotateX: 60 }}
-                  transition={{ type: "spring", bounce: 0.35, duration: 0.7 }}
-                  className="fixed bottom-10 right-10 z-[100002] flex items-center gap-4 bg-stone-900/90 backdrop-blur-xl border border-white/10 text-white pl-5 pr-3 py-2.5 rounded-2xl shadow-[0_30px_60px_rgba(0,0,0,0.6)] overflow-hidden min-w-75 origin-right"
+                  initial={{ y: 40, opacity: 0, scale: 0.9 }}
+                  animate={{ y: 0, opacity: 1, scale: 1 }}
+                  exit={{ y: 20, opacity: 0, scale: 0.9 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  className="fixed bottom-20 sm:bottom-10 left-4 right-4 sm:left-auto sm:right-10 z-[100002] flex items-center justify-between gap-3 bg-[#1E1C1A]/95 backdrop-blur-xl border border-white/15 text-white pl-3.5 sm:pl-5 pr-2 sm:pr-3 py-2.5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden max-w-sm sm:max-w-md mx-auto sm:mx-0"
               >
                   <AnimatedTrashIcon />
                   
-                  <p className="text-[13px] text-stone-200 flex-1 truncate">
+                  <p className="text-xs sm:text-[13px] text-stone-200 flex-1 truncate min-w-0">
                       Deleted <strong className="text-white font-semibold">{toast.activityTitle}</strong>
                   </p>
                   
-                  <div className="w-px h-4 bg-white/20 ml-2 shrink-0" />
+                  <div className="w-px h-4 bg-white/20 shrink-0" />
                   
-                  <button 
+                  <motion.button 
+                      whileTap={{ scale: 0.9 }}
+                      type="button"
                       onClick={handleUndo}
-                      className="px-3 py-1.5 hover:bg-white/10 rounded-lg text-[#FF6B2C] hover:text-[#FF8A4C] text-[11px] font-bold uppercase tracking-wider transition-all active:scale-95 shrink-0"
+                      className="px-2.5 sm:px-3 py-1.5 bg-[#FF6B2C]/15 hover:bg-[#FF6B2C]/25 text-[#FF6B2C] text-[11px] sm:text-xs font-bold uppercase tracking-wider rounded-xl transition-all shrink-0 cursor-pointer"
                   >
                       Undo
-                  </button>
+                  </motion.button>
                   
                   {/* Time remaining indicator */}
                   <motion.div 
@@ -428,29 +430,29 @@ export default function JournalView({ tripId, itinerary, onEntriesChange }) {
       {/* Premium Animated Success Message */}
       <AnimatePresence>
         {successMessage && (
-          <div className="fixed bottom-10 left-0 right-0 z-[200000] flex justify-center pointer-events-none">
+          <div className="fixed bottom-20 sm:bottom-10 left-4 right-4 sm:left-0 sm:right-0 z-[200000] flex justify-center pointer-events-none">
             <motion.div
               initial={{ opacity: 0, y: 40, scale: 0.85 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.9 }}
               transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-              className="bg-white/95 backdrop-blur-xl border border-[#E6DFD5]/60 shadow-[0_12px_40px_-10px_rgba(0,0,0,0.15)] p-2 pr-6 rounded-full flex items-center gap-3 pointer-events-auto"
+              className="bg-white/95 backdrop-blur-xl border border-[#E6DFD5]/80 shadow-[0_12px_40px_-10px_rgba(0,0,0,0.18)] p-2 pr-5 sm:pr-6 rounded-full flex items-center gap-3 pointer-events-auto max-w-[92vw] sm:max-w-md"
               whileHover={{ scale: 1.02, y: -2 }}
             >
-              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-[0_4px_12px_rgba(255,107,44,0.3)] bg-[#FF6B2C]">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 shadow-[0_4px_12px_rgba(255,107,44,0.3)] bg-[#FF6B2C]">
                 <motion.div
                    initial={{ scale: 0, rotate: -45 }}
                    animate={{ scale: 1, rotate: 0 }}
                    transition={{ type: "spring", stiffness: 400, delay: 0.1 }}
                 >
-                  <Check className="w-5 h-5 text-white stroke-[3px]" />
+                  <Check className="w-4 h-4 sm:w-5 sm:h-5 text-white stroke-[3px]" />
                 </motion.div>
               </div>
-              <div className="flex flex-col justify-center">
-                <h4 className="text-[13px] font-sans font-bold text-[#1E1C1A] leading-none mb-1">
+              <div className="flex flex-col justify-center min-w-0 flex-1">
+                <h4 className="text-xs sm:text-[13px] font-sans font-bold text-[#1E1C1A] leading-tight mb-0.5">
                   Entry updated successfully
                 </h4>
-                <p className="text-[11px] font-sans font-medium text-[#7A7268] truncate max-w-[200px] leading-none">
+                <p className="text-[10.5px] sm:text-[11px] font-sans font-medium text-[#7A7268] truncate max-w-[180px] sm:max-w-[240px] leading-tight">
                   {successMessage.title}
                 </p>
               </div>

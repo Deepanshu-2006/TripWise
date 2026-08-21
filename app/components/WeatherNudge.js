@@ -15,7 +15,7 @@ export default function WeatherNudge({ show, nudgeData, onAdjust, onDismiss }) {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 50, scale: 0.95 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-sm"
+          className="fixed bottom-20 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-sm"
         >
           <div className="bg-[#1E1C1A] text-white p-5 rounded-[2rem] shadow-2xl border border-gray-700 relative overflow-hidden">
             {/* Background glowing orb effect */}
