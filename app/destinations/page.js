@@ -1354,10 +1354,10 @@ export default function DestinationsPage() {
         </div>
       )}
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-12">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 sm:space-y-12">
         {/* View Mode Toggle & Command Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-200 hover:relative hover:z-50">
-          <div className="relative flex items-center bg-stone-200/50 p-1 rounded-full border border-stone-200/80 shadow-inner hover:z-50">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-4 border-b border-stone-200 hover:relative hover:z-50">
+          <div className="relative flex items-center bg-stone-200/50 p-1 rounded-full border border-stone-200/80 shadow-inner hover:z-50 w-full sm:w-auto">
             {['bento', 'atlas'].map((mode) => (
               <div
                 key={mode}
@@ -1366,7 +1366,7 @@ export default function DestinationsPage() {
                 onMouseEnter={() => setHoverMode(mode)}
                 onMouseLeave={() => setHoverMode(null)}
                 onClick={() => setViewMode(mode)}
-                className={`relative z-10 cursor-pointer flex items-center gap-2 px-5 py-2 rounded-full text-[11px] font-bold transition-colors ${
+                className={`relative z-10 cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 rounded-full text-[10px] sm:text-[11px] font-bold transition-colors flex-1 sm:flex-initial whitespace-nowrap ${
                   viewMode === mode ? 'text-white font-bold' : 'text-stone-500 hover:text-[#fe7717]'
                 }`}
                 title={mode === 'bento' ? 'Magazine Bento & Grid' : 'AI Atlas & Radar Mode'}
@@ -1381,7 +1381,7 @@ export default function DestinationsPage() {
                 <span className="relative z-10">{mode === 'bento' ? '▦' : '◉'}</span>
                 <span className="relative z-10 uppercase tracking-widest">{mode === 'bento' ? 'Magazine View' : 'Radar View'}</span>
                 
-                {/* Hover Preview Thumbnail */}
+                {/* Hover Preview Thumbnail (Desktop Only) */}
                 <AnimatePresence>
                   {hoverMode === mode && viewMode !== mode && (
                     <motion.div
@@ -1389,7 +1389,7 @@ export default function DestinationsPage() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 5, scale: 0.95 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 bg-stone-900 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-stone-200/20 overflow-hidden pointer-events-none z-50"
+                      className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-4 bg-stone-900 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-stone-200/20 overflow-hidden pointer-events-none z-50"
                       style={{ width: 320, height: mode === 'bento' ? 240 : 200 }}
                     >
                       {mode === 'bento' ? (
@@ -1407,8 +1407,8 @@ export default function DestinationsPage() {
               </div>
             ))}
           </div>
-          <div className="flex items-center gap-2 text-xs text-stone-500 font-mono">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <div className="flex items-center gap-2 text-[11px] sm:text-xs text-stone-500 font-mono">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
             <span className="transition-all duration-300">{viewMode === 'bento' ? 'Editorial High-Contrast Showcase' : 'Dark-Mode Telemetry Feed'}</span>
           </div>
         </div>

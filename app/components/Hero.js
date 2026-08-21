@@ -551,13 +551,13 @@ const Hero = () => {
                                 Your <span className="text-[#fe7717]">Day-by-Day</span> Itinerary, <br />
                                 <span className="text-brand-coral">Auto-Generated</span>
                             </h2>
-                            <button onClick={scrollToPlanner} className={`stage5-cta group relative pointer-events-auto px-10 py-5 bg-[#fe7717] text-[#1C1B1B] font-extrabold text-[1.1rem] rounded-full shadow-[0_0_30px_rgba(254,119,23,0.5)] transition-all duration-500 transform cursor-pointer font-mono tracking-widest uppercase overflow-visible ${isFlying ? 'scale-95 shadow-[0_0_50px_rgba(254,119,23,0.8)]' : 'hover:-translate-y-1 hover:scale-105 active:scale-95 hover:shadow-[0_0_50px_rgba(254,119,23,0.8)]'}`}>
+                            <button onClick={scrollToPlanner} className={`stage5-cta group relative pointer-events-auto px-6 py-3.5 sm:px-8 sm:py-4 md:px-10 md:py-5 bg-[#fe7717] text-[#1C1B1B] font-extrabold text-sm sm:text-base md:text-[1.1rem] rounded-full shadow-[0_0_30px_rgba(254,119,23,0.5)] transition-all duration-500 transform cursor-pointer font-mono tracking-wider md:tracking-widest uppercase overflow-visible whitespace-nowrap ${isFlying ? 'scale-95 shadow-[0_0_50px_rgba(254,119,23,0.8)]' : 'hover:-translate-y-1 hover:scale-105 active:scale-95 hover:shadow-[0_0_50px_rgba(254,119,23,0.8)]'}`}>
                                 {/* Animated background overlay */}
                                 <div className={`absolute inset-0 w-full h-full bg-[#1C1B1B] rounded-full origin-bottom transition-transform duration-500 ease-out ${isFlying ? 'scale-y-100' : 'scale-y-0 group-hover:scale-y-100'}`} />
                                 
-                                <span className={`relative z-10 flex items-center justify-center gap-4 transition-colors duration-500 ${isFlying ? 'text-[#fe7717]' : 'group-hover:text-[#fe7717]'}`}>
+                                <span className={`relative z-10 flex items-center justify-center gap-2.5 md:gap-4 transition-colors duration-500 whitespace-nowrap ${isFlying ? 'text-[#fe7717]' : 'group-hover:text-[#fe7717]'}`}>
                                     Plan My Trip
-                                    <svg className={`w-6 h-6 transform transition-transform duration-500 ${isFlying ? 'translate-x-10 opacity-0' : 'group-hover:translate-x-2'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className={`w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 shrink-0 transform transition-transform duration-500 ${isFlying ? 'translate-x-10 opacity-0' : 'group-hover:translate-x-2'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                                     </svg>
                                 </span>

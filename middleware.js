@@ -5,7 +5,9 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 // The planner and user-specific routes should be protected.
 const isPublicRoute = createRouteMatcher([
   '/',
+  '/destinations(.*)',
   '/community(.*)',
+  '/invite(.*)',
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/image(.*)',
