@@ -101,6 +101,7 @@ const TripRecapModal = dynamic(() => import('../components/TripRecapModal'));
 import { getTripJournalEntries, saveTripJournalEntries, addJournalEntry } from '../../lib/journalApi';
 const CalendarSyncModal = dynamic(() => import('../components/CalendarSyncModal'));
 const NotificationsPanel = dynamic(() => import('../components/NotificationsPanel'));
+const LiveProximityBanner = dynamic(() => import('../components/LiveProximityBanner'), { ssr: false });
 
 const toRomanNumeral = (num) => {
   const romanMap = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V', 6: 'VI', 7: 'VII', 8: 'VIII', 9: 'IX', 10: 'X' };
@@ -544,31 +545,6 @@ const getContextAwareTip = (act, idx, summary) => {
   return { logisticsNote, weatherNote };
 };
 
-const getDistanceAndProximity = (p1, p2, basecampName = 'Basecamp') => {
-  if (!p1 || !p2 || !p1.lat || !p2.lat) {
-    return { label: `10 min walk from ${basecampName}`, distKm: '0.8' };
-  }
-  const R = 6371; // km
-  const dLat = (p2.lat - p1.lat) * (Math.PI / 180);
-  const dLng = (p2.lng - p1.lng) * (Math.PI / 180);
-  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(p1.lat * (Math.PI / 180)) * Math.cos(p2.lat * (Math.PI / 180)) *
-            Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distKm = (R * c).toFixed(1);
-  const distMeters = R * c * 1000;
-
-  if (distMeters < 1200) {
-    const mins = Math.max(3, Math.round(distMeters / 80));
-    return { label: `${mins} min walk from ${basecampName}`, distKm };
-  }
-  if (distMeters < 8000) {
-    const mins = Math.max(6, Math.round(distMeters / 350 + 2));
-    return { label: `${mins} min taxi from ${basecampName}`, distKm };
-  }
-  const mins = Math.max(15, Math.round(distMeters / 600 + 5));
-  return { label: `${mins} min transit from ${basecampName}`, distKm };
-};
 const HiddenGemsWall = dynamic(() => import('../components/HiddenGemsWall'));
 const FeaturesSelection = dynamic(() => import('../components/FeaturesSelection'));
 const SavedPlacesModal = dynamic(() => import('../components/SavedPlacesModal'));
@@ -4065,30 +4041,23 @@ export default function ItineraryPage() {
                                   {/* Secondary detail card underneath image on wide viewports to balance column heights (`hidden lg:flex`) */}
                                   {(() => {
                                     const isBasecampConfirmed = itinerary?.hotelMode === 'basecamp' || itinerary?.basecampHotel;
-                                    const basecampName = typeof itinerary?.basecampHotel === 'string' ? itinerary?.basecampHotel : (itinerary?.basecampHotel?.name || 'Basecamp');
-                                    const bCoords = itinerary?.basecampHotelDetails?.coordinates || itinerary?.coordinates || { lat: 41.9028, lng: 12.4964 };
+                                    const anchorName = isBasecampConfirmed 
+                                      ? (typeof itinerary?.basecampHotel === 'string' ? itinerary?.basecampHotel : (itinerary?.basecampHotel?.name || 'Basecamp'))
+                                      : 'City Center';
+                                    const anchorCoords = itinerary?.basecampHotelDetails?.coordinates || itinerary?.coordinates || { lat: 41.9028, lng: 12.4964 };
                                     const actCoords = act.coordinates || { lat: 41.9028, lng: 12.4964 };
-                                    const prox = getDistanceAndProximity(bCoords, actCoords, basecampName);
+
 
                                     return (
-                                      <div className="hidden lg:flex items-start gap-3.5 p-4 rounded-2xl border border-[#E6DFD5] bg-[#FAF6F0]/70 text-xs font-sans text-[#5F5E5A] shadow-2xs">
-                                        <div className="w-9 h-9 rounded-xl bg-white border border-[#E6DFD5] flex items-center justify-center text-[#FF6B2C] shrink-0 mt-0.5 shadow-2xs">
-                                          <MapPin className="w-4 h-4 stroke-[2.2]" />
-                                        </div>
-                                        <div className="flex-1">
-                                          <div className="flex items-center justify-between gap-2 border-b border-[#E6DFD5]/60 pb-1.5 mb-1.5">
-                                            <strong className="font-serif font-bold text-[#1E1C1A] text-sm tracking-tight">Getting There &amp; Proximity</strong>
-                                            <span className={`text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md border font-bold ${
-                                              isBasecampConfirmed ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-white text-[#7A7268] border-[#E6DFD5]'
-                                            }`}>
-                                              {isBasecampConfirmed ? `📍 ${prox.label}` : '📍 Central Anchor'}
-                                            </span>
-                                          </div>
-                                          <p className="font-serif text-xs text-[#4A443E] leading-relaxed">
-                                            {(typeof act.location === 'object' ? act.location?.name : act.location) || `${cleanName}, ${cleanDest}`} — {isBasecampConfirmed ? `approx. ${prox.distKm} km from your basecamp stay at ${basecampName}.` : 'easily reached on foot or short local transit.'}
-                                          </p>
-                                        </div>
-                                      </div>
+                                      <LiveProximityBanner
+                                        anchorCoords={anchorCoords}
+                                        actCoords={actCoords}
+                                        anchorName={anchorName}
+                                        isBasecampConfirmed={isBasecampConfirmed}
+                                        actLocation={act.location}
+                                        cleanName={cleanName}
+                                        cleanDest={cleanDest}
+                                      />
                                     );
                                   })()}
                                 </div>
