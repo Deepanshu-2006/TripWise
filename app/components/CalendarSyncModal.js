@@ -61,7 +61,7 @@ function GoogleIcon() {
 
 function AppleIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="w-7 h-7" fill="currentColor">
+    <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
       <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
     </svg>
   );
@@ -69,7 +69,7 @@ function AppleIcon() {
 
 function OutlookIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none">
+    <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none">
       <rect x="1" y="4" width="14" height="16" rx="2" fill="#0078D4"/>
       <rect x="9" y="8" width="14" height="12" rx="2" fill="#28A8E8"/>
       <circle cx="9" cy="13" r="3.5" fill="white"/>
@@ -79,7 +79,7 @@ function OutlookIcon() {
 
 function AnyCalIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none" stroke="#FF6B2C" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg viewBox="0 0 24 24" className="w-6 h-6 text-stone-400" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="4" width="18" height="18" rx="2"/>
       <line x1="16" y1="2" x2="16" y2="6"/>
       <line x1="8" y1="2" x2="8" y2="6"/>
@@ -109,15 +109,13 @@ function EventPreviewItem({ activity, dayNum }) {
   const emoji = isFood ? '🍽️' : isTransport ? '🚌' : '📍';
 
   return (
-    <div className="flex items-center gap-2.5 py-2 border-b border-[#E6DFD5]/50 last:border-0">
-      <span className="text-sm shrink-0">{emoji}</span>
+    <div className="flex items-center gap-3 py-2.5">
+      <span className="text-base shrink-0">{emoji}</span>
       <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-sans font-semibold text-[#1E1C1A] truncate">{activity.title}</p>
-        {activity.time && (
-          <p className="text-[10px] text-[#7A7268] font-mono mt-0.5">{activity.time}</p>
-        )}
+        <p className="text-[13px] font-sans font-medium text-stone-900 truncate">{activity.title}</p>
+        <p className="text-[11px] text-stone-500 font-sans mt-0.5">{activity.time || 'Flexible time'}</p>
       </div>
-      <span className="text-[9px] font-mono text-[#7A7268]/70 shrink-0">Day {dayNum}</span>
+      <span className="text-[11px] font-sans font-medium text-stone-400 shrink-0">Day {dayNum}</span>
     </div>
   );
 }
@@ -187,199 +185,157 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
 
           {/* Modal */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: 16 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="fixed z-[9999] inset-x-4 bottom-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-auto sm:w-full sm:max-w-md"
+            initial={{ opacity: 0, y: '100%' }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: '100%' }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.8 }}
+            onDragEnd={(e, { offset, velocity }) => {
+              if (offset.y > 100 || velocity.y > 400) {
+                onClose();
+              }
+            }}
+            className="fixed z-[9999] inset-x-0 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:max-w-[380px] flex flex-col max-h-[90vh] sm:max-h-[85vh]"
           >
-            <div className="bg-[#FDFAF7] rounded-3xl shadow-[0_32px_80px_rgba(0,0,0,0.22),0_0_0_1px_rgba(230,223,213,0.9)] overflow-hidden">
+            <div className="bg-white rounded-t-[32px] sm:rounded-3xl shadow-[0_-12px_48px_rgba(0,0,0,0.1)] sm:shadow-[0_24px_64px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05)] flex flex-col h-full overflow-hidden">
 
               {/* ── Header ── */}
-              <div className="relative bg-gradient-to-br from-[#1E1C1A] via-[#2D2A26] to-[#3D3830] px-5 pt-5 pb-6 overflow-hidden">
-                {/* Decorative background glow */}
-                <div className="absolute -top-6 -right-6 w-32 h-32 bg-[#FF6B2C]/20 rounded-full blur-2xl pointer-events-none" />
-                <div className="absolute -bottom-4 left-8 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
+              <div className="relative px-6 pt-5 pb-4 shrink-0 z-10 flex flex-col items-center border-b border-stone-100">
+                {/* Mobile Drag Pill */}
+                <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-12 h-1.5 rounded-full bg-stone-200 sm:hidden" />
+                
+                <button
+                  onClick={onClose}
+                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center transition-colors cursor-pointer"
+                  aria-label="Close"
+                >
+                  <X className="w-4 h-4 text-stone-500" strokeWidth={2} />
+                </button>
 
-                <div className="relative flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    {/* Animated calendar icon */}
-                    <motion.div
-                      animate={{ rotate: [0, -8, 8, -4, 4, 0] }}
-                      transition={{ delay: 0.4, duration: 0.6 }}
-                      className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] flex items-center justify-center shadow-lg shadow-[#FF6B2C]/30 shrink-0"
-                    >
-                      <Calendar className="w-5.5 h-5.5 text-white" strokeWidth={2.2} />
-                    </motion.div>
-
-                    <div>
-                      <h2 className="text-base font-serif font-black text-white leading-tight">
-                        Sync to Calendar
-                      </h2>
-                      <p className="text-[11px] text-white/60 font-sans mt-0.5 leading-snug">
-                        {destination} · {eventCount} event{eventCount !== 1 ? 's' : ''}
-                        {itinerary?.startDate ? (
-                          <span className="ml-1 opacity-70">· {days.length} days</span>
-                        ) : (
-                          <span className="ml-1 text-amber-400/80"> · add start date for exact times</span>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={onClose}
-                    className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors shrink-0 mt-0.5 cursor-pointer"
-                    aria-label="Close"
-                  >
-                    <X className="w-3.5 h-3.5 text-white" />
-                  </button>
+                <div className="w-12 h-12 rounded-full bg-stone-50 flex items-center justify-center mb-3 mt-2 sm:mt-0 text-stone-800">
+                  <Calendar className="w-6 h-6" strokeWidth={1.5} />
                 </div>
+                
+                <h2 className="text-xl font-serif font-medium text-stone-900 tracking-tight">
+                  Sync to Calendar
+                </h2>
+                <p className="text-xs text-stone-500 font-sans mt-1">
+                  {destination} · {eventCount} event{eventCount !== 1 ? 's' : ''}
+                </p>
               </div>
 
-              {/* ── Calendar Provider Grid ── */}
-              <div className="p-4 space-y-4">
+              {/* ── Scrollable Body ── */}
+              <div className="p-5 sm:p-6 space-y-6 overflow-y-auto relative z-0 flex-1 overscroll-contain pb-safe-8 sm:pb-6">
                 <div>
-                  <p className="text-[10px] font-mono font-black uppercase tracking-widest text-[#7A7268] mb-3">
-                    Choose your calendar
-                  </p>
-
-                  <div className="grid grid-cols-2 gap-2.5">
-                    {PROVIDERS.map((provider) => {
-                      const isDone = downloadedId === provider.id;
-                      return (
-                        <motion.button
-                          key={provider.id}
-                          whileTap={{ scale: 0.96 }}
-                          whileHover={{ y: -1 }}
-                          onClick={() => handleAction(provider)}
-                          style={{ '--provider-color': provider.color, '--provider-bg': provider.bg }}
-                          className="relative flex flex-col items-center gap-2 p-3.5 rounded-2xl border border-[#E6DFD5] bg-white hover:border-[--provider-color]/40 hover:shadow-[0_4px_16px_-4px_var(--provider-color,rgba(0,0,0,0.1))] transition-all duration-200 cursor-pointer overflow-hidden group"
-                        >
-                          {/* Subtle background fill on hover */}
-                          <div
-                            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                            style={{ background: provider.bg }}
-                          />
-
+                <div className="grid grid-cols-2 gap-3">
+                  {PROVIDERS.map((provider) => {
+                    const isDone = downloadedId === provider.id;
+                    return (
+                      <button
+                        key={provider.id}
+                        onClick={() => handleAction(provider)}
+                        className="relative flex flex-col items-center justify-center gap-2.5 p-4 rounded-2xl bg-stone-50 hover:bg-stone-100 border border-transparent transition-colors cursor-pointer group"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center relative">
                           {isDone ? (
                             <motion.div
-                              initial={{ scale: 0.5, rotate: -20 }}
-                              animate={{ scale: 1, rotate: 0 }}
-                              className="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center relative z-10"
+                              initial={{ scale: 0.5, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              className="w-full h-full rounded-full bg-stone-900 flex items-center justify-center"
                             >
                               <Check className="w-4 h-4 text-white" strokeWidth={2.5} />
                             </motion.div>
                           ) : (
-                            <div className="relative z-10">{providerIcons[provider.id]}</div>
-                          )}
-
-                          <div className="text-center relative z-10">
-                            <p className="text-[11px] font-sans font-bold text-[#1E1C1A] leading-tight">
-                              {isDone ? (provider.action === 'url' ? 'Opened!' : 'Downloaded!') : provider.name}
-                            </p>
-                            <p className="text-[9.5px] text-[#7A7268] font-mono mt-0.5">
-                              {isDone ? '✓ done' : provider.label}
-                            </p>
-                          </div>
-
-                          {/* Action icon */}
-                          {!isDone && (
-                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-60 transition-opacity">
-                              {provider.action === 'url' ? (
-                                <ExternalLink className="w-3 h-3 text-[#7A7268]" />
-                              ) : (
-                                <Download className="w-3 h-3 text-[#7A7268]" />
-                              )}
+                            <div className="text-stone-800 transition-transform group-hover:scale-105 duration-300">
+                              {providerIcons[provider.id]}
                             </div>
                           )}
-                        </motion.button>
-                      );
-                    })}
-                  </div>
+                        </div>
+
+                        <div className="text-center">
+                          <p className="text-[13px] font-sans font-medium text-stone-800 leading-tight">
+                            {provider.name}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
                 </div>
 
                 {/* ── Event Filters ── */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[9.5px] font-mono font-black uppercase tracking-widest text-[#7A7268] shrink-0">
-                    Include:
-                  </span>
+                <div className="flex justify-center gap-2 flex-wrap">
                   {[
-                    { key: 'sightseeing', label: 'Sightseeing', icon: <MapPin className="w-2.5 h-2.5" />, value: includeSightseeing, setter: setIncludeSightseeing, color: '#FF6B2C' },
-                    { key: 'food', label: 'Dining', icon: <Utensils className="w-2.5 h-2.5" />, value: includeFood, setter: setIncludeFood, color: '#059669' },
-                    { key: 'transport', label: 'Transport', icon: <Plane className="w-2.5 h-2.5" />, value: includeTransport, setter: setIncludeTransport, color: '#6366F1' },
+                    { key: 'sightseeing', label: 'Sightseeing', icon: <MapPin className="w-3.5 h-3.5" strokeWidth={2} />, value: includeSightseeing, setter: setIncludeSightseeing },
+                    { key: 'food', label: 'Dining', icon: <Utensils className="w-3.5 h-3.5" strokeWidth={2} />, value: includeFood, setter: setIncludeFood },
+                    { key: 'transport', label: 'Transport', icon: <Plane className="w-3.5 h-3.5" strokeWidth={2} />, value: includeTransport, setter: setIncludeTransport },
                   ].map(filter => (
                     <button
                       key={filter.key}
                       onClick={() => filter.setter(v => !v)}
-                      style={{
-                        background: filter.value ? `${filter.color}15` : 'transparent',
-                        borderColor: filter.value ? `${filter.color}60` : '#E6DFD5',
-                        color: filter.value ? filter.color : '#7A7268',
-                      }}
-                      className="flex items-center gap-1 px-2 py-1 rounded-full border text-[9.5px] font-sans font-bold transition-all duration-150 cursor-pointer"
+                      className={`relative flex items-center gap-1.5 px-3.5 py-2 rounded-full border transition-all duration-200 cursor-pointer overflow-hidden ${
+                        filter.value 
+                          ? 'bg-stone-900 border-stone-900 shadow-md' 
+                          : 'bg-white border-stone-200 hover:bg-stone-50 hover:border-stone-300'
+                      }`}
                     >
-                      {filter.icon}
-                      {filter.label}
-                      {filter.value && <Check className="w-2.5 h-2.5" strokeWidth={2.5} />}
+                      <div className={`transition-colors ${filter.value ? 'text-stone-300' : 'text-stone-400'}`}>
+                        {filter.value ? <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} /> : filter.icon}
+                      </div>
+                      <span className={`text-[12px] font-sans font-medium transition-colors ${filter.value ? 'text-white' : 'text-stone-600'}`}>
+                        {filter.label}
+                      </span>
                     </button>
                   ))}
                 </div>
 
                 {/* ── Event Preview Toggle ── */}
-                <button
-                  onClick={() => setShowPreview(v => !v)}
-                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-[#FAF6F0] border border-[#E6DFD5] hover:border-[#FF6B2C]/30 transition-colors cursor-pointer group"
-                >
-                  <span className="text-[11px] font-sans font-semibold text-[#1E1C1A]">
-                    Preview {eventCount} calendar event{eventCount !== 1 ? 's' : ''}
-                  </span>
-                  <motion.div animate={{ rotate: showPreview ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                    <ChevronDown className="w-3.5 h-3.5 text-[#7A7268] group-hover:text-[#FF6B2C] transition-colors" />
-                  </motion.div>
-                </button>
-
-                <AnimatePresence>
-                  {showPreview && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25, ease: 'easeOut' }}
-                      className="overflow-hidden"
-                    >
-                      <div className="rounded-xl border border-[#E6DFD5] bg-white overflow-y-auto max-h-48 px-3">
-                        {/* Summary event */}
-                        <div className="flex items-center gap-2.5 py-2 border-b border-[#E6DFD5]/50">
-                          <span className="text-sm shrink-0">✈️</span>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[11px] font-sans font-semibold text-[#1E1C1A] truncate">
-                              Trip to {destination}
-                            </p>
-                            <p className="text-[10px] text-[#7A7268] font-mono mt-0.5">All-day · Full trip span</p>
-                          </div>
-                          <span className="text-[9px] font-mono text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full shrink-0">Summary</span>
-                        </div>
-
-                        {previewEvents.map((item, i) => (
-                          <EventPreviewItem key={i} activity={item.activity} dayNum={item.dayNum} />
-                        ))}
-
-                        {previewEvents.length === 0 && (
-                          <p className="text-[11px] text-[#7A7268] font-sans py-3 text-center">
-                            No activities match the selected filters
-                          </p>
-                        )}
-                      </div>
+                <div className="pt-2 border-t border-stone-100">
+                  <button
+                    onClick={() => setShowPreview(v => !v)}
+                    className="w-full flex items-center justify-between py-2 transition-colors cursor-pointer group"
+                  >
+                    <span className="text-sm font-sans font-medium text-stone-800">
+                      View itinerary preview
+                    </span>
+                    <motion.div animate={{ rotate: showPreview ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                      <ChevronDown className="w-4 h-4 text-stone-400 group-hover:text-stone-700 transition-colors" />
                     </motion.div>
-                  )}
-                </AnimatePresence>
+                  </button>
+
+                  <AnimatePresence>
+                    {showPreview && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25, ease: 'easeOut' }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pt-3 pb-1 space-y-1">
+                          {previewEvents.map((item, i) => (
+                            <EventPreviewItem key={i} activity={item.activity} dayNum={item.dayNum} />
+                          ))}
+
+                          {previewEvents.length === 0 && (
+                            <p className="text-sm text-stone-500 font-sans py-4 text-center">
+                              No activities match the selected filters.
+                            </p>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
 
                 {/* ── Footer note ── */}
-                <p className="text-[9.5px] text-[#7A7268]/70 font-sans text-center leading-relaxed">
-                  .ics files work with Google Calendar, Apple Calendar, Outlook & more.
-                  All syncing is done offline — no data leaves your device.
-                </p>
+                <div className="pt-2">
+                  <p className="text-xs text-stone-400 font-sans text-center leading-relaxed">
+                    Sync is offline. No data leaves your device.
+                  </p>
+                </div>
               </div>
             </div>
           </motion.div>
