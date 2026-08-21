@@ -527,7 +527,9 @@ export default function PlannerSidebar({
   onUpdateItinerary: originalOnUpdateItinerary = null,
   onResetPrompt = null,
   onGenerate,
-  onViewItinerary
+  onViewItinerary,
+  onOpenCalendar = null,
+  onOpenNotifications = null,
 }) {
   const [internalSelectedDayIndex, setInternalSelectedDayIndex] = useState(0);
   const selectedDayIndex = propSelectedDayIndex !== undefined ? propSelectedDayIndex : internalSelectedDayIndex;
@@ -603,6 +605,7 @@ export default function PlannerSidebar({
     if (prefersReducedMotion) {
       setIsUnfoldingMap(true);
       await new Promise(r => setTimeout(r, 2000));
+      if (onOpenCalendar) onOpenCalendar();
       if (onViewItinerary) onViewItinerary();
       else router.push('/itinerary');
       setIsUnfoldingMap(false);
@@ -3614,7 +3617,10 @@ export default function PlannerSidebar({
                           await new Promise(r => setTimeout(r, prefersReducedMotion ? 150 : 1200));
                           const confirmedItinerary = { ...itinerary, status: 'CONFIRMED' };
                           if (onUpdateItinerary) await onUpdateItinerary(confirmedItinerary);
-                          if (typeof window !== 'undefined') window.location.href = '/ai-planner';
+                          // Show the Trip Setup popup (calendar + notifications)
+                          if (onOpenCalendar) onOpenCalendar();
+                          setIsElevating(false);
+                          setIsConfirming(false);
                         }
                       }}
                       className={`relative w-full sm:w-[48%] h-10 flex rounded-2xl ${itinerary?.status === 'CONFIRMED' ? '' : 'cursor-pointer group hover:shadow-[0_12px_32px_rgba(255,107,44,0.5)]'} shadow-[0_8px_24px_rgba(255,107,44,0.3)] transition-shadow`}

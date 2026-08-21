@@ -431,3 +431,29 @@ export function getDaySummary(day, idx = 0, allDays = []) {
     }
   };
 }
+
+export const getDistanceAndProximity = (p1, p2, basecampName = 'Basecamp') => {
+  if (!p1 || !p2 || !p1.lat || !p2.lat) {
+    return { label: `10 min walk from ${basecampName}`, distKm: '0.8', mins: 10, type: 'walk' };
+  }
+  const R = 6371; // km
+  const dLat = (p2.lat - p1.lat) * (Math.PI / 180);
+  const dLng = (p2.lng - p1.lng) * (Math.PI / 180);
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(p1.lat * (Math.PI / 180)) * Math.cos(p2.lat * (Math.PI / 180)) *
+            Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distKm = (R * c).toFixed(1);
+  const distMeters = R * c * 1000;
+
+  if (distMeters < 1200) {
+    const mins = Math.max(3, Math.round(distMeters / 80));
+    return { label: `${mins} min walk from ${basecampName}`, distKm, mins, type: 'walk' };
+  }
+  if (distMeters < 8000) {
+    const mins = Math.max(6, Math.round(distMeters / 350 + 2));
+    return { label: `${mins} min taxi from ${basecampName}`, distKm, mins, type: 'taxi' };
+  }
+  const mins = Math.max(15, Math.round(distMeters / 600 + 5));
+  return { label: `${mins} min transit from ${basecampName}`, distKm, mins, type: 'transit' };
+};
