@@ -147,39 +147,28 @@ export default function OfflineTripManager({
   return (
     <>
       {/* HEADER ACTION BUTTON TOGGLE / BADGE */}
-      <div className="relative inline-flex items-center gap-1.5">
+      <div className="relative inline-flex items-center gap-1.5 shrink-0">
         {isAvailable ? (
-          <div className="flex items-center gap-1.5">
-            {/* Available Offline Badge */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Available Offline Badge (Expanding on Hover) */}
             <motion.button
               type="button"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.96 }}
               onClick={() => setShowModal(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-emerald-500/40 bg-emerald-50 text-emerald-800 text-xs font-sans font-bold hover:bg-emerald-100 transition-all cursor-pointer shadow-2xs"
+              className="group/btn relative overflow-hidden flex items-center h-[34px] rounded-full px-2.5 border border-emerald-500/40 bg-emerald-50 hover:bg-emerald-100 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer shadow-2xs shrink-0"
             >
-              <CloudCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Available Offline ✓</span>
+              <CloudCheck className="w-[15px] h-[15px] text-emerald-600 shrink-0 relative z-10" />
+              <span className="max-w-0 opacity-0 whitespace-nowrap overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/btn:max-w-[150px] group-hover/btn:opacity-100 group-hover/btn:ml-2 text-[10px] font-bold text-emerald-800 relative z-0 -translate-x-3 group-hover/btn:translate-x-0">
+                Offline ✓
+              </span>
             </motion.button>
-
-            {/* Last Synced / Refresh Action */}
-            <motion.button
-              type="button"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.94 }}
-              onClick={() => setShowModal(true)}
-              title={`Last synced: ${formatLastSynced()}`}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full border border-[#E6DFD5] bg-white text-[11px] font-sans text-gray-600 hover:bg-[#F5F0E8] transition-all cursor-pointer"
-            >
-              <RefreshCw className="w-3 h-3 text-[#FF6B2C]" />
-              <span className="hidden md:inline">{formatLastSynced()}</span>
-            </motion.button>
-
+            
             {/* Outdated Warning Chip if Stale */}
             {isStale && (
               <span 
                 onClick={() => setShowModal(true)}
-                className="hidden xl:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 border border-amber-300 text-amber-800 text-[10px] font-bold cursor-pointer"
+                className="hidden xl:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 border border-amber-300 text-amber-800 text-[10px] font-bold cursor-pointer shrink-0"
                 title="Your offline copy may be outdated. Click to refresh."
               >
                 <AlertTriangle className="w-3 h-3 text-amber-600" />
@@ -188,35 +177,21 @@ export default function OfflineTripManager({
             )}
           </div>
         ) : (
-          /* Make Available Offline Toggle Button */
+          /* Make Available Offline Toggle Button (Expanding on Hover) */
           <button
             type="button"
             onClick={() => setShowModal(true)}
-            className="group/offline relative inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-white/20 bg-gradient-to-r from-[#FF6B2C] via-[#FFA057] to-[#FF6B2C] bg-[length:200%_auto] text-xs font-sans font-bold text-white shadow-[0_4px_12px_-2px_rgba(255,107,44,0.4)] hover:-translate-y-1 hover:scale-[1.02] hover:animate-[bg-shift_2s_ease-in-out_infinite,pulse-shadow_1.5s_infinite] transition-all duration-300 ease-out cursor-pointer active:scale-95"
+            className="group/offline relative overflow-hidden flex items-center h-[34px] rounded-full px-2.5 border border-white/20 bg-gradient-to-br from-[#FF6B2C] to-[#FFA057] shadow-[0_4px_12px_-2px_rgba(255,107,44,0.4)] hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-[0_6px_16px_-4px_rgba(255,107,44,0.5)] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer active:scale-95 shrink-0"
           >
-            {/* Inner Glow to make the button look 3D */}
             <div className="absolute inset-0 rounded-full border border-white/20 pointer-events-none" />
-            
-            <div className="relative flex items-center justify-center">
-               <CloudOff className="w-4 h-4 relative z-10 group-hover/offline:-translate-y-0.5 group-hover/offline:scale-110 group-hover/offline:drop-shadow-[0_2px_4px_rgba(255,255,255,0.5)] transition-all duration-300 xl:mr-0.5" />
-            </div>
-            
-            <span className="hidden xl:inline relative z-10 tracking-wide drop-shadow-sm group-hover/offline:text-white">Make Available Offline</span>
-            
-            <style dangerouslySetInnerHTML={{ __html: `
-              @keyframes bg-shift {
-                0% { background-position: 0% 50%; }
-                50% { background-position: 100% 50%; }
-                100% { background-position: 0% 50%; }
-              }
-              @keyframes pulse-shadow {
-                0% { box-shadow: 0 0 0 0 rgba(255, 107, 44, 0.6), 0 8px 24px -4px rgba(255, 107, 44, 0.7); }
-                70% { box-shadow: 0 0 0 12px rgba(255, 107, 44, 0), 0 8px 24px -4px rgba(255, 107, 44, 0.7); }
-                100% { box-shadow: 0 0 0 0 rgba(255, 107, 44, 0), 0 8px 24px -4px rgba(255, 107, 44, 0.7); }
-              }
-            `}} />
+            <CloudOff className="w-[15px] h-[15px] text-white relative z-10 shrink-0" strokeWidth={2.5} />
+            <span className="max-w-0 opacity-0 whitespace-nowrap overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/offline:max-w-[150px] group-hover/offline:opacity-100 group-hover/offline:ml-2 text-[10px] font-bold text-white relative z-0 -translate-x-3 group-hover/offline:translate-x-0">
+              Download Trip
+            </span>
           </button>
         )}
+
+        {/* Sync Progress / Initializing Toast (Now rendered inline) */}
       </div>
 
       {/* MODAL SHEET FOR OFFLINE DOWNLOAD / MANAGING PACK (Portal to document.body) */}

@@ -614,6 +614,27 @@ export default function ItineraryPage() {
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
   const [isNotificationsPanelOpen, setIsNotificationsPanelOpen] = useState(false);
 
+  // Tab Scroll State
+  const tabsContainerRef = useRef(null);
+  const [canScrollTabsRight, setCanScrollTabsRight] = useState(false);
+
+  const checkTabsScroll = () => {
+    if (tabsContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = tabsContainerRef.current;
+      setCanScrollTabsRight(scrollWidth > clientWidth + Math.ceil(scrollLeft) + 2);
+    }
+  };
+
+  useEffect(() => {
+    // Check after a short delay to ensure DOM has rendered
+    const timer = setTimeout(checkTabsScroll, 100);
+    window.addEventListener('resize', checkTabsScroll);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', checkTabsScroll);
+    };
+  }, [itinerary]);
+
   // Preference Engine State
   const { recordSkip, recordTripSignals, profile } = usePreferenceEngine();
   const [activityRatings, setActivityRatings] = useState({});
@@ -1765,7 +1786,11 @@ export default function ItineraryPage() {
           
           <div className="relative flex-1 min-w-0 flex items-center">
             {/* Day Tabs */}
-            <div className="flex items-center gap-0.5 sm:gap-1.5 overflow-x-auto w-full no-scrollbar pb-0 pr-4 lg:pr-12">
+            <div 
+              ref={tabsContainerRef}
+              onScroll={checkTabsScroll}
+              className="flex items-center gap-0.5 sm:gap-1.5 overflow-x-auto w-full no-scrollbar pb-0 pr-4 lg:pr-12"
+            >
               {days.map((day, dIdx) => {
                 const dayNum = day.dayNumber || dIdx + 1;
                 const isSelected = activeDay === dayNum;
@@ -1774,20 +1799,20 @@ export default function ItineraryPage() {
                   <button
                     key={dayNum}
                     onClick={() => setActiveDay(dayNum)}
-                    className={`group relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif font-bold transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap flex flex-col items-center justify-center ${isSelected ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+                    className={`group relative pb-3.5 pt-1.5 px-3 sm:px-4 font-serif transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap flex flex-col items-center justify-center ${isSelected ? 'text-[#1E1C1A] font-black text-[15px] sm:text-base' : 'text-[#7A7268] hover:text-[#1E1C1A] font-bold text-sm sm:text-[15px]'
                       }`}
                   >
                     <span>Day {toRomanNumeral(dayNum)}</span>
                     {dateStr && (
-                      <span className="text-[9px] font-sans text-stone-400 font-bold -mt-0.5 tracking-wide">{dateStr}</span>
+                      <span className={`font-sans tracking-wider mt-0.5 uppercase transition-colors ${isSelected ? 'text-[#FF6B2C] font-bold text-[9px] sm:text-[10px]' : 'text-stone-400 font-semibold text-[9px] sm:text-[10px]'}`}>{dateStr}</span>
                     )}
                     {!isSelected && (
-                      <div className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#E6DFD5] rounded-t-full opacity-0 scale-x-50 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-300 ease-out origin-center" />
+                      <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#E6DFD5] rounded-t-full opacity-0 scale-x-50 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-300 ease-out origin-center" />
                     )}
                     {isSelected && (
                       <motion.div
                         layoutId="activeTabUnderline"
-                        className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#FF6B2C] rounded-t-full"
+                        className="absolute bottom-0 left-0 right-0 h-1 bg-[#FF6B2C] rounded-t-full"
                         transition={{ type: "spring", stiffness: 380, damping: 30 }}
                       />
                     )}
@@ -1797,17 +1822,17 @@ export default function ItineraryPage() {
 
               <button
                 onClick={() => setActiveDay('epilogue')}
-                className={`group relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'epilogue' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+                className={`group relative pb-3.5 pt-1.5 px-3 sm:px-4 font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap flex flex-col justify-center ${activeDay === 'epilogue' ? 'text-[#1E1C1A] font-black text-[15px] sm:text-base' : 'text-[#7A7268] hover:text-[#1E1C1A] font-bold text-sm sm:text-[15px]'
                   }`}
               >
                 <span>Epilogue</span>
                 {activeDay !== 'epilogue' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#E6DFD5] rounded-t-full opacity-0 scale-x-50 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-300 ease-out origin-center" />
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#E6DFD5] rounded-t-full opacity-0 scale-x-50 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-300 ease-out origin-center" />
                 )}
                 {activeDay === 'epilogue' && (
                   <motion.div
                     layoutId="activeTabUnderline"
-                    className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#FF6B2C] rounded-t-full"
+                    className="absolute bottom-0 left-0 right-0 h-1 bg-[#FF6B2C] rounded-t-full"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
@@ -1815,17 +1840,17 @@ export default function ItineraryPage() {
 
               <button
                 onClick={() => setActiveDay('journal')}
-                className={`group relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'journal' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+                className={`group relative pb-3.5 pt-1.5 px-3 sm:px-4 font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap flex flex-col justify-center ${activeDay === 'journal' ? 'text-[#1E1C1A] font-black text-[15px] sm:text-base' : 'text-[#7A7268] hover:text-[#1E1C1A] font-bold text-sm sm:text-[15px]'
                   }`}
               >
                 <span>Journal</span>
                 {activeDay !== 'journal' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#E6DFD5] rounded-t-full opacity-0 scale-x-50 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-300 ease-out origin-center" />
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#E6DFD5] rounded-t-full opacity-0 scale-x-50 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-300 ease-out origin-center" />
                 )}
                 {activeDay === 'journal' && (
                   <motion.div
                     layoutId="activeTabUnderline"
-                    className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#FF6B2C] rounded-t-full"
+                    className="absolute bottom-0 left-0 right-0 h-1 bg-[#FF6B2C] rounded-t-full"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
@@ -1833,24 +1858,24 @@ export default function ItineraryPage() {
 
               <button
                 onClick={() => setActiveDay('tracking')}
-                className={`group relative pb-3.5 pt-2 px-2.5 sm:px-3.5 text-xs font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap ${activeDay === 'tracking' ? 'text-[#1E1C1A] font-black' : 'text-[#7A7268] hover:text-[#1E1C1A]'
+                className={`group relative pb-3.5 pt-1.5 px-3 sm:px-4 font-serif italic transition-all duration-200 shrink-0 cursor-pointer select-none whitespace-nowrap flex flex-col justify-center ${activeDay === 'tracking' ? 'text-[#1E1C1A] font-black text-[15px] sm:text-base' : 'text-[#7A7268] hover:text-[#1E1C1A] font-bold text-sm sm:text-[15px]'
                   }`}
               >
                 <span>Price Tracking</span>
                 {activeDay !== 'tracking' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#E6DFD5] rounded-t-full opacity-0 scale-x-50 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-300 ease-out origin-center" />
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#E6DFD5] rounded-t-full opacity-0 scale-x-50 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-300 ease-out origin-center" />
                 )}
                 {activeDay === 'tracking' && (
                   <motion.div
                     layoutId="activeTabUnderline"
-                    className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#FF6B2C] rounded-t-full"
+                    className="absolute bottom-0 left-0 right-0 h-1 bg-[#FF6B2C] rounded-t-full"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
               </button>
             </div>
             
-            <div className="absolute right-0 top-0 bottom-[3px] w-14 bg-gradient-to-l from-[#FAF6F0] via-[#FAF6F0]/80 to-transparent pointer-events-none flex items-center justify-end z-10">
+            <div className={`absolute right-0 top-0 bottom-[3px] w-14 bg-gradient-to-l from-[#FAF6F0] via-[#FAF6F0]/80 to-transparent pointer-events-none flex items-center justify-end z-10 transition-opacity duration-300 ${canScrollTabsRight ? 'opacity-100' : 'opacity-0'}`}>
               <ChevronRight className="w-4 h-4 text-[#FF6B2C] opacity-70 animate-pulse mr-1 mt-1" />
             </div>
           </div>
@@ -1897,12 +1922,11 @@ export default function ItineraryPage() {
               whileTap={{ scale: 0.92 }}
               type="button"
               onClick={() => setIsCalendarModalOpen(true)}
-              className="group/btn relative overflow-hidden inline-flex items-center gap-0 xl:gap-1.5 px-3 xl:px-4 py-1.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] text-xs font-sans font-bold text-[#1E1C1A] hover:border-[#FF6B2C]/60 hover:shadow-[0_8px_20px_-6px_rgba(255,107,44,0.4)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer"
-              title="Sync trip to your calendar"
+              className="group/btn relative overflow-hidden flex items-center h-[34px] px-2.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] hover:border-[#FF6B2C]/60 hover:shadow-[0_4px_12px_-4px_rgba(255,107,44,0.3)] hover:-translate-y-0.5 hover:scale-[1.02] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer shrink-0"
             >
               <div className="absolute top-0 left-[-100%] w-[120%] h-full bg-gradient-to-r from-transparent via-white/90 to-transparent skew-x-[-25deg] group-hover/btn:left-[100%] transition-all duration-700 ease-out z-0 pointer-events-none" />
-              <Calendar className="w-4 h-4 text-[#FF6B2C] relative z-10 group-hover/btn:scale-110 group-hover/btn:-rotate-6 group-active/btn:scale-125 transition-all duration-300" />
-              <span className="hidden xl:inline relative z-10 group-hover/btn:text-[#FF6B2C] transition-colors duration-300 ml-1.5">Calendar</span>
+              <Calendar className="w-[15px] h-[15px] text-[#1E1C1A] group-hover/btn:text-[#FF6B2C] relative z-10 shrink-0 group-hover/btn:scale-110 group-hover/btn:-rotate-6 transition-all duration-300" />
+              <span className="max-w-0 opacity-0 whitespace-nowrap overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/btn:max-w-[100px] group-hover/btn:opacity-100 group-hover/btn:ml-1.5 text-[10px] font-bold text-[#FF6B2C] relative z-0 -translate-x-3 group-hover/btn:translate-x-0">Calendar</span>
             </motion.button>
 
             {/* Notifications Button */}
@@ -1910,35 +1934,23 @@ export default function ItineraryPage() {
               whileTap={{ scale: 0.92 }}
               type="button"
               onClick={() => setIsNotificationsPanelOpen(true)}
-              className="group/btn relative overflow-hidden inline-flex items-center gap-0 xl:gap-1.5 px-3 xl:px-4 py-1.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] text-xs font-sans font-bold text-[#1E1C1A] hover:border-[#FF6B2C]/60 hover:shadow-[0_8px_20px_-6px_rgba(255,107,44,0.4)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer"
-              title="Smart trip notifications"
+              className="group/btn relative overflow-hidden flex items-center h-[34px] px-2.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] hover:border-[#FF6B2C]/60 hover:shadow-[0_4px_12px_-4px_rgba(255,107,44,0.3)] hover:-translate-y-0.5 hover:scale-[1.02] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer shrink-0"
             >
               <div className="absolute top-0 left-[-100%] w-[120%] h-full bg-gradient-to-r from-transparent via-white/90 to-transparent skew-x-[-25deg] group-hover/btn:left-[100%] transition-all duration-700 ease-out z-0 pointer-events-none" />
-              <Bell className="w-4 h-4 text-[#FF6B2C] relative z-10 group-hover/btn:scale-110 group-hover/btn:rotate-12 group-active/btn:scale-125 transition-all duration-300" />
-              <span className="hidden xl:inline relative z-10 group-hover/btn:text-[#FF6B2C] transition-colors duration-300 ml-1.5">Notify</span>
+              <Bell className="w-[15px] h-[15px] text-[#1E1C1A] group-hover/btn:text-[#FF6B2C] relative z-10 shrink-0 group-hover/btn:scale-110 group-hover/btn:rotate-12 transition-all duration-300" />
+              <span className="max-w-0 opacity-0 whitespace-nowrap overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/btn:max-w-[100px] group-hover/btn:opacity-100 group-hover/btn:ml-1.5 text-[10px] font-bold text-[#FF6B2C] relative z-0 -translate-x-3 group-hover/btn:translate-x-0">Notify</span>
             </motion.button>
 
-            <div className="relative group/print">
+            <div className="relative group/print shrink-0">
               <motion.button
                 whileTap={{ scale: 0.92 }}
                 type="button"
                 onClick={handlePrintOrDownload}
-                className="group/btn relative overflow-hidden inline-flex items-center gap-0 xl:gap-1.5 px-3 xl:px-4 py-1.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] text-xs font-sans font-bold text-[#1E1C1A] hover:border-[#FF6B2C]/60 hover:shadow-[0_8px_20px_-6px_rgba(255,107,44,0.4)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer"
+                className="group/btn relative overflow-hidden flex items-center h-[34px] px-2.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] hover:border-[#FF6B2C]/60 hover:shadow-[0_4px_12px_-4px_rgba(255,107,44,0.3)] hover:-translate-y-0.5 hover:scale-[1.02] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer"
               >
                 <div className="absolute top-0 left-[-100%] w-[120%] h-full bg-gradient-to-r from-transparent via-white/90 to-transparent skew-x-[-25deg] group-hover/btn:left-[100%] transition-all duration-700 ease-out z-0 pointer-events-none" />
-                
-                <div className="absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 bg-[#FF6B2C]/30 rounded-full blur-md opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500 z-0 pointer-events-none" />
-                
-                <div className="relative flex items-center justify-center w-4 h-4 z-10">
-                  <div className="absolute top-1 w-2.5 h-2 bg-white border border-[#1E1C1A] rounded-[1px] opacity-0 group-hover/btn:opacity-100 group-active/btn:opacity-100 group-hover/btn:-translate-y-2.5 group-active/btn:-translate-y-2.5 transition-all duration-500 ease-out flex flex-col justify-evenly px-[1px] py-[1px] shadow-sm">
-                     <div className="w-full h-[0.5px] bg-[#1E1C1A]/40" />
-                     <div className="w-full h-[0.5px] bg-[#1E1C1A]/40" />
-                  </div>
-                  <div className="bg-white rounded-[2px] relative z-10">
-                    <Printer className="w-4 h-4 text-[#FF6B2C] group-hover/btn:scale-110 group-active/btn:scale-125 transition-transform duration-300" />
-                  </div>
-                </div>
-                <span className="hidden xl:inline relative z-10 group-hover/btn:text-[#FF6B2C] transition-colors duration-300 ml-1.5">Download PDF</span>
+                <Printer className="w-[15px] h-[15px] text-[#1E1C1A] group-hover/btn:text-[#FF6B2C] relative z-10 shrink-0 group-hover/btn:scale-110 transition-transform duration-300" />
+                <span className="max-w-0 opacity-0 whitespace-nowrap overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/btn:max-w-[120px] group-hover/btn:opacity-100 group-hover/btn:ml-1.5 text-[10px] font-bold text-[#FF6B2C] relative z-0 -translate-x-3 group-hover/btn:translate-x-0">Print</span>
               </motion.button>
               <div className="absolute right-0 top-full mt-2.5 opacity-0 translate-y-1 pointer-events-none group-hover/print:opacity-100 group-hover/print:translate-y-0 transition-all duration-300 ease-out z-50 bg-[#1E1C1A] text-white text-[10px] font-sans py-1.5 px-2.5 rounded-lg shadow-lg whitespace-nowrap border border-[#FF6B2C]/40">
                 💡 Tip: Uncheck "Headers and footers" in print dialog
@@ -1949,21 +1961,19 @@ export default function ItineraryPage() {
               whileTap={{ scale: 0.92 }}
               type="button"
               onClick={handleShareDossier}
-              className="group/btn relative overflow-hidden inline-flex items-center gap-0 xl:gap-1.5 px-3 xl:px-4 py-1.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] text-xs font-sans font-bold text-[#1E1C1A] hover:border-[#FF6B2C]/60 hover:shadow-[0_8px_20px_-6px_rgba(255,107,44,0.4)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer"
+              className="group/btn relative overflow-hidden flex items-center h-[34px] px-2.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] hover:border-[#FF6B2C]/60 hover:shadow-[0_4px_12px_-4px_rgba(255,107,44,0.3)] hover:-translate-y-0.5 hover:scale-[1.02] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer shrink-0"
             >
               <div className="absolute top-0 left-[-100%] w-[120%] h-full bg-gradient-to-r from-transparent via-white/90 to-transparent skew-x-[-25deg] group-hover/btn:left-[100%] transition-all duration-700 ease-out z-0 pointer-events-none" />
               
-              <div className="absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 bg-[#FF6B2C]/30 rounded-full blur-md opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500 z-0 pointer-events-none" />
-              
               {shareCopied ? (
                 <>
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 relative z-10 group-hover/btn:scale-110 group-active/btn:scale-125 transition-transform duration-300" />
-                  <span className="hidden xl:inline text-emerald-700 relative z-10 transition-colors duration-300 ml-1.5">Copied!</span>
+                  <CheckCircle2 className="w-[15px] h-[15px] text-emerald-600 relative z-10 shrink-0 group-hover/btn:scale-110 transition-transform duration-300" />
+                  <span className="max-w-0 opacity-0 whitespace-nowrap overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/btn:max-w-[100px] group-hover/btn:opacity-100 group-hover/btn:ml-1.5 text-[10px] font-bold text-emerald-600 relative z-0 -translate-x-3 group-hover/btn:translate-x-0">Copied</span>
                 </>
               ) : (
                 <>
-                  <Share2 className="w-4 h-4 text-[#FF6B2C] relative z-10 group-hover/btn:scale-110 group-hover/btn:rotate-[15deg] group-active/btn:scale-125 group-active/btn:rotate-[25deg] transition-transform duration-300 ease-out" />
-                  <span className="hidden xl:inline relative z-10 group-hover/btn:text-[#FF6B2C] transition-colors duration-300 ml-1.5">Share Link</span>
+                  <Share2 className="w-[15px] h-[15px] text-[#1E1C1A] group-hover/btn:text-[#FF6B2C] relative z-10 shrink-0 group-hover/btn:scale-110 group-hover/btn:rotate-[15deg] transition-transform duration-300 ease-out" />
+                  <span className="max-w-0 opacity-0 whitespace-nowrap overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/btn:max-w-[100px] group-hover/btn:opacity-100 group-hover/btn:ml-1.5 text-[10px] font-bold text-[#FF6B2C] relative z-0 -translate-x-3 group-hover/btn:translate-x-0">Share</span>
                 </>
               )}
             </motion.button>
@@ -2032,33 +2042,6 @@ export default function ItineraryPage() {
                     </span>
                   </div>
 
-                  {/* Calendar Sync — Mobile Drawer */}
-                  <motion.button
-                    whileTap={{ scale: 0.92 }}
-                    type="button"
-                    onClick={() => { setIsCalendarModalOpen(true); setIsMobileDrawerOpen(false); }}
-                    className="w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-all duration-150 cursor-pointer select-none group bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent"
-                    title="Sync to Calendar"
-                  >
-                    <div className="p-1 rounded-lg transition-all bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] group-active:scale-125 group-active:-rotate-6 shadow-2xs">
-                      <Calendar className="w-3.5 h-3.5 stroke-[2.2]" />
-                    </div>
-                    <span className="text-[9.5px] font-sans font-bold leading-none tracking-tight text-center">Calendar</span>
-                  </motion.button>
-
-                  {/* Notifications — Mobile Drawer */}
-                  <motion.button
-                    whileTap={{ scale: 0.92 }}
-                    type="button"
-                    onClick={() => { setIsNotificationsPanelOpen(true); setIsMobileDrawerOpen(false); }}
-                    className="w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-all duration-150 cursor-pointer select-none group bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent"
-                    title="Smart Notifications"
-                  >
-                    <div className="p-1 rounded-lg transition-all bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] group-active:scale-125 group-active:rotate-12 shadow-2xs">
-                      <Bell className="w-3.5 h-3.5 stroke-[2.2]" />
-                    </div>
-                    <span className="text-[9.5px] font-sans font-bold leading-none tracking-tight text-center">Notify</span>
-                  </motion.button>
 
                   {/* Packing List */}
                   {(() => {
@@ -2325,7 +2308,7 @@ export default function ItineraryPage() {
       <div className="max-w-6xl mx-auto px-6 py-12 w-full flex items-start gap-8 relative">
         
         {/* DESKTOP VERTICAL UTILITY SIDEBAR RAIL (Desktop Only - hidden on mobile/tablet < lg) */}
-        <aside className="hidden lg:flex flex-col items-center p-2.5 bg-[#FAF6F0]/90 backdrop-blur-xl backdrop-saturate-150 rounded-3xl border border-[#E6DFD5] shadow-[0_12px_36px_rgba(0,0,0,0.06),0_0_20px_rgba(255,107,44,0.04)] sticky top-[140px] lg:top-[150px] shrink-0 h-fit z-20 font-sans gap-2 w-28 transition-all duration-200">
+        <aside className="hidden lg:flex flex-col items-center p-2.5 bg-[#FAF6F0]/90 backdrop-blur-xl backdrop-saturate-150 rounded-3xl border border-[#E6DFD5] shadow-[0_12px_36px_rgba(0,0,0,0.06),0_0_20px_rgba(255,107,44,0.04)] lg:-ml-6 xl:-ml-8 lg:mt-8 sticky top-[140px] lg:top-[180px] shrink-0 h-fit z-20 font-sans gap-2 w-28 transition-all duration-200">
           
           {/* GROUP 1: PREPARE (Pre-trip planning tools) */}
           <div className="flex flex-col items-center w-full gap-2 pt-1 lg:pt-0">
@@ -2501,47 +2484,6 @@ export default function ItineraryPage() {
             </div>
           </div>
 
-          {/* Calendar Sync Rail Item — Desktop Sidebar */}
-          <div className="relative group/tool w-full">
-            <button
-              type="button"
-              onClick={() => { setIsCalendarModalOpen(true); setIsMobileDrawerOpen(false); }}
-              className="relative w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group bg-white hover:bg-stone-50 text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-[#E6DFD5]/60 shadow-2xs"
-              title="Sync to Calendar"
-            >
-              <div className="p-1.5 rounded-xl transition-all bg-[#FAF6F0] text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs">
-                <Calendar className="w-4 h-4 stroke-[2.2]" />
-              </div>
-              <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center">Calendar</span>
-            </button>
-            <div className="absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 opacity-0 pointer-events-none group-hover/tool:opacity-100 group-hover/tool:pointer-events-auto transition-all duration-200 z-50 translate-x-1 group-hover/tool:translate-x-0">
-              <div className="bg-[#1E1C1A]/95 text-white backdrop-blur-md rounded-xl p-2.5 shadow-xl border border-[#FF6B2C]/30 text-left w-44 pointer-events-none">
-                <div className="text-[11px] font-serif font-black text-[#FF6B2C]">Calendar Sync</div>
-                <p className="text-[9.5px] text-stone-300 font-sans mt-0.5 leading-snug">Export all activities to Google Calendar, Apple, Outlook or any .ics app.</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Smart Notifications Rail Item — Desktop Sidebar */}
-          <div className="relative group/tool w-full">
-            <button
-              type="button"
-              onClick={() => { setIsNotificationsPanelOpen(true); setIsMobileDrawerOpen(false); }}
-              className="relative w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group bg-white hover:bg-stone-50 text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-[#E6DFD5]/60 shadow-2xs"
-              title="Smart Notifications"
-            >
-              <div className="p-1.5 rounded-xl transition-all bg-[#FAF6F0] text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs">
-                <Bell className="w-4 h-4 stroke-[2.2]" />
-              </div>
-              <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center">Notify</span>
-            </button>
-            <div className="absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 opacity-0 pointer-events-none group-hover/tool:opacity-100 group-hover/tool:pointer-events-auto transition-all duration-200 z-50 translate-x-1 group-hover/tool:translate-x-0">
-              <div className="bg-[#1E1C1A]/95 text-white backdrop-blur-md rounded-xl p-2.5 shadow-xl border border-[#FF6B2C]/30 text-left w-44 pointer-events-none">
-                <div className="text-[11px] font-serif font-black text-[#FF6B2C]">Smart Notifications</div>
-                <p className="text-[9.5px] text-stone-300 font-sans mt-0.5 leading-snug">Trip countdown, morning activity briefings & price drop push alerts.</p>
-              </div>
-            </div>
-          </div>
 
           <div className="w-full h-px bg-[#E6DFD5]" />
 
