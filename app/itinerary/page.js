@@ -582,17 +582,19 @@ export default function ItineraryPage() {
   const { recordSkip, recordTripSignals, profile } = usePreferenceEngine();
   const [activityRatings, setActivityRatings] = useState({});
   
-  // Journal State
+  // Journal & Skip State
   const [journalEntries, setJournalEntries] = useState([]);
   const [journalModalOpen, setJournalModalOpen] = useState(false);
   const [journalModalActivity, setJournalModalActivity] = useState(null);
   const [journalSuccessMessage, setJournalSuccessMessage] = useState(null);
+  const [skipConfirmation, setSkipConfirmation] = useState(null);
+  const [lastSkippedStop, setLastSkippedStop] = useState(null);
 
   useEffect(() => {
     if (journalSuccessMessage) {
       const timer = setTimeout(() => {
         setJournalSuccessMessage(null);
-      }, 4000);
+      }, 5000);
       return () => clearTimeout(timer);
     }
   }, [journalSuccessMessage]);
@@ -1233,12 +1235,24 @@ export default function ItineraryPage() {
     });
   };
 
-  const handleSkipStop = (dayNum, stopNum, category) => {
+  const handleRequestSkip = (dayNum, stopNum, category, title) => {
+    setSkipConfirmation({
+      dayNum,
+      stopNum,
+      category,
+      title: title || `Stop ${stopNum}`
+    });
+  };
+
+  const handleConfirmSkip = () => {
+    if (!skipConfirmation) return;
+    const { dayNum, stopNum, category, title } = skipConfirmation;
     recordSkip(category);
     const newDays = [...(itinerary.days || [])];
     const dayIdx = dayNum - 1;
     if (newDays[dayIdx] && newDays[dayIdx].activities) {
       const skippedActivity = newDays[dayIdx].activities[stopNum - 1];
+      setLastSkippedStop({ activity: skippedActivity, dayNum, stopNum });
       newDays[dayIdx].activities = newDays[dayIdx].activities.filter((_, idx) => idx !== (stopNum - 1));
       const newItinerary = { ...itinerary, days: newDays };
       setItinerary(newItinerary);
@@ -1247,9 +1261,27 @@ export default function ItineraryPage() {
       }
       setJournalSuccessMessage({
         isSkip: true,
-        title: skippedActivity ? skippedActivity.title : 'Activity'
+        title: skippedActivity ? skippedActivity.title : title || 'Activity'
       });
     }
+    setSkipConfirmation(null);
+  };
+
+  const handleUndoSkip = () => {
+    if (!lastSkippedStop) return;
+    const { activity, dayNum, stopNum } = lastSkippedStop;
+    const newDays = [...(itinerary.days || [])];
+    const dayIdx = dayNum - 1;
+    if (newDays[dayIdx] && newDays[dayIdx].activities) {
+      newDays[dayIdx].activities.splice(stopNum - 1, 0, activity);
+      const newItinerary = { ...itinerary, days: newDays };
+      setItinerary(newItinerary);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('tripwise_itinerary', JSON.stringify(newItinerary));
+      }
+    }
+    setLastSkippedStop(null);
+    setJournalSuccessMessage(null);
   };
 
   const handleShareDossier = () => {
@@ -1381,79 +1413,92 @@ export default function ItineraryPage() {
       <AnimatePresence>
         {toastMessage && (
           <motion.div
-            initial={{ opacity: 0, y: 80, x: '-50%', scale: 0.5, rotate: -5 }}
-            animate={{ opacity: 1, y: 0, x: '-50%', scale: 1, rotate: 0 }}
-            exit={{ opacity: 0, y: 50, x: '-50%', scale: 0.8, rotate: 5 }}
-            transition={{ type: 'spring', stiffness: 450, damping: 15, mass: 1, bounce: 0.6 }}
-            className="fixed bottom-8 left-1/2 z-[99999] pointer-events-auto"
+            initial={{ opacity: 0, y: 30, x: '-50%', scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, x: '-50%', scale: 1 }}
+            exit={{ opacity: 0, y: 20, x: '-50%', scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 450, damping: 25 }}
+            className="fixed bottom-20 sm:bottom-10 left-1/2 z-[99999] pointer-events-auto w-[92%] sm:w-auto max-w-md select-none"
           >
-            <div className={`relative overflow-hidden flex items-center gap-2 px-4 py-3 rounded-2xl shadow-xl border ${toastMessage.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
-                toastMessage.type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
-                  toastMessage.type === 'expense' ? 'bg-orange-50 border-orange-200 text-[#E55A1C]' :
-                    'bg-white border-[#E6DFD5] text-[#1E1C1A]'
+            <div className={`relative overflow-hidden flex items-center justify-between gap-2.5 px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl shadow-2xl border backdrop-blur-md ${toastMessage.type === 'success' ? 'bg-emerald-50/95 border-emerald-200 text-emerald-900' :
+                toastMessage.type === 'error' ? 'bg-red-50/95 border-red-200 text-red-900' :
+                  toastMessage.type === 'expense' ? 'bg-orange-50/95 border-orange-200 text-[#E55A1C]' :
+                    'bg-white/95 border-[#E6DFD5] text-[#1E1C1A]'
               }`}>
-              {toastMessage.icon === 'Bell' && <Bell className="w-4 h-4" />}
-              {toastMessage.icon === 'CheckCircle2' && (
-                <motion.div
-                  initial={{ scale: 0, rotate: -90 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 15, delay: 0.05 }}
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                {toastMessage.icon === 'Bell' && <Bell className="w-4 h-4 shrink-0" />}
+                {toastMessage.icon === 'CheckCircle2' && (
+                  <motion.div
+                    initial={{ scale: 0, rotate: -90 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 15, delay: 0.05 }}
+                    className="shrink-0"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                  </motion.div>
+                )}
+                {toastMessage.icon === 'Trash2' && (
+                  <motion.div
+                    initial={{ y: -15, opacity: 0, rotate: 15 }}
+                    animate={{ y: 0, opacity: 1, rotate: 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 12, delay: 0.05 }}
+                    className="shrink-0"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </motion.div>
+                )}
+                {toastMessage.icon === 'Receipt' && (
+                  <motion.div
+                    initial={{ scale: 0, y: 10 }}
+                    animate={{ scale: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 12, delay: 0.05 }}
+                    className="shrink-0"
+                  >
+                    <Receipt className="w-4 h-4" />
+                  </motion.div>
+                )}
+                {toastMessage.icon === 'Bookmark' && (
+                  <motion.div
+                    initial={{ scale: 0, rotate: 45 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 12, delay: 0.05 }}
+                    className="shrink-0"
+                  >
+                    <Bookmark className="w-4 h-4" />
+                  </motion.div>
+                )}
+                <span className="text-xs sm:text-sm font-semibold truncate leading-tight">{toastMessage.message}</span>
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                {toastMessage.action && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      toastMessage.action.onClick();
+                      setToastMessage(null);
+                    }}
+                    className="flex items-center gap-1 px-3 py-1 rounded-full bg-black/5 shadow-2xs border border-black/5 text-[10px] sm:text-[11px] uppercase tracking-wider font-extrabold transition-colors cursor-pointer"
+                  >
+                    {toastMessage.action.label}
+                    <ChevronRight className="w-3 h-3 opacity-70" />
+                  </motion.button>
+                )}
+                <motion.button 
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setToastMessage(null)} 
+                  className="p-1 rounded-full hover:bg-black/5 text-current/70 hover:text-current cursor-pointer transition-colors"
                 >
-                  <CheckCircle2 className="w-4 h-4" />
-                </motion.div>
-              )}
-              {toastMessage.icon === 'Trash2' && (
-                <motion.div
-                  initial={{ y: -15, opacity: 0, rotate: 15 }}
-                  animate={{ y: 0, opacity: 1, rotate: 0 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 12, delay: 0.05 }}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </motion.div>
-              )}
-              {toastMessage.icon === 'Receipt' && (
-                <motion.div
-                  initial={{ scale: 0, y: 10 }}
-                  animate={{ scale: 1, y: 0 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 12, delay: 0.05 }}
-                >
-                  <Receipt className="w-4 h-4" />
-                </motion.div>
-              )}
-              {toastMessage.icon === 'Bookmark' && (
-                <motion.div
-                  initial={{ scale: 0, rotate: 45 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 12, delay: 0.05 }}
-                >
-                  <Bookmark className="w-4 h-4" />
-                </motion.div>
-              )}
-              <span className="text-sm font-semibold">{toastMessage.message}</span>
-              {toastMessage.action && (
-                <motion.button
-                  whileHover={{ scale: 1.05, backgroundColor: 'rgba(0,0,0,0.08)' }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    toastMessage.action.onClick();
-                    setToastMessage(null);
-                  }}
-                  className="ml-3 flex items-center gap-1 px-4 py-1.5 rounded-full bg-black/5 shadow-sm border border-black/5 text-[11px] uppercase tracking-wider font-extrabold transition-colors cursor-pointer"
-                >
-                  {toastMessage.action.label}
-                  <ChevronRight className="w-3.5 h-3.5 opacity-70" />
+                  <X className="w-3.5 h-3.5" />
                 </motion.button>
-              )}
-              <button onClick={() => setToastMessage(null)} className="ml-2 hover:opacity-70 cursor-pointer">
-                <X className="w-4 h-4" />
-              </button>
+              </div>
               
               {/* Toast Auto-Dismiss Timer */}
               <motion.div
                 initial={{ width: "100%" }}
                 animate={{ width: "0%" }}
                 transition={{ duration: 5, ease: "linear" }}
-                className="absolute bottom-0 left-0 h-1 bg-current opacity-20"
+                className="absolute bottom-0 left-0 h-0.75 bg-current opacity-20"
               />
             </div>
           </motion.div>
@@ -1650,7 +1695,7 @@ export default function ItineraryPage() {
         onLaunchRecap={() => setIsRecapModalOpen(true)} 
       />
 
-      <div className="sticky top-[80px] sm:top-[90px] z-40 bg-[#FAF6F0]/95 backdrop-blur-md border-b border-[#E6DFD5] pt-4 pb-0 px-6 shadow-2xs transition-all print:hidden">
+      <div className="sticky top-[66px] sm:top-[70px] z-40 bg-[#FAF6F0]/95 backdrop-blur-md border-b border-[#E6DFD5] pt-3 sm:pt-4 pb-0 px-4 sm:px-6 shadow-2xs transition-all print:hidden">
         <div className="max-w-6xl mx-auto w-full flex flex-col sm:flex-row sm:items-end justify-between gap-4 relative">
           
           <div className="relative flex-1 min-w-0 flex items-center">
@@ -1782,35 +1827,37 @@ export default function ItineraryPage() {
 
             <div className="flex items-center gap-2 shrink-0 flex-nowrap">
             <div className="relative group/print">
-              <button
+              <motion.button
+                whileTap={{ scale: 0.92 }}
                 type="button"
                 onClick={handlePrintOrDownload}
-                className="group/btn relative overflow-hidden inline-flex items-center gap-0 xl:gap-1.5 px-3 xl:px-4 py-1.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] text-xs font-sans font-bold text-[#1E1C1A] hover:border-[#FF6B2C]/60 hover:shadow-[0_8px_20px_-6px_rgba(255,107,44,0.4)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer active:scale-95"
+                className="group/btn relative overflow-hidden inline-flex items-center gap-0 xl:gap-1.5 px-3 xl:px-4 py-1.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] text-xs font-sans font-bold text-[#1E1C1A] hover:border-[#FF6B2C]/60 hover:shadow-[0_8px_20px_-6px_rgba(255,107,44,0.4)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer"
               >
                 <div className="absolute top-0 left-[-100%] w-[120%] h-full bg-gradient-to-r from-transparent via-white/90 to-transparent skew-x-[-25deg] group-hover/btn:left-[100%] transition-all duration-700 ease-out z-0 pointer-events-none" />
                 
                 <div className="absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 bg-[#FF6B2C]/30 rounded-full blur-md opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500 z-0 pointer-events-none" />
                 
                 <div className="relative flex items-center justify-center w-4 h-4 z-10">
-                  <div className="absolute top-1 w-2.5 h-2 bg-white border border-[#1E1C1A] rounded-[1px] opacity-0 group-hover/btn:opacity-100 group-hover/btn:-translate-y-2.5 transition-all duration-500 ease-out flex flex-col justify-evenly px-[1px] py-[1px] shadow-sm">
+                  <div className="absolute top-1 w-2.5 h-2 bg-white border border-[#1E1C1A] rounded-[1px] opacity-0 group-hover/btn:opacity-100 group-active/btn:opacity-100 group-hover/btn:-translate-y-2.5 group-active/btn:-translate-y-2.5 transition-all duration-500 ease-out flex flex-col justify-evenly px-[1px] py-[1px] shadow-sm">
                      <div className="w-full h-[0.5px] bg-[#1E1C1A]/40" />
                      <div className="w-full h-[0.5px] bg-[#1E1C1A]/40" />
                   </div>
                   <div className="bg-white rounded-[2px] relative z-10">
-                    <Printer className="w-4 h-4 text-[#FF6B2C] group-hover/btn:scale-110 transition-transform duration-300" />
+                    <Printer className="w-4 h-4 text-[#FF6B2C] group-hover/btn:scale-110 group-active/btn:scale-125 transition-transform duration-300" />
                   </div>
                 </div>
                 <span className="hidden xl:inline relative z-10 group-hover/btn:text-[#FF6B2C] transition-colors duration-300 ml-1.5">Download PDF</span>
-              </button>
+              </motion.button>
               <div className="absolute right-0 top-full mt-2.5 opacity-0 translate-y-1 pointer-events-none group-hover/print:opacity-100 group-hover/print:translate-y-0 transition-all duration-300 ease-out z-50 bg-[#1E1C1A] text-white text-[10px] font-sans py-1.5 px-2.5 rounded-lg shadow-lg whitespace-nowrap border border-[#FF6B2C]/40">
                 💡 Tip: Uncheck "Headers and footers" in print dialog
               </div>
             </div>
 
-            <button
+            <motion.button
+              whileTap={{ scale: 0.92 }}
               type="button"
               onClick={handleShareDossier}
-              className="group/btn relative overflow-hidden inline-flex items-center gap-0 xl:gap-1.5 px-3 xl:px-4 py-1.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] text-xs font-sans font-bold text-[#1E1C1A] hover:border-[#FF6B2C]/60 hover:shadow-[0_8px_20px_-6px_rgba(255,107,44,0.4)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer active:scale-95"
+              className="group/btn relative overflow-hidden inline-flex items-center gap-0 xl:gap-1.5 px-3 xl:px-4 py-1.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] text-xs font-sans font-bold text-[#1E1C1A] hover:border-[#FF6B2C]/60 hover:shadow-[0_8px_20px_-6px_rgba(255,107,44,0.4)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer"
             >
               <div className="absolute top-0 left-[-100%] w-[120%] h-full bg-gradient-to-r from-transparent via-white/90 to-transparent skew-x-[-25deg] group-hover/btn:left-[100%] transition-all duration-700 ease-out z-0 pointer-events-none" />
               
@@ -1818,16 +1865,16 @@ export default function ItineraryPage() {
               
               {shareCopied ? (
                 <>
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 relative z-10 group-hover/btn:scale-110 transition-transform duration-300" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 relative z-10 group-hover/btn:scale-110 group-active/btn:scale-125 transition-transform duration-300" />
                   <span className="hidden xl:inline text-emerald-700 relative z-10 transition-colors duration-300 ml-1.5">Copied!</span>
                 </>
               ) : (
                 <>
-                  <Share2 className="w-4 h-4 text-[#FF6B2C] relative z-10 group-hover/btn:scale-110 group-hover/btn:rotate-[15deg] transition-transform duration-300 ease-out" />
+                  <Share2 className="w-4 h-4 text-[#FF6B2C] relative z-10 group-hover/btn:scale-110 group-hover/btn:rotate-[15deg] group-active/btn:scale-125 group-active/btn:rotate-[25deg] transition-transform duration-300 ease-out" />
                   <span className="hidden xl:inline relative z-10 group-hover/btn:text-[#FF6B2C] transition-colors duration-300 ml-1.5">Share Link</span>
                 </>
               )}
-            </button>
+            </motion.button>
 
             <OfflineTripManager
               tripId={activeTripId || itinerary?.id || itinerary?.db_id || 'default-trip'}
@@ -1839,18 +1886,18 @@ export default function ItineraryPage() {
               onCloseExternal={() => setIsOfflineModalOpen(false)}
             />
 
-            <a
+            <motion.a
+              whileTap={{ scale: 0.92 }}
               href={itinerary?.id || itinerary?.db_id || activeTripId ? `/ai-planner/new?action=view&trip_id=${itinerary?.id || itinerary?.db_id || activeTripId}` : '/ai-planner'}
-              className="group/edit relative overflow-hidden inline-flex items-center gap-0 xl:gap-1.5 px-3 xl:px-5 py-1.5 rounded-full border border-[#FF6B2C] bg-white text-xs font-sans font-bold text-[#FF6B2C] hover:text-white hover:shadow-[0_8px_20px_-6px_rgba(255,107,44,0.6)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer active:scale-95 ml-0 xl:ml-1"
+              className="group/edit relative overflow-hidden inline-flex items-center gap-0 xl:gap-1.5 px-3 xl:px-5 py-1.5 rounded-full border border-[#FF6B2C] bg-white text-xs font-sans font-bold text-[#FF6B2C] hover:text-white hover:shadow-[0_8px_20px_-6px_rgba(255,107,44,0.6)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer ml-0 xl:ml-1"
             >
               {/* Premium Left-to-Right Ink Fill */}
               <div className="absolute inset-0 bg-[#FF6B2C] origin-left scale-x-0 group-hover/edit:scale-x-100 transition-transform duration-500 ease-[cubic-bezier(0.19,1,0.22,1)] z-0 pointer-events-none" />
               
-              {/* Writing marker pop & tilt */}
-              <Edit3 className="w-4 h-4 relative z-10 group-hover/edit:-translate-y-0.5 group-hover/edit:translate-x-0.5 group-hover/edit:rotate-12 group-hover/edit:scale-110 group-hover/edit:drop-shadow-[0_2px_2px_rgba(0,0,0,0.15)] transition-all duration-300" />
+              <Edit3 className="w-4 h-4 relative z-10 group-hover/edit:-translate-y-0.5 group-hover/edit:translate-x-0.5 group-hover/edit:rotate-12 group-hover/edit:scale-110 group-active/edit:rotate-24 group-active/edit:scale-125 transition-all duration-300" />
               
               <span className="hidden xl:inline relative z-10 ml-1.5">Edit in Planner</span>
-            </a>
+            </motion.a>
             </div>
           </div>
         </div>
@@ -1868,52 +1915,54 @@ export default function ItineraryPage() {
                 className="fixed inset-0 top-[180px] bg-black/25 backdrop-blur-[2px] z-30 lg:hidden"
               />
 
-              {/* Tools Panel Emerging from Left Screen Edge with Cascading Micro-Animations */}
+              {/* Tools Panel Emerging from Left Screen Edge */}
               <motion.div
-                initial={{ x: -120, opacity: 0, scale: 0.92, filter: "blur(6px)" }}
-                animate={{ x: 0, opacity: 1, scale: 1, filter: "blur(0px)" }}
-                exit={{ x: -120, opacity: 0, scale: 0.92, filter: "blur(6px)" }}
-                transition={{ type: "spring", stiffness: 360, damping: 26, mass: 0.8 }}
-                className="lg:hidden absolute top-[calc(100%-1px)] left-0 z-40 p-2 bg-white/95 backdrop-blur-xl rounded-r-3xl rounded-l-none border-y border-r border-[#E6DFD5] border-l-0 shadow-[10px_24px_45px_rgba(0,0,0,0.15),0_0_20px_rgba(255,107,44,0.06)] flex flex-col items-center gap-1.5 w-27 select-none"
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={{ left: 0.65, right: 0.05 }}
+                onDragEnd={(e, info) => {
+                  if (info.offset.x < -30 || info.velocity.x < -200) {
+                    setIsMobileDrawerOpen(false);
+                  }
+                }}
+                initial={{ x: "-100%", opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: "-100%", opacity: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                className="lg:hidden absolute top-[calc(100%-1px)] left-0 z-40 p-2 bg-white/95 backdrop-blur-xl rounded-r-3xl rounded-l-none border-y border-r border-[#E6DFD5] border-l-0 shadow-[8px_20px_40px_rgba(0,0,0,0.12)] flex flex-col items-center gap-1.5 w-27 select-none touch-pan-y"
               >
                 {/* Prepare Group */}
                 <div className="flex flex-col items-center w-full gap-1">
-                  <motion.div
-                    initial={{ x: -12, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.04, duration: 0.2 }}
-                    className="flex items-center justify-center gap-1 px-1 w-full"
-                  >
+                  <div className="flex items-center justify-center gap-1 px-1 w-full">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B2C] shrink-0" />
                     <span className="text-[8.5px] font-mono font-black uppercase tracking-widest text-[#FF6B2C]">
                       Prepare
                     </span>
-                  </motion.div>
+                  </div>
 
                   {/* Packing List */}
                   {(() => {
                     const totalItems = packingList ? Object.values(packingList).flat().length : 0;
                     const checkedItems = packingList ? Object.values(packingList).flat().filter(i => i.checked).length : 0;
                     const isZero = checkedItems === 0;
-                    const isComplete = checkedItems === totalItems;
+                    const isComplete = totalItems > 0 && checkedItems === totalItems;
+                    const progressRatio = totalItems > 0 ? checkedItems / totalItems : 0;
+                    const isSelected = activeDay === 'packing';
 
                     return (
                       <motion.button
-                        type="button"
-                        initial={{ x: -18, opacity: 0, scale: 0.88 }}
-                        animate={{ x: 0, opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.06, type: "spring", stiffness: 420, damping: 22 }}
                         whileTap={{ scale: 0.92 }}
+                        type="button"
                         onClick={() => { setActiveDay('packing'); setIsMobileDrawerOpen(false); }}
-                        className={`relative w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-colors duration-150 cursor-pointer select-none group ${
-                          activeDay === 'packing'
+                        className={`relative w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-all duration-150 cursor-pointer select-none group ${
+                          isSelected
                             ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-xs border border-[#FF6B2C]/50 scale-[1.02]'
                             : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent'
                         }`}
                         title="Packing List"
                       >
-                        <div className={`relative p-1 rounded-lg transition-all ${
-                          activeDay === 'packing' ? 'bg-[#FF6B2C]/20 text-[#FF6B2C] border border-[#FF6B2C]/40 shadow-2xs' : 'bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
+                        <div className={`relative p-1 rounded-lg transition-all z-10 group-active:scale-125 ${
+                          isSelected ? 'bg-[#FF6B2C]/20 text-[#FF6B2C] border border-[#FF6B2C]/40 shadow-2xs' : 'bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
                         }`}>
                           <AnimatedSuitcaseIcon
                             isAnimated={isPackingIconAnimated}
@@ -1925,62 +1974,74 @@ export default function ItineraryPage() {
                           />
                         </div>
                         
-                        <span className="text-[9.5px] font-sans font-bold leading-none tracking-tight text-center">
+                        <span className="text-[9.5px] font-sans font-bold leading-none tracking-tight text-center relative z-10">
                           Packing
                         </span>
 
                         {totalItems > 0 && (
-                          <span className={`px-1.5 py-0 rounded-full text-[7.5px] font-mono font-black shadow-2xs transition-colors ${
-                            isZero
-                              ? 'bg-[#E6DFD5] text-[#5F5E5A]'
-                              : isComplete
-                              ? 'bg-emerald-600 text-white'
-                              : 'bg-[#FF6B2C] text-white'
-                          }`}>
-                            {checkedItems}/{totalItems}
-                          </span>
+                          <div className="flex items-center gap-1 relative z-10 mt-0.5">
+                            <svg className="w-2.5 h-2.5 -rotate-90" viewBox="0 0 14 14">
+                              <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="2" fill="none" className={isSelected ? 'text-white/20' : 'text-stone-300'} />
+                              <circle
+                                cx="7"
+                                cy="7"
+                                r="5"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                fill="none"
+                                strokeDasharray={31.4}
+                                strokeDashoffset={31.4 - progressRatio * 31.4}
+                                strokeLinecap="round"
+                                className={`transition-all duration-500 ${isComplete ? 'text-emerald-400' : 'text-[#FF6B2C]'}`}
+                              />
+                            </svg>
+                            <span className={`text-[7.5px] font-mono font-black ${
+                              isSelected ? 'text-stone-300' : isComplete ? 'text-emerald-600' : 'text-stone-600'
+                            }`}>
+                              {checkedItems}/{totalItems}
+                            </span>
+                          </div>
                         )}
                       </motion.button>
                     );
                   })()}
 
                   {/* Visa & Docs */}
-                  <motion.button
-                    type="button"
-                    initial={{ x: -18, opacity: 0, scale: 0.88 }}
-                    animate={{ x: 0, opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.09, type: "spring", stiffness: 420, damping: 22 }}
-                    whileTap={{ scale: 0.92 }}
-                    onClick={() => { setActiveDay('visa'); setIsMobileDrawerOpen(false); }}
-                    className={`w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-colors duration-150 cursor-pointer select-none group ${
-                      activeDay === 'visa'
-                        ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-xs border border-[#FF6B2C]/50 scale-[1.02]'
-                        : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent'
-                    }`}
-                    title="Visa & Docs"
-                  >
-                    <div className={`p-1 rounded-lg transition-all ${
-                      activeDay === 'visa' ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-2xs' : 'bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
-                    }`}>
-                      <FileText className="w-3.5 h-3.5 stroke-[2.2]" />
-                    </div>
-                    <span className="text-[9.5px] font-sans font-bold leading-none tracking-tight text-center whitespace-nowrap">
-                      Visa &amp; Docs
-                    </span>
-                  </motion.button>
+                  {(() => {
+                    const isSelected = activeDay === 'visa';
+                    return (
+                      <motion.button
+                        whileTap={{ scale: 0.92 }}
+                        type="button"
+                        onClick={() => { setActiveDay('visa'); setIsMobileDrawerOpen(false); }}
+                        className={`relative w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-all duration-150 cursor-pointer select-none group ${
+                          isSelected
+                            ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-xs border border-[#FF6B2C]/50 scale-[1.02]'
+                            : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent'
+                        }`}
+                        title="Visa & Docs"
+                      >
+                        <div className={`p-1 rounded-lg transition-all relative z-10 group-active:scale-125 group-active:rotate-6 ${
+                          isSelected ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-2xs' : 'bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
+                        }`}>
+                          <FileText className="w-3.5 h-3.5 stroke-[2.2]" />
+                        </div>
+                        <span className="text-[9.5px] font-sans font-bold leading-none tracking-tight text-center whitespace-nowrap relative z-10">
+                          Visa &amp; Docs
+                        </span>
+                      </motion.button>
+                    );
+                  })()}
 
                   {/* Bookmarks */}
                   <motion.button
-                    type="button"
-                    initial={{ x: -18, opacity: 0, scale: 0.88 }}
-                    animate={{ x: 0, opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.12, type: "spring", stiffness: 420, damping: 22 }}
                     whileTap={{ scale: 0.92 }}
+                    type="button"
                     onClick={() => { setIsSavedPlacesModalOpen(true); setIsMobileDrawerOpen(false); }}
-                    className="w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-colors duration-150 cursor-pointer select-none group bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent"
+                    className="w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-all duration-150 cursor-pointer select-none group bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent"
                     title="Saved Bookmarks"
                   >
-                    <div className="p-1 rounded-lg transition-all bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs">
+                    <div className="p-1 rounded-lg transition-all bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] group-active:scale-125 group-active:rotate-12 shadow-2xs">
                       <Bookmark className="w-3.5 h-3.5 stroke-[2.2] group-hover:fill-[#FF6B2C]/20" />
                     </div>
                     <span className="text-[9.5px] font-sans font-bold leading-none tracking-tight text-center">
@@ -1993,108 +2054,117 @@ export default function ItineraryPage() {
 
                 {/* Live Group */}
                 <div className="flex flex-col items-center w-full gap-1">
-                  <motion.div
-                    initial={{ x: -12, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.15, duration: 0.2 }}
-                    className="flex items-center justify-center gap-1 px-1 w-full"
-                  >
+                  <div className="flex items-center justify-center gap-1 px-1 w-full">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                     <span className="text-[8.5px] font-mono font-black uppercase tracking-widest text-[#FF6B2C]">
                       Live
                     </span>
-                  </motion.div>
+                  </div>
 
                   {/* Tracking */}
-                  <motion.button
-                    type="button"
-                    initial={{ x: -18, opacity: 0, scale: 0.88 }}
-                    animate={{ x: 0, opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.17, type: "spring", stiffness: 420, damping: 22 }}
-                    whileTap={{ scale: 0.92 }}
-                    onClick={() => { setActiveDay('tracking'); setIsMobileDrawerOpen(false); }}
-                    className={`relative w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-colors duration-150 cursor-pointer select-none group ${
-                      activeDay === 'tracking'
-                        ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-xs border border-[#FF6B2C]/50 scale-[1.02]'
-                        : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent'
-                    }`}
-                    title="Price Tracking"
-                  >
-                    <span className="absolute top-1.5 right-1.5 flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
-                    </span>
+                  {(() => {
+                    const isSelected = activeDay === 'tracking';
+                    return (
+                      <motion.button
+                        whileTap={{ scale: 0.92 }}
+                        type="button"
+                        onClick={() => { setActiveDay('tracking'); setIsMobileDrawerOpen(false); }}
+                        className={`relative w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-all duration-150 cursor-pointer select-none group ${
+                          isSelected
+                            ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-xs border border-[#FF6B2C]/50 scale-[1.02]'
+                            : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent'
+                        }`}
+                        title="Price Tracking"
+                      >
+                        <span className="absolute top-1.5 right-1.5 flex h-1.5 w-1.5 z-20">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                        </span>
 
-                    <div className={`p-1 rounded-lg transition-all ${
-                      activeDay === 'tracking' ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-2xs' : 'bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
-                    }`}>
-                      <Plane className="w-3.5 h-3.5 stroke-[2.2]" />
-                    </div>
-                    <span className="text-[9.5px] font-sans font-bold leading-none tracking-tight text-center">
-                      Tracking
-                    </span>
-                  </motion.button>
+                        <div className={`p-1 rounded-lg transition-all relative z-10 group-active:scale-125 group-active:rotate-12 ${
+                          isSelected ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-2xs' : 'bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
+                        }`}>
+                          <Plane className="w-3.5 h-3.5 stroke-[2.2]" />
+                        </div>
+                        <span className="text-[9.5px] font-sans font-bold leading-none tracking-tight text-center relative z-10">
+                          Tracking
+                        </span>
+                      </motion.button>
+                    );
+                  })()}
 
                   {/* Expenses */}
-                  <motion.button
-                    type="button"
-                    initial={{ x: -18, opacity: 0, scale: 0.88 }}
-                    animate={{ x: 0, opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.20, type: "spring", stiffness: 420, damping: 22 }}
-                    whileTap={{ scale: 0.92 }}
-                    onClick={() => { setActiveDay('expenses'); setIsMobileDrawerOpen(false); }}
-                    className={`w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-colors duration-150 cursor-pointer select-none group ${
-                      activeDay === 'expenses'
-                        ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-xs border border-[#FF6B2C]/50 scale-[1.02]'
-                        : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent'
-                    }`}
-                    title="In-Trip Expense Tracker"
-                  >
-                    <div className={`p-1 rounded-lg transition-all ${
-                      activeDay === 'expenses' ? 'bg-[#FF6B2C]/20 text-[#FF6B2C] border border-[#FF6B2C]/40 shadow-2xs' : 'bg-white text-[#FF6B2C] shadow-2xs'
-                    }`}>
-                      <DollarSign className="w-3.5 h-3.5 stroke-[2.2]" />
-                    </div>
-                    <span className="text-[9.5px] font-sans font-bold leading-none tracking-tight text-center">
-                      Expenses
-                    </span>
-                  </motion.button>
+                  {(() => {
+                    const isSelected = activeDay === 'expenses';
+                    const tripExpenses = typeof window !== 'undefined'
+                      ? getTripExpenses(itinerary?.id || itinerary?.db_id || activeTripId || 'default-trip')
+                      : [];
+                    const totalSpent = tripExpenses.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+
+                    return (
+                      <motion.button
+                        whileTap={{ scale: 0.92 }}
+                        type="button"
+                        onClick={() => { setActiveDay('expenses'); setIsMobileDrawerOpen(false); }}
+                        className={`relative w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-all duration-150 cursor-pointer select-none group ${
+                          isSelected
+                            ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-xs border border-[#FF6B2C]/50 scale-[1.02]'
+                            : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent'
+                        }`}
+                        title="In-Trip Expense Tracker"
+                      >
+                        <div className={`p-1 rounded-lg transition-all relative z-10 group-active:scale-125 ${
+                          isSelected ? 'bg-[#FF6B2C]/20 text-[#FF6B2C] border border-[#FF6B2C]/40 shadow-2xs' : 'bg-white text-[#FF6B2C] shadow-2xs'
+                        }`}>
+                          <DollarSign className="w-3.5 h-3.5 stroke-[2.2]" />
+                        </div>
+                        <span className="text-[9.5px] font-sans font-bold leading-none tracking-tight text-center relative z-10">
+                          Expenses
+                        </span>
+
+                        {totalSpent > 0 && (
+                          <span className={`px-1.5 py-0 rounded-full text-[7.5px] font-mono font-black shadow-2xs transition-colors relative z-10 ${
+                            isSelected ? 'bg-[#FF6B2C] text-white' : 'bg-[#FF6B2C]/15 text-[#FF6B2C]'
+                          }`}>
+                            ₹{totalSpent > 999 ? `${(totalSpent / 1000).toFixed(1)}k` : totalSpent}
+                          </span>
+                        )}
+                      </motion.button>
+                    );
+                  })()}
 
                   {/* Safety */}
-                  <motion.button
-                    type="button"
-                    initial={{ x: -18, opacity: 0, scale: 0.88 }}
-                    animate={{ x: 0, opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.23, type: "spring", stiffness: 420, damping: 22 }}
-                    whileTap={{ scale: 0.92 }}
-                    onClick={() => { setActiveDay('emergency'); setIsMobileDrawerOpen(false); }}
-                    className={`w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-colors duration-150 cursor-pointer select-none group ${
-                      activeDay === 'emergency'
-                        ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-xs border border-[#FF6B2C]/50 scale-[1.02]'
-                        : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent'
-                    }`}
-                    title="Emergency Safety Info"
-                  >
-                    <div className={`p-1 rounded-lg transition-all ${
-                      activeDay === 'emergency' ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-2xs' : 'bg-white text-[#FF6B2C] shadow-2xs'
-                    }`}>
-                      <ShieldAlert className="w-3.5 h-3.5 stroke-[2.2]" />
-                    </div>
-                    <span className="text-[9.5px] font-sans font-bold leading-none tracking-tight text-center">
-                      Safety
-                    </span>
-                  </motion.button>
+                  {(() => {
+                    const isSelected = activeDay === 'emergency';
+                    return (
+                      <motion.button
+                        whileTap={{ scale: 0.92 }}
+                        type="button"
+                        onClick={() => { setActiveDay('emergency'); setIsMobileDrawerOpen(false); }}
+                        className={`relative w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-all duration-150 cursor-pointer select-none group ${
+                          isSelected
+                            ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-xs border border-[#FF6B2C]/50 scale-[1.02]'
+                            : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent'
+                        }`}
+                        title="Emergency Safety Info"
+                      >
+                        <div className={`p-1 rounded-lg transition-all relative z-10 group-active:scale-125 group-active:rotate-6 ${
+                          isSelected ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-2xs' : 'bg-white text-[#FF6B2C] shadow-2xs'
+                        }`}>
+                          <ShieldAlert className="w-3.5 h-3.5 stroke-[2.2]" />
+                        </div>
+                        <span className="text-[9.5px] font-sans font-bold leading-none tracking-tight text-center relative z-10">
+                          Safety
+                        </span>
+                      </motion.button>
+                    );
+                  })()}
                 </div>
 
                 <div className="w-full h-px bg-[#E6DFD5]/80 my-0.5" />
 
                 {/* Roadmap Group */}
-                <motion.div
-                  initial={{ x: -18, opacity: 0, scale: 0.88 }}
-                  animate={{ x: 0, opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.26, type: "spring", stiffness: 420, damping: 22 }}
-                  className="flex flex-col items-center w-full gap-1 p-1 rounded-xl bg-[#FAF6F0]/80 border border-dashed border-[#E6DFD5]"
-                >
+                <div className="flex flex-col items-center w-full gap-1 p-1 rounded-xl bg-[#FAF6F0]/80 border border-dashed border-[#E6DFD5]">
                   <div className="flex items-center justify-center gap-1 px-1 w-full">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#7A7268]/50 shrink-0" />
                     <span className="text-[8px] font-mono font-black uppercase tracking-widest text-[#7A7268]">
@@ -2104,13 +2174,13 @@ export default function ItineraryPage() {
 
                   {/* Offline */}
                   <motion.button
-                    type="button"
                     whileTap={{ scale: 0.92 }}
+                    type="button"
                     onClick={() => { setIsOfflineModalOpen(true); setIsMobileDrawerOpen(false); }}
-                    className="w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-colors duration-150 cursor-pointer select-none group bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent"
+                    className="w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-all duration-150 cursor-pointer select-none group bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent"
                     title="Offline Availability & Pack Download"
                   >
-                    <div className="p-1 rounded-lg bg-white text-[#FF6B2C] shadow-2xs">
+                    <div className="p-1 rounded-lg bg-white text-[#FF6B2C] group-active:scale-125 shadow-2xs">
                       <CloudOff className="w-3.5 h-3.5 stroke-[2.2]" />
                     </div>
                     <span className="text-[9.5px] font-sans font-bold leading-none tracking-tight text-center">
@@ -2120,7 +2190,7 @@ export default function ItineraryPage() {
                       READY
                     </span>
                   </motion.button>
-                </motion.div>
+                </div>
               </motion.div>
             </>
           )}
@@ -2131,7 +2201,7 @@ export default function ItineraryPage() {
       <div className="max-w-6xl mx-auto px-6 py-12 w-full flex items-start gap-8 relative">
         
         {/* DESKTOP VERTICAL UTILITY SIDEBAR RAIL (Desktop Only - hidden on mobile/tablet < lg) */}
-        <aside className="hidden lg:flex flex-col items-center p-2.5 bg-white/95 backdrop-blur-md rounded-3xl border border-[#E6DFD5] shadow-md sticky top-[160px] lg:top-[170px] shrink-0 h-fit z-20 font-sans gap-2 w-28 transition-all duration-200">
+        <aside className="hidden lg:flex flex-col items-center p-2.5 bg-[#FAF6F0]/90 backdrop-blur-xl backdrop-saturate-150 rounded-3xl border border-[#E6DFD5] shadow-[0_12px_36px_rgba(0,0,0,0.06),0_0_20px_rgba(255,107,44,0.04)] sticky top-[140px] lg:top-[150px] shrink-0 h-fit z-20 font-sans gap-2 w-28 transition-all duration-200">
           
           {/* GROUP 1: PREPARE (Pre-trip planning tools) */}
           <div className="flex flex-col items-center w-full gap-2 pt-1 lg:pt-0">
@@ -2147,87 +2217,164 @@ export default function ItineraryPage() {
               const totalItems = packingList ? Object.values(packingList).flat().length : 0;
               const checkedItems = packingList ? Object.values(packingList).flat().filter(i => i.checked).length : 0;
               const isZero = checkedItems === 0;
-              const isComplete = checkedItems === totalItems;
+              const isComplete = totalItems > 0 && checkedItems === totalItems;
+              const progressRatio = totalItems > 0 ? checkedItems / totalItems : 0;
+              const isSelected = activeDay === 'packing';
 
               return (
-                <button
-                  type="button"
-                  onClick={() => { setActiveDay('packing'); setIsMobileDrawerOpen(false); }}
-                  className={`relative w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group ${
-                    activeDay === 'packing'
-                      ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-md shadow-[#FF6B2C]/20 border border-[#FF6B2C]/50 scale-[1.02]'
-                      : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent'
-                  }`}
-                  title="Packing List"
-                >
-                  <div className={`relative p-1.5 rounded-xl transition-all ${
-                    activeDay === 'packing' ? 'bg-[#FF6B2C]/20 text-[#FF6B2C] border border-[#FF6B2C]/40 shadow-xs' : 'bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
-                  }`}>
-                    <AnimatedSuitcaseIcon
-                      isAnimated={isPackingIconAnimated}
-                      actionType={packingActionType}
-                      checkedItems={checkedItems}
-                      totalItems={totalItems}
-                      size="small"
-                      flyingEmoji={flyingItemEmoji}
-                    />
-                  </div>
-                  
-                  <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center">
-                    Packing
-                  </span>
+                <div className="relative group/tool w-full">
+                  <button
+                    type="button"
+                    onClick={() => { setActiveDay('packing'); setIsMobileDrawerOpen(false); }}
+                    className={`relative w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group ${
+                      isSelected
+                        ? 'text-white scale-[1.02]'
+                        : 'bg-white hover:bg-stone-50 text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-[#E6DFD5]/60 shadow-2xs'
+                    }`}
+                    title="Packing List"
+                  >
+                    {/* Active Sliding Glider */}
+                    {isSelected && (
+                      <motion.div
+                        layoutId="activeToolGliderDesktop"
+                        className="absolute inset-0 bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] rounded-2xl shadow-md border border-[#FF6B2C]/50 z-0"
+                        transition={{ type: "spring", stiffness: 450, damping: 30 }}
+                      />
+                    )}
 
-                  {/* Live Packing Progress Badge Pill */}
-                  {totalItems > 0 && (
-                    <span className={`px-2 py-0.5 rounded-full text-[8.5px] font-mono font-black shadow-2xs mt-0.5 transition-colors ${
-                      isZero
-                        ? 'bg-[#E6DFD5] text-[#5F5E5A]'
-                        : isComplete
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-[#FF6B2C] text-white'
+                    <div className={`relative p-1.5 rounded-xl transition-all z-10 ${
+                      isSelected ? 'bg-[#FF6B2C]/20 text-[#FF6B2C] border border-[#FF6B2C]/40 shadow-xs' : 'bg-[#FAF6F0] text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
                     }`}>
-                      {checkedItems}/{totalItems}
+                      <AnimatedSuitcaseIcon
+                        isAnimated={isPackingIconAnimated}
+                        actionType={packingActionType}
+                        checkedItems={checkedItems}
+                        totalItems={totalItems}
+                        size="small"
+                        flyingEmoji={flyingItemEmoji}
+                      />
+                    </div>
+                    
+                    <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center relative z-10">
+                      Packing
                     </span>
-                  )}
-                </button>
+
+                    {/* Circular Live Packing Progress Badge */}
+                    {totalItems > 0 && (
+                      <div className="flex items-center gap-1.5 relative z-10 mt-0.5">
+                        <svg className="w-3 h-3 -rotate-90" viewBox="0 0 14 14">
+                          <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="2" fill="none" className={isSelected ? 'text-white/20' : 'text-stone-300'} />
+                          <circle
+                            cx="7"
+                            cy="7"
+                            r="5"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            fill="none"
+                            strokeDasharray={31.4}
+                            strokeDashoffset={31.4 - progressRatio * 31.4}
+                            strokeLinecap="round"
+                            className={`transition-all duration-500 ${isComplete ? 'text-emerald-400' : 'text-[#FF6B2C]'}`}
+                          />
+                        </svg>
+                        <span className={`text-[8.5px] font-mono font-black ${
+                          isSelected ? 'text-stone-300' : isComplete ? 'text-emerald-600' : 'text-stone-600'
+                        }`}>
+                          {checkedItems}/{totalItems}
+                        </span>
+                      </div>
+                    )}
+                  </button>
+
+                  {/* Rich Floating Tooltip Glance Card */}
+                  <div className="absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 opacity-0 pointer-events-none group-hover/tool:opacity-100 group-hover/tool:pointer-events-auto transition-all duration-200 z-50 translate-x-1 group-hover/tool:translate-x-0">
+                    <div className="bg-[#1E1C1A]/95 text-white backdrop-blur-md rounded-xl p-2.5 shadow-xl border border-[#FF6B2C]/30 text-left w-44 pointer-events-none">
+                      <div className="text-[11px] font-serif font-black text-[#FF6B2C] flex items-center justify-between">
+                        <span>Packing Essentials</span>
+                        <span className="text-[9px] font-mono text-stone-400">{checkedItems}/{totalItems}</span>
+                      </div>
+                      <p className="text-[9.5px] text-stone-300 font-sans mt-0.5 leading-snug">
+                        Interactive luggage checklist with category categorization.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               );
             })()}
 
             {/* Visa & Docs Rail Item */}
-            <button
-              type="button"
-              onClick={() => { setActiveDay('visa'); setIsMobileDrawerOpen(false); }}
-              className={`w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group ${
-                activeDay === 'visa'
-                  ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-md shadow-[#FF6B2C]/20 border border-[#FF6B2C]/50 scale-[1.02]'
-                  : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent'
-              }`}
-              title="Visa & Docs"
-            >
-              <div className={`p-1.5 rounded-xl transition-all ${
-                activeDay === 'visa' ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-xs' : 'bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
-              }`}>
-                <FileText className="w-4 h-4 stroke-[2.2]" />
-              </div>
-              <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center whitespace-nowrap">
-                Visa &amp; Docs
-              </span>
-            </button>
+            {(() => {
+              const isSelected = activeDay === 'visa';
+              return (
+                <div className="relative group/tool w-full">
+                  <button
+                    type="button"
+                    onClick={() => { setActiveDay('visa'); setIsMobileDrawerOpen(false); }}
+                    className={`relative w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group ${
+                      isSelected
+                        ? 'text-white scale-[1.02]'
+                        : 'bg-white hover:bg-stone-50 text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-[#E6DFD5]/60 shadow-2xs'
+                    }`}
+                    title="Visa & Docs"
+                  >
+                    {/* Active Sliding Glider */}
+                    {isSelected && (
+                      <motion.div
+                        layoutId="activeToolGliderDesktop"
+                        className="absolute inset-0 bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] rounded-2xl shadow-md border border-[#FF6B2C]/50 z-0"
+                        transition={{ type: "spring", stiffness: 450, damping: 30 }}
+                      />
+                    )}
+
+                    <div className={`p-1.5 rounded-xl transition-all relative z-10 ${
+                      isSelected ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-xs' : 'bg-[#FAF6F0] text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
+                    }`}>
+                      <FileText className="w-4 h-4 stroke-[2.2]" />
+                    </div>
+                    <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center whitespace-nowrap relative z-10">
+                      Visa &amp; Docs
+                    </span>
+                  </button>
+
+                  {/* Rich Tooltip */}
+                  <div className="absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 opacity-0 pointer-events-none group-hover/tool:opacity-100 group-hover/tool:pointer-events-auto transition-all duration-200 z-50 translate-x-1 group-hover/tool:translate-x-0">
+                    <div className="bg-[#1E1C1A]/95 text-white backdrop-blur-md rounded-xl p-2.5 shadow-xl border border-[#FF6B2C]/30 text-left w-44 pointer-events-none">
+                      <div className="text-[11px] font-serif font-black text-[#FF6B2C]">Visa &amp; Passports</div>
+                      <p className="text-[9.5px] text-stone-300 font-sans mt-0.5 leading-snug">
+                        Entry requirements, validity rules &amp; emergency embassy records.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Bookmarks Rail Item */}
-            <button
-              type="button"
-              onClick={() => { setIsSavedPlacesModalOpen(true); setIsMobileDrawerOpen(false); }}
-              className={`w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent`}
-              title="Saved Bookmarks"
-            >
-              <div className={`p-1.5 rounded-xl transition-all bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs`}>
-                <Bookmark className="w-4 h-4 stroke-[2.2] group-hover:fill-[#FF6B2C]/20" />
+            <div className="relative group/tool w-full">
+              <button
+                type="button"
+                onClick={() => { setIsSavedPlacesModalOpen(true); setIsMobileDrawerOpen(false); }}
+                className="w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group bg-white hover:bg-stone-50 text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-[#E6DFD5]/60 shadow-2xs"
+                title="Saved Bookmarks"
+              >
+                <div className="p-1.5 rounded-xl transition-all bg-[#FAF6F0] text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs">
+                  <Bookmark className="w-4 h-4 stroke-[2.2] group-hover:fill-[#FF6B2C]/20" />
+                </div>
+                <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center">
+                  Bookmarks
+                </span>
+              </button>
+
+              {/* Rich Tooltip */}
+              <div className="absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 opacity-0 pointer-events-none group-hover/tool:opacity-100 group-hover/tool:pointer-events-auto transition-all duration-200 z-50 translate-x-1 group-hover/tool:translate-x-0">
+                <div className="bg-[#1E1C1A]/95 text-white backdrop-blur-md rounded-xl p-2.5 shadow-xl border border-[#FF6B2C]/30 text-left w-44 pointer-events-none">
+                  <div className="text-[11px] font-serif font-black text-[#FF6B2C]">Saved Places</div>
+                  <p className="text-[9.5px] text-stone-300 font-sans mt-0.5 leading-snug">
+                    Quick-access vault of your pinned spots and saved places.
+                  </p>
+                </div>
               </div>
-              <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center">
-                Bookmarks
-              </span>
-            </button>
+            </div>
           </div>
 
           <div className="w-full h-px bg-[#E6DFD5]" />
@@ -2242,73 +2389,170 @@ export default function ItineraryPage() {
             </div>
 
             {/* Price Tracking Rail Item */}
-            <button
-              type="button"
-              onClick={() => { setActiveDay('tracking'); setIsMobileDrawerOpen(false); }}
-              className={`relative w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group ${
-                activeDay === 'tracking'
-                  ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-md shadow-[#FF6B2C]/20 border border-[#FF6B2C]/50 scale-[1.02]'
-                  : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent'
-              }`}
-              title="Price Tracking"
-            >
-              {/* Live Active Data Pulsing Dot */}
-              <span className="absolute top-2 right-2 flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-              </span>
+            {(() => {
+              const isSelected = activeDay === 'tracking';
+              return (
+                <div className="relative group/tool w-full">
+                  <button
+                    type="button"
+                    onClick={() => { setActiveDay('tracking'); setIsMobileDrawerOpen(false); }}
+                    className={`relative w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group ${
+                      isSelected
+                        ? 'text-white scale-[1.02]'
+                        : 'bg-white hover:bg-stone-50 text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-[#E6DFD5]/60 shadow-2xs'
+                    }`}
+                    title="Price Tracking"
+                  >
+                    {/* Active Sliding Glider */}
+                    {isSelected && (
+                      <motion.div
+                        layoutId="activeToolGliderDesktop"
+                        className="absolute inset-0 bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] rounded-2xl shadow-md border border-[#FF6B2C]/50 z-0"
+                        transition={{ type: "spring", stiffness: 450, damping: 30 }}
+                      />
+                    )}
 
-              <div className={`p-1.5 rounded-xl transition-all ${
-                activeDay === 'tracking' ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-xs' : 'bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
-              }`}>
-                <Plane className="w-4 h-4 stroke-[2.2]" />
-              </div>
-              <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center">
-                Tracking
-              </span>
-            </button>
+                    {/* Live Active Data Pulsing Dot */}
+                    <span className="absolute top-2 right-2 flex h-2 w-2 z-20">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                    </span>
+
+                    <div className={`p-1.5 rounded-xl transition-all relative z-10 ${
+                      isSelected ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-xs' : 'bg-[#FAF6F0] text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
+                    }`}>
+                      <Plane className="w-4 h-4 stroke-[2.2]" />
+                    </div>
+                    <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center relative z-10">
+                      Tracking
+                    </span>
+                  </button>
+
+                  {/* Rich Tooltip */}
+                  <div className="absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 opacity-0 pointer-events-none group-hover/tool:opacity-100 group-hover/tool:pointer-events-auto transition-all duration-200 z-50 translate-x-1 group-hover/tool:translate-x-0">
+                    <div className="bg-[#1E1C1A]/95 text-white backdrop-blur-md rounded-xl p-2.5 shadow-xl border border-[#FF6B2C]/30 text-left w-44 pointer-events-none">
+                      <div className="text-[11px] font-serif font-black text-[#FF6B2C] flex items-center justify-between">
+                        <span>Price Tracking</span>
+                        <span className="text-[8px] font-mono bg-emerald-900/60 text-emerald-300 px-1.5 py-0.5 rounded-full">LIVE</span>
+                      </div>
+                      <p className="text-[9.5px] text-stone-300 font-sans mt-0.5 leading-snug">
+                        Real-time airfare, hotel fluctuations &amp; drop alerts.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Expenses Item (Active Utility) */}
-            <button
-              type="button"
-              onClick={() => { setActiveDay('expenses'); setIsMobileDrawerOpen(false); }}
-              className={`w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group ${
-                activeDay === 'expenses'
-                  ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-md shadow-[#FF6B2C]/20 border border-[#FF6B2C]/50 scale-[1.02]'
-                  : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent'
-              }`}
-              title="In-Trip Expense Tracker"
-            >
-              <div className={`p-1.5 rounded-xl transition-all ${
-                activeDay === 'expenses' ? 'bg-[#FF6B2C]/20 text-[#FF6B2C] border border-[#FF6B2C]/40 shadow-xs' : 'bg-white text-[#FF6B2C] shadow-2xs'
-              }`}>
-                <DollarSign className="w-4 h-4 stroke-[2.2]" />
-              </div>
-              <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center">
-                Expenses
-              </span>
-            </button>
+            {(() => {
+              const isSelected = activeDay === 'expenses';
+              const tripExpenses = typeof window !== 'undefined'
+                ? getTripExpenses(itinerary?.id || itinerary?.db_id || activeTripId || 'default-trip')
+                : [];
+              const totalSpent = tripExpenses.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+
+              return (
+                <div className="relative group/tool w-full">
+                  <button
+                    type="button"
+                    onClick={() => { setActiveDay('expenses'); setIsMobileDrawerOpen(false); }}
+                    className={`relative w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group ${
+                      isSelected
+                        ? 'text-white scale-[1.02]'
+                        : 'bg-white hover:bg-stone-50 text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-[#E6DFD5]/60 shadow-2xs'
+                    }`}
+                    title="In-Trip Expense Tracker"
+                  >
+                    {/* Active Sliding Glider */}
+                    {isSelected && (
+                      <motion.div
+                        layoutId="activeToolGliderDesktop"
+                        className="absolute inset-0 bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] rounded-2xl shadow-md border border-[#FF6B2C]/50 z-0"
+                        transition={{ type: "spring", stiffness: 450, damping: 30 }}
+                      />
+                    )}
+
+                    <div className={`p-1.5 rounded-xl transition-all relative z-10 ${
+                      isSelected ? 'bg-[#FF6B2C]/20 text-[#FF6B2C] border border-[#FF6B2C]/40 shadow-xs' : 'bg-[#FAF6F0] text-[#FF6B2C] shadow-2xs'
+                    }`}>
+                      <DollarSign className="w-4 h-4 stroke-[2.2]" />
+                    </div>
+                    <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center relative z-10">
+                      Expenses
+                    </span>
+
+                    {totalSpent > 0 && (
+                      <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-mono font-black shadow-2xs mt-0.5 transition-colors relative z-10 ${
+                        isSelected ? 'bg-[#FF6B2C] text-white' : 'bg-[#FF6B2C]/15 text-[#FF6B2C]'
+                      }`}>
+                        ₹{totalSpent > 999 ? `${(totalSpent / 1000).toFixed(1)}k` : totalSpent}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Rich Tooltip */}
+                  <div className="absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 opacity-0 pointer-events-none group-hover/tool:opacity-100 group-hover/tool:pointer-events-auto transition-all duration-200 z-50 translate-x-1 group-hover/tool:translate-x-0">
+                    <div className="bg-[#1E1C1A]/95 text-white backdrop-blur-md rounded-xl p-2.5 shadow-xl border border-[#FF6B2C]/30 text-left w-44 pointer-events-none">
+                      <div className="text-[11px] font-serif font-black text-[#FF6B2C] flex items-center justify-between">
+                        <span>Expense Vault</span>
+                        {totalSpent > 0 && <span className="text-[9px] font-mono text-stone-300">₹{totalSpent.toLocaleString()}</span>}
+                      </div>
+                      <p className="text-[9.5px] text-stone-300 font-sans mt-0.5 leading-snug">
+                        Live spend logs, split bills, receipts &amp; budget tracking.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Safety / Emergency Info Rail Item */}
-            <button
-              type="button"
-              onClick={() => { setActiveDay('emergency'); setIsMobileDrawerOpen(false); }}
-              className={`w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group ${
-                activeDay === 'emergency'
-                  ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-md shadow-[#FF6B2C]/20 border border-[#FF6B2C]/50 scale-[1.02]'
-                  : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent'
-              }`}
-              title="Emergency Safety Info"
-            >
-              <div className={`p-1.5 rounded-xl transition-all ${
-                activeDay === 'emergency' ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-xs' : 'bg-white text-[#FF6B2C] shadow-2xs'
-              }`}>
-                <ShieldAlert className="w-4 h-4 stroke-[2.2]" />
-              </div>
-              <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center">
-                Safety
-              </span>
-            </button>
+            {(() => {
+              const isSelected = activeDay === 'emergency';
+              return (
+                <div className="relative group/tool w-full">
+                  <button
+                    type="button"
+                    onClick={() => { setActiveDay('emergency'); setIsMobileDrawerOpen(false); }}
+                    className={`relative w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group ${
+                      isSelected
+                        ? 'text-white scale-[1.02]'
+                        : 'bg-white hover:bg-stone-50 text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-[#E6DFD5]/60 shadow-2xs'
+                    }`}
+                    title="Emergency Safety Info"
+                  >
+                    {/* Active Sliding Glider */}
+                    {isSelected && (
+                      <motion.div
+                        layoutId="activeToolGliderDesktop"
+                        className="absolute inset-0 bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] rounded-2xl shadow-md border border-[#FF6B2C]/50 z-0"
+                        transition={{ type: "spring", stiffness: 450, damping: 30 }}
+                      />
+                    )}
+
+                    <div className={`p-1.5 rounded-xl transition-all relative z-10 ${
+                      isSelected ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-xs' : 'bg-[#FAF6F0] text-[#FF6B2C] shadow-2xs'
+                    }`}>
+                      <ShieldAlert className="w-4 h-4 stroke-[2.2]" />
+                    </div>
+                    <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center relative z-10">
+                      Safety
+                    </span>
+                  </button>
+
+                  {/* Rich Tooltip */}
+                  <div className="absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 opacity-0 pointer-events-none group-hover/tool:opacity-100 group-hover/tool:pointer-events-auto transition-all duration-200 z-50 translate-x-1 group-hover/tool:translate-x-0">
+                    <div className="bg-[#1E1C1A]/95 text-white backdrop-blur-md rounded-xl p-2.5 shadow-xl border border-[#FF6B2C]/30 text-left w-44 pointer-events-none">
+                      <div className="text-[11px] font-serif font-black text-[#FF6B2C]">Emergency Hub</div>
+                      <p className="text-[9.5px] text-stone-300 font-sans mt-0.5 leading-snug">
+                        Local emergency numbers, nearest hospitals &amp; travel insurance info.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* GROUP 3: ROADMAP / COMING SOON (Distinct visual zone) */}
@@ -2321,22 +2565,37 @@ export default function ItineraryPage() {
             </div>
 
             {/* Offline Pack Item */}
-            <button
-              type="button"
-              onClick={() => { setIsOfflineModalOpen(true); setIsMobileDrawerOpen(false); }}
-              className="w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent"
-              title="Offline Availability & Pack Download"
-            >
-              <div className="p-1.5 rounded-xl bg-white text-[#FF6B2C] shadow-2xs">
-                <CloudOff className="w-4 h-4 stroke-[2.2]" />
+            <div className="relative group/tool w-full">
+              <button
+                type="button"
+                onClick={() => { setIsOfflineModalOpen(true); setIsMobileDrawerOpen(false); }}
+                className="w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group bg-white hover:bg-stone-50 text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-[#E6DFD5]/60 shadow-2xs"
+                title="Offline Availability & Pack Download"
+              >
+                <div className="p-1.5 rounded-xl bg-[#FAF6F0] text-[#FF6B2C] shadow-2xs">
+                  <CloudOff className="w-4 h-4 stroke-[2.2]" />
+                </div>
+                <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center">
+                  Offline
+                </span>
+                <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[8px] font-mono font-black border border-emerald-300">
+                  READY
+                </span>
+              </button>
+
+              {/* Rich Tooltip */}
+              <div className="absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 opacity-0 pointer-events-none group-hover/tool:opacity-100 group-hover/tool:pointer-events-auto transition-all duration-200 z-50 translate-x-1 group-hover/tool:translate-x-0">
+                <div className="bg-[#1E1C1A]/95 text-white backdrop-blur-md rounded-xl p-2.5 shadow-xl border border-[#FF6B2C]/30 text-left w-44 pointer-events-none">
+                  <div className="text-[11px] font-serif font-black text-[#FF6B2C] flex items-center justify-between">
+                    <span>Offline Pack</span>
+                    <span className="text-[8px] font-mono bg-emerald-900/60 text-emerald-300 px-1.5 py-0.5 rounded-full">READY</span>
+                  </div>
+                  <p className="text-[9.5px] text-stone-300 font-sans mt-0.5 leading-snug">
+                    Full offline offline access for flights &amp; low connectivity spots.
+                  </p>
+                </div>
               </div>
-              <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center">
-                Offline
-              </span>
-              <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[8px] font-mono font-black border border-emerald-300">
-                READY
-              </span>
-            </button>
+            </div>
           </div>
         </aside>
 
@@ -3656,11 +3915,12 @@ export default function ItineraryPage() {
                                       <span>{act.time || '10:00 AM'}</span>
                                       <span className="text-[#FF6B2C] font-serif">•</span>
 
-                                      {/* Micro-loop 3D hover rotating icon (Accesses Requirement 5) */}
+                                      {/* Micro-loop 3D hover rotating icon & on-tap 360 flip on mobile */}
                                       <motion.span
-                                        whileHover={{ rotateY: 180, scale: 1.15 }}
-                                        transition={{ type: "spring", stiffness: 150, damping: 10 }}
-                                        className="inline-block cursor-pointer"
+                                        whileHover={{ rotateY: 180, scale: 1.25 }}
+                                        whileTap={{ rotate: [0, -25, 25, 0], scale: 1.45 }}
+                                        transition={{ type: "spring", stiffness: 300, damping: 12 }}
+                                        className="inline-block cursor-pointer select-none active:scale-125"
                                       >
                                         {categoryStyle.icon}
                                       </motion.span>
@@ -3668,59 +3928,60 @@ export default function ItineraryPage() {
                                       <span>{categoryStyle.name}</span>
                                     </div>
 
-                                    <div className="flex items-center gap-2">
-                                      {/* Skip Button - Tactile 3D */}
+                                    <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
+                                      {/* Skip Button */}
                                       <motion.button
-                                        whileHover={{ y: -2 }}
-                                        whileTap={{ y: 4, boxShadow: "0px 0px 0px #D8D1C7" }}
+                                        whileHover={{ y: -1 }}
+                                        whileTap={{ scale: 0.88 }}
                                         transition={{ type: "spring", stiffness: 400, damping: 20 }}
                                         type="button"
-                                        onClick={() => handleSkipStop(activeDay, stopNum, act.category)}
-                                        className="relative inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl border-2 border-[#E6DFD5] bg-white text-[#7A7268] hover:bg-red-50 hover:border-red-200 hover:text-red-500 text-xs font-sans font-black whitespace-nowrap shadow-[0_4px_0_#E6DFD5] hover:shadow-[0_4px_0_#FCA5A5] cursor-pointer group"
+                                        onClick={() => handleRequestSkip(activeDay, stopNum, act.category, act.title)}
+                                        className="relative inline-flex items-center justify-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl border border-[#E6DFD5] bg-white text-[#7A7268] hover:bg-red-50 hover:border-red-200 hover:text-red-500 text-[11px] sm:text-xs font-sans font-bold whitespace-nowrap shadow-2xs hover:shadow-xs transition-all cursor-pointer group shrink-0"
                                       >
-                                        <X className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-300" />
+                                        <X className="w-3.5 h-3.5 group-hover:rotate-90 group-active:rotate-180 group-active:scale-125 transition-transform duration-300" />
                                         <span>Skip</span>
                                       </motion.button>
                                       
-                                      {/* Bookmark Button - Tactile 3D */}
+                                      {/* Bookmark Button */}
                                       <motion.button
-                                        whileHover={{ y: -2 }}
-                                        whileTap={{ y: 4, boxShadow: isSaved ? "0px 0px 0px #CC5522" : "0px 0px 0px #D8D1C7" }}
+                                        whileHover={{ y: -1 }}
+                                        whileTap={{ scale: 0.88 }}
                                         transition={{ type: "spring", stiffness: 400, damping: 20 }}
                                         type="button"
                                         onClick={() => toggleSaveStop(stopKey)}
-                                        className={`relative inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl border-2 text-xs font-sans font-black cursor-pointer group ${isSaved
-                                            ? 'border-[#FF6B2C] bg-[#FFF0E8] text-[#FF6B2C] shadow-[0_4px_0_#FF6B2C]'
-                                            : 'border-[#E6DFD5] bg-white text-[#7A7268] hover:border-[#FF6B2C] hover:text-[#FF6B2C] shadow-[0_4px_0_#E6DFD5] hover:shadow-[0_4px_0_#FF6B2C]'
+                                        className={`relative inline-flex items-center justify-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl border text-[11px] sm:text-xs font-sans font-bold cursor-pointer group transition-all shrink-0 ${isSaved
+                                            ? 'border-[#FF6B2C] bg-[#FFF0E8] text-[#FF6B2C] shadow-2xs'
+                                            : 'border-[#E6DFD5] bg-white text-[#7A7268] hover:border-[#FF6B2C] hover:text-[#FF6B2C] shadow-2xs hover:shadow-xs'
                                           } whitespace-nowrap`}
                                       >
-                                        <Bookmark className={`w-3.5 h-3.5 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300 ${isSaved ? 'fill-[#FF6B2C]' : ''}`} />
+                                        <Bookmark className={`w-3.5 h-3.5 group-hover:scale-110 group-hover:rotate-12 group-active:scale-135 group-active:rotate-24 transition-transform duration-300 ${isSaved ? 'fill-[#FF6B2C]' : ''}`} />
                                         <span>{isSaved ? 'Saved' : 'Bookmark'}</span>
                                       </motion.button>
                                       
-                                      {/* Journal Entry Button - Tactile 3D Primary */}
+                                      {/* Journal Entry Button */}
                                       {(() => {
                                         const journalId = `${activeDay}-${stopNum}`;
                                         const entry = journalEntries.find(e => e.activityId === journalId);
                                         return (
                                           <motion.button
-                                            whileHover={{ y: -2 }}
-                                            whileTap={{ y: 4, boxShadow: entry ? "0px 0px 0px #000" : "0px 0px 0px #CC5522" }}
+                                            whileHover={{ y: -1 }}
+                                            whileTap={{ scale: 0.9 }}
                                             transition={{ type: "spring", stiffness: 400, damping: 15 }}
                                             type="button"
                                             onClick={() => {
                                               setJournalModalActivity({ activity: act, dayNum: activeDay, stopNum });
                                               setJournalModalOpen(true);
                                             }}
-                                            className={`relative inline-flex items-center gap-1.5 px-5 py-1.5 rounded-xl border-2 text-xs font-sans font-black cursor-pointer group ${entry
-                                                ? 'border-[#1E1C1A] bg-[#222] text-white shadow-[0_4px_0_#1E1C1A]'
-                                                : 'border-[#FF6B2C] bg-[#FF7744] text-white shadow-[0_4px_0_#CC5522]'
-                                              } whitespace-nowrap`}
+                                            className={`relative flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-xl border text-[11px] sm:text-xs font-sans font-bold cursor-pointer group transition-all whitespace-nowrap shadow-2xs hover:shadow-xs ${entry
+                                                ? 'border-[#1E1C1A] bg-[#1E1C1A] text-white hover:bg-stone-800'
+                                                : 'border-[#FF6B2C] bg-gradient-to-r from-[#FF6B2C] to-[#FF7744] text-white hover:brightness-105 shadow-xs'
+                                              }`}
                                           >
-                                            <span className="flex items-center justify-center group-hover:scale-110 group-hover:-rotate-12 transition-transform duration-300">
-                                              {entry ? <BookOpen className="w-4 h-4" /> : <PenLine className="w-4 h-4" />}
+                                            <span className="flex items-center justify-center group-hover:scale-110 group-active:scale-135 group-active:-rotate-18 transition-transform duration-300 shrink-0">
+                                              {entry ? <BookOpen className="w-3.5 h-3.5" /> : <PenLine className="w-3.5 h-3.5" />}
                                             </span>
-                                            <span className="tracking-wide">{entry ? 'View Journal' : 'Add Journal Entry'}</span>
+                                            <span className="sm:hidden tracking-wide">{entry ? 'Journal' : '+ Journal'}</span>
+                                            <span className="hidden sm:inline tracking-wide">{entry ? 'View Journal' : 'Add Journal Entry'}</span>
                                           </motion.button>
                                         );
                                       })()}
@@ -4581,39 +4842,99 @@ export default function ItineraryPage() {
         }}
       />
 
-      {/* Premium Animated Success Message */}
+      {/* Skip Confirmation Toast Message */}
+      <AnimatePresence>
+        {skipConfirmation && (
+          <div className="fixed bottom-20 sm:bottom-10 left-4 right-4 sm:left-auto sm:right-10 z-[100002] flex justify-center sm:justify-end pointer-events-none">
+            <motion.div
+              initial={{ y: 35, opacity: 0, scale: 0.94 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: 20, opacity: 0, scale: 0.94 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              className="w-full max-w-sm sm:max-w-md bg-white/95 backdrop-blur-2xl border border-[#E6DFD5] text-[#1E1C1A] p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl shadow-[0_24px_50px_-10px_rgba(30,28,26,0.22),0_0_0_1px_rgba(255,255,255,0.8)_inset] pointer-events-auto flex flex-col gap-3"
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0 text-red-500 shadow-2xs mt-0.5">
+                  <Trash2 className="w-4 h-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-xs sm:text-sm font-sans font-bold text-[#1E1C1A] leading-tight">
+                    Skip this activity?
+                  </h4>
+                  <p className="text-[11px] sm:text-xs font-sans text-[#7A7268] mt-0.5 truncate leading-tight">
+                    Remove <strong className="text-[#1E1C1A] font-semibold">&quot;{skipConfirmation.title}&quot;</strong> from Day {skipConfirmation.dayNum}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#E6DFD5]/70">
+                <motion.button
+                  whileTap={{ scale: 0.92 }}
+                  type="button"
+                  onClick={() => setSkipConfirmation(null)}
+                  className="px-3.5 sm:px-4 py-1.5 rounded-xl border border-[#E6DFD5] bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#7A7268] hover:text-[#1E1C1A] text-xs font-sans font-bold shadow-2xs transition-all cursor-pointer"
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.92 }}
+                  type="button"
+                  onClick={handleConfirmSkip}
+                  className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-sans font-bold shadow-2xs hover:shadow-xs transition-all cursor-pointer group"
+                >
+                  <Trash2 className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform duration-200" />
+                  <span>Yes, Skip</span>
+                </motion.button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Premium Animated Success Message with Undo */}
       <AnimatePresence>
         {journalSuccessMessage && (
-          <div className="fixed bottom-10 left-0 right-0 z-[200000] flex justify-center pointer-events-none">
+          <div className="fixed bottom-20 sm:bottom-10 left-4 right-4 sm:left-0 sm:right-0 z-[200000] flex justify-center pointer-events-none">
             <motion.div
               initial={{ opacity: 0, y: 40, scale: 0.85 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.9 }}
               transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-              className="bg-white/95 backdrop-blur-xl border border-[#E6DFD5]/60 shadow-[0_12px_40px_-10px_rgba(0,0,0,0.15)] p-2 pr-6 rounded-full flex items-center gap-3 pointer-events-auto"
+              className="bg-white/95 backdrop-blur-xl border border-[#E6DFD5]/80 shadow-[0_12px_40px_-10px_rgba(0,0,0,0.18)] p-2 pr-4 sm:pr-5 rounded-full flex items-center gap-3 pointer-events-auto max-w-[92vw] sm:max-w-md"
               whileHover={{ scale: 1.02, y: -2 }}
             >
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-[0_4px_12px_rgba(255,107,44,0.3)] ${journalSuccessMessage.isSkip ? 'bg-[#7A7268]' : 'bg-[#FF6B2C]'}`}>
+              <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 shadow-[0_4px_12px_rgba(255,107,44,0.3)] ${journalSuccessMessage.isSkip ? 'bg-[#7A7268]' : 'bg-[#FF6B2C]'}`}>
                 <motion.div
                    initial={{ scale: 0, rotate: -45 }}
                    animate={{ scale: 1, rotate: 0 }}
                    transition={{ type: "spring", stiffness: 400, delay: 0.1 }}
                 >
                   {journalSuccessMessage.isSkip ? (
-                     <FastForward className="w-5 h-5 text-white stroke-[3px] ml-0.5" />
+                     <FastForward className="w-4 h-4 sm:w-5 sm:h-5 text-white stroke-[3px] ml-0.5" />
                   ) : (
-                     <Check className="w-5 h-5 text-white stroke-[3px]" />
+                     <Check className="w-4 h-4 sm:w-5 sm:h-5 text-white stroke-[3px]" />
                   )}
                 </motion.div>
               </div>
-              <div className="flex flex-col justify-center">
-                <h4 className="text-[13px] font-sans font-bold text-[#1E1C1A] leading-none mb-1">
+              <div className="flex flex-col justify-center min-w-0 flex-1">
+                <h4 className="text-xs sm:text-[13px] font-sans font-bold text-[#1E1C1A] leading-tight mb-0.5">
                   {journalSuccessMessage.isSkip ? 'Activity Skipped' : (journalSuccessMessage.isNew ? 'Entry saved successfully' : 'Entry updated successfully')}
                 </h4>
-                <p className="text-[11px] font-sans font-medium text-[#7A7268] truncate max-w-[200px] leading-none">
+                <p className="text-[10.5px] sm:text-[11px] font-sans font-medium text-[#7A7268] truncate max-w-[150px] sm:max-w-[200px] leading-tight">
                   {journalSuccessMessage.title}
                 </p>
               </div>
+
+              {journalSuccessMessage.isSkip && lastSkippedStop && (
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  type="button"
+                  onClick={handleUndoSkip}
+                  className="px-2.5 sm:px-3 py-1 rounded-full bg-[#FF6B2C]/15 hover:bg-[#FF6B2C]/25 text-[#FF6B2C] text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer shrink-0"
+                >
+                  Undo
+                </motion.button>
+              )}
             </motion.div>
           </div>
         )}
