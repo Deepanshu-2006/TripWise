@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, Download, ExternalLink, Check, ChevronDown, ChevronUp, Utensils, MapPin, Plane } from 'lucide-react';
 import { generateICS, downloadICS, getGoogleCalendarTripUrl, getICSFilename, countCalendarEvents } from '../../lib/calendarSync';
@@ -50,19 +50,27 @@ const PROVIDERS = [
 
 function GoogleIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none">
-      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+    <svg viewBox="0 0 512 512" className="w-6 h-6">
+      <path d="M387 117.5 265.7 104l-148.2 13.5L104 252.2 117.5 387l134.7 16.8L387 387l13.5-138.1z" style={{ fill: '#fff' }} transform="translate(3.75 3.75)"/>
+      <path d="M176.55 330.35c-10.1-6.8-17-16.7-20.9-29.9l23.4-9.6c2.1 8.1 5.8 14.3 11.1 18.8 5.3 4.4 11.7 6.6 19.1 6.6 7.6 0 14.2-2.3 19.7-7s8.3-10.6 8.3-17.8q0-10.95-8.7-18c-5.8-4.6-13.1-7-21.8-7h-13.5v-23.1h12.1c7.5 0 13.8-2 18.9-6.1 5.1-4 7.7-9.6 7.7-16.6q0-9.45-6.9-15c-4.6-3.7-10.4-5.6-17.4-5.6-6.9 0-12.3 1.8-16.4 5.5-4 3.7-7 8.2-8.8 13.5l-23.1-9.6c3.1-8.7 8.7-16.4 16.9-23 8.3-6.6 18.8-10 31.6-10 9.5 0 18 1.8 25.5 5.5s13.5 8.8 17.8 15.2c4.3 6.5 6.4 13.8 6.4 21.9 0 8.3-2 15.2-6 21q-6 8.55-14.7 13.2v1.4c7.6 3.2 13.9 8.1 18.8 14.7s7.3 14.4 7.3 23.6-2.3 17.3-7 24.5c-4.6 7.2-11.1 12.8-19.2 16.9-8.2 4.1-17.4 6.2-27.6 6.2-11.6 0-22.5-3.4-32.6-10.2m143.4-116-25.5 18.6-12.8-19.5 46-33.2h17.7v156.7h-25.3v-122.6z" style={{ fill: '#1a73e8' }}/>
+      <path d="M387 508.2 508.2 387l-60.6-27-60.6 27-27 60.6z" style={{ fill: '#ea4335' }} transform="translate(3.75 3.75)"/>
+      <path d="m90.6 447.6 26.9 60.6H387V387H117.5z" style={{ fill: '#34a853' }} transform="translate(3.75 3.75)"/>
+      <path d="M36.7-3.8C14.3-3.8-3.8 14.3-3.8 36.7V387l60.6 26.9 60.6-26.9V117.5H387l26.9-60.6L387-3.8z" style={{ fill: '#4285f4' }} transform="translate(3.75 3.75)"/>
+      <path d="M-3.8 387v80.8c0 22.3 18.1 40.4 40.4 40.4h80.8V387z" style={{ fill: '#188038' }} transform="translate(3.75 3.75)"/>
+      <path d="M387 117.5V387h121.3V117.5l-60.6-26.9z" style={{ fill: '#fbbc04' }} transform="translate(3.75 3.75)"/>
+      <path d="M508.2 117.5V36.7c0-22.3-18.1-40.4-40.4-40.4H387v121.3h121.2z" style={{ fill: '#1967d2' }} transform="translate(3.75 3.75)"/>
     </svg>
   );
 }
 
 function AppleIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
-      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+    <svg viewBox="0 0 100 100" className="w-6 h-6 shadow-[0_1px_3px_rgba(0,0,0,0.1)] rounded-[20px]">
+      <rect width="100" height="100" rx="20" fill="white" />
+      <path d="M0 20 C0 8.95 8.95 0 20 0 L80 0 C91.05 0 100 8.95 100 20 L100 28 L0 28 Z" fill="#ff3b30"/>
+      <text x="50" y="21" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="700" fontSize="15" fill="white" textAnchor="middle" letterSpacing="1">JUL</text>
+      <text x="50" y="78" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="400" fontSize="58" fill="black" textAnchor="middle" letterSpacing="-2">17</text>
+      <rect width="100" height="100" rx="20" fill="none" stroke="#E5E5EA" strokeWidth="1"/>
     </svg>
   );
 }
@@ -128,11 +136,28 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
   const [includeSightseeing, setIncludeSightseeing] = useState(true);
   const [includeTransport, setIncludeTransport] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const scrollContainerRef = useRef(null);
+  const previewRef = useRef(null);
 
   const options = { includeFood, includeSightseeing, includeTransport };
   const eventCount = useMemo(() => countCalendarEvents(itinerary, options), [itinerary, options]);
   const destination = itinerary?.destination || 'Your Trip';
   const days = itinerary?.days || [];
+
+  // Lock body scroll and Lenis when modal is open to prevent background scrolling bleed
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      if (typeof window !== 'undefined' && window.__lenis) window.__lenis.stop();
+    } else {
+      document.body.style.overflow = '';
+      if (typeof window !== 'undefined' && window.__lenis) window.__lenis.start();
+    }
+    return () => {
+      document.body.style.overflow = '';
+      if (typeof window !== 'undefined' && window.__lenis) window.__lenis.start();
+    };
+  }, [isOpen]);
 
   const handleAction = (provider) => {
     if (provider.action === 'url') {
@@ -197,7 +222,7 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
                 onClose();
               }
             }}
-            className="fixed z-[9999] inset-x-0 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:max-w-[380px] flex flex-col max-h-[90vh] sm:max-h-[85vh]"
+            className="fixed z-[9999] inset-x-0 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:max-w-[400px] flex flex-col h-[90vh] sm:h-[600px] max-h-[90vh]"
           >
             <div className="bg-white rounded-t-[32px] sm:rounded-3xl shadow-[0_-12px_48px_rgba(0,0,0,0.1)] sm:shadow-[0_24px_64px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05)] flex flex-col h-full overflow-hidden">
 
@@ -227,7 +252,12 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
               </div>
 
               {/* ── Scrollable Body ── */}
-              <div className="p-5 sm:p-6 space-y-6 overflow-y-auto relative z-0 flex-1 overscroll-contain pb-safe-8 sm:pb-6">
+              <div 
+                ref={scrollContainerRef}
+                className="p-5 sm:p-6 space-y-6 overflow-y-auto relative z-0 flex-1 overscroll-contain pb-safe-8 sm:pb-6"
+                onPointerDownCapture={(e) => e.stopPropagation()}
+                data-lenis-prevent="true"
+              >
                 <div>
                 <div className="grid grid-cols-2 gap-3">
                   {PROVIDERS.map((provider) => {
@@ -292,9 +322,20 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
                 </div>
 
                 {/* ── Event Preview Toggle ── */}
-                <div className="pt-2 border-t border-stone-100">
+                <div ref={previewRef} className="pt-2 border-t border-stone-100">
                   <button
-                    onClick={() => setShowPreview(v => !v)}
+                    onClick={() => {
+                      const opening = !showPreview;
+                      setShowPreview(v => !v);
+                      if (opening) {
+                        // After animation starts, scroll the container to reveal preview
+                        setTimeout(() => {
+                          if (previewRef.current && scrollContainerRef.current) {
+                            previewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }
+                        }, 50);
+                      }
+                    }}
                     className="w-full flex items-center justify-between py-2 transition-colors cursor-pointer group"
                   >
                     <span className="text-sm font-sans font-medium text-stone-800">
