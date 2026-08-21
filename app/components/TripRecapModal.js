@@ -7,7 +7,7 @@ import {
   X, Download, MapPin, Map, Star, Calendar, 
   Camera, Sparkles, Award, Compass, Heart, Film, 
   ArrowRight, RotateCcw, Play, Pause, ChevronLeft, ChevronRight, Check,
-  Utensils, Landmark, ShoppingBag, Palmtree, Clock
+  Utensils, Landmark, ShoppingBag, Palmtree, Clock, Ticket, Plane
 } from 'lucide-react';
 import { getTripJournalEntries } from '../../lib/journalApi';
 import { getTripExpenses, convertCurrency, getUserDisplayCurrency, formatCurrency } from '../../lib/expenseApi';
@@ -20,17 +20,43 @@ const getCategoryIcon = (category = '') => {
     return <Utensils className="w-4 h-4 text-[#FF6B2C]" />;
   }
   if (cat.includes('shop') || cat.includes('market') || cat.includes('retail')) {
-    return <ShoppingBag className="w-4 h-4 text-amber-400" />;
+    return <ShoppingBag className="w-4 h-4 text-amber-600" />;
   }
   if (cat.includes('sight') || cat.includes('monument') || cat.includes('cultur') || cat.includes('temple') || cat.includes('fort')) {
-    return <Landmark className="w-4 h-4 text-emerald-400" />;
+    return <Landmark className="w-4 h-4 text-emerald-600" />;
   }
   return <Palmtree className="w-4 h-4 text-[#FF6B2C]" />;
 };
 
-// --- Story Card Components (Clean, Solid, Cohesive Noir Theme) ---
+// --- Destination Code Helper (e.g. New Delhi -> DEL) ---
+const getDestinationCode = (name = '') => {
+  if (!name) return 'TW';
+  const clean = name.trim().toUpperCase().replace(/[^A-Z]/g, '');
+  if (clean.length >= 3) return clean.slice(0, 3);
+  return (clean + 'XX').slice(0, 3);
+};
 
-// 1. Cinematic Intro Cover
+// --- Authentic Customs Rubber Stamp Badge ---
+const CustomsStamp = ({ city = 'TRIPWISE', year = '2026', rotation = '-6deg' }) => (
+  <div 
+    style={{ transform: `rotate(${rotation})` }}
+    className="inline-flex flex-col items-center justify-center p-2 rounded-2xl border-2 border-dashed border-[#FF6B2C]/70 text-[#FF6B2C] select-none pointer-events-none bg-[#FFF5EE]"
+  >
+    <div className="text-[7.5px] font-mono tracking-[0.2em] font-black uppercase">
+      ★ CUSTOMS DEPARTURE ★
+    </div>
+    <div className="text-[12px] font-serif font-black tracking-widest my-0.5 uppercase">
+      {city}
+    </div>
+    <div className="text-[8px] font-mono font-bold tracking-wider">
+      VERIFIED • {year}
+    </div>
+  </div>
+);
+
+// --- Story Card Components (Warm Editorial Linen Theme) ---
+
+// 1. Cinematic Intro Cover (The Editorial Magazine Cover)
 const IntroCard = ({ itinerary, heroPhoto }) => {
   const startDateStr = itinerary?.startDate ? new Date(itinerary.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : null;
   const endDateStr = itinerary?.endDate ? new Date(itinerary.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null;
@@ -38,57 +64,76 @@ const IntroCard = ({ itinerary, heroPhoto }) => {
   const totalStops = itinerary?.days?.reduce((acc, d) => acc + (d.activities?.length || 0), 0) || 0;
 
   return (
-    <div className="w-full h-full relative flex flex-col justify-between pt-20 sm:pt-24 pb-8 px-6 sm:px-8 bg-[#12100E] overflow-hidden select-none">
-      {/* Hero Photo with Scrim */}
-      {heroPhoto && (
-        <div className="absolute inset-0 w-full h-full">
-          <img src={heroPhoto} alt="Hero" className="w-full h-full object-cover opacity-55" />
-        </div>
-      )}
-      
-      {/* Solid Scrim Overlay */}
-      <div className="absolute inset-0 bg-[#12100E]/75" />
-
-      {/* Top Label */}
-      <motion.div 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-        className="relative z-10"
-      >
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1E1C1A] border border-stone-700 text-stone-200 text-[10px] font-mono uppercase tracking-widest font-bold shadow-sm">
+    <div className="w-full h-full relative flex flex-col justify-between pt-20 sm:pt-22 pb-7 px-5 sm:px-7 bg-[#FAF8F5] overflow-hidden select-none text-[#1E1C1A]">
+      {/* Top Header Controls Area */}
+      <div className="relative z-10 flex items-start justify-between">
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#E8E2D9] text-[#7A7268] text-[10px] font-mono uppercase tracking-widest font-bold shadow-2xs"
+        >
           <Sparkles className="w-3 h-3 text-[#FF6B2C]" />
-          <span>TripWise Retrospective • {new Date().getFullYear()}</span>
+          <span>Retrospective • {new Date().getFullYear()}</span>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.15, type: "spring" }}
+        >
+          <CustomsStamp city={getDestinationCode(itinerary?.destinationName)} year={new Date().getFullYear()} rotation="-6deg" />
+        </motion.div>
+      </div>
+
+      {/* Center Framed Hero Photo with Ken Burns Motion */}
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.94 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.1, type: "spring", stiffness: 350, damping: 25 }}
+        className="my-auto relative z-10 w-full bg-white p-2.5 sm:p-3 pb-3.5 sm:pb-4 rounded-3xl border border-[#E8E2D9] shadow-md"
+      >
+        <div className="aspect-[16/10] w-full rounded-2xl overflow-hidden relative bg-stone-100 border border-stone-200">
+          {heroPhoto && (
+            <motion.div 
+              initial={{ scale: 1 }}
+              animate={{ scale: 1.06 }}
+              transition={{ duration: 7, ease: "easeOut" }}
+              className="w-full h-full"
+            >
+              <img src={heroPhoto} alt="Hero" className="w-full h-full object-cover" />
+            </motion.div>
+          )}
         </div>
       </motion.div>
 
-      {/* Bottom Content */}
+      {/* Bottom Editorial Content */}
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ type: "spring", stiffness: 350, damping: 25, delay: 0.1 }}
-        className="relative z-10 text-white"
+        transition={{ type: "spring", stiffness: 350, damping: 25, delay: 0.2 }}
+        className="relative z-10"
       >
-        <div className="flex items-center gap-2 mb-2 flex-wrap">
-          <span className="px-2.5 py-0.5 rounded-full bg-[#FF6B2C] text-white text-[10px] font-mono uppercase font-bold tracking-wider">
+        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+          <span className="px-2.5 py-0.5 rounded-full bg-[#FFF0E8] border border-[#FF6B2C]/25 text-[#FF6B2C] text-[10px] font-mono uppercase font-bold tracking-wider">
             {itinerary?.days?.length || 1} Days
           </span>
-          <span className="text-xs font-sans font-semibold text-stone-300">
+          <span className="text-xs font-sans font-semibold text-[#7A7268]">
             {totalStops} Curated Places • {dateRange}
           </span>
         </div>
 
-        <h2 className="text-3xl sm:text-5xl font-serif font-black tracking-tight leading-[1.05] mb-2 text-white">
+        <h2 className="text-3xl sm:text-4xl font-serif font-black tracking-tight leading-[1.05] mb-1.5 text-[#1E1C1A]">
           {itinerary?.destinationName || 'Your Journey'}
         </h2>
 
-        <p className="text-xs sm:text-sm font-sans text-stone-300 max-w-sm leading-relaxed mb-6 font-light">
+        <p className="text-xs font-sans text-[#7A7268] max-w-sm leading-relaxed mb-3 font-light">
           An authentic retrospective of iconic sights, culinary stops, and memorable moments.
         </p>
 
-        <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-widest text-stone-400">
-          <span>Tap right to explore</span>
-          <ArrowRight className="w-3.5 h-3.5 text-[#FF6B2C]" />
+        <div className="flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-widest text-[#FF6B2C] font-bold">
+          <span>Tap right to begin story</span>
+          <ArrowRight className="w-3.5 h-3.5" />
         </div>
       </motion.div>
     </div>
@@ -101,24 +146,42 @@ const RouteMapCard = ({ itinerary }) => {
     d.activities.map(a => ({ ...a, day: i + 1 }))
   ).filter(a => a.location || a.title).slice(0, 5) || [];
 
+  let peakDayNum = 1;
+  let maxStops = 0;
+  itinerary?.days?.forEach((d, i) => {
+    if ((d.activities?.length || 0) > maxStops) {
+      maxStops = d.activities.length;
+      peakDayNum = i + 1;
+    }
+  });
+
   return (
-    <div className="w-full h-full relative pt-20 sm:pt-22 pb-7 px-5 sm:px-7 bg-[#12100E] flex flex-col justify-between text-white overflow-hidden select-none">
+    <div className="w-full h-full relative pt-20 sm:pt-22 pb-7 px-5 sm:px-7 bg-[#FAF8F5] flex flex-col justify-between text-[#1E1C1A] overflow-hidden select-none">
       {/* Top Header */}
-      <div className="relative z-10">
-        <span className="text-[10px] font-mono uppercase tracking-widest text-[#FF6B2C] font-bold block mb-1">
-          EXPEDITION TIMELINE
-        </span>
-        <h3 className="text-2xl sm:text-3xl font-serif font-black text-white tracking-tight leading-tight">
-          The Journey Route
-        </h3>
-        <p className="text-xs font-sans text-stone-400 mt-0.5">
-          Curated waypoints explored across {itinerary?.destinationName || 'your trip'}.
-        </p>
+      <div className="relative z-10 flex items-start justify-between">
+        <div>
+          <span className="text-[10px] font-mono uppercase tracking-widest text-[#FF6B2C] font-bold block mb-1">
+            EXPEDITION TIMELINE
+          </span>
+          <h3 className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A] tracking-tight leading-tight">
+            The Journey Route
+          </h3>
+          <p className="text-xs font-sans text-[#7A7268] mt-0.5">
+            Curated waypoints explored across {itinerary?.destinationName || 'your trip'}.
+          </p>
+        </div>
+
+        {maxStops > 0 && (
+          <div className="hidden sm:block px-2.5 py-1 rounded-xl bg-white border border-[#E8E2D9] text-right shadow-2xs">
+            <span className="text-[8px] font-mono uppercase text-[#7A7268] font-bold block">Peak Exploration</span>
+            <span className="text-xs font-serif font-black text-[#FF6B2C]">Day {peakDayNum} ({maxStops} stops)</span>
+          </div>
+        )}
       </div>
 
       {/* Timeline List */}
       <div className="relative my-auto py-2">
-        <div className="absolute left-[20px] top-6 bottom-6 w-0.5 bg-stone-800" />
+        <div className="absolute left-[20px] top-6 bottom-6 w-0.5 bg-[#E8E2D9]" />
 
         <div className="space-y-2.5 relative z-10">
           {allStops.map((stop, idx) => (
@@ -127,20 +190,20 @@ const RouteMapCard = ({ itinerary }) => {
               initial={{ opacity: 0, x: -15 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.08 + idx * 0.06, type: "spring", stiffness: 350, damping: 25 }}
-              className="flex items-center gap-3 bg-[#1A1816] p-2.5 pr-3.5 rounded-2xl border border-stone-800 shadow-sm"
+              className="flex items-center gap-3 bg-white p-2.5 pr-3.5 rounded-2xl border border-[#E8E2D9] shadow-xs group hover:border-[#FF6B2C] transition-all"
             >
               {stop.image ? (
-                <div className="w-10 h-10 rounded-xl overflow-hidden bg-stone-900 shrink-0 border border-stone-800">
+                <div className="w-10 h-10 rounded-xl overflow-hidden bg-stone-100 shrink-0 border border-stone-200">
                   <img src={stop.image} alt={stop.title} className="w-full h-full object-cover" />
                 </div>
               ) : (
-                <div className="w-10 h-10 rounded-xl bg-[#24201D] border border-stone-800 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-[#FAF6F0] border border-[#E8E2D9] flex items-center justify-center shrink-0">
                   {getCategoryIcon(stop.category)}
                 </div>
               )}
 
               <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-[13px] font-sans font-bold text-white truncate leading-tight">
+                <p className="text-xs sm:text-[13px] font-sans font-bold text-[#1E1C1A] truncate leading-tight">
                   {stop.title}
                 </p>
                 <div className="flex items-center gap-2 mt-0.5">
@@ -149,8 +212,8 @@ const RouteMapCard = ({ itinerary }) => {
                   </span>
                   {stop.category && (
                     <>
-                      <span className="text-stone-600">•</span>
-                      <span className="text-[10px] font-sans text-stone-400 capitalize truncate">
+                      <span className="text-stone-300">•</span>
+                      <span className="text-[10px] font-sans text-[#7A7268] capitalize truncate">
                         {stop.category}
                       </span>
                     </>
@@ -158,13 +221,13 @@ const RouteMapCard = ({ itinerary }) => {
                 </div>
               </div>
 
-              <div className="w-6 h-6 rounded-full bg-[#24201D] border border-stone-800 flex items-center justify-center text-[10px] font-mono font-bold text-stone-300 shrink-0">
+              <div className="w-6 h-6 rounded-full bg-[#FAF6F0] border border-[#E8E2D9] flex items-center justify-center text-[10px] font-mono font-bold text-[#1E1C1A] shrink-0">
                 #{idx + 1}
               </div>
             </motion.div>
           ))}
           {allStops.length === 0 && (
-            <div className="text-center text-stone-400 text-sm py-8 font-serif italic">
+            <div className="text-center text-[#7A7268] text-sm py-8 font-serif italic">
               No stops logged for this itinerary.
             </div>
           )}
@@ -172,7 +235,7 @@ const RouteMapCard = ({ itinerary }) => {
       </div>
 
       {/* Footer Status */}
-      <div className="relative z-10 pt-2 border-t border-stone-800 flex items-center justify-between text-[10.5px] font-mono text-stone-400">
+      <div className="relative z-10 pt-2 border-t border-[#E8E2D9] flex items-center justify-between text-[10.5px] font-mono text-[#7A7268]">
         <span>{allStops.length} Highlighted Waypoints</span>
         <span className="text-[#FF6B2C] font-bold">100% Curated</span>
       </div>
@@ -180,12 +243,19 @@ const RouteMapCard = ({ itinerary }) => {
   );
 };
 
-// 3. Stats & Traveler Archetype (Unified Solid Noir Grid)
+// 3. Stats & Deep Travel Narrative (Warm Editorial White Grid)
 const StatsCard = ({ stats, itinerary }) => {
   const categories = itinerary?.days?.flatMap(d => d.activities?.map(a => a.category?.toLowerCase())).filter(Boolean) || [];
-  const foodCount = categories.filter(c => c?.includes('food') || c?.includes('din') || c?.includes('culinary')).length;
-  const cultureCount = categories.filter(c => c?.includes('sight') || c?.includes('cultur') || c?.includes('histor') || c?.includes('museum')).length;
+  const totalCatCount = categories.length || 1;
+  const foodCount = categories.filter(c => c?.includes('food') || c?.includes('din') || c?.includes('culinary') || c?.includes('lunch')).length;
+  const cultureCount = categories.filter(c => c?.includes('sight') || c?.includes('cultur') || c?.includes('histor') || c?.includes('museum') || c?.includes('temple')).length;
+  const shopCount = categories.filter(c => c?.includes('shop') || c?.includes('market')).length;
   
+  const foodPct = Math.round((foodCount / totalCatCount) * 100);
+  const culturePct = Math.round((cultureCount / totalCatCount) * 100);
+  const shopPct = Math.round((shopCount / totalCatCount) * 100);
+  const otherPct = Math.max(0, 100 - (foodPct + culturePct + shopPct));
+
   let archetype = "The Modern Wanderer";
   let archetypedesc = "Curator of authentic sights, relaxed pacing, and vibrant local gems.";
   if (foodCount > cultureCount && foodCount >= 2) {
@@ -201,37 +271,37 @@ const StatsCard = ({ stats, itinerary }) => {
   const avgStopsPerDay = (totalStops / daysCount).toFixed(1);
 
   return (
-    <div className="w-full h-full relative pt-20 sm:pt-22 pb-10 sm:pb-8 px-5 sm:px-7 bg-[#12100E] flex flex-col justify-between text-white overflow-hidden select-none">
+    <div className="w-full h-full relative pt-20 sm:pt-22 pb-8 px-5 sm:px-7 bg-[#FAF8F5] flex flex-col justify-between text-[#1E1C1A] overflow-hidden select-none">
       {/* Header */}
       <div className="relative z-10">
         <span className="text-[10px] font-mono uppercase tracking-widest text-[#FF6B2C] font-bold block mb-1">
           EXPEDITION METRICS
         </span>
-        <h3 className="text-2xl sm:text-3xl font-serif font-black text-white tracking-tight leading-tight">
+        <h3 className="text-2xl sm:text-3xl font-serif font-black tracking-tight leading-tight">
           By The Numbers
         </h3>
-        <p className="text-xs font-sans text-stone-400 mt-0.5">
+        <p className="text-xs font-sans text-[#7A7268] mt-0.5">
           Travel footprint across {itinerary?.destinationName || 'your destination'}.
         </p>
       </div>
 
       {/* Balanced 4-Metric Grid */}
-      <div className="grid grid-cols-2 gap-3 my-auto relative z-10">
+      <div className="grid grid-cols-2 gap-2.5 my-auto relative z-10">
         {/* Metric 1: Days Journeyed */}
         <motion.div 
           initial={{ opacity: 0, scale: 0.94 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.08, type: "spring", stiffness: 350 }}
-          className="bg-[#1A1816] rounded-2xl p-3.5 sm:p-4 border border-stone-800 shadow-sm flex flex-col justify-between"
+          className="bg-white rounded-2xl p-3 sm:p-3.5 border border-[#E8E2D9] shadow-xs flex flex-col justify-between"
         >
-          <div className="w-7 h-7 rounded-xl bg-[#24201D] border border-stone-700 flex items-center justify-center text-[#FF6B2C] mb-2">
+          <div className="w-6.5 h-6.5 rounded-xl bg-[#FFF0E8] border border-[#FF6B2C]/25 flex items-center justify-center text-[#FF6B2C] mb-1.5">
             <Calendar className="w-3.5 h-3.5" />
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-serif font-black text-white leading-none mb-1">
+            <div className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A] leading-none mb-0.5">
               {daysCount}
             </div>
-            <div className="text-[9.5px] font-mono uppercase tracking-wider text-stone-400 font-bold">
+            <div className="text-[9px] font-mono uppercase tracking-wider text-[#7A7268] font-bold">
               Days Journeyed
             </div>
           </div>
@@ -242,16 +312,16 @@ const StatsCard = ({ stats, itinerary }) => {
           initial={{ opacity: 0, scale: 0.94 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.14, type: "spring", stiffness: 350 }}
-          className="bg-[#1A1816] rounded-2xl p-3.5 sm:p-4 border border-stone-800 shadow-sm flex flex-col justify-between"
+          className="bg-white rounded-2xl p-3 sm:p-3.5 border border-[#E8E2D9] shadow-xs flex flex-col justify-between"
         >
-          <div className="w-7 h-7 rounded-xl bg-[#24201D] border border-stone-700 flex items-center justify-center text-amber-400 mb-2">
+          <div className="w-6.5 h-6.5 rounded-xl bg-[#FAF6F0] border border-[#E8E2D9] flex items-center justify-center text-amber-600 mb-1.5">
             <MapPin className="w-3.5 h-3.5" />
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-serif font-black text-white leading-none mb-1">
+            <div className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A] leading-none mb-0.5">
               {totalStops}
             </div>
-            <div className="text-[9.5px] font-mono uppercase tracking-wider text-stone-400 font-bold">
+            <div className="text-[9px] font-mono uppercase tracking-wider text-[#7A7268] font-bold">
               Curated Stops
             </div>
           </div>
@@ -262,16 +332,16 @@ const StatsCard = ({ stats, itinerary }) => {
           initial={{ opacity: 0, scale: 0.94 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2, type: "spring", stiffness: 350 }}
-          className="bg-[#1A1816] rounded-2xl p-3.5 sm:p-4 border border-stone-800 shadow-sm flex flex-col justify-between"
+          className="bg-white rounded-2xl p-3 sm:p-3.5 border border-[#E8E2D9] shadow-xs flex flex-col justify-between"
         >
-          <div className="w-7 h-7 rounded-xl bg-[#24201D] border border-stone-700 flex items-center justify-center text-emerald-400 mb-2">
+          <div className="w-6.5 h-6.5 rounded-xl bg-[#FAF6F0] border border-[#E8E2D9] flex items-center justify-center text-emerald-600 mb-1.5">
             <Clock className="w-3.5 h-3.5" />
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-serif font-black text-white leading-none mb-1">
+            <div className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A] leading-none mb-0.5">
               ~{avgStopsPerDay}
             </div>
-            <div className="text-[9.5px] font-mono uppercase tracking-wider text-stone-400 font-bold">
+            <div className="text-[9px] font-mono uppercase tracking-wider text-[#7A7268] font-bold">
               Stops / Day
             </div>
           </div>
@@ -282,40 +352,69 @@ const StatsCard = ({ stats, itinerary }) => {
           initial={{ opacity: 0, scale: 0.94 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.26, type: "spring", stiffness: 350 }}
-          className="bg-[#1A1816] rounded-2xl p-3.5 sm:p-4 border border-stone-800 shadow-sm flex flex-col justify-between"
+          className="bg-white rounded-2xl p-3 sm:p-3.5 border border-[#E8E2D9] shadow-xs flex flex-col justify-between"
         >
-          <div className="w-7 h-7 rounded-xl bg-[#24201D] border border-stone-700 flex items-center justify-center text-[#FF6B2C] mb-2">
+          <div className="w-6.5 h-6.5 rounded-xl bg-[#FFF0E8] border border-[#FF6B2C]/25 flex items-center justify-center text-[#FF6B2C] mb-1.5">
             <Compass className="w-3.5 h-3.5" />
           </div>
           <div>
-            <div className="text-xl sm:text-2xl font-serif font-black text-[#FF8A4C] leading-none mb-1">
+            <div className="text-xl sm:text-2xl font-serif font-black text-[#FF6B2C] leading-none mb-0.5">
               Fluid
             </div>
-            <div className="text-[9.5px] font-mono uppercase tracking-wider text-stone-400 font-bold">
+            <div className="text-[9px] font-mono uppercase tracking-wider text-[#7A7268] font-bold">
               Pacing Rate
             </div>
           </div>
         </motion.div>
       </div>
 
+      {/* Travel Rhythm Category Distribution Bar */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, type: "spring" }}
+        className="relative z-10 bg-white p-3 rounded-2xl border border-[#E8E2D9] shadow-xs mb-2"
+      >
+        <div className="flex items-center justify-between text-[9px] font-mono uppercase font-bold text-[#7A7268] mb-1.5">
+          <span>Travel Rhythm Breakdown</span>
+          <span className="text-[#FF6B2C]">Exploration Footprint</span>
+        </div>
+
+        {/* Segmented Bar */}
+        <div className="h-2 w-full rounded-full bg-stone-100 overflow-hidden flex gap-0.5 border border-stone-200">
+          {culturePct > 0 && <div style={{ width: `${culturePct}%` }} className="h-full bg-emerald-500 rounded-sm" title="Culture" />}
+          {foodPct > 0 && <div style={{ width: `${foodPct}%` }} className="h-full bg-[#FF6B2C] rounded-sm" title="Dining" />}
+          {shopPct > 0 && <div style={{ width: `${shopPct}%` }} className="h-full bg-amber-500 rounded-sm" title="Shopping" />}
+          {otherPct > 0 && <div style={{ width: `${otherPct}%` }} className="h-full bg-stone-400 rounded-sm" title="Leisure" />}
+        </div>
+
+        {/* Legend */}
+        <div className="flex items-center justify-between text-[9px] font-sans font-semibold text-[#7A7268] mt-1.5">
+          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Sights</span>
+          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#FF6B2C]" /> Dining</span>
+          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Markets</span>
+          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-stone-400" /> Leisure</span>
+        </div>
+      </motion.div>
+
       {/* Solid Archetype Banner */}
       <motion.div 
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.32, type: "spring" }}
-        className="relative z-10 p-3.5 rounded-2xl bg-[#1A1816] border border-stone-800 text-white flex items-center gap-3 shadow-sm"
+        transition={{ delay: 0.35, type: "spring" }}
+        className="relative z-10 p-3 rounded-2xl bg-[#1E1C1A] text-white flex items-center gap-3 shadow-sm border border-stone-800"
       >
-        <div className="w-10 h-10 rounded-xl bg-[#FF6B2C] text-white flex items-center justify-center shrink-0">
-          <Award className="w-5 h-5" />
+        <div className="w-9 h-9 rounded-xl bg-[#FF6B2C] text-white flex items-center justify-center shrink-0">
+          <Award className="w-4.5 h-4.5" />
         </div>
         <div className="min-w-0 flex-1">
-          <span className="text-[9px] font-mono uppercase tracking-widest text-[#FF6B2C] font-bold block">
+          <span className="text-[8.5px] font-mono uppercase tracking-widest text-[#FF6B2C] font-bold block">
             Traveler Archetype
           </span>
-          <h4 className="text-xs sm:text-sm font-serif font-bold text-white leading-tight truncate">
+          <h4 className="text-xs font-serif font-bold text-white leading-tight truncate">
             {archetype}
           </h4>
-          <p className="text-[10px] font-sans text-stone-300 truncate mt-0.5">
+          <p className="text-[9.5px] font-sans text-stone-300 truncate mt-0.5">
             {archetypedesc}
           </p>
         </div>
@@ -324,24 +423,24 @@ const StatsCard = ({ stats, itinerary }) => {
   );
 };
 
-// 4. Standout Memory Highlight (Solid Polaroid)
+// 4. Standout Memory Highlight (Warm Polaroid)
 const HighlightCard = ({ item }) => (
-  <div className="w-full h-full relative pt-20 sm:pt-22 pb-8 px-5 sm:px-7 bg-[#12100E] flex flex-col justify-between text-white overflow-hidden select-none">
+  <div className="w-full h-full relative pt-20 sm:pt-22 pb-8 px-5 sm:px-7 bg-[#FAF8F5] flex flex-col justify-between text-[#1E1C1A] overflow-hidden select-none">
     {/* Header */}
     <div className="relative z-10 flex items-center justify-between">
       <div>
         <span className="text-[10px] font-mono uppercase tracking-widest text-[#FF6B2C] font-bold block mb-0.5">
           CAPTURED HIGHLIGHT
         </span>
-        <h4 className="text-lg sm:text-xl font-serif font-black text-white leading-tight">
+        <h4 className="text-lg sm:text-xl font-serif font-black text-[#1E1C1A] leading-tight">
           Standout Memory
         </h4>
       </div>
-      <div className="flex items-center gap-1 bg-[#1A1816] px-2.5 py-1 rounded-full border border-stone-800 shadow-sm">
+      <div className="flex items-center gap-1 bg-white px-2.5 py-1 rounded-full border border-[#E8E2D9] shadow-2xs">
         {[...Array(5)].map((_, i) => (
           <Star 
             key={i} 
-            className={`w-3.5 h-3.5 ${i < (item.rating || 5) ? 'fill-[#FF6B2C] text-[#FF6B2C]' : 'fill-transparent text-stone-600'}`} 
+            className={`w-3.5 h-3.5 ${i < (item.rating || 5) ? 'fill-[#FF6B2C] text-[#FF6B2C]' : 'fill-transparent text-stone-300'}`} 
           />
         ))}
       </div>
@@ -352,7 +451,7 @@ const HighlightCard = ({ item }) => (
       initial={{ opacity: 0, scale: 0.92 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ type: "spring", stiffness: 350, damping: 25, delay: 0.12 }}
-      className="relative z-10 my-auto mx-auto w-full max-w-[270px] bg-white p-3 pb-4.5 rounded-2xl shadow-xl border border-stone-300 text-[#1E1C1A]"
+      className="relative z-10 my-auto mx-auto w-full max-w-[270px] bg-white p-3 pb-4.5 rounded-2xl shadow-md border border-[#E8E2D9] text-[#1E1C1A]"
     >
       <div className="aspect-[4/3] rounded-xl overflow-hidden bg-stone-100 mb-2.5 relative border border-stone-200">
         {item.photo ? (
@@ -381,13 +480,13 @@ const HighlightCard = ({ item }) => (
       className="relative z-10"
     >
       {item.note ? (
-        <div className="bg-[#1A1816] p-3 rounded-2xl border border-stone-800 shadow-sm">
-          <p className="text-xs font-serif italic text-stone-200 leading-relaxed line-clamp-3">
+        <div className="bg-white p-3 rounded-2xl border border-[#E8E2D9] shadow-2xs">
+          <p className="text-xs font-serif italic text-[#1E1C1A] leading-relaxed line-clamp-3">
             &ldquo;{item.note}&rdquo;
           </p>
         </div>
       ) : (
-        <p className="text-xs font-serif italic text-stone-400 text-center">
+        <p className="text-xs font-serif italic text-[#7A7268] text-center">
           One of the standout recorded stops from your expedition.
         </p>
       )}
@@ -395,62 +494,93 @@ const HighlightCard = ({ item }) => (
   </div>
 );
 
-// 5. Keepsake Boarding Pass Finale (Solid Dark Charcoal)
+// 5. Perforated Master Boarding Pass & Finale (The Tactile Travel Ticket)
 const OutroCard = ({ itinerary, heroPhoto, onDownload, isDownloading, onReplay }) => {
   const startDateStr = itinerary?.startDate ? new Date(itinerary.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
   const endDateStr = itinerary?.endDate ? new Date(itinerary.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
   const dateRange = startDateStr && endDateStr ? `${startDateStr} – ${endDateStr}` : `${itinerary?.days?.length || 1} Days Expedition`;
   const totalStops = itinerary?.days?.reduce((acc, d) => acc + (d.activities?.length || 0), 0) || 0;
+  const destCode = getDestinationCode(itinerary?.destinationName);
 
   return (
-    <div className="w-full h-full relative pt-20 sm:pt-22 pb-8 px-5 sm:px-7 bg-[#12100E] flex flex-col justify-between overflow-hidden select-none text-white">
+    <div className="w-full h-full relative pt-20 sm:pt-22 pb-8 px-5 sm:px-7 bg-[#FAF8F5] flex flex-col justify-between overflow-hidden select-none text-[#1E1C1A]">
       {/* Header */}
       <div className="relative z-10 text-center">
-        <span className="text-[10px] font-mono uppercase tracking-widest text-[#FF6B2C] font-bold block mb-1">
+        <span className="text-[10px] font-mono uppercase tracking-widest text-[#FF6B2C] font-bold block mb-0.5">
           EXPEDITION PASSPORT
         </span>
-        <h3 className="text-2xl sm:text-3xl font-serif font-black text-white tracking-tight leading-tight">
+        <h3 className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A] tracking-tight leading-tight">
           Your Keepsake Pass
         </h3>
       </div>
 
-      {/* Boarding Pass Ticket */}
+      {/* Official Perforated Boarding Pass Ticket */}
       <motion.div 
         id="recap-outro-card"
         initial={{ opacity: 0, scale: 0.94, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 350, damping: 25, delay: 0.12 }}
-        className="relative z-10 my-auto mx-auto w-full max-w-[300px] bg-white rounded-3xl p-4 sm:p-5 shadow-2xl border border-stone-200 text-[#1E1C1A] flex flex-col items-center text-center"
+        className="relative z-10 my-auto mx-auto w-full max-w-[310px] bg-white rounded-3xl p-4 sm:p-5 shadow-xl border border-[#E8E2D9] text-[#1E1C1A] overflow-hidden"
       >
-        {/* Destination Portrait */}
-        <div className="w-18 h-18 rounded-2xl overflow-hidden border-2 border-stone-200 shadow-sm mb-2.5 -mt-8 bg-stone-100 relative shrink-0">
-          <img src={heroPhoto} alt="Hero" className="w-full h-full object-cover" />
+        {/* Left & Right Authentic Semicircular Ticket Notches */}
+        <div className="absolute -left-3.5 top-[68%] w-6 h-6 rounded-full bg-[#FAF8F5] border border-[#E8E2D9]" />
+        <div className="absolute -right-3.5 top-[68%] w-6 h-6 rounded-full bg-[#FAF8F5] border border-[#E8E2D9]" />
+
+        {/* Top Ticket Header */}
+        <div className="flex items-center justify-between pb-3 border-b border-[#E8E2D9] mb-3">
+          <div className="flex items-center gap-1.5">
+            <Ticket className="w-4 h-4 text-[#FF6B2C]" />
+            <span className="text-[9.5px] font-mono uppercase font-black tracking-widest text-[#1E1C1A]">
+              BOARDING PASS
+            </span>
+          </div>
+          <div className="px-2 py-0.5 rounded bg-[#1E1C1A] text-white text-[9px] font-mono font-bold tracking-wider">
+            {destCode} ➔ EXP
+          </div>
         </div>
 
-        <span className="text-[9px] font-mono uppercase tracking-widest text-[#FF6B2C] font-bold block mb-0.5">
-          OFFICIAL TRAVEL DOSSIER
-        </span>
-        <h4 className="text-xl sm:text-2xl font-serif font-black text-[#1E1C1A] tracking-tight leading-tight mb-1">
-          {itinerary?.destinationName || 'Destination'}
-        </h4>
-        <p className="text-[10.5px] text-[#7A7268] font-sans font-medium mb-3.5">
-          {dateRange} • {totalStops} Curated Places
-        </p>
-
-        {/* Footer Seal */}
-        <div className="w-full pt-3 border-t border-stone-200 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs font-serif font-black text-[#1E1C1A]">
-            <Map className="w-3.5 h-3.5 text-[#FF6B2C]" />
-            <span>TripWise</span>
+        {/* Center Passport Portrait & Details */}
+        <div className="flex items-center gap-3.5 mb-3.5">
+          <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-[#E8E2D9] shadow-xs bg-stone-100 relative shrink-0">
+            <img src={heroPhoto} alt="Hero" className="w-full h-full object-cover" />
           </div>
-          <div className="px-2 py-0.5 rounded bg-[#FAF6F0] border border-[#E6DFD5] text-[8.5px] font-mono uppercase tracking-wider font-bold text-[#7A7268]">
+
+          <div className="min-w-0 flex-1">
+            <span className="text-[8.5px] font-mono uppercase tracking-widest text-[#FF6B2C] font-bold block">
+              OFFICIAL TRAVEL DOSSIER
+            </span>
+            <h4 className="text-lg sm:text-xl font-serif font-black text-[#1E1C1A] tracking-tight leading-tight truncate">
+              {itinerary?.destinationName || 'Destination'}
+            </h4>
+            <p className="text-[10px] text-[#7A7268] font-sans font-medium mt-0.5 truncate">
+              {dateRange}
+            </p>
+          </div>
+        </div>
+
+        {/* Perforation Divider Line */}
+        <div className="border-b-2 border-dashed border-[#E8E2D9] my-2" />
+
+        {/* Barcode & Archival Stamp Footer */}
+        <div className="pt-2 flex items-center justify-between">
+          <div>
+            <div className="text-[8px] font-mono text-[#7A7268] tracking-wider mb-0.5">
+              TICKET NO. TW-8042
+            </div>
+            {/* Monospace Visual Barcode */}
+            <div className="text-[12px] font-mono font-black tracking-widest text-[#1E1C1A] select-none">
+              ||| | || ||| | ||| || |
+            </div>
+          </div>
+
+          <div className="px-2.5 py-1 rounded-xl bg-[#FAF6F0] border border-[#E6DFD5] text-[8.5px] font-mono uppercase tracking-wider font-bold text-[#7A7268] text-right">
             ARCHIVED • {new Date().getFullYear()}
           </div>
         </div>
       </motion.div>
 
       {/* High-Priority Clickable Action Buttons */}
-      <div className="relative z-50 flex flex-col gap-2 w-full max-w-[300px] mx-auto pointer-events-auto" data-html2canvas-ignore="true">
+      <div className="relative z-50 flex flex-col gap-2 w-full max-w-[310px] mx-auto pointer-events-auto" data-html2canvas-ignore="true">
         <motion.button 
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.95 }}
@@ -462,7 +592,7 @@ const OutroCard = ({ itinerary, heroPhoto, onDownload, isDownloading, onReplay }
           className="w-full py-3.5 rounded-2xl bg-[#FF6B2C] hover:bg-[#E55A1C] text-white font-sans font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-md disabled:opacity-60 cursor-pointer"
         >
           <Download className="w-4 h-4" />
-          <span>{isDownloading ? 'Saving Image...' : 'Save Keepsake Image'}</span>
+          <span>{isDownloading ? 'Saving Keepsake...' : 'Save Keepsake Boarding Pass'}</span>
         </motion.button>
 
         <motion.button 
@@ -471,7 +601,7 @@ const OutroCard = ({ itinerary, heroPhoto, onDownload, isDownloading, onReplay }
             e.stopPropagation();
             onReplay();
           }}
-          className="w-full py-2.5 rounded-2xl bg-[#1A1816] hover:bg-[#24201D] text-stone-300 hover:text-white font-sans font-bold text-xs flex items-center justify-center gap-2 border border-stone-800 transition-colors cursor-pointer"
+          className="w-full py-2.5 rounded-2xl bg-white hover:bg-[#F2ECE4] text-[#1E1C1A] font-sans font-bold text-xs flex items-center justify-center gap-2 border border-[#E8E2D9] transition-colors cursor-pointer shadow-2xs"
         >
           <RotateCcw className="w-3.5 h-3.5" />
           <span>Replay Story</span>
@@ -614,7 +744,7 @@ export default function TripRecapModal({ isOpen, onClose, itinerary, estBudget }
       });
       
       const link = document.createElement('a');
-      link.download = `TripWise-Passport-${itinerary?.destinationName || 'Trip'}.png`;
+      link.download = `TripWise-BoardingPass-${itinerary?.destinationName || 'Trip'}.png`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
@@ -632,7 +762,7 @@ export default function TripRecapModal({ isOpen, onClose, itinerary, estBudget }
   return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[110000] flex items-center justify-center bg-black/90 backdrop-blur-md p-0 sm:p-4">
+        <div className="fixed inset-0 z-[110000] flex items-center justify-center bg-black/80 backdrop-blur-md p-0 sm:p-4">
           
           {/* Backdrop Dismiss */}
           <div className="absolute inset-0" onClick={onClose} />
@@ -642,29 +772,29 @@ export default function TripRecapModal({ isOpen, onClose, itinerary, estBudget }
             <button
               onClick={(e) => { e.stopPropagation(); handlePrev(); }}
               disabled={currentSlide === 0}
-              className="w-12 h-12 rounded-full bg-[#1E1C1A] hover:bg-[#2C2824] text-white flex items-center justify-center border border-stone-750 transition-all disabled:opacity-20 cursor-pointer pointer-events-auto shadow-lg"
+              className="w-12 h-12 rounded-full bg-white hover:bg-[#F2ECE4] text-[#1E1C1A] flex items-center justify-center border border-[#E8E2D9] transition-all disabled:opacity-20 cursor-pointer pointer-events-auto shadow-lg"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); handleNext(); }}
               disabled={isLastSlide}
-              className="w-12 h-12 rounded-full bg-[#1E1C1A] hover:bg-[#2C2824] text-white flex items-center justify-center border border-stone-750 transition-all disabled:opacity-20 cursor-pointer pointer-events-auto shadow-lg"
+              className="w-12 h-12 rounded-full bg-white hover:bg-[#F2ECE4] text-[#1E1C1A] flex items-center justify-center border border-[#E8E2D9] transition-all disabled:opacity-20 cursor-pointer pointer-events-auto shadow-lg"
             >
               <ChevronRight className="w-6 h-6" />
             </button>
           </div>
 
-          {/* Story Container */}
+          {/* Story Container - Warm Luxury Editorial Paper */}
           <div 
             onMouseDown={() => setIsPaused(true)}
             onMouseUp={() => setIsPaused(false)}
             onTouchStart={() => setIsPaused(true)}
             onTouchEnd={() => setIsPaused(false)}
-            className="relative w-full h-full sm:max-w-[420px] sm:max-h-[760px] bg-[#12100E] overflow-hidden sm:rounded-[32px] sm:border border-stone-800 shadow-2xl flex flex-col z-10"
+            className="relative w-full h-full sm:max-w-[420px] sm:max-h-[760px] bg-[#FAF8F5] overflow-hidden sm:rounded-[36px] sm:border border-[#E8E2D9] shadow-2xl flex flex-col z-10"
           >
             {/* Top Control Bar with Segmented Progress */}
-            <div className="absolute top-0 left-0 right-0 p-4 pt-3.5 z-40 bg-[#12100E] pointer-events-none">
+            <div className="absolute top-0 left-0 right-0 p-4 pt-3.5 z-40 bg-[#FAF8F5]/95 backdrop-blur-md border-b border-[#E8E2D9]/80 pointer-events-none">
               
               {/* Segmented Progress Bars */}
               <div className="flex gap-1.5 mb-2.5">
@@ -677,24 +807,24 @@ export default function TripRecapModal({ isOpen, onClose, itinerary, estBudget }
                 {slides.map((_, idx) => {
                   if (idx < currentSlide) {
                     return (
-                      <div key={idx} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
-                        <div className="h-full w-full bg-white" />
+                      <div key={idx} className="h-1 flex-1 bg-[#E5DFD5] rounded-full overflow-hidden">
+                        <div className="h-full w-full bg-[#1E1C1A]" />
                       </div>
                     );
                   }
                   if (idx > currentSlide) {
                     return (
-                      <div key={idx} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
-                        <div className="h-full w-0 bg-white" />
+                      <div key={idx} className="h-1 flex-1 bg-[#E5DFD5] rounded-full overflow-hidden">
+                        <div className="h-full w-0 bg-[#1E1C1A]" />
                       </div>
                     );
                   }
                   // Active Slide
                   return (
-                    <div key={idx} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
+                    <div key={idx} className="h-1 flex-1 bg-[#E5DFD5] rounded-full overflow-hidden">
                       <div
                         key={`active-bar-${currentSlide}`}
-                        className="h-full w-full bg-white origin-left"
+                        className="h-full w-full bg-[#1E1C1A] origin-left"
                         style={{
                           transform: isLastSlide ? 'scaleX(1)' : 'scaleX(0)',
                           animation: !isLastSlide ? `storyProgress 5.5s linear forwards` : 'none',
@@ -709,10 +839,10 @@ export default function TripRecapModal({ isOpen, onClose, itinerary, estBudget }
               {/* Story Header Controls */}
               <div className="flex items-center justify-between pointer-events-auto">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-serif font-black text-white truncate max-w-[160px]">
+                  <span className="text-xs font-serif font-black text-[#1E1C1A] truncate max-w-[160px]">
                     {itinerary?.destinationName || 'Trip'}
                   </span>
-                  <span className="text-[9.5px] font-mono text-white/70 bg-white/10 px-2 py-0.5 rounded-full">
+                  <span className="text-[9.5px] font-mono text-[#7A7268] bg-[#EFEAE2] border border-[#E0D8CC] px-2 py-0.5 rounded-full font-bold">
                     {String(currentSlide + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}
                   </span>
                 </div>
@@ -720,15 +850,15 @@ export default function TripRecapModal({ isOpen, onClose, itinerary, estBudget }
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setIsPaused(!isPaused)}
-                    className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white border border-white/15 transition-colors cursor-pointer"
+                    className="w-8 h-8 rounded-full bg-white hover:bg-[#F2ECE4] flex items-center justify-center text-[#1E1C1A] border border-[#E8E2D9] transition-colors cursor-pointer shadow-2xs"
                     title={isPaused ? "Resume" : "Pause"}
                   >
-                    {isPaused ? <Play className="w-3.5 h-3.5 fill-white ml-0.5" /> : <Pause className="w-3.5 h-3.5" />}
+                    {isPaused ? <Play className="w-3.5 h-3.5 fill-[#1E1C1A] ml-0.5" /> : <Pause className="w-3.5 h-3.5" />}
                   </button>
 
                   <button 
                     onClick={onClose}
-                    className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white border border-white/15 transition-colors cursor-pointer"
+                    className="w-8 h-8 rounded-full bg-white hover:bg-[#F2ECE4] flex items-center justify-center text-[#1E1C1A] border border-[#E8E2D9] transition-colors cursor-pointer shadow-2xs"
                     title="Close"
                   >
                     <X className="w-4 h-4" />
@@ -737,7 +867,7 @@ export default function TripRecapModal({ isOpen, onClose, itinerary, estBudget }
               </div>
             </div>
 
-            {/* Tap Navigation Zones (Middle area only so top controls and bottom action buttons are never blocked) */}
+            {/* Tap Navigation Zones */}
             {!isLastSlide ? (
               <div className="absolute top-18 bottom-20 inset-x-0 z-20 flex">
                 <div className="w-[35%] h-full cursor-pointer" onClick={handlePrev} />
