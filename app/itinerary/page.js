@@ -58,6 +58,7 @@ import {
   XCircle,
   Book,
   AlertTriangle,
+  Menu,
   FileText,
   ShieldAlert,
   Plane,
@@ -558,6 +559,7 @@ export default function ItineraryPage() {
   const [itinerary, setItinerary] = useState(null);
   const [userCurrency, setUserCurrency] = useState('USD');
   const [ratesReady, setRatesReady] = useState(false);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
   useEffect(() => {
     setUserCurrency(getUserDisplayCurrency());
@@ -1649,10 +1651,11 @@ export default function ItineraryPage() {
       />
 
       <div className="sticky top-[80px] sm:top-[90px] z-40 bg-[#FAF6F0]/95 backdrop-blur-md border-b border-[#E6DFD5] pt-4 pb-0 px-6 shadow-2xs transition-all print:hidden">
-        <div className="max-w-6xl mx-auto w-full flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div className="max-w-6xl mx-auto w-full flex flex-col sm:flex-row sm:items-end justify-between gap-4 relative">
           
-          <div className="relative flex-1 min-w-0">
-            <div className="flex items-center gap-0.5 sm:gap-1.5 overflow-x-auto w-full no-scrollbar pb-0 pr-12">
+          <div className="relative flex-1 min-w-0 flex items-center">
+            {/* Day Tabs */}
+            <div className="flex items-center gap-0.5 sm:gap-1.5 overflow-x-auto w-full no-scrollbar pb-0 pr-4 lg:pr-12">
               {days.map((day, dIdx) => {
                 const dayNum = day.dayNumber || dIdx + 1;
                 const isSelected = activeDay === dayNum;
@@ -1742,7 +1745,42 @@ export default function ItineraryPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 pb-3.5 self-end sm:self-auto flex-nowrap justify-end">
+          <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 pb-3.5 w-full sm:w-auto">
+            {/* Mobile Sidebar Trigger Icon (Placed on the left of action buttons row) */}
+            <button
+              onClick={() => setIsMobileDrawerOpen(prev => !prev)}
+              className={`lg:hidden shrink-0 flex flex-col justify-center items-center gap-1 w-8.5 h-8.5 rounded-full transition-all duration-300 border select-none active:scale-95 cursor-pointer ${
+                isMobileDrawerOpen
+                  ? 'bg-[#FF6B2C] border-[#FF6B2C] shadow-[#FF6B2C]/25 shadow-md'
+                  : 'bg-white hover:bg-stone-50 border-[#E6DFD5] hover:border-[#FF6B2C]/50 shadow-xs'
+              }`}
+              title={isMobileDrawerOpen ? "Close Tools Menu" : "Open Tools Menu"}
+              aria-label={isMobileDrawerOpen ? "Close Tools Menu" : "Open Tools Menu"}
+            >
+              <span
+                className={`block w-4 h-[1.8px] rounded-full transition-transform duration-300 ${
+                  isMobileDrawerOpen
+                    ? 'bg-white rotate-45 translate-y-[5.5px]'
+                    : 'bg-[#FF6B2C]'
+                }`}
+              />
+              <span
+                className={`block w-4 h-[1.8px] rounded-full transition-opacity duration-300 ${
+                  isMobileDrawerOpen
+                    ? 'opacity-0'
+                    : 'bg-[#FF6B2C]'
+                }`}
+              />
+              <span
+                className={`block w-4 h-[1.8px] rounded-full transition-transform duration-300 ${
+                  isMobileDrawerOpen
+                    ? 'bg-white -rotate-45 -translate-y-[5.5px]'
+                    : 'bg-[#FF6B2C]'
+                }`}
+              />
+            </button>
+
+            <div className="flex items-center gap-2 shrink-0 flex-nowrap">
             <div className="relative group/print">
               <button
                 type="button"
@@ -1813,8 +1851,280 @@ export default function ItineraryPage() {
               
               <span className="hidden xl:inline relative z-10 ml-1.5">Edit in Planner</span>
             </a>
+            </div>
           </div>
         </div>
+
+        {/* Mobile Vertical Sidebar Panel (Anchored Directly Beneath the Entire Horizontal Sidebar Below All 4 Buttons) */}
+        <AnimatePresence>
+          {isMobileDrawerOpen && (
+            <>
+              {/* Backdrop below entire horizontal bar */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsMobileDrawerOpen(false)}
+                className="fixed inset-0 top-[180px] bg-black/25 backdrop-blur-[2px] z-30 lg:hidden"
+              />
+
+              {/* Tools Panel Emerging from Left Screen Edge with Cascading Micro-Animations */}
+              <motion.div
+                initial={{ x: -120, opacity: 0, scale: 0.92, filter: "blur(6px)" }}
+                animate={{ x: 0, opacity: 1, scale: 1, filter: "blur(0px)" }}
+                exit={{ x: -120, opacity: 0, scale: 0.92, filter: "blur(6px)" }}
+                transition={{ type: "spring", stiffness: 360, damping: 26, mass: 0.8 }}
+                className="lg:hidden absolute top-[calc(100%-1px)] left-0 z-40 p-2 bg-white/95 backdrop-blur-xl rounded-r-3xl rounded-l-none border-y border-r border-[#E6DFD5] border-l-0 shadow-[10px_24px_45px_rgba(0,0,0,0.15),0_0_20px_rgba(255,107,44,0.06)] flex flex-col items-center gap-1.5 w-27 select-none"
+              >
+                {/* Prepare Group */}
+                <div className="flex flex-col items-center w-full gap-1">
+                  <motion.div
+                    initial={{ x: -12, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.04, duration: 0.2 }}
+                    className="flex items-center justify-center gap-1 px-1 w-full"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B2C] shrink-0" />
+                    <span className="text-[8.5px] font-mono font-black uppercase tracking-widest text-[#FF6B2C]">
+                      Prepare
+                    </span>
+                  </motion.div>
+
+                  {/* Packing List */}
+                  {(() => {
+                    const totalItems = packingList ? Object.values(packingList).flat().length : 0;
+                    const checkedItems = packingList ? Object.values(packingList).flat().filter(i => i.checked).length : 0;
+                    const isZero = checkedItems === 0;
+                    const isComplete = checkedItems === totalItems;
+
+                    return (
+                      <motion.button
+                        type="button"
+                        initial={{ x: -18, opacity: 0, scale: 0.88 }}
+                        animate={{ x: 0, opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.06, type: "spring", stiffness: 420, damping: 22 }}
+                        whileTap={{ scale: 0.92 }}
+                        onClick={() => { setActiveDay('packing'); setIsMobileDrawerOpen(false); }}
+                        className={`relative w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-colors duration-150 cursor-pointer select-none group ${
+                          activeDay === 'packing'
+                            ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-xs border border-[#FF6B2C]/50 scale-[1.02]'
+                            : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent'
+                        }`}
+                        title="Packing List"
+                      >
+                        <div className={`relative p-1 rounded-lg transition-all ${
+                          activeDay === 'packing' ? 'bg-[#FF6B2C]/20 text-[#FF6B2C] border border-[#FF6B2C]/40 shadow-2xs' : 'bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
+                        }`}>
+                          <AnimatedSuitcaseIcon
+                            isAnimated={isPackingIconAnimated}
+                            actionType={packingActionType}
+                            checkedItems={checkedItems}
+                            totalItems={totalItems}
+                            size="small"
+                            flyingEmoji={flyingItemEmoji}
+                          />
+                        </div>
+                        
+                        <span className="text-[9.5px] font-sans font-bold leading-none tracking-tight text-center">
+                          Packing
+                        </span>
+
+                        {totalItems > 0 && (
+                          <span className={`px-1.5 py-0 rounded-full text-[7.5px] font-mono font-black shadow-2xs transition-colors ${
+                            isZero
+                              ? 'bg-[#E6DFD5] text-[#5F5E5A]'
+                              : isComplete
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-[#FF6B2C] text-white'
+                          }`}>
+                            {checkedItems}/{totalItems}
+                          </span>
+                        )}
+                      </motion.button>
+                    );
+                  })()}
+
+                  {/* Visa & Docs */}
+                  <motion.button
+                    type="button"
+                    initial={{ x: -18, opacity: 0, scale: 0.88 }}
+                    animate={{ x: 0, opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.09, type: "spring", stiffness: 420, damping: 22 }}
+                    whileTap={{ scale: 0.92 }}
+                    onClick={() => { setActiveDay('visa'); setIsMobileDrawerOpen(false); }}
+                    className={`w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-colors duration-150 cursor-pointer select-none group ${
+                      activeDay === 'visa'
+                        ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-xs border border-[#FF6B2C]/50 scale-[1.02]'
+                        : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent'
+                    }`}
+                    title="Visa & Docs"
+                  >
+                    <div className={`p-1 rounded-lg transition-all ${
+                      activeDay === 'visa' ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-2xs' : 'bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
+                    }`}>
+                      <FileText className="w-3.5 h-3.5 stroke-[2.2]" />
+                    </div>
+                    <span className="text-[9.5px] font-sans font-bold leading-none tracking-tight text-center whitespace-nowrap">
+                      Visa &amp; Docs
+                    </span>
+                  </motion.button>
+
+                  {/* Bookmarks */}
+                  <motion.button
+                    type="button"
+                    initial={{ x: -18, opacity: 0, scale: 0.88 }}
+                    animate={{ x: 0, opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.12, type: "spring", stiffness: 420, damping: 22 }}
+                    whileTap={{ scale: 0.92 }}
+                    onClick={() => { setIsSavedPlacesModalOpen(true); setIsMobileDrawerOpen(false); }}
+                    className="w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-colors duration-150 cursor-pointer select-none group bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent"
+                    title="Saved Bookmarks"
+                  >
+                    <div className="p-1 rounded-lg transition-all bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs">
+                      <Bookmark className="w-3.5 h-3.5 stroke-[2.2] group-hover:fill-[#FF6B2C]/20" />
+                    </div>
+                    <span className="text-[9.5px] font-sans font-bold leading-none tracking-tight text-center">
+                      Bookmarks
+                    </span>
+                  </motion.button>
+                </div>
+
+                <div className="w-full h-px bg-[#E6DFD5]/80 my-0.5" />
+
+                {/* Live Group */}
+                <div className="flex flex-col items-center w-full gap-1">
+                  <motion.div
+                    initial={{ x: -12, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.15, duration: 0.2 }}
+                    className="flex items-center justify-center gap-1 px-1 w-full"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                    <span className="text-[8.5px] font-mono font-black uppercase tracking-widest text-[#FF6B2C]">
+                      Live
+                    </span>
+                  </motion.div>
+
+                  {/* Tracking */}
+                  <motion.button
+                    type="button"
+                    initial={{ x: -18, opacity: 0, scale: 0.88 }}
+                    animate={{ x: 0, opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.17, type: "spring", stiffness: 420, damping: 22 }}
+                    whileTap={{ scale: 0.92 }}
+                    onClick={() => { setActiveDay('tracking'); setIsMobileDrawerOpen(false); }}
+                    className={`relative w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-colors duration-150 cursor-pointer select-none group ${
+                      activeDay === 'tracking'
+                        ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-xs border border-[#FF6B2C]/50 scale-[1.02]'
+                        : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent'
+                    }`}
+                    title="Price Tracking"
+                  >
+                    <span className="absolute top-1.5 right-1.5 flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                    </span>
+
+                    <div className={`p-1 rounded-lg transition-all ${
+                      activeDay === 'tracking' ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-2xs' : 'bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
+                    }`}>
+                      <Plane className="w-3.5 h-3.5 stroke-[2.2]" />
+                    </div>
+                    <span className="text-[9.5px] font-sans font-bold leading-none tracking-tight text-center">
+                      Tracking
+                    </span>
+                  </motion.button>
+
+                  {/* Expenses */}
+                  <motion.button
+                    type="button"
+                    initial={{ x: -18, opacity: 0, scale: 0.88 }}
+                    animate={{ x: 0, opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.20, type: "spring", stiffness: 420, damping: 22 }}
+                    whileTap={{ scale: 0.92 }}
+                    onClick={() => { setActiveDay('expenses'); setIsMobileDrawerOpen(false); }}
+                    className={`w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-colors duration-150 cursor-pointer select-none group ${
+                      activeDay === 'expenses'
+                        ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-xs border border-[#FF6B2C]/50 scale-[1.02]'
+                        : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent'
+                    }`}
+                    title="In-Trip Expense Tracker"
+                  >
+                    <div className={`p-1 rounded-lg transition-all ${
+                      activeDay === 'expenses' ? 'bg-[#FF6B2C]/20 text-[#FF6B2C] border border-[#FF6B2C]/40 shadow-2xs' : 'bg-white text-[#FF6B2C] shadow-2xs'
+                    }`}>
+                      <DollarSign className="w-3.5 h-3.5 stroke-[2.2]" />
+                    </div>
+                    <span className="text-[9.5px] font-sans font-bold leading-none tracking-tight text-center">
+                      Expenses
+                    </span>
+                  </motion.button>
+
+                  {/* Safety */}
+                  <motion.button
+                    type="button"
+                    initial={{ x: -18, opacity: 0, scale: 0.88 }}
+                    animate={{ x: 0, opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.23, type: "spring", stiffness: 420, damping: 22 }}
+                    whileTap={{ scale: 0.92 }}
+                    onClick={() => { setActiveDay('emergency'); setIsMobileDrawerOpen(false); }}
+                    className={`w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-colors duration-150 cursor-pointer select-none group ${
+                      activeDay === 'emergency'
+                        ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-xs border border-[#FF6B2C]/50 scale-[1.02]'
+                        : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent'
+                    }`}
+                    title="Emergency Safety Info"
+                  >
+                    <div className={`p-1 rounded-lg transition-all ${
+                      activeDay === 'emergency' ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-2xs' : 'bg-white text-[#FF6B2C] shadow-2xs'
+                    }`}>
+                      <ShieldAlert className="w-3.5 h-3.5 stroke-[2.2]" />
+                    </div>
+                    <span className="text-[9.5px] font-sans font-bold leading-none tracking-tight text-center">
+                      Safety
+                    </span>
+                  </motion.button>
+                </div>
+
+                <div className="w-full h-px bg-[#E6DFD5]/80 my-0.5" />
+
+                {/* Roadmap Group */}
+                <motion.div
+                  initial={{ x: -18, opacity: 0, scale: 0.88 }}
+                  animate={{ x: 0, opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.26, type: "spring", stiffness: 420, damping: 22 }}
+                  className="flex flex-col items-center w-full gap-1 p-1 rounded-xl bg-[#FAF6F0]/80 border border-dashed border-[#E6DFD5]"
+                >
+                  <div className="flex items-center justify-center gap-1 px-1 w-full">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#7A7268]/50 shrink-0" />
+                    <span className="text-[8px] font-mono font-black uppercase tracking-widest text-[#7A7268]">
+                      Roadmap
+                    </span>
+                  </div>
+
+                  {/* Offline */}
+                  <motion.button
+                    type="button"
+                    whileTap={{ scale: 0.92 }}
+                    onClick={() => { setIsOfflineModalOpen(true); setIsMobileDrawerOpen(false); }}
+                    className="w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-colors duration-150 cursor-pointer select-none group bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent"
+                    title="Offline Availability & Pack Download"
+                  >
+                    <div className="p-1 rounded-lg bg-white text-[#FF6B2C] shadow-2xs">
+                      <CloudOff className="w-3.5 h-3.5 stroke-[2.2]" />
+                    </div>
+                    <span className="text-[9.5px] font-sans font-bold leading-none tracking-tight text-center">
+                      Offline
+                    </span>
+                    <span className="px-1.5 py-0 rounded-full bg-emerald-100 text-emerald-800 text-[7.5px] font-mono font-black border border-emerald-300">
+                      READY
+                    </span>
+                  </motion.button>
+                </motion.div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* DOSSIER BODY CONTENT & DESKTOP SIDEBAR RAIL */}
@@ -1824,7 +2134,7 @@ export default function ItineraryPage() {
         <aside className="hidden lg:flex flex-col items-center p-2.5 bg-white/95 backdrop-blur-md rounded-3xl border border-[#E6DFD5] shadow-md sticky top-[160px] lg:top-[170px] shrink-0 h-fit z-20 font-sans gap-2 w-28 transition-all duration-200">
           
           {/* GROUP 1: PREPARE (Pre-trip planning tools) */}
-          <div className="flex flex-col items-center w-full gap-2">
+          <div className="flex flex-col items-center w-full gap-2 pt-1 lg:pt-0">
             <div className="flex items-center justify-center gap-1.5 px-1 w-full">
               <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B2C] shrink-0" />
               <span className="text-[9px] font-mono font-black uppercase tracking-widest text-[#FF6B2C]">
@@ -1842,7 +2152,7 @@ export default function ItineraryPage() {
               return (
                 <button
                   type="button"
-                  onClick={() => setActiveDay('packing')}
+                  onClick={() => { setActiveDay('packing'); setIsMobileDrawerOpen(false); }}
                   className={`relative w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group ${
                     activeDay === 'packing'
                       ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-md shadow-[#FF6B2C]/20 border border-[#FF6B2C]/50 scale-[1.02]'
@@ -1886,7 +2196,7 @@ export default function ItineraryPage() {
             {/* Visa & Docs Rail Item */}
             <button
               type="button"
-              onClick={() => setActiveDay('visa')}
+              onClick={() => { setActiveDay('visa'); setIsMobileDrawerOpen(false); }}
               className={`w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group ${
                 activeDay === 'visa'
                   ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-md shadow-[#FF6B2C]/20 border border-[#FF6B2C]/50 scale-[1.02]'
@@ -1907,7 +2217,7 @@ export default function ItineraryPage() {
             {/* Bookmarks Rail Item */}
             <button
               type="button"
-              onClick={() => setIsSavedPlacesModalOpen(true)}
+              onClick={() => { setIsSavedPlacesModalOpen(true); setIsMobileDrawerOpen(false); }}
               className={`w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent`}
               title="Saved Bookmarks"
             >
@@ -1934,7 +2244,7 @@ export default function ItineraryPage() {
             {/* Price Tracking Rail Item */}
             <button
               type="button"
-              onClick={() => setActiveDay('tracking')}
+              onClick={() => { setActiveDay('tracking'); setIsMobileDrawerOpen(false); }}
               className={`relative w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group ${
                 activeDay === 'tracking'
                   ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-md shadow-[#FF6B2C]/20 border border-[#FF6B2C]/50 scale-[1.02]'
@@ -1961,7 +2271,7 @@ export default function ItineraryPage() {
             {/* Expenses Item (Active Utility) */}
             <button
               type="button"
-              onClick={() => setActiveDay('expenses')}
+              onClick={() => { setActiveDay('expenses'); setIsMobileDrawerOpen(false); }}
               className={`w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group ${
                 activeDay === 'expenses'
                   ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-md shadow-[#FF6B2C]/20 border border-[#FF6B2C]/50 scale-[1.02]'
@@ -1982,7 +2292,7 @@ export default function ItineraryPage() {
             {/* Safety / Emergency Info Rail Item */}
             <button
               type="button"
-              onClick={() => setActiveDay('emergency')}
+              onClick={() => { setActiveDay('emergency'); setIsMobileDrawerOpen(false); }}
               className={`w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group ${
                 activeDay === 'emergency'
                   ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-md shadow-[#FF6B2C]/20 border border-[#FF6B2C]/50 scale-[1.02]'
@@ -2013,7 +2323,7 @@ export default function ItineraryPage() {
             {/* Offline Pack Item */}
             <button
               type="button"
-              onClick={() => setIsOfflineModalOpen(true)}
+              onClick={() => { setIsOfflineModalOpen(true); setIsMobileDrawerOpen(false); }}
               className="w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-transparent"
               title="Offline Availability & Pack Download"
             >
