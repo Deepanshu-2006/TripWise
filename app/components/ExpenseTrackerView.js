@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, Camera, Trash2, Edit2, AlertCircle, CheckCircle2, 
@@ -123,6 +124,9 @@ export default function ExpenseTrackerView({
   collaborators = [],
   onShowToast = null
 }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
   const [expenses, setExpenses] = useState([]);
   const [homeCurrency, setHomeCurrency] = useState('USD');
   useEffect(() => { setHomeCurrency(getUserDisplayCurrency()); }, []);
@@ -549,6 +553,17 @@ export default function ExpenseTrackerView({
     setShowAddModal(true);
   };
 
+  // Dynamic available days based on daysCount
+  const availableDays = useMemo(() => {
+    const count = Math.max(1, parseInt(daysCount) || 3);
+    const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV'];
+    return Array.from({ length: count }, (_, i) => ({
+      id: `Day ${i + 1}`,
+      label: `Day ${romanNumerals[i] || i + 1}`,
+      fullLabel: `Day ${romanNumerals[i] || i + 1} (Day ${i + 1})`
+    }));
+  }, [daysCount]);
+
   // Filtered Expenses
   const filteredExpenses = expenses.filter(exp => {
     if (selectedDayFilter !== 'All' && exp.day !== selectedDayFilter) return false;
@@ -562,24 +577,24 @@ export default function ExpenseTrackerView({
   };
 
   return (
-    <div className="w-full space-y-6 font-sans text-[#1E1C1A]">
+    <div className="w-full space-y-4 sm:space-y-6 font-sans text-[#1E1C1A]">
       {/* HEADER BAR */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E6DFD5] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-[#E6DFD5] pb-3.5 sm:pb-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="font-serif text-3xl font-bold tracking-tight text-[#1E1C1A]">Expenses</h2>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-[#1E1C1A]">Expenses</h2>
             {isOffline && (
-              <span className="px-2.5 py-0.5 rounded-full bg-amber-100 border border-amber-300 text-amber-800 text-[10px] font-mono font-bold flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-full bg-amber-100 border border-amber-300 text-amber-800 text-[10px] font-mono font-bold flex items-center gap-1">
                 <CloudOff className="w-3 h-3 text-amber-600" /> Offline Mode
               </span>
             )}
             {pendingSyncCount > 0 && !isOffline && (
-              <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-900 text-[10px] font-mono font-bold flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-900 text-[10px] font-mono font-bold flex items-center gap-1">
                 <RefreshCw className="w-3 h-3 animate-spin text-amber-600" /> {pendingSyncCount} pending sync
               </span>
             )}
           </div>
-          <p className="text-xs text-[#7A7268] mt-0.5">
+          <p className="text-[11px] sm:text-xs text-[#7A7268] mt-0.5">
             Track daily spending, split group bills with {collaboratorFirstName}, and scan receipts.
           </p>
         </div>
@@ -589,12 +604,12 @@ export default function ExpenseTrackerView({
           initial={{ opacity: 0, x: 15 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, delay: 0.15 }}
-          className="flex items-center gap-2 flex-wrap"
+          className="flex items-center gap-1.5 sm:gap-2 flex-wrap"
         >
           {/* EXPORT BUTTON */}
           <motion.button
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.94 }}
+            whileHover={{ scale: 1.04, y: -1 }}
+            whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
             onClick={() => {
               const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(expenses, null, 2));
@@ -605,7 +620,7 @@ export default function ExpenseTrackerView({
               downloadAnchor.click();
               downloadAnchor.remove();
             }}
-            className="group px-4 py-2 rounded-full border border-[#E6DFD5] bg-white hover:bg-[#F5F0E8] text-[#1E1C1A] text-xs font-sans font-bold transition-all duration-200 flex items-center gap-1.5 cursor-pointer shadow-2xs select-none"
+            className="group px-3 sm:px-4 py-2 rounded-full border border-[#E6DFD5] bg-white hover:bg-[#F5F0E8] text-[#1E1C1A] text-xs font-sans font-bold transition-all duration-200 flex items-center gap-1.5 cursor-pointer shadow-2xs select-none"
           >
             <Download className="w-3.5 h-3.5 text-[#FF6B2C] group-hover:translate-y-0.5 transition-transform" />
             <span>Export</span>
@@ -613,11 +628,11 @@ export default function ExpenseTrackerView({
 
           {/* ADD EXPENSE BUTTON */}
           <motion.button
-            whileHover={{ scale: 1.05, y: -2, backgroundColor: "#1E1C1A", color: "#ffffff", boxShadow: "0 6px 16px rgba(30,28,26,0.2)" }}
-            whileTap={{ scale: 0.94 }}
+            whileHover={{ scale: 1.04, y: -1, backgroundColor: "#1E1C1A", color: "#ffffff", boxShadow: "0 6px 16px rgba(30,28,26,0.2)" }}
+            whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
             onClick={handleOpenAddModal}
-            className="group px-4.5 py-2 rounded-full border border-[#1E1C1A] text-[#1E1C1A] text-xs font-sans font-bold transition-all duration-200 flex items-center gap-1.5 cursor-pointer select-none"
+            className="group px-3.5 sm:px-4.5 py-2 rounded-full border border-[#1E1C1A] text-[#1E1C1A] text-xs font-sans font-bold transition-all duration-200 flex items-center gap-1.5 cursor-pointer select-none"
           >
             <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-300" />
             <span>Add Expense</span>
@@ -625,14 +640,13 @@ export default function ExpenseTrackerView({
 
           {/* SCAN RECEIPT BUTTON */}
           <motion.button
-            whileHover={{ scale: 1.06, y: -2, boxShadow: "0 8px 20px rgba(255, 107, 44, 0.4)" }}
-            whileTap={{ scale: 0.94 }}
+            whileHover={{ scale: 1.05, y: -1, boxShadow: "0 8px 20px rgba(255, 107, 44, 0.4)" }}
+            whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
             onClick={() => fileInputRef.current?.click()}
-            className="group relative px-5 py-2 rounded-full bg-gradient-to-r from-[#FF6B2C] to-[#E55A1C] text-white text-xs font-sans font-bold transition-all duration-200 flex items-center gap-1.5 cursor-pointer shadow-xs overflow-hidden select-none"
+            className="group relative px-4 sm:px-5 py-2 rounded-full bg-gradient-to-r from-[#FF6B2C] to-[#E55A1C] text-white text-xs font-sans font-bold transition-all duration-200 flex items-center gap-1.5 cursor-pointer shadow-xs overflow-hidden select-none"
           >
             <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 pointer-events-none" />
-            
             <Camera className="w-3.5 h-3.5 group-hover:rotate-12 group-hover:scale-110 transition-transform duration-200" />
             <span className="relative z-10">Scan Receipt</span>
           </motion.button>
@@ -652,40 +666,40 @@ export default function ExpenseTrackerView({
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.2 }}
-        className="bg-[#FAF6F0] rounded-3xl border border-[#E6DFD5] p-6 flex flex-col gap-4 shadow-2xs"
+        className="bg-[#FAF6F0] rounded-2xl sm:rounded-3xl border border-[#E6DFD5] p-4 sm:p-6 flex flex-col gap-3.5 sm:gap-4 shadow-2xs"
       >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
           <div>
-            <span className="text-[10.5px] font-mono uppercase tracking-wider text-[#7A7268] font-bold block mb-1">
+            <span className="text-[10px] sm:text-[10.5px] font-mono uppercase tracking-wider text-[#7A7268] font-bold block">
               Total Spent
             </span>
-            <div className="flex items-baseline gap-2.5">
-              <div className="text-3xl font-black text-gray-900 mt-2">
+            <div className="flex flex-wrap items-baseline gap-2 sm:gap-2.5 mt-1">
+              <div className="text-2xl sm:text-3xl font-black text-gray-900 font-serif">
                 <AnimatedCurrency value={totalSpentBase} currency={homeCurrency} />
               </div>
-              <div className="text-sm text-gray-500 mt-1 font-medium">
+              <div className="text-xs sm:text-sm text-gray-500 font-medium">
                 of {formatCurrency(budgetGoalBase, homeCurrency)} Budget
               </div>
             </div>
           </div>
 
-          <div className="text-left sm:text-right">
+          <div className="text-left sm:text-right flex items-center sm:flex-col justify-between sm:justify-start gap-1">
             <motion.span 
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-800 text-xs font-mono font-bold inline-block mb-1 shadow-2xs"
+              className="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-800 text-[11px] sm:text-xs font-mono font-bold inline-block shadow-2xs"
             >
               <AnimatedCurrency value={Math.max(0, budgetGoalBase - totalSpentBase)} currency={homeCurrency} /> Remaining
             </motion.span>
-            <span className="text-[11px] font-mono text-[#7A7268] block">
-              {Math.min(100, (totalSpentBase / budgetGoalBase) * 100).toFixed(0)}% of budget used
+            <span className="text-[10.5px] sm:text-[11px] font-mono text-[#7A7268]">
+              {Math.min(100, (totalSpentBase / budgetGoalBase) * 100).toFixed(0)}% used
             </span>
           </div>
         </div>
 
         {/* PROGRESS TRACK ANIMATION */}
-        <div className="w-full h-2 rounded-full bg-[#E6DFD5]/70 overflow-hidden">
+        <div className="w-full h-2 sm:h-2.5 rounded-full bg-[#E6DFD5]/70 overflow-hidden">
           <motion.div 
             initial={{ width: 0 }}
             animate={{ width: `${Math.min(100, (totalSpentBase / budgetGoalBase) * 100)}%` }}
@@ -698,20 +712,20 @@ export default function ExpenseTrackerView({
 
         {/* SPENDING PACE INDICATOR NOTE */}
         {projectedTotalBase > budgetGoalBase ? (
-            <div className="mt-6 flex items-start gap-3 p-4 bg-orange-50 border border-orange-200 rounded-xl">
-              <div className="p-2 bg-orange-100 rounded-full shrink-0 mt-0.5">
-                <TrendingUp className="w-5 h-5 text-orange-600" />
+            <div className="flex items-start gap-2.5 sm:gap-3 p-3 sm:p-4 bg-orange-50 border border-orange-200 rounded-xl">
+              <div className="p-1.5 sm:p-2 bg-orange-100 rounded-full shrink-0 mt-0.5">
+                <TrendingUp className="w-4 h-4 text-orange-600" />
               </div>
-              <p className="text-sm text-orange-800 leading-relaxed">
+              <p className="text-xs sm:text-sm text-orange-800 leading-relaxed">
                 <strong>⚠️ Spending Pace Warning:</strong> At current pace (~{formatCurrency(dailyPaceBase, homeCurrency)}/day), projected total is <strong>{formatCurrency(projectedTotalBase, homeCurrency)}</strong> ({formatCurrency(paceDiffBase, homeCurrency)} over {formatCurrency(budgetGoalBase, homeCurrency)} budget).
               </p>
             </div>
           ) : (
-            <div className="mt-6 flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
-              <div className="p-2 bg-emerald-100 rounded-full shrink-0 mt-0.5">
-                <TrendingDown className="w-5 h-5 text-emerald-600" />
+            <div className="flex items-start gap-2.5 sm:gap-3 p-3 sm:p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+              <div className="p-1.5 sm:p-2 bg-emerald-100 rounded-full shrink-0 mt-0.5">
+                <TrendingDown className="w-4 h-4 text-emerald-600" />
               </div>
-              <p className="text-sm text-emerald-800 leading-relaxed">
+              <p className="text-xs sm:text-sm text-emerald-800 leading-relaxed">
                 <strong>✓ Spending Pace On Track:</strong> Current pace (~{formatCurrency(dailyPaceBase, homeCurrency)}/day) is on track to stay within your {formatCurrency(budgetGoalBase, homeCurrency)} budget.
               </p>
             </div>
@@ -767,41 +781,41 @@ export default function ExpenseTrackerView({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.22 }}
-            className="p-4 sm:p-5 rounded-2xl bg-white border border-[#E6DFD5] shadow-2xs flex flex-col gap-4"
+            className="p-3.5 sm:p-5 rounded-2xl bg-white border border-[#E6DFD5] shadow-2xs flex flex-col gap-3 sm:gap-4"
           >
-            <div className="flex items-center gap-3 pb-3 border-b border-[#E6DFD5]">
-              <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                <Users className="w-5 h-5" />
+            <div className="flex items-center gap-2.5 sm:gap-3 pb-2.5 sm:pb-3 border-b border-[#E6DFD5]">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                <Users className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <span className="text-sm font-serif font-black text-[#1E1C1A] block">
                   Group Settlement
                 </span>
-                <span className="text-xs font-sans text-[#7A7268]">
-                  Total Trip Cost: {formatCurrencyRounded(totalGroupCost, homeCurrency)} • Split equally among {numMembers} people
+                <span className="text-[11px] sm:text-xs font-sans text-[#7A7268] truncate block">
+                  Total: {formatCurrencyRounded(totalGroupCost, homeCurrency)} &middot; Split equally ({numMembers} people)
                 </span>
               </div>
             </div>
 
             <div className="flex flex-col gap-2">
               {balances.map((b, idx) => (
-                <div key={idx} className="flex items-center justify-between text-sm font-sans">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-stone-300"></span>
-                    <span className="font-bold text-[#1E1C1A]">{b.name}</span>
-                    <span className="text-xs text-[#7A7268] hidden sm:inline">(Paid: {formatCurrencyRounded(b.paid, homeCurrency)})</span>
+                <div key={idx} className="flex items-center justify-between text-xs sm:text-sm font-sans gap-2">
+                  <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                    <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-stone-300 shrink-0"></span>
+                    <span className="font-bold text-[#1E1C1A] truncate">{b.name}</span>
+                    <span className="text-[10px] sm:text-xs text-[#7A7268] shrink-0">(Paid: {formatCurrencyRounded(b.paid, homeCurrency)})</span>
                   </div>
                   
                   {b.net > 1 ? (
-                    <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-100">
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold text-[11px] sm:text-xs border border-emerald-100 shrink-0">
                       is owed {formatCurrencyRounded(b.net, homeCurrency)}
                     </span>
                   ) : b.net < -1 ? (
-                    <span className="px-2.5 py-1 rounded-full bg-orange-50 text-orange-700 font-bold text-xs border border-orange-100">
+                    <span className="px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 font-bold text-[11px] sm:text-xs border border-orange-100 shrink-0">
                       owes {formatCurrencyRounded(Math.abs(b.net), homeCurrency)}
                     </span>
                   ) : (
-                    <span className="px-2.5 py-1 rounded-full bg-stone-100 text-stone-500 font-bold text-xs border border-stone-200">
+                    <span className="px-2 py-0.5 rounded-full bg-stone-100 text-stone-500 font-bold text-[11px] sm:text-xs border border-stone-200 shrink-0">
                       Settled Up
                     </span>
                   )}
@@ -818,20 +832,20 @@ export default function ExpenseTrackerView({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.24 }}
-          className="bg-white rounded-2xl border border-[#E6DFD5] p-4 shadow-2xs space-y-3"
+          className="bg-white rounded-2xl border border-[#E6DFD5] p-3.5 sm:p-4 shadow-2xs space-y-2.5 sm:space-y-3"
         >
           <div className="flex items-center justify-between text-xs">
-            <span className="font-bold text-[#1E1C1A] uppercase tracking-wider text-[10.5px] font-mono flex items-center gap-1.5">
+            <span className="font-bold text-[#1E1C1A] uppercase tracking-wider text-[10px] sm:text-[10.5px] font-mono flex items-center gap-1.5">
               <DollarSign className="w-3.5 h-3.5 text-[#FF6B2C]" />
               <span>Category Breakdown</span>
             </span>
-            <span className="text-[#7A7268] text-[11px] font-mono">
+            <span className="text-[#7A7268] text-[10.5px] sm:text-[11px] font-mono">
               {categoryTotalsBase.filter(c => c.total > 0).length} Active Categories
             </span>
           </div>
 
           {/* Multi-segment stacked bar */}
-          <div className="w-full h-3.5 rounded-full bg-[#FAF6F0] overflow-hidden flex p-0.5 border border-[#E6DFD5]/70 gap-0.5">
+          <div className="w-full h-3 sm:h-3.5 rounded-full bg-[#FAF6F0] overflow-hidden flex p-0.5 border border-[#E6DFD5]/70 gap-0.5">
             {categoryTotalsBase.map(cat => {
               if (cat.total <= 0) return null;
               const pct = (cat.total / totalSpentBase) * 100;
@@ -851,17 +865,17 @@ export default function ExpenseTrackerView({
           </div>
 
           {/* Legend chips */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-sans pt-1">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-sans pt-0.5">
             {categoryTotalsBase.map(cat => {
               if (cat.total <= 0) return null;
               const pct = (cat.total / totalSpentBase) * 100;
               const catConfig = CATEGORY_ICONS[cat.id] || CATEGORY_ICONS['Other'];
               return (
                 <div key={`legend-${cat.id}`} className="flex items-center gap-1.5 text-[#1E1C1A]">
-                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: catConfig.color }} />
-                  <span className="font-medium text-gray-700">{cat.label}:</span>
-                  <span className="font-bold font-mono text-[#1E1C1A]">{formatCurrencyRounded(cat.total, homeCurrency)}</span>
-                  <span className="text-[10px] text-gray-500 font-mono">({pct.toFixed(0)}%)</span>
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: catConfig.color }} />
+                  <span className="font-medium text-gray-700 text-[11px] sm:text-xs">{cat.label}:</span>
+                  <span className="font-bold font-mono text-[#1E1C1A] text-[11px] sm:text-xs">{formatCurrencyRounded(cat.total, homeCurrency)}</span>
+                  <span className="text-[9.5px] sm:text-[10px] text-gray-500 font-mono">({pct.toFixed(0)}%)</span>
                 </div>
               );
             })}
@@ -874,7 +888,7 @@ export default function ExpenseTrackerView({
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.25 }}
-        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5"
+        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 sm:gap-2.5"
       >
         {categoryTotalsBase.map((cat, idx) => {
           const isSelected = selectedCategoryFilter === cat.id;
@@ -888,10 +902,10 @@ export default function ExpenseTrackerView({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.25 + idx * 0.04 }}
-              whileHover={{ scale: 1.04, y: -2 }}
-              whileTap={{ scale: 0.96 }}
+              whileHover={{ scale: 1.03, y: -1 }}
+              whileTap={{ scale: 0.97 }}
               onClick={() => setSelectedCategoryFilter(isSelected ? 'All' : cat.id)}
-              className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer select-none relative overflow-hidden ${
+              className={`p-3 sm:p-3.5 rounded-xl sm:rounded-2xl border text-left transition-all cursor-pointer select-none relative overflow-hidden ${
                 isSelected 
                   ? 'bg-[#1E1C1A] text-white border-[#1E1C1A] shadow-xs' 
                   : isZeroSpend
@@ -908,14 +922,14 @@ export default function ExpenseTrackerView({
                 />
               )}
 
-              <div className="flex items-center justify-between mb-1.5 relative z-10">
-                <div className={`w-7 h-7 rounded-xl ${
+              <div className="flex items-center justify-between mb-1 relative z-10">
+                <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg sm:rounded-xl ${
                   isSelected ? 'bg-white/10 border border-white/20' : isZeroSpend ? 'bg-gray-200/50 border border-gray-300/60' : catConfig.bg + ' border ' + catConfig.border
                 } flex items-center justify-center shrink-0`}>
                   <IconComp className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : ''}`} style={{ color: isSelected ? '#ffffff' : isZeroSpend ? '#9CA3AF' : catConfig.color }} />
                 </div>
                 {cat.count > 0 && (
-                  <span className={`text-[9.5px] font-mono font-bold ${
+                  <span className={`text-[9px] sm:text-[9.5px] font-mono font-bold ${
                     isSelected ? 'text-[#FF6B2C]' : 'text-[#7A7268]'
                   }`}>
                     {cat.count}
@@ -923,12 +937,12 @@ export default function ExpenseTrackerView({
                 )}
               </div>
 
-              <span className={`text-xs font-sans font-bold block ${
+              <span className={`text-[11px] sm:text-xs font-sans font-bold block truncate ${
                 isSelected ? 'text-white' : isZeroSpend ? 'text-gray-400' : 'text-[#1E1C1A]'
               }`}>
                 {cat.label}
               </span>
-              <span className={`text-xs font-serif font-black block mt-0.5 ${
+              <span className={`text-xs sm:text-sm font-serif font-black block mt-0.5 ${
                 isSelected ? 'text-[#FF6B2C]' : isZeroSpend ? 'text-gray-400 font-normal' : 'text-[#1E1C1A]'
               }`}>
                 {formatCurrencyRounded(cat.total, homeCurrency)}
@@ -939,30 +953,39 @@ export default function ExpenseTrackerView({
       </motion.div>
 
       {/* FILTER BAR & LOGGED EXPENSES FEED */}
-      <div className="space-y-4 pt-2">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <h3 className="font-serif text-xl font-bold text-[#1E1C1A]">
+      <div className="space-y-3 sm:space-y-4 pt-1 sm:pt-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
+          <h3 className="font-serif text-lg sm:text-xl font-bold text-[#1E1C1A]">
             Logged Expenses ({filteredExpenses.length})
           </h3>
 
-          {/* DAY FILTER PILLS */}
-          <div className="flex items-center gap-1.5 bg-[#FAF6F0] p-1 rounded-full border border-[#E6DFD5] self-start sm:self-auto">
-            {['All', 'Day I', 'Day II', 'Day III'].map(dayLabel => {
-              const filterVal = dayLabel === 'Day I' ? 'Day 1' : dayLabel === 'Day II' ? 'Day 2' : dayLabel === 'Day III' ? 'Day 3' : 'All';
-              const count = expenses.filter(e => filterVal === 'All' || e.day === filterVal).length;
-              const isActive = (selectedDayFilter === 'All' && filterVal === 'All') || selectedDayFilter === filterVal;
+          {/* DAY FILTER PILLS (Scrollable on mobile) */}
+          <div className="flex items-center gap-1 bg-[#FAF6F0] p-1 rounded-full border border-[#E6DFD5] overflow-x-auto max-w-full hide-scrollbar shrink-0">
+            <button
+              onClick={() => setSelectedDayFilter('All')}
+              className={`px-3 py-1 rounded-full text-xs font-sans font-bold transition-all cursor-pointer select-none shrink-0 ${
+                selectedDayFilter === 'All'
+                  ? 'bg-[#1E1C1A] text-white shadow-2xs' 
+                  : 'text-[#7A7268] hover:text-[#1E1C1A] hover:bg-white/60'
+              }`}
+            >
+              All ({expenses.length})
+            </button>
+            {availableDays.map(d => {
+              const count = expenses.filter(e => e.day === d.id).length;
+              const isActive = selectedDayFilter === d.id;
 
               return (
                 <button
-                  key={dayLabel}
-                  onClick={() => setSelectedDayFilter(filterVal)}
-                  className={`px-3 py-1 rounded-full text-xs font-sans font-bold transition-all cursor-pointer select-none ${
+                  key={d.id}
+                  onClick={() => setSelectedDayFilter(d.id)}
+                  className={`px-3 py-1 rounded-full text-xs font-sans font-bold transition-all cursor-pointer select-none shrink-0 ${
                     isActive 
                       ? 'bg-[#1E1C1A] text-white shadow-2xs' 
                       : 'text-[#7A7268] hover:text-[#1E1C1A] hover:bg-white/60'
                   }`}
                 >
-                  {dayLabel} ({count})
+                  {d.label} ({count})
                 </button>
               );
             })}
@@ -971,11 +994,11 @@ export default function ExpenseTrackerView({
 
         {/* FEED ITEMS LIST */}
         {filteredExpenses.length === 0 ? (
-          <div className="p-8 text-center bg-[#FAF6F0] rounded-3xl border border-dashed border-[#E6DFD5]">
-            <p className="text-sm font-sans text-[#7A7268]">No expenses logged for this filter selection.</p>
+          <div className="p-6 sm:p-8 text-center bg-[#FAF6F0] rounded-2xl sm:rounded-3xl border border-dashed border-[#E6DFD5]">
+            <p className="text-xs sm:text-sm font-sans text-[#7A7268]">No expenses logged for this filter selection.</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2.5 sm:gap-3">
             <AnimatePresence>
               {filteredExpenses.map((exp) => {
                 const catConfig = CATEGORY_ICONS[exp.category] || CATEGORY_ICONS['Other'];
@@ -991,9 +1014,9 @@ export default function ExpenseTrackerView({
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.98, y: -8 }}
                     transition={{ duration: 0.25 }}
-                    className="p-4 rounded-2xl bg-white border border-[#E6DFD5] shadow-2xs hover:shadow-xs transition-shadow flex items-center justify-between gap-3 group"
+                    className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white border border-[#E6DFD5] shadow-2xs hover:shadow-xs transition-shadow flex items-center justify-between gap-2.5 sm:gap-3 group"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
                       {/* Interactive Clickable Receipt Thumbnail if available */}
                       {(() => {
                         const imgUrl = exp.receiptUrl || exp.receiptPhoto || exp.photoDataUrl;
@@ -1002,79 +1025,79 @@ export default function ExpenseTrackerView({
                             <div 
                               onClick={() => setPreviewPhotoUrl(imgUrl)}
                               title="Click to view full receipt"
-                              className="w-11 h-11 rounded-xl border border-[#E6DFD5] overflow-hidden shrink-0 cursor-pointer relative group/thumb shadow-2xs hover:scale-105 transition-transform"
+                              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl border border-[#E6DFD5] overflow-hidden shrink-0 cursor-pointer relative group/thumb shadow-2xs hover:scale-105 transition-transform"
                             >
                               <img src={imgUrl} alt="Receipt" className="w-full h-full object-cover" />
                               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center text-white">
-                                <Eye className="w-4 h-4" />
+                                <Eye className="w-3.5 h-3.5" />
                               </div>
                             </div>
                           );
                         }
                         return (
-                          <div className={`w-11 h-11 rounded-xl ${catConfig.bg} border ${catConfig.border} flex items-center justify-center shrink-0`}>
-                            <IconComp className="w-5 h-5" style={{ color: catConfig.color }} />
+                          <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl ${catConfig.bg} border ${catConfig.border} flex items-center justify-center shrink-0`}>
+                            <IconComp className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: catConfig.color }} />
                           </div>
                         );
                       })()}
 
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h4 className="font-serif font-extrabold text-base text-[#1E1C1A] truncate">{exp.merchant}</h4>
-                          <span className="px-2 py-0.5 rounded-md bg-[#FAF6F0] border border-[#E6DFD5] text-[10px] font-sans font-bold text-[#1E1C1A]">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h4 className="font-serif font-extrabold text-sm sm:text-base text-[#1E1C1A] truncate max-w-[140px] sm:max-w-none">{exp.merchant}</h4>
+                          <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-[#FAF6F0] border border-[#E6DFD5] text-[9.5px] sm:text-[10px] font-sans font-bold text-[#1E1C1A]">
                             {exp.category}
                           </span>
                           {exp.day && (
-                            <span className="px-2 py-0.5 rounded-md bg-[#FF6B2C]/10 border border-[#FF6B2C]/30 text-[10px] font-mono font-bold text-[#FF6B2C]">
+                            <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-[#FF6B2C]/10 border border-[#FF6B2C]/30 text-[9.5px] sm:text-[10px] font-mono font-bold text-[#FF6B2C]">
                               {exp.day}
                             </span>
                           )}
                         </div>
 
-                        <div className="flex items-center gap-2 text-[11px] font-sans text-gray-600 mt-1">
+                        <div className="flex items-center gap-1.5 text-[10.5px] sm:text-[11px] font-sans text-gray-600 mt-0.5">
                           <span>{exp.date || 'Today'}</span>
                           {exp.paidBy && exp.paidBy !== 'Me' && (
                             <>
-                              <span>•</span>
-                              <span className="font-bold text-[#FF6B2C]">Paid by {exp.paidBy}</span>
+                              <span>&middot;</span>
+                              <span className="font-bold text-[#FF6B2C]">By {exp.paidBy}</span>
                             </>
                           )}
                           {exp.syncStatus === 'pending' && (
                             <span className="text-amber-600 font-bold flex items-center gap-1">
-                              • <RefreshCw className="w-3 h-3 animate-spin" /> Pending sync
+                              &middot; <RefreshCw className="w-3 h-3 animate-spin" /> Syncing
                             </span>
                           )}
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 shrink-0">
+                    <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                       <div className="text-right">
-                        <span className="text-lg font-serif font-black text-[#1E1C1A] block">
+                        <span className="text-sm sm:text-base font-serif font-black text-[#1E1C1A] block">
                           {symbol}{parseFloat(exp.amount).toFixed(2)}
                         </span>
                         {isForeign && (
-                          <span className="text-[11px] font-mono font-bold text-gray-500 block">
+                          <span className="text-[9.5px] sm:text-[11px] font-mono font-bold text-gray-500 block">
                             (~{formatCurrency(usdEquiv, homeCurrency)})
                           </span>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-0.5 opacity-80 group-hover:opacity-100 transition-opacity">
                         <motion.button
-                          whileHover={{ scale: 1.15, rotate: 5 }}
+                          whileHover={{ scale: 1.15 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => handleEditClick(exp)}
-                          className="p-1.5 rounded-lg text-gray-500 hover:text-[#1E1C1A] hover:bg-[#FAF6F0] transition-colors cursor-pointer"
+                          className="p-1 sm:p-1.5 rounded-lg text-gray-500 hover:text-[#1E1C1A] hover:bg-[#FAF6F0] transition-colors cursor-pointer"
                           title="Edit Expense"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </motion.button>
                         <motion.button
-                          whileHover={{ scale: 1.15, rotate: -5 }}
+                          whileHover={{ scale: 1.15 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => handleDeleteExpense(exp.id)}
-                          className="p-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                          className="p-1 sm:p-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                           title="Delete Expense"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -1089,154 +1112,158 @@ export default function ExpenseTrackerView({
         )}
       </div>
 
-      {/* ADD / EDIT EXPENSE MODAL */}
-      <AnimatePresence>
-        {showAddModal && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowAddModal(false)}
-              className="absolute inset-0 bg-black/25 backdrop-blur-[2px]"
-            />
+      {/* ADD / EDIT EXPENSE MODAL (PORTALED TO BODY TO ESCAPE 3D PERSPECTIVE) */}
+      {mounted && createPortal(
+        <AnimatePresence>
+          {showAddModal && (
+            <div className="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowAddModal(false)}
+                className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+              />
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="relative w-full max-w-lg bg-[#FAF6F0] rounded-3xl p-6 shadow-2xl border border-[#E6DFD5] text-[#1E1C1A] z-10 font-sans"
-            >
-              <div className="flex items-center justify-between pb-3 border-b border-[#E6DFD5]">
-                <h3 className="font-serif text-xl font-bold">
-                  {editingExpense ? 'Edit Expense' : 'Log New Expense'}
-                </h3>
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  className="w-8 h-8 rounded-full bg-white border border-[#E6DFD5] flex items-center justify-center text-gray-500 hover:text-gray-900 transition-all cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* OCR PROCESSING LOADING SCANNING BEAM */}
-              {isScanningOcr && (
-                <div className="my-4 p-4 rounded-2xl bg-white border border-[#FF6B2C]/40 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#FF6B2C]/15 flex items-center justify-center text-[#FF6B2C] animate-spin">
-                    <RefreshCw className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-xs text-[#FF6B2C]">Scanning Receipt Text...</p>
-                    <p className="text-[11px] text-gray-500">Extracting merchant, category, total amount, and currency.</p>
-                  </div>
-                </div>
-              )}
-
-              {/* OCR CONFIDENCE SUCCESS MSG */}
-              {ocrConfidenceMsg && (
-                <div className={`my-3 p-3 rounded-xl border text-xs flex items-center gap-2 ${
-                  ocrConfidenceMsg.type === 'success' ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-amber-50 border-amber-300 text-amber-900'
-                }`}>
-                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
-                  <span>{ocrConfidenceMsg.text}</span>
-                </div>
-              )}
-
-              {/* DUPLICATE WARNING */}
-              {duplicateWarning && (
-                <div className="my-3 p-3 rounded-xl bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-amber-700" />
-                  <span>{duplicateWarning}</span>
-                </div>
-              )}
-
-              {/* SCANNED BILL RECEIPT PHOTO PREVIEW INSIDE MODAL */}
-              {receiptPhotoDataUrl && (
-                <div className="my-3 p-3 rounded-2xl bg-white border border-[#E6DFD5] flex items-center justify-between gap-3 shadow-2xs">
-                  <div className="flex items-center gap-3">
-                    <div 
-                      onClick={() => setPreviewPhotoUrl(receiptPhotoDataUrl)}
-                      className="w-14 h-14 rounded-xl border border-[#E6DFD5] overflow-hidden shrink-0 cursor-pointer relative group"
-                      title="Click to view full-size receipt"
-                    >
-                      <img src={receiptPhotoDataUrl} alt="Scanned Bill" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
-                        <Eye className="w-4 h-4" />
-                      </div>
-                    </div>
-                    <div>
-                      <span className="font-bold text-xs text-[#1E1C1A] block">Bill Photo Attached</span>
-                      <span className="text-[11px] text-[#7A7268] block">Receipt photo will be saved & previewable in feed</span>
-                    </div>
-                  </div>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                className="relative w-full max-w-lg max-h-[88vh] overflow-y-auto bg-[#FAF6F0] rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl border border-[#E6DFD5] text-[#1E1C1A] z-10 font-sans"
+              >
+                <div className="flex items-center justify-between pb-3 border-b border-[#E6DFD5]">
+                  <h3 className="font-serif text-lg sm:text-xl font-bold">
+                    {editingExpense ? 'Edit Expense' : 'Log New Expense'}
+                  </h3>
                   <button
                     type="button"
-                    onClick={() => {
-                      setReceiptPhoto(null);
-                      setReceiptPhotoDataUrl(null);
-                    }}
-                    className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                    title="Remove Attached Photo"
+                    onClick={() => setShowAddModal(false)}
+                    className="w-8 h-8 rounded-full bg-white border border-[#E6DFD5] flex items-center justify-center text-gray-500 hover:text-gray-900 transition-all cursor-pointer"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
-              )}
 
-              <form onSubmit={handleSaveExpense} className="mt-4 space-y-4 text-xs">
-                <div className="grid grid-cols-2 gap-3">
+                {/* OCR PROCESSING LOADING SCANNING BEAM */}
+                {isScanningOcr && (
+                  <div className="my-3 p-3.5 rounded-2xl bg-white border border-[#FF6B2C]/40 flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-full bg-[#FF6B2C]/15 flex items-center justify-center text-[#FF6B2C] animate-spin shrink-0">
+                      <RefreshCw className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-xs text-[#FF6B2C]">Scanning Receipt Text...</p>
+                      <p className="text-[10.5px] text-gray-500">Extracting merchant, category, amount, and currency.</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* OCR CONFIDENCE SUCCESS MSG */}
+                {ocrConfidenceMsg && (
+                  <div className={`my-2.5 p-2.5 sm:p-3 rounded-xl border text-xs flex items-center gap-2 ${
+                    ocrConfidenceMsg.type === 'success' ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-amber-50 border-amber-300 text-amber-900'
+                  }`}>
+                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                    <span>{ocrConfidenceMsg.text}</span>
+                  </div>
+                )}
+
+                {/* DUPLICATE WARNING */}
+                {duplicateWarning && (
+                  <div className="my-2.5 p-2.5 sm:p-3 rounded-xl bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-amber-700" />
+                    <span>{duplicateWarning}</span>
+                  </div>
+                )}
+
+                {/* SCANNED BILL RECEIPT PHOTO PREVIEW INSIDE MODAL */}
+                {receiptPhotoDataUrl && (
+                  <div className="my-3 p-2.5 sm:p-3 rounded-2xl bg-white border border-[#E6DFD5] flex items-center justify-between gap-3 shadow-2xs">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div 
+                        onClick={() => setPreviewPhotoUrl(receiptPhotoDataUrl)}
+                        className="w-12 h-12 rounded-xl border border-[#E6DFD5] overflow-hidden shrink-0 cursor-pointer relative group"
+                        title="Click to view full-size receipt"
+                      >
+                        <img src={receiptPhotoDataUrl} alt="Scanned Bill" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                          <Eye className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
+                      <div className="min-w-0">
+                        <span className="font-bold text-xs text-[#1E1C1A] block truncate">Bill Photo Attached</span>
+                        <span className="text-[10.5px] text-[#7A7268] block">Receipt photo saved to feed</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReceiptPhoto(null);
+                        setReceiptPhotoDataUrl(null);
+                      }}
+                      className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer shrink-0"
+                      title="Remove Attached Photo"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
+                <form onSubmit={handleSaveExpense} className="mt-3.5 space-y-3 sm:space-y-3.5 text-xs">
+                  {/* Amount and Currency */}
+                  <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+                    <div>
+                      <label className="block font-bold text-gray-700 mb-1 text-[11px] sm:text-xs">Amount</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        required
+                        className="w-full px-3 py-2.5 rounded-xl bg-white border border-[#E6DFD5] text-base sm:text-sm font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-gray-700 mb-1 text-[11px] sm:text-xs">Currency</label>
+                      <div className="relative">
+                        <select
+                          value={expenseCurrency}
+                          onChange={(e) => setExpenseCurrency(e.target.value)}
+                          className="w-full px-3 py-2.5 pr-8 rounded-xl bg-white border border-[#E6DFD5] text-sm font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C] appearance-none"
+                        >
+                          {SUPPORTED_CURRENCIES.map(c => (
+                            <option key={c.code} value={c.code}>
+                              {c.code} ({c.symbol})
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Merchant Description */}
                   <div>
-                    <label className="block font-bold text-gray-700 mb-1">Amount</label>
+                    <label className="block font-bold text-gray-700 mb-1 text-[11px] sm:text-xs">Merchant / Description</label>
                     <input
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
+                      type="text"
+                      placeholder="e.g. The Bikers Cafe, Trattoria, Taxi"
+                      value={merchant}
+                      onChange={(e) => setMerchant(e.target.value)}
                       required
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E6DFD5] text-sm font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C]"
+                      className="w-full px-3 py-2.5 rounded-xl bg-white border border-[#E6DFD5] text-base sm:text-sm font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C]"
                     />
                   </div>
 
+                  {/* Category: FULL WIDTH to prevent truncation */}
                   <div>
-                    <label className="block font-bold text-gray-700 mb-1">Currency</label>
-                    <div className="relative">
-                      <select
-                        value={expenseCurrency}
-                        onChange={(e) => setExpenseCurrency(e.target.value)}
-                        className="w-full px-3.5 py-2.5 pr-10 rounded-xl bg-white border border-[#E6DFD5] text-xs font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C] appearance-none"
-                      >
-                        {SUPPORTED_CURRENCIES.map(c => (
-                          <option key={c.code} value={c.code}>
-                            {c.code} ({c.symbol}) — {c.label}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-gray-700 mb-1">Merchant / Description</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. The Bikers Cafe, Trattoria, Taxi"
-                    value={merchant}
-                    onChange={(e) => setMerchant(e.target.value)}
-                    required
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E6DFD5] text-xs font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C]"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-bold text-gray-700 mb-1">Category</label>
+                    <label className="block font-bold text-gray-700 mb-1 text-[11px] sm:text-xs">Category</label>
                     <div className="relative">
                       <select
                         value={category}
                         onChange={(e) => setCategory(e.target.value)}
-                        className="w-full px-3.5 py-2.5 pr-10 rounded-xl bg-white border border-[#E6DFD5] text-xs font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C] appearance-none"
+                        className="w-full px-3.5 py-2.5 pr-8 rounded-xl bg-white border border-[#E6DFD5] text-sm font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C] appearance-none"
                       >
                         {EXPENSE_CATEGORIES.map(cat => (
                           <option key={cat.id} value={cat.id}>{cat.label}</option>
@@ -1246,120 +1273,128 @@ export default function ExpenseTrackerView({
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block font-bold text-gray-700 mb-1">Itinerary Day</label>
-                    <div className="relative">
-                      <select
-                        value={expenseDay}
-                        onChange={(e) => setExpenseDay(e.target.value)}
-                        className="w-full px-3.5 py-2.5 pr-10 rounded-xl bg-white border border-[#E6DFD5] text-xs font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C] appearance-none"
-                      >
-                        <option value="Day 1">Day I (Sep 4)</option>
-                        <option value="Day 2">Day II (Sep 5)</option>
-                        <option value="Day 3">Day III (Sep 6)</option>
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+                  {/* Itinerary Day & Paid By */}
+                  <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+                    <div>
+                      <label className="block font-bold text-gray-700 mb-1 text-[11px] sm:text-xs">Itinerary Day</label>
+                      <div className="relative">
+                        <select
+                          value={expenseDay}
+                          onChange={(e) => setExpenseDay(e.target.value)}
+                          className="w-full px-3 py-2.5 pr-8 rounded-xl bg-white border border-[#E6DFD5] text-sm font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C] appearance-none"
+                        >
+                          {availableDays.map(d => (
+                            <option key={d.id} value={d.id}>{d.label}</option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-gray-700 mb-1 text-[11px] sm:text-xs">Paid By</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          list="trip-members"
+                          value={paidBy}
+                          onChange={(e) => setPaidBy(e.target.value)}
+                          placeholder="e.g. Me, Sarah"
+                          className="w-full px-3 py-2.5 rounded-xl bg-white border border-[#E6DFD5] text-base sm:text-sm font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C]"
+                        />
+                        <datalist id="trip-members">
+                          <option value="Me" />
+                          <option value="Split Equally" />
+                          {tripMembers.filter(m => m !== 'Me' && m !== 'Split Equally' && m !== 'Shared 50/50').map(m => (
+                            <option key={m} value={m} />
+                          ))}
+                        </datalist>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div>
-                  <label className="block font-bold text-gray-700 mb-1">Paid By (Who paid the bill?)</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      list="trip-members"
-                      value={paidBy}
-                      onChange={(e) => setPaidBy(e.target.value)}
-                      placeholder="e.g. Me, John, Alice"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E6DFD5] text-xs font-bold text-[#1E1C1A] focus:outline-none focus:border-[#FF6B2C]"
-                    />
-                    <datalist id="trip-members">
-                      <option value="Me" />
-                      <option value="Split Equally" />
-                      {tripMembers.filter(m => m !== 'Me' && m !== 'Split Equally' && m !== 'Shared 50/50').map(m => (
-                        <option key={m} value={m} />
-                      ))}
-                    </datalist>
-                  </div>
-                </div>
+                  {!receiptPhotoDataUrl && (
+                    <div>
+                      <label className="block font-bold text-gray-700 mb-1 text-[11px] sm:text-xs">Receipt Photo (Optional)</label>
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full py-2.5 rounded-xl bg-white border border-dashed border-gray-400 text-gray-600 font-bold hover:bg-gray-50 hover:text-gray-900 transition-colors flex items-center justify-center gap-2 cursor-pointer text-xs"
+                      >
+                        <Camera className="w-4 h-4 text-[#FF6B2C]" />
+                        Attach Receipt Photo
+                      </button>
+                    </div>
+                  )}
 
-                {!receiptPhotoDataUrl && (
-                  <div>
-                    <label className="block font-bold text-gray-700 mb-1">Receipt / Bill (Optional)</label>
+                  <div className="pt-3 border-t border-[#E6DFD5] flex items-center justify-end gap-2">
                     <button
                       type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="w-full py-2.5 rounded-xl bg-white border border-dashed border-gray-400 text-gray-600 font-bold hover:bg-gray-50 hover:text-gray-900 transition-colors flex items-center justify-center gap-2"
+                      onClick={() => setShowAddModal(false)}
+                      className="px-4 py-2.5 rounded-xl text-gray-600 font-bold hover:bg-gray-200/50 transition-colors cursor-pointer text-xs"
                     >
-                      <Camera className="w-4 h-4" />
-                      Attach Receipt Photo
+                      Cancel
                     </button>
+                    <motion.button
+                      whileHover={{ scale: 1.04, boxShadow: "0px 10px 20px rgba(255,107,44,0.3)" }}
+                      whileTap={{ scale: 0.96 }}
+                      type="submit"
+                      className="px-5 py-2.5 rounded-xl bg-[#FF6B2C] hover:bg-[#E55A1C] text-white font-bold shadow-md transition-colors cursor-pointer text-xs"
+                    >
+                      Save Expense
+                    </motion.button>
                   </div>
-                )}
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
-                <div className="pt-3 border-t border-[#E6DFD5] flex items-center justify-end gap-2">
+      {/* FULL RECEIPT PREVIEW LIGHTBOX (PORTALED TO BODY) */}
+      {mounted && createPortal(
+        <AnimatePresence>
+          {previewPhotoUrl && (
+            <div className="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setPreviewPhotoUrl(null)}
+                className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+              />
+
+              <motion.div
+                initial={{ opacity: 0, scaleY: 0.3, y: -40 }}
+                animate={{ opacity: 1, scaleY: 1, y: 0 }}
+                exit={{ opacity: 0, scaleY: 0.3, y: -40 }}
+                transition={{ type: 'spring', stiffness: 350, damping: 26 }}
+                className="relative max-w-md w-full bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl border border-[#E6DFD5] z-10 overflow-hidden text-[#1E1C1A] origin-top"
+              >
+                <div className="flex items-center justify-between pb-2.5 sm:pb-3 border-b border-[#E6DFD5] mb-2.5 sm:mb-3">
+                  <div className="flex items-center gap-2">
+                    <Camera className="w-4 h-4 text-[#FF6B2C]" />
+                    <span className="font-serif font-bold text-sm sm:text-base">Receipt Preview</span>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2 rounded-xl text-gray-600 font-bold hover:bg-gray-200/50 transition-colors"
+                    onClick={() => setPreviewPhotoUrl(null)}
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#FAF6F0] border border-[#E6DFD5] flex items-center justify-center text-gray-500 hover:text-gray-900 transition-all cursor-pointer"
                   >
-                    Cancel
+                    <X className="w-4 h-4" />
                   </button>
-                  <motion.button
-                    whileHover={{ scale: 1.05, boxShadow: "0px 10px 20px rgba(255,107,44,0.3)" }}
-                    whileTap={{ scale: 0.95 }}
-                    type="submit"
-                    className="px-5 py-2 rounded-xl bg-[#FF6B2C] hover:bg-[#E55A1C] text-white font-bold shadow-md transition-colors cursor-pointer"
-                  >
-                    Save Expense
-                  </motion.button>
                 </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
-      {/* FULL RECEIPT PREVIEW LIGHTBOX WITH PAPER UNROLL ANIMATION */}
-      <AnimatePresence>
-        {previewPhotoUrl && (
-          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setPreviewPhotoUrl(null)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-xs"
-            />
-
-            <motion.div
-              initial={{ opacity: 0, scaleY: 0.3, y: -40 }}
-              animate={{ opacity: 1, scaleY: 1, y: 0 }}
-              exit={{ opacity: 0, scaleY: 0.3, y: -40 }}
-              transition={{ type: 'spring', stiffness: 350, damping: 26 }}
-              className="relative max-w-md w-full bg-white rounded-3xl p-5 shadow-2xl border border-[#E6DFD5] z-10 overflow-hidden text-[#1E1C1A] origin-top"
-            >
-              <div className="flex items-center justify-between pb-3 border-b border-[#E6DFD5] mb-3">
-                <div className="flex items-center gap-2">
-                  <Camera className="w-4 h-4 text-[#FF6B2C]" />
-                  <span className="font-serif font-bold text-base">Receipt Preview</span>
+                <div className="w-full max-h-[70vh] rounded-xl sm:rounded-2xl overflow-hidden border border-[#E6DFD5] bg-stone-900 flex items-center justify-center">
+                  <img src={previewPhotoUrl} alt="Receipt Preview" className="max-w-full max-h-[70vh] object-contain" />
                 </div>
-                <button
-                  onClick={() => setPreviewPhotoUrl(null)}
-                  className="w-8 h-8 rounded-full bg-[#FAF6F0] border border-[#E6DFD5] flex items-center justify-center text-gray-500 hover:text-gray-900 transition-all cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="w-full max-h-[70vh] rounded-2xl overflow-hidden border border-[#E6DFD5] bg-stone-900 flex items-center justify-center">
-                <img src={previewPhotoUrl} alt="Receipt Preview" className="max-w-full max-h-[70vh] object-contain" />
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 }
