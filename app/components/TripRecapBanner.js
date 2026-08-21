@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, X, ChevronRight, Play } from 'lucide-react';
+import { Sparkles, X, Play, Film } from 'lucide-react';
 
 export default function TripRecapBanner({ itinerary, onLaunchRecap }) {
   const [isVisible, setIsVisible] = useState(false);
@@ -38,74 +38,99 @@ export default function TripRecapBanner({ itinerary, onLaunchRecap }) {
 
   if (!isVisible) return null;
 
+  const heroPhoto = itinerary?.destinationImage || 
+    itinerary?.image || 
+    itinerary?.days?.[0]?.activities?.[0]?.image || 
+    'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80';
+
+  const totalDays = itinerary?.days?.length || 0;
+  const totalStops = itinerary?.days?.reduce((acc, d) => acc + (d.activities?.length || 0), 0) || 0;
+
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, y: -20, scale: 0.98 }}
+        initial={{ opacity: 0, y: -16, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, height: 0, overflow: 'hidden', transition: { duration: 0.3 } }}
         transition={{ type: "spring", stiffness: 400, damping: 30 }}
-        className="mx-auto max-w-4xl px-4 sm:px-6 mb-8 relative z-40"
+        className="mx-auto max-w-5xl px-4 sm:px-6 mb-6 relative z-30"
       >
-        {/* Premium Banner Container */}
-        <div className="relative overflow-hidden rounded-[24px] bg-[#1E1C1A] border border-stone-800/80 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] group">
+        {/* Luxury Editorial Retrospective Banner */}
+        <div className="relative overflow-hidden rounded-3xl bg-white/95 backdrop-blur-xl border border-[#E6DFD5] shadow-[0_20px_45px_-12px_rgba(30,28,26,0.12),0_0_0_1px_rgba(255,255,255,0.8)_inset] p-4.5 sm:p-6 group">
           
-          {/* Animated Background Glow */}
-          <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#FF6B2C]/20 rounded-full blur-[100px] opacity-40 group-hover:opacity-60 transition-opacity duration-1000 mix-blend-screen pointer-events-none" />
-          <div className="absolute bottom-0 left-1/4 w-72 h-72 bg-emerald-500/10 rounded-full blur-[80px] opacity-30 mix-blend-screen pointer-events-none" />
-          
-          {/* Subtle noise texture */}
-          <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
-          
-          {/* Light Sweep Animation */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-[200%] group-hover:animate-[sweep_2s_ease-in-out_infinite] pointer-events-none" />
+          {/* Subtle Decorative Postal Seal Watermark */}
+          <div className="absolute -right-6 -bottom-6 w-44 h-44 rounded-full border-2 border-dashed border-[#E6DFD5]/70 pointer-events-none flex items-center justify-center -rotate-12 select-none">
+            <span className="text-[9.5px] font-mono uppercase tracking-widest text-[#C8BFB2] font-black">
+              TripWise • Retrospective
+            </span>
+          </div>
 
-          <div className="relative p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+          <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6">
             
-            {/* Left Content */}
-            <div className="flex items-center gap-4">
-              {/* Icon Container */}
-              <div className="relative shrink-0">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#FF6B2C] to-amber-400 rounded-full blur-md opacity-40 animate-pulse" />
-                <div className="w-12 h-12 rounded-full bg-gradient-to-b from-stone-800 to-stone-900 border border-stone-700/50 flex items-center justify-center text-white relative z-10 shadow-inner">
-                  <Sparkles className="w-5 h-5 text-[#FF6B2C]" />
+            {/* Left Section: Polaroid Preview + Storybook Title */}
+            <div className="flex items-center gap-3.5 sm:gap-5 min-w-0">
+              
+              {/* Layered Travel Polaroid Mini-Card */}
+              <div className="relative shrink-0 hidden sm:block">
+                <div className="w-16 h-20 sm:w-20 sm:h-24 bg-white p-1.5 pb-4 sm:pb-5 rounded-xl shadow-sm border border-[#E6DFD5] -rotate-3 group-hover:rotate-0 transition-transform duration-300">
+                  <div className="w-full h-full rounded-lg overflow-hidden relative bg-stone-100">
+                    <img 
+                      src={heroPhoto} 
+                      alt={itinerary?.destinationName || 'Trip'} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                    />
+                    <div className="absolute inset-0 bg-black/5" />
+                  </div>
+                </div>
+                {/* Micro badge */}
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#FF6B2C] text-white flex items-center justify-center shadow-xs">
+                  <Film className="w-3 h-3 stroke-[2.5]" />
                 </div>
               </div>
-              
-              {/* Text */}
-              <div>
-                <h4 className="text-white font-serif font-medium text-xl sm:text-2xl leading-tight tracking-tight flex items-center gap-2">
-                  Your {itinerary?.destinationName || 'Trip'} Recap
-                  <span className="inline-flex px-2 py-0.5 rounded-md bg-[#FF6B2C]/10 border border-[#FF6B2C]/20 text-[#FF6B2C] text-[10px] uppercase font-sans font-bold tracking-wider align-middle ml-1">
-                    Ready
+
+              {/* Text Details */}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#FFF0E8] border border-[#FF6B2C]/25 text-[#FF6B2C] text-[10px] font-mono uppercase font-bold tracking-wider">
+                    <Sparkles className="w-2.5 h-2.5" />
+                    Story Recap Ready
                   </span>
-                </h4>
-                <p className="text-stone-400 text-sm font-sans mt-1 max-w-md">
-                  A personalized, story-style retrospective of your journey, memories, and travel stats.
+                  {totalDays > 0 && (
+                    <span className="text-[11px] font-sans font-bold text-[#7A7268]">
+                      {totalDays} {totalDays === 1 ? 'Day' : 'Days'} • {totalStops} Stops
+                    </span>
+                  )}
+                </div>
+
+                <h3 className="text-lg sm:text-2xl font-serif font-black text-[#1E1C1A] leading-tight tracking-tight">
+                  Your {itinerary?.destinationName || 'Trip'} Retrospective
+                </h3>
+                <p className="text-xs sm:text-sm font-sans text-[#7A7268] mt-1 max-w-lg leading-snug">
+                  Relive your journey with an interactive story of your favorite stops, places, and memories.
                 </p>
               </div>
             </div>
 
-            {/* Right Actions */}
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <button
+            {/* Right Section: Action Buttons */}
+            <div className="flex items-center gap-2.5 w-full md:w-auto shrink-0 justify-between md:justify-end border-t md:border-t-0 border-[#E6DFD5]/70 pt-3 md:pt-0">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.94 }}
                 onClick={onLaunchRecap}
-                className="group/btn relative overflow-hidden flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-[#1E1C1A] text-sm font-sans font-bold rounded-full hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,107,44,0.3)] active:scale-95"
+                className="relative inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-[#FF6B2C] hover:bg-[#E55A1C] text-white text-xs sm:text-sm font-sans font-bold shadow-sm transition-all cursor-pointer flex-1 md:flex-initial"
               >
-                <span className="relative z-10">Play Recap</span>
-                <Play className="w-4 h-4 relative z-10 fill-[#1E1C1A] group-hover/btn:translate-x-0.5 transition-transform" />
-                
-                {/* Button Hover Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-r from-white via-orange-50 to-[#FFD8C4] opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
-              </button>
-              
-              <button
+                <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-white shrink-0" />
+                <span>Play Story Recap</span>
+              </motion.button>
+
+              <motion.button
+                whileTap={{ scale: 0.9 }}
                 onClick={handleDismiss}
-                className="w-10 h-10 shrink-0 rounded-full bg-stone-800/50 border border-stone-700/50 hover:bg-stone-800 hover:border-stone-600 flex items-center justify-center text-stone-400 hover:text-white transition-all duration-200"
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[#FAF6F0] hover:bg-[#F5F0E8] border border-[#E6DFD5] flex items-center justify-center text-[#7A7268] hover:text-[#1E1C1A] transition-colors shadow-2xs cursor-pointer shrink-0"
                 title="Dismiss"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </motion.button>
             </div>
           </div>
         </div>
