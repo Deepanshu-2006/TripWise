@@ -157,3 +157,69 @@ self.addEventListener('fetch', (event) => {
       })
   );
 });
+
+// ─── Push Notification Handlers ─────────────────────────────────────────────
+
+/**
+ * Handle incoming server-pushed notifications (future VAPID backend).
+ * For now, this handles any push event that arrives with a JSON payload.
+ */
+self.addEventListener('push', (event) => {
+  let data = { title: '✈️ TripWise', body: 'You have a trip update!', url: '/itinerary' };
+  if (event.data) {
+    try { data = { ...data, ...event.data.json() }; } catch {}
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: data.icon || '/logo.png',
+      badge: '/logo.png',
+      tag: data.tag || 'tripwise-push',
+      data: { url: data.url || '/itinerary' },
+      vibrate: [100, 50, 100],
+    })
+  );
+});
+
+/**
+ * Handle notification click — open the app to the correct page.
+ */
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || '/itinerary';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Focus an already-open TripWise tab if one exists
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.navigate(targetUrl);
+          return client.focus();
+        }
+      }
+      // Otherwise open a new tab
+      if (clients.openWindow) return clients.openWindow(targetUrl);
+    })
+  );
+});
+
+/**
+ * Handle messages from the TripWise app page.
+ * Supports: SCHEDULE_NOTIFICATION — schedule a local timed notification.
+ */
+self.addEventListener('message', (event) => {
+  if (!event.data || event.data.type !== 'SCHEDULE_NOTIFICATION') return;
+
+  const { title, body, tag, delayMs = 0, icon = '/logo.png', url = '/itinerary' } = event.data.payload || {};
+  if (!title) return;
+
+  setTimeout(() => {
+    self.registration.showNotification(title, {
+      body,
+      icon,
+      badge: '/logo.png',
+      tag: tag || `tw-local-${Date.now()}`,
+      data: { url },
+      vibrate: [80, 40, 80],
+    });
+  }, Math.max(0, delayMs));
+});
