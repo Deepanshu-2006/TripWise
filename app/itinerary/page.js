@@ -2722,21 +2722,21 @@ export default function ItineraryPage() {
                 const tripDiningRollup = computeDiningRollup(null);
                 return (
                   /* SECTION 3: THE EPILOGUE & 3D STAMP FLOURISH (Accesses Requirement 4) */
-                  <section className="scroll-mt-32 flex flex-col gap-10">
-                    <div className="text-center max-w-2xl mx-auto">
-                      <span className="text-xs font-mono uppercase tracking-widest text-[#FF6B2C] font-bold block mb-1">
+                  <section className="scroll-mt-32 flex flex-col gap-6 sm:gap-10 pb-12">
+                    <div className="text-center max-w-2xl mx-auto px-4">
+                      <span className="text-[10px] sm:text-xs font-mono uppercase tracking-widest text-[#FF6B2C] font-bold block mb-1">
                         THE EPILOGUE  —  DOSSIER SUMMARY
                       </span>
-                      <h2 className="text-3xl sm:text-5xl font-serif font-black text-[#1E1C1A] tracking-tight leading-tight">
+                      <h2 className="text-2xl sm:text-4xl md:text-5xl font-serif font-black text-[#1E1C1A] tracking-tight leading-tight">
                         Trip Epilogue &amp; Statistics
                       </h2>
                     </div>
 
                     {/* Visual 3D stamp flourish loop trigger when scrolled into view */}
-                    <div className="flex flex-col items-center justify-center py-6 relative overflow-visible w-full min-h-55">
+                    <div className="flex flex-col items-center justify-center py-4 sm:py-6 relative overflow-hidden sm:overflow-visible w-full min-h-48 sm:min-h-55">
                       {/* SVG Flight Path & Animated Airplane */}
                       {stampInView && (
-                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-90 pointer-events-none z-0 overflow-visible">
+                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[340px] sm:max-w-none sm:w-150 h-72 sm:h-90 pointer-events-none z-0 overflow-hidden sm:overflow-visible opacity-75 sm:opacity-100">
                           <svg
                             viewBox="0 0 600 360"
                             className="w-full h-full overflow-visible"
@@ -2759,7 +2759,7 @@ export default function ItineraryPage() {
                             className="flight-plane animate-fly-plane"
                             style={{ animationDelay: '0.8s' }}
                           >
-                            <svg viewBox="-30 -30 60 60" className="w-full h-full text-[#FF6B2C] overflow-visible drop-shadow-[0_4px_6px_rgba(255, 107, 44,0.25)]">
+                            <svg viewBox="-30 -30 60 60" className="w-full h-full text-[#FF6B2C] overflow-visible drop-shadow-[0_4px_6px_rgba(255,107,44,0.25)]">
                               <path
                                 d="M -8 -4 L 0 -38 L 8 -4 L 26 6 L 26 14 L 8 8 L 5 26 L 13 32 L 13 38 L 0 32 L -13 38 L -13 32 L -5 26 L -8 8 L -26 14 L -26 6 Z"
                                 fill="currentColor"
@@ -2770,78 +2770,78 @@ export default function ItineraryPage() {
                       )}
 
                       <motion.div
-                        initial={{ scale: 1.8, rotate: -45, opacity: 0 }}
-                        whileInView={{ scale: 1, rotate: -12, opacity: 1 }}
-                        viewport={{ once: true, margin: "-120px" }}
+                        initial={{ scale: 1.6, rotate: -35, opacity: 0 }}
+                        whileInView={{ scale: 1, rotate: -8, opacity: 1 }}
+                        viewport={{ once: true, margin: "-80px" }}
                         onViewportEnter={() => setStampInView(true)}
-                        transition={{ type: "spring", damping: 12, stiffness: 90, delay: 0.2 }}
-                        className="w-44 h-44 rounded-full border-4 border-dashed border-[#FF6B2C]/80 text-[#FF6B2C] flex flex-col items-center justify-center font-serif uppercase text-center relative z-10 shadow-xs select-none bg-[#FAF6F0]"
+                        transition={{ type: "spring", damping: 14, stiffness: 100, delay: 0.15 }}
+                        className="w-36 h-36 sm:w-44 sm:h-44 rounded-full border-3 sm:border-4 border-dashed border-[#FF6B2C]/80 text-[#FF6B2C] flex flex-col items-center justify-center font-serif uppercase text-center relative z-10 shadow-xs select-none bg-[#FAF6F0]"
                       >
-                        <span className="text-[10px] tracking-widest font-bold">Approved</span>
-                        <span className="text-lg font-black tracking-tight my-0.5">TripWise</span>
-                        <span className="text-[8px] tracking-[0.2em] font-extrabold text-[#7A7268]">Concierge</span>
+                        <span className="text-[9px] sm:text-[10px] tracking-widest font-bold">Approved</span>
+                        <span className="text-base sm:text-lg font-black tracking-tight my-0.5">TripWise</span>
+                        <span className="text-[7.5px] sm:text-[8px] tracking-[0.2em] font-extrabold text-[#7A7268]">Concierge</span>
 
                         {/* Innermost ink circle stamp details */}
                         <div className="absolute inset-1 border border-solid border-[#FF6B2C]/25 rounded-full pointer-events-none" />
-                        <div className="absolute bottom-2 text-[6px] text-[#7A7268] tracking-widest font-sans font-bold uppercase">Private Guide</div>
+                        <div className="absolute bottom-2 text-[5.5px] sm:text-[6px] text-[#7A7268] tracking-widest font-sans font-bold uppercase">Private Guide</div>
                       </motion.div>
 
                       <motion.div
                         initial={{ scale: 0.8, opacity: 0 }}
                         whileInView={{ scale: 1, opacity: 1 }}
                         viewport={{ once: true }}
-                        transition={{ delay: 0.7 }}
-                        className="text-xs font-serif italic text-[#7A7268] mt-3"
+                        transition={{ delay: 0.5 }}
+                        className="text-xs font-serif italic text-[#7A7268] mt-3 text-center px-4"
                       >
                         ✨ Custom travel dossier assembled &amp; formatted.
                       </motion.div>
                     </div>
 
-                    {/* Grid stats */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 p-8 rounded-3xl bg-white border border-[#E6DFD5] text-center shadow-xs">
-                      <div className="flex flex-col gap-1 border-r border-[#E6DFD5] last:border-r-0">
-                        <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Total Duration</span>
-                        <span className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A]">{days.length} Days</span>
+                    {/* Grid stats - Mobile Responsive 2x2 Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 p-4 sm:p-8 rounded-3xl bg-white border border-[#E6DFD5] text-center shadow-xs">
+                      <div className="flex flex-col gap-1 p-2 sm:p-0 sm:border-r border-[#E6DFD5]">
+                        <span className="text-[10px] sm:text-xs font-sans uppercase tracking-widest text-[#7A7268] font-bold">Total Duration</span>
+                        <span className="text-xl sm:text-3xl font-serif font-black text-[#1E1C1A]">{days.length} Days</span>
                       </div>
-                      <div className="flex flex-col gap-1 border-r border-[#E6DFD5] last:border-r-0">
-                        <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Experiences Plotted</span>
-                        <span className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A]">{totalStopsCount} Stops</span>
+                      <div className="flex flex-col gap-1 p-2 sm:p-0 sm:border-r border-[#E6DFD5]">
+                        <span className="text-[10px] sm:text-xs font-sans uppercase tracking-widest text-[#7A7268] font-bold">Curated Stops</span>
+                        <span className="text-xl sm:text-3xl font-serif font-black text-[#1E1C1A]">{totalStopsCount} Stops</span>
                       </div>
-                      <div className="flex flex-col gap-1 border-r border-[#E6DFD5] last:border-r-0">
-                        <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Walking Distance</span>
-                        <span className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A]">~{totalDistanceEst} km</span>
+                      <div className="flex flex-col gap-1 p-2 sm:p-0 sm:border-r border-[#E6DFD5]">
+                        <span className="text-[10px] sm:text-xs font-sans uppercase tracking-widest text-[#7A7268] font-bold">Walking Est.</span>
+                        <span className="text-xl sm:text-3xl font-serif font-black text-[#1E1C1A]">~{totalDistanceEst} km</span>
                       </div>
-                      <div className="flex flex-col gap-1">
-                        <span className="text-xs font-sans uppercase tracking-widest text-[#7A7268]">Estimated Cost</span>
-                        <span className="text-2xl sm:text-3xl font-serif font-black text-[#FF6B2C]">{getConvertedEstimatedCost(itinerary.estimatedCost, userCurrency)}</span>
+                      <div className="flex flex-col gap-1 p-2 sm:p-0">
+                        <span className="text-[10px] sm:text-xs font-sans uppercase tracking-widest text-[#7A7268] font-bold">Estimated Cost</span>
+                        <span className="text-xl sm:text-3xl font-serif font-black text-[#FF6B2C]">{getConvertedEstimatedCost(itinerary.estimatedCost, userCurrency)}</span>
                       </div>
                     </div>
 
                     {/* Trip-Level Dining Rollup Banner */}
                     {tripDiningRollup.total > 0 && (
-                      <div className="p-6 rounded-3xl bg-[#FAF6F0] border border-[#FF6B2C]/30 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                        <div className="flex items-center gap-3.5">
-                          <div className="w-12 h-12 rounded-2xl bg-[#FF6B2C]/10 border border-[#FF6B2C]/25 flex items-center justify-center text-[#FF6B2C] shrink-0">
-                            <Utensils className="w-6 h-6 stroke-[2.2]" />
+                      <div className="p-4.5 sm:p-6 rounded-3xl bg-[#FAF6F0] border border-[#FF6B2C]/30 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3 sm:gap-3.5">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-[#FF6B2C]/10 border border-[#FF6B2C]/25 flex items-center justify-center text-[#FF6B2C] shrink-0">
+                            <Utensils className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2]" />
                           </div>
                           <div>
-                            <h4 className="font-serif font-bold text-lg text-[#1E1C1A] leading-tight">
+                            <h4 className="font-serif font-bold text-base sm:text-lg text-[#1E1C1A] leading-tight">
                               Trip-Level Dining Concierge Rollup
                             </h4>
-                            <p className="text-xs sm:text-sm font-sans text-[#5F5E5A] mt-1">
+                            <p className="text-xs sm:text-sm font-sans text-[#5F5E5A] mt-0.5 sm:mt-1">
                               {tripDiningRollup.markedReserved === tripDiningRollup.total ? 'All dining reservations across your itinerary are marked as booked!' : `${tripDiningRollup.markedReserved} of ${tripDiningRollup.total} dining reservations marked as booked.`}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3 self-end sm:self-auto flex-wrap">
-                          <span className="px-3.5 py-1.5 rounded-full bg-[#FF6B2C]/15 border border-[#FF6B2C]/30 text-[#FF6B2C] font-mono text-xs font-extrabold tracking-wider">
-                            {tripDiningRollup.markedReserved} / {tripDiningRollup.total} MARKED AS BOOKED
+                        <div className="flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto justify-between sm:justify-end flex-wrap pt-2 sm:pt-0 border-t sm:border-t-0 border-[#E6DFD5]/60">
+                          <span className="px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-[#FF6B2C]/15 border border-[#FF6B2C]/30 text-[#FF6B2C] font-mono text-[10px] sm:text-xs font-extrabold tracking-wider">
+                            {tripDiningRollup.markedReserved} / {tripDiningRollup.total} BOOKED
                           </span>
                           {tripDiningRollup.firstUnbooked && (
                             <button
                               type="button"
                               onClick={() => scrollToFirstUnbookedDining(tripDiningRollup.firstUnbooked)}
-                              className="px-4 py-2 rounded-xl bg-[#1E1C1A] text-white hover:bg-[#FF6B2C] font-sans text-xs font-bold transition-all cursor-pointer shadow-2xs flex items-center gap-1.5"
+                              className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-[#1E1C1A] text-white hover:bg-[#FF6B2C] font-sans text-xs font-bold transition-all cursor-pointer shadow-2xs flex items-center gap-1.5"
                             >
                               <span>Mark Day {tripDiningRollup.firstUnbooked.dayNum} Table →</span>
                             </button>
@@ -2851,9 +2851,9 @@ export default function ItineraryPage() {
                     )}
 
                     {/* Reminders grids */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="bg-white p-6 rounded-2xl border border-[#E6DFD5] shadow-2xs">
-                        <h3 className="text-sm font-sans font-bold uppercase tracking-widest text-[#FF6B2C] border-b border-[#E6DFD5] pb-2.5 mb-3.5 flex items-center gap-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
+                      <div className="bg-white p-4.5 sm:p-6 rounded-3xl border border-[#E6DFD5] shadow-xs">
+                        <h3 className="text-xs sm:text-sm font-sans font-bold uppercase tracking-widest text-[#FF6B2C] border-b border-[#E6DFD5] pb-2.5 mb-3.5 flex items-center gap-2">
                           <Calendar className="w-4 h-4" />
                           <span>Concierge Packing &amp; Prep Reminders</span>
                         </h3>
@@ -2870,20 +2870,20 @@ export default function ItineraryPage() {
                         </ul>
                       </div>
 
-                      <div className="bg-white p-6 rounded-2xl border border-[#E6DFD5] shadow-2xs">
-                        <h3 className="text-sm font-sans font-bold uppercase tracking-widest text-[#FF6B2C] border-b border-[#E6DFD5] pb-2.5 mb-3.5 flex items-center gap-2">
+                      <div className="bg-white p-4.5 sm:p-6 rounded-3xl border border-[#E6DFD5] shadow-xs">
+                        <h3 className="text-xs sm:text-sm font-sans font-bold uppercase tracking-widest text-[#FF6B2C] border-b border-[#E6DFD5] pb-2.5 mb-3.5 flex items-center gap-2">
                           <Layers className="w-4 h-4" />
                           <span>Booking &amp; Tickets Status Overview</span>
                         </h3>
                         <div className="flex flex-col gap-3">
                           {preBookedItems.map((item, keyIdx) => (
-                            <div key={keyIdx} className="flex items-center justify-between text-xs border-b border-[#FAF6F0] pb-2.5 last:border-b-0 last:pb-0 gap-4">
-                              <div className="min-w-0 flex-1 pr-2">
-                                <strong className="block text-[#1E1C1A] font-serif">{item.item}</strong>
-                                <span className="text-[10px] text-[#7A7268] font-sans">{item.code || 'Instant access link available'}</span>
+                            <div key={keyIdx} className="flex items-center justify-between text-xs border-b border-[#FAF6F0] pb-2.5 last:border-b-0 last:pb-0 gap-3">
+                              <div className="min-w-0 flex-1 pr-1">
+                                <strong className="block text-[#1E1C1A] font-serif truncate">{item.item}</strong>
+                                <span className="text-[10px] text-[#7A7268] font-sans truncate block">{item.code || 'Instant access link available'}</span>
                               </div>
-                              <div className="flex items-center gap-2 shrink-0">
-                                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap shrink-0 ${item.status === 'Pre-booked' ? 'bg-emerald-500/10 text-emerald-700' :
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <span className={`px-2 py-0.5 rounded-full text-[9.5px] font-bold whitespace-nowrap shrink-0 ${item.status === 'Pre-booked' ? 'bg-emerald-500/10 text-emerald-700' :
                                     item.status === 'Open Access' ? 'bg-blue-500/10 text-blue-700' : 'bg-[#FF6B2C]/10 text-[#FF6B2C]'
                                   }`}>
                                   {item.status}
@@ -2892,10 +2892,10 @@ export default function ItineraryPage() {
                                   <button
                                     type="button"
                                     onClick={() => scrollToStopCard(item.dayNum, item.stopNum)}
-                                    className="px-2.5 py-1 rounded-lg bg-[#1E1C1A] text-white hover:bg-[#FF6B2C] font-sans text-[10px] font-bold transition-all cursor-pointer shadow-2xs shrink-0 flex items-center gap-1"
+                                    className="px-2 py-1 rounded-lg bg-[#1E1C1A] text-white hover:bg-[#FF6B2C] font-sans text-[9.5px] font-bold transition-all cursor-pointer shadow-2xs shrink-0 flex items-center gap-1"
                                     title="Jump to this stop card to review booking options"
                                   >
-                                    <span>View Stop →</span>
+                                    <span>View →</span>
                                   </button>
                                 )}
                               </div>
@@ -2906,33 +2906,34 @@ export default function ItineraryPage() {
                     </div>
 
                     {/* Post-Trip Activity Ratings */}
-                    <div className="bg-white p-6 md:p-8 rounded-3xl border border-[#E6DFD5] shadow-sm mb-6 mt-8">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6 border-b border-[#E6DFD5] pb-4">
-                        <div className="w-10 h-10 rounded-full bg-[#FF6B2C]/10 flex items-center justify-center text-[#FF6B2C] shrink-0">
-                          <Sparkles className="w-5 h-5" />
+                    <div className="bg-white p-4.5 sm:p-8 rounded-3xl border border-[#E6DFD5] shadow-xs">
+                      <div className="flex items-center gap-3 mb-4 sm:mb-6 border-b border-[#E6DFD5] pb-3.5 sm:pb-4">
+                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[#FF6B2C]/10 flex items-center justify-center text-[#FF6B2C] shrink-0">
+                          <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
                         </div>
                         <div>
-                          <h3 className="font-serif font-bold text-xl text-[#1E1C1A]">Rate this Trip's Activities</h3>
-                          <p className="text-sm font-sans text-[#7A7268] mt-1">Your ratings help TripWise learn your preferences for future trips.</p>
+                          <h3 className="font-serif font-bold text-lg sm:text-xl text-[#1E1C1A]">Rate this Trip's Activities</h3>
+                          <p className="text-xs sm:text-sm font-sans text-[#7A7268]">Your ratings help TripWise learn your travel taste.</p>
                         </div>
                       </div>
-                      <div className="flex flex-col gap-4 max-h-96 overflow-y-auto pr-2 mb-6 custom-scrollbar">
+                      <div className="flex flex-col gap-2.5 max-h-80 sm:max-h-96 overflow-y-auto pr-1 sm:pr-2 mb-5 custom-scrollbar">
                         {itinerary?.days?.flatMap((day, dayIdx) => 
                           day.activities?.map((act, stopIdx) => {
                             const stopKey = `tw_day${dayIdx}_stop${stopIdx}`;
                             const rating = activityRatings[stopKey]?.rating || 0;
                             return (
-                              <div key={stopKey} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-[#FAF6F0] bg-[#FAF6F0]/50 hover:bg-white transition-colors">
-                                <div>
-                                  <strong className="block text-[#1E1C1A] font-serif text-sm">{act.title}</strong>
-                                  <span className="text-[10px] text-[#7A7268] font-sans uppercase tracking-wider">{act.category}</span>
+                              <div key={stopKey} className="flex items-center justify-between gap-2 p-3 sm:p-3.5 rounded-2xl border border-[#FAF6F0] bg-[#FAF8F5] hover:bg-white transition-colors">
+                                <div className="min-w-0 flex-1 pr-2">
+                                  <strong className="block text-[#1E1C1A] font-serif text-xs sm:text-sm truncate">{act.title}</strong>
+                                  <span className="text-[9px] sm:text-[10px] text-[#7A7268] font-sans uppercase tracking-wider block truncate">{act.category || `Day ${dayIdx + 1}`}</span>
                                 </div>
-                                <div className="flex items-center gap-1 shrink-0">
+                                <div className="flex items-center gap-0.5 sm:gap-1 shrink-0 touch-manipulation">
                                   {[1, 2, 3, 4, 5].map(star => (
                                     <button
                                       key={star}
                                       onClick={() => handleRatingChange(stopKey, act, star)}
-                                      className={`p-1 text-2xl hover:scale-110 transition-transform cursor-pointer ${star <= rating ? 'text-amber-500' : 'text-[#E6DFD5]'}`}
+                                      className={`p-1 text-xl sm:text-2xl active:scale-125 transition-transform cursor-pointer ${star <= rating ? 'text-amber-500' : 'text-[#E6DFD5]'}`}
+                                      aria-label={`${star} star`}
                                     >
                                       ★
                                     </button>
@@ -2945,14 +2946,14 @@ export default function ItineraryPage() {
                       </div>
                       <button
                         onClick={handleCompleteTrip}
-                        className="w-full py-3.5 rounded-xl bg-[#1E1C1A] text-white font-bold font-sans text-sm tracking-wide hover:bg-[#FF6B2C] transition-colors cursor-pointer shadow-md"
+                        className="w-full py-3.5 sm:py-4 rounded-2xl bg-[#1E1C1A] hover:bg-[#FF6B2C] text-white font-bold font-sans text-xs sm:text-sm tracking-wide transition-all cursor-pointer shadow-md active:scale-[0.98]"
                       >
-                        Complete Trip & Update Preferences
+                        Complete Trip &amp; Update Preferences
                       </button>
                     </div>
 
                     {/* Closing signature and bottom page-turns */}
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-8 border-t border-[#E6DFD5]">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 pt-6 sm:pt-8 border-t border-[#E6DFD5]">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 shrink-0 flex items-center justify-center">
                           <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 object-contain">
