@@ -99,6 +99,8 @@ const JournalEntryModal = dynamic(() => import('../components/JournalEntryModal'
 import TripRecapBanner from '../components/TripRecapBanner';
 const TripRecapModal = dynamic(() => import('../components/TripRecapModal'));
 import { getTripJournalEntries, saveTripJournalEntries, addJournalEntry } from '../../lib/journalApi';
+const CalendarSyncModal = dynamic(() => import('../components/CalendarSyncModal'));
+const NotificationsPanel = dynamic(() => import('../components/NotificationsPanel'));
 
 const toRomanNumeral = (num) => {
   const romanMap = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V', 6: 'VI', 7: 'VII', 8: 'VIII', 9: 'IX', 10: 'X' };
@@ -609,6 +611,8 @@ export default function ItineraryPage() {
   const [isSavedPlacesModalOpen, setIsSavedPlacesModalOpen] = useState(false);
   const [isRecapModalOpen, setIsRecapModalOpen] = useState(false);
   const [isOfflineModalOpen, setIsOfflineModalOpen] = useState(false);
+  const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
+  const [isNotificationsPanelOpen, setIsNotificationsPanelOpen] = useState(false);
 
   // Preference Engine State
   const { recordSkip, recordTripSignals, profile } = usePreferenceEngine();
@@ -1887,6 +1891,33 @@ export default function ItineraryPage() {
             </button>
 
             <div className="flex items-center gap-2 shrink-0 flex-nowrap">
+
+            {/* Calendar Sync Button */}
+            <motion.button
+              whileTap={{ scale: 0.92 }}
+              type="button"
+              onClick={() => setIsCalendarModalOpen(true)}
+              className="group/btn relative overflow-hidden inline-flex items-center gap-0 xl:gap-1.5 px-3 xl:px-4 py-1.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] text-xs font-sans font-bold text-[#1E1C1A] hover:border-[#FF6B2C]/60 hover:shadow-[0_8px_20px_-6px_rgba(255,107,44,0.4)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer"
+              title="Sync trip to your calendar"
+            >
+              <div className="absolute top-0 left-[-100%] w-[120%] h-full bg-gradient-to-r from-transparent via-white/90 to-transparent skew-x-[-25deg] group-hover/btn:left-[100%] transition-all duration-700 ease-out z-0 pointer-events-none" />
+              <Calendar className="w-4 h-4 text-[#FF6B2C] relative z-10 group-hover/btn:scale-110 group-hover/btn:-rotate-6 group-active/btn:scale-125 transition-all duration-300" />
+              <span className="hidden xl:inline relative z-10 group-hover/btn:text-[#FF6B2C] transition-colors duration-300 ml-1.5">Calendar</span>
+            </motion.button>
+
+            {/* Notifications Button */}
+            <motion.button
+              whileTap={{ scale: 0.92 }}
+              type="button"
+              onClick={() => setIsNotificationsPanelOpen(true)}
+              className="group/btn relative overflow-hidden inline-flex items-center gap-0 xl:gap-1.5 px-3 xl:px-4 py-1.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] text-xs font-sans font-bold text-[#1E1C1A] hover:border-[#FF6B2C]/60 hover:shadow-[0_8px_20px_-6px_rgba(255,107,44,0.4)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer"
+              title="Smart trip notifications"
+            >
+              <div className="absolute top-0 left-[-100%] w-[120%] h-full bg-gradient-to-r from-transparent via-white/90 to-transparent skew-x-[-25deg] group-hover/btn:left-[100%] transition-all duration-700 ease-out z-0 pointer-events-none" />
+              <Bell className="w-4 h-4 text-[#FF6B2C] relative z-10 group-hover/btn:scale-110 group-hover/btn:rotate-12 group-active/btn:scale-125 transition-all duration-300" />
+              <span className="hidden xl:inline relative z-10 group-hover/btn:text-[#FF6B2C] transition-colors duration-300 ml-1.5">Notify</span>
+            </motion.button>
+
             <div className="relative group/print">
               <motion.button
                 whileTap={{ scale: 0.92 }}
@@ -2000,6 +2031,34 @@ export default function ItineraryPage() {
                       Prepare
                     </span>
                   </div>
+
+                  {/* Calendar Sync — Mobile Drawer */}
+                  <motion.button
+                    whileTap={{ scale: 0.92 }}
+                    type="button"
+                    onClick={() => { setIsCalendarModalOpen(true); setIsMobileDrawerOpen(false); }}
+                    className="w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-all duration-150 cursor-pointer select-none group bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent"
+                    title="Sync to Calendar"
+                  >
+                    <div className="p-1 rounded-lg transition-all bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] group-active:scale-125 group-active:-rotate-6 shadow-2xs">
+                      <Calendar className="w-3.5 h-3.5 stroke-[2.2]" />
+                    </div>
+                    <span className="text-[9.5px] font-sans font-bold leading-none tracking-tight text-center">Calendar</span>
+                  </motion.button>
+
+                  {/* Notifications — Mobile Drawer */}
+                  <motion.button
+                    whileTap={{ scale: 0.92 }}
+                    type="button"
+                    onClick={() => { setIsNotificationsPanelOpen(true); setIsMobileDrawerOpen(false); }}
+                    className="w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-all duration-150 cursor-pointer select-none group bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent"
+                    title="Smart Notifications"
+                  >
+                    <div className="p-1 rounded-lg transition-all bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] group-active:scale-125 group-active:rotate-12 shadow-2xs">
+                      <Bell className="w-3.5 h-3.5 stroke-[2.2]" />
+                    </div>
+                    <span className="text-[9.5px] font-sans font-bold leading-none tracking-tight text-center">Notify</span>
+                  </motion.button>
 
                   {/* Packing List */}
                   {(() => {
@@ -2438,6 +2497,48 @@ export default function ItineraryPage() {
                     Quick-access vault of your pinned spots and saved places.
                   </p>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Calendar Sync Rail Item — Desktop Sidebar */}
+          <div className="relative group/tool w-full">
+            <button
+              type="button"
+              onClick={() => { setIsCalendarModalOpen(true); setIsMobileDrawerOpen(false); }}
+              className="relative w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group bg-white hover:bg-stone-50 text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-[#E6DFD5]/60 shadow-2xs"
+              title="Sync to Calendar"
+            >
+              <div className="p-1.5 rounded-xl transition-all bg-[#FAF6F0] text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs">
+                <Calendar className="w-4 h-4 stroke-[2.2]" />
+              </div>
+              <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center">Calendar</span>
+            </button>
+            <div className="absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 opacity-0 pointer-events-none group-hover/tool:opacity-100 group-hover/tool:pointer-events-auto transition-all duration-200 z-50 translate-x-1 group-hover/tool:translate-x-0">
+              <div className="bg-[#1E1C1A]/95 text-white backdrop-blur-md rounded-xl p-2.5 shadow-xl border border-[#FF6B2C]/30 text-left w-44 pointer-events-none">
+                <div className="text-[11px] font-serif font-black text-[#FF6B2C]">Calendar Sync</div>
+                <p className="text-[9.5px] text-stone-300 font-sans mt-0.5 leading-snug">Export all activities to Google Calendar, Apple, Outlook or any .ics app.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Smart Notifications Rail Item — Desktop Sidebar */}
+          <div className="relative group/tool w-full">
+            <button
+              type="button"
+              onClick={() => { setIsNotificationsPanelOpen(true); setIsMobileDrawerOpen(false); }}
+              className="relative w-full py-1.5 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer select-none group bg-white hover:bg-stone-50 text-[#1E1C1A] hover:scale-[1.03] hover:shadow-md hover:border-[#FF6B2C]/40 border border-[#E6DFD5]/60 shadow-2xs"
+              title="Smart Notifications"
+            >
+              <div className="p-1.5 rounded-xl transition-all bg-[#FAF6F0] text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs">
+                <Bell className="w-4 h-4 stroke-[2.2]" />
+              </div>
+              <span className="text-[10px] font-sans font-bold leading-none tracking-tight text-center">Notify</span>
+            </button>
+            <div className="absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 opacity-0 pointer-events-none group-hover/tool:opacity-100 group-hover/tool:pointer-events-auto transition-all duration-200 z-50 translate-x-1 group-hover/tool:translate-x-0">
+              <div className="bg-[#1E1C1A]/95 text-white backdrop-blur-md rounded-xl p-2.5 shadow-xl border border-[#FF6B2C]/30 text-left w-44 pointer-events-none">
+                <div className="text-[11px] font-serif font-black text-[#FF6B2C]">Smart Notifications</div>
+                <p className="text-[9.5px] text-stone-300 font-sans mt-0.5 leading-snug">Trip countdown, morning activity briefings & price drop push alerts.</p>
               </div>
             </div>
           </div>
@@ -5213,6 +5314,20 @@ export default function ItineraryPage() {
         onAccept={applyLiveAssistantProposal}
         onReject={() => setLiveAssistantProposal(null)}
         isApplying={isApplyingProposal}
+      />
+
+      {/* ── Calendar Sync Modal ─────────────────────────────────────────────── */}
+      <CalendarSyncModal
+        isOpen={isCalendarModalOpen}
+        onClose={() => setIsCalendarModalOpen(false)}
+        itinerary={itinerary}
+      />
+
+      {/* ── Smart Notifications Panel ───────────────────────────────────────── */}
+      <NotificationsPanel
+        isOpen={isNotificationsPanelOpen}
+        onClose={() => setIsNotificationsPanelOpen(false)}
+        itinerary={itinerary}
       />
 
       <footer className="py-12 text-center text-xs font-serif italic text-[#7A7268] border-t border-[#E6DFD5] bg-white mt-auto">
