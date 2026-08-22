@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, Download, ExternalLink, Check, ChevronDown, ChevronUp, Utensils, MapPin, Plane } from 'lucide-react';
+import { X, Calendar, Download, ExternalLink, Check, ChevronDown, ChevronUp, Utensils, MapPin, Plane, Sparkles, RefreshCw } from 'lucide-react';
 import { generateICS, downloadICS, getGoogleCalendarTripUrl, getICSFilename, countCalendarEvents } from '../../lib/calendarSync';
 
 // ─── Calendar Provider Configs ───────────────────────────────────────────────
@@ -99,6 +99,15 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
   const destination = itinerary?.destination || itinerary?.destinationName || 'Your Trip';
   const days = itinerary?.days || [];
 
+  const [isSynced, setIsSynced] = useState(false);
+  const syncStorageKey = `tw_calendar_synced_${itinerary?.id || 'default'}`;
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsSynced(localStorage.getItem(syncStorageKey) === 'true');
+    }
+  }, [isOpen, syncStorageKey]);
+
   // Lock body scroll and Lenis when modal is open to prevent background scrolling bleed
   useEffect(() => {
     if (isOpen) {
@@ -120,15 +129,20 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
       const url = getGoogleCalendarTripUrl(itinerary);
       window.open(url, '_blank', 'noopener,noreferrer');
       setDownloadedId(provider.id);
-      setTimeout(() => setDownloadedId(null), 3000);
     } else {
       // ICS download
       const icsContent = generateICS(itinerary, options);
       const filename = getICSFilename(itinerary);
       downloadICS(icsContent, filename);
       setDownloadedId(provider.id);
-      setTimeout(() => setDownloadedId(null), 3000);
     }
+    
+    // Mark as synced locally
+    localStorage.setItem(syncStorageKey, 'true');
+    setTimeout(() => {
+      setDownloadedId(null);
+      setIsSynced(true);
+    }, 1500); // Show checkmark briefly before switching to success screen
   };
 
   // Build preview events list
@@ -165,6 +179,7 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
 
           {/* Modal */}
           <motion.div
+            layout
             initial={{ opacity: 0, y: '100%' }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: '100%' }}
@@ -177,9 +192,9 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
                 onClose();
               }
             }}
-            className="fixed z-[9999] inset-x-0 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:max-w-[400px] flex flex-col h-[90vh] sm:h-[600px] max-h-[90vh]"
+            className="fixed z-[9999] inset-x-0 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:max-w-[400px] flex flex-col h-auto max-h-[90vh]"
           >
-            <div className="bg-white rounded-t-[32px] sm:rounded-3xl shadow-[0_-12px_48px_rgba(0,0,0,0.1)] sm:shadow-[0_24px_64px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05)] flex flex-col h-full overflow-hidden">
+            <motion.div layout className="bg-white rounded-t-[32px] sm:rounded-3xl shadow-[0_-12px_48px_rgba(0,0,0,0.1)] sm:shadow-[0_24px_64px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05)] flex flex-col h-auto max-h-full overflow-hidden">
 
               {/* ── Header ── */}
               <div className="relative px-6 pt-5 pb-4 shrink-0 z-10 flex flex-col items-center border-b border-stone-100">
@@ -214,40 +229,97 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
                 data-lenis-prevent="true"
               >
                 <div>
-                <div className="grid grid-cols-2 gap-3">
-                  {PROVIDERS.map((provider) => {
-                    const isDone = downloadedId === provider.id;
-                    return (
-                      <button
-                        key={provider.id}
-                        onClick={() => handleAction(provider)}
-                        className="relative flex flex-col items-center justify-center gap-2.5 p-4 rounded-2xl bg-stone-50 hover:bg-stone-100 border border-transparent transition-colors cursor-pointer group"
-                      >
-                        <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center relative">
-                          {isDone ? (
-                            <motion.div
-                              initial={{ scale: 0.5, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              className="w-full h-full rounded-full bg-stone-900 flex items-center justify-center"
-                            >
-                              <Check className="w-4 h-4 text-white" strokeWidth={2.5} />
-                            </motion.div>
-                          ) : (
-                            <div className="text-stone-800 transition-transform group-hover:scale-105 duration-300">
-                              {providerIcons[provider.id]}
+                <AnimatePresence mode="wait">
+                  {!isSynced ? (
+                    <motion.div
+                      key="options"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="grid grid-cols-2 gap-3"
+                    >
+                      {PROVIDERS.map((provider) => {
+                        const isDone = downloadedId === provider.id;
+                        return (
+                          <button
+                            key={provider.id}
+                            onClick={() => handleAction(provider)}
+                            className="relative flex flex-col items-center justify-center gap-2.5 p-4 rounded-2xl bg-stone-50 hover:bg-stone-100 border border-transparent transition-colors cursor-pointer group"
+                          >
+                            <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center relative">
+                              {isDone ? (
+                                <motion.div
+                                  initial={{ scale: 0.5, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  className="w-full h-full rounded-full bg-stone-900 flex items-center justify-center"
+                                >
+                                  <Check className="w-4 h-4 text-white" strokeWidth={2.5} />
+                                </motion.div>
+                              ) : (
+                                <div className="text-stone-800 transition-transform group-hover:scale-105 duration-300">
+                                  {providerIcons[provider.id]}
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-
-                        <div className="text-center">
-                          <p className="text-[13px] font-sans font-medium text-stone-800 leading-tight">
-                            {provider.name}
-                          </p>
-                        </div>
+                            <div className="text-center">
+                              <p className="text-[13px] font-sans font-medium text-stone-800 leading-tight">
+                                {provider.name}
+                              </p>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="success"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="relative flex flex-col items-center justify-center py-8 px-6 bg-white border border-[#E6DFD5] shadow-sm rounded-[24px] text-center overflow-hidden"
+                    >
+                      {/* Subtle premium gradient accent (Green for success) */}
+                      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent opacity-50" />
+                      
+                      <div className="relative w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center mb-4 border border-emerald-100 shadow-xs">
+                        <motion.svg
+                          viewBox="0 0 24 24"
+                          className="w-7 h-7 text-emerald-600"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={3}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <motion.path
+                            initial={{ pathLength: 0, opacity: 0 }}
+                            animate={{ pathLength: 1, opacity: 1 }}
+                            transition={{ duration: 0.5, ease: "easeOut", delay: 0.15 }}
+                            d="M20 6 9 17l-5-5"
+                          />
+                        </motion.svg>
+                      </div>
+                      
+                      <h3 className="text-[17px] font-serif font-bold text-[#1E1C1A] tracking-tight mb-2">
+                        Sync Initiated
+                      </h3>
+                      
+                      <p className="text-[13px] text-[#7A7268] font-sans leading-relaxed max-w-[220px] mb-6">
+                        Please ensure you complete the save process inside your calendar app.
+                      </p>
+                      
+                      <button 
+                        onClick={() => setIsSynced(false)}
+                        className="group flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-widest text-[#7A7268] hover:text-[#FF6B2C] transition-colors cursor-pointer"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5 transition-transform group-hover:rotate-180 duration-500" />
+                        <span>Try again</span>
                       </button>
-                    );
-                  })}
-                </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
                 </div>
 
                 {/* ── Event Filters ── */}
@@ -283,12 +355,12 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
                       const opening = !showPreview;
                       setShowPreview(v => !v);
                       if (opening) {
-                        // After animation starts, scroll the container to reveal preview
+                        // Wait for height animation to complete before scrolling to prevent jank
                         setTimeout(() => {
                           if (previewRef.current && scrollContainerRef.current) {
                             previewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
                           }
-                        }, 50);
+                        }, 300);
                       }
                     }}
                     className="w-full flex items-center justify-between py-2 transition-colors cursor-pointer group"
@@ -333,7 +405,7 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
                   </p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         </>
       )}
