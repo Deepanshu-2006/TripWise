@@ -2962,19 +2962,31 @@ export default function PlannerSidebar({
                   if (!destOvertourism) return null;
 
                   return (
-                    <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col gap-2 text-xs text-amber-950 shadow-2xs">
-                      <div className="flex items-center gap-2 font-bold">
-                        <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                        <span>⚠️ {destOvertourism.warningText}</span>
+                    <div className="relative p-5 rounded-[20px] bg-white border border-[#E6DFD5] shadow-sm flex flex-col gap-4 group">
+                      <div className="flex items-start gap-3.5">
+                        <div className="w-8 h-8 rounded-full border border-orange-100 bg-orange-50/50 flex items-center justify-center shrink-0">
+                          <AlertTriangle className="w-4 h-4 text-[#FF6B2C]" strokeWidth={1.5} />
+                        </div>
+                        <p className="text-[13px] font-medium text-[#1E1C1A] font-sans leading-relaxed pt-1.5 sm:pt-1">
+                          {destOvertourism.warningText}
+                        </p>
                       </div>
+
                       {destOvertourism.alternativeDestinations?.length > 0 && (
-                        <div className="text-[11px] text-amber-900/90 flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-amber-500/20">
-                          <span className="font-mono font-bold uppercase text-[9px] text-amber-800">Alternative Low-Strain Regions:</span>
-                          {destOvertourism.alternativeDestinations.map((alt, aIdx) => (
-                            <span key={aIdx} className="bg-white/90 px-2.5 py-0.5 rounded-full font-bold border border-amber-300/80 text-amber-950 shadow-2xs">
-                              {alt.name}
-                            </span>
-                          ))}
+                        <div className="flex flex-col gap-3 pt-4 border-t border-[#E6DFD5]/60">
+                          <span className="font-mono font-bold uppercase tracking-widest text-[9px] text-[#A89F91]">
+                            Consider Nearby Alternatives
+                          </span>
+                          <div className="flex flex-wrap items-center gap-2">
+                            {destOvertourism.alternativeDestinations.map((alt, aIdx) => (
+                              <button 
+                                key={aIdx} 
+                                className="px-4 py-1.5 rounded-full bg-[#FAF6F0] border border-[#E6DFD5] text-[#1E1C1A] text-[11px] font-bold hover:border-[#FF6B2C] hover:text-[#FF6B2C] hover:bg-white transition-all cursor-pointer shadow-xs"
+                              >
+                                {alt.name}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
