@@ -19,28 +19,10 @@ const PROVIDERS = [
   },
   {
     id: 'apple',
-    name: 'Apple Calendar',
+    name: 'Apple / Other',
     icon: null,
     color: '#1C1C1E',
     bg: '#F2F2F7',
-    action: 'ics',
-    label: 'Download .ics',
-  },
-  {
-    id: 'outlook',
-    name: 'Outlook',
-    icon: null,
-    color: '#0078D4',
-    bg: '#E6F2FB',
-    action: 'ics',
-    label: 'Download .ics',
-  },
-  {
-    id: 'other',
-    name: 'Any Calendar',
-    icon: null,
-    color: '#FF6B2C',
-    bg: '#FFF2EC',
     action: 'ics',
     label: 'Download .ics',
   },
@@ -75,37 +57,10 @@ function AppleIcon() {
   );
 }
 
-function OutlookIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none">
-      <rect x="1" y="4" width="14" height="16" rx="2" fill="#0078D4"/>
-      <rect x="9" y="8" width="14" height="12" rx="2" fill="#28A8E8"/>
-      <circle cx="9" cy="13" r="3.5" fill="white"/>
-    </svg>
-  );
-}
-
-function AnyCalIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="w-6 h-6 text-stone-400" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="4" width="18" height="18" rx="2"/>
-      <line x1="16" y1="2" x2="16" y2="6"/>
-      <line x1="8" y1="2" x2="8" y2="6"/>
-      <line x1="3" y1="10" x2="21" y2="10"/>
-      <line x1="8" y1="14" x2="8" y2="14" strokeWidth="2.5"/>
-      <line x1="12" y1="14" x2="12" y2="14" strokeWidth="2.5"/>
-      <line x1="16" y1="14" x2="16" y2="14" strokeWidth="2.5"/>
-      <line x1="8" y1="18" x2="8" y2="18" strokeWidth="2.5"/>
-      <line x1="12" y1="18" x2="12" y2="18" strokeWidth="2.5"/>
-    </svg>
-  );
-}
 
 const providerIcons = {
   google: <GoogleIcon />,
   apple: <AppleIcon />,
-  outlook: <OutlookIcon />,
-  other: <AnyCalIcon />,
 };
 
 // ─── Event Preview Item ───────────────────────────────────────────────────────
@@ -141,7 +96,7 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
 
   const options = { includeFood, includeSightseeing, includeTransport };
   const eventCount = useMemo(() => countCalendarEvents(itinerary, options), [itinerary, options]);
-  const destination = itinerary?.destination || 'Your Trip';
+  const destination = itinerary?.destination || itinerary?.destinationName || 'Your Trip';
   const days = itinerary?.days || [];
 
   // Lock body scroll and Lenis when modal is open to prevent background scrolling bleed

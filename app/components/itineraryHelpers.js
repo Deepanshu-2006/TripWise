@@ -4,6 +4,10 @@
 // Helper to strip conversational AI words so Google Places finds the actual landmark
 export function getGooglePlacesQuery(title, destination = '') {
   let cleanTitle = (title || '').replace(/(photo walk|stroll|tour|explore|visit|experience|day trip|dinner at|lunch at|breakfast at|afternoon at|morning at)/gi, '').trim();
+  
+  // Strip trailing generic words that confuse Google Places API (e.g. "Boutiques", "Eateries")
+  cleanTitle = cleanTitle.replace(/\s+(Boutiques|Boutique|Shops|Shop|Stores|Store|Restaurants|Restaurant|Eateries|Eatery|Cafes|Cafe|Spots|Spot)$/gi, '').trim();
+  
   if (!cleanTitle) cleanTitle = title; // fallback if we stripped everything
   return `${cleanTitle} ${destination}`.trim();
 }
@@ -52,9 +56,9 @@ export function getTransportBetweenStops(prevStop, nextStop, idx = 0) {
     if (km < 1.4) {
       mode = 'walk';
       const m = Math.round(km * 1000);
-      distStr = m < 100 ? '~150m' : `${m}m`;
+      distStr = `${m}m`;
       const mins = Math.max(3, Math.round((km / 4.5) * 60));
-      timeStr = `${mins} min walk`;
+      timeStr = `${mins} ${mins === 1 ? 'min' : 'mins'} walk`;
     } else if (km < 5) {
       mode = idx % 2 === 0 ? 'metro' : 'taxi';
       distStr = `${km.toFixed(1)} km`;
