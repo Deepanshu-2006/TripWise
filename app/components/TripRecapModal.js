@@ -692,18 +692,6 @@ export default function TripRecapModal({ isOpen, onClose, itinerary, estBudget }
     }
   }, [isOpen, itinerary]);
 
-  // Auto-advance progress
-  useEffect(() => {
-    if (!isOpen || slides.length === 0 || isPaused) return;
-    
-    if (currentSlide === slides.length - 1) return;
-
-    const timer = setTimeout(() => {
-      setCurrentSlide(prev => (prev < slides.length - 1 ? prev + 1 : prev));
-    }, 5500);
-
-    return () => clearTimeout(timer);
-  }, [currentSlide, isOpen, slides.length, isPaused]);
 
   const handleNext = () => {
     if (currentSlide < slides.length - 1) {
@@ -789,6 +777,7 @@ export default function TripRecapModal({ isOpen, onClose, itinerary, estBudget }
           <div 
             onMouseDown={() => setIsPaused(true)}
             onMouseUp={() => setIsPaused(false)}
+            onMouseLeave={() => setIsPaused(false)}
             onTouchStart={() => setIsPaused(true)}
             onTouchEnd={() => setIsPaused(false)}
             className="relative w-full h-full sm:max-w-[420px] sm:max-h-[760px] bg-[#FAF8F5] overflow-hidden sm:rounded-[36px] sm:border border-[#E8E2D9] shadow-2xl flex flex-col z-10"
@@ -819,7 +808,6 @@ export default function TripRecapModal({ isOpen, onClose, itinerary, estBudget }
                       </div>
                     );
                   }
-                  // Active Slide
                   return (
                     <div key={idx} className="h-1 flex-1 bg-[#E5DFD5] rounded-full overflow-hidden">
                       <div
@@ -829,6 +817,11 @@ export default function TripRecapModal({ isOpen, onClose, itinerary, estBudget }
                           transform: isLastSlide ? 'scaleX(1)' : 'scaleX(0)',
                           animation: !isLastSlide ? `storyProgress 5.5s linear forwards` : 'none',
                           animationPlayState: isPaused ? 'paused' : 'running'
+                        }}
+                        onAnimationEnd={() => {
+                          if (!isLastSlide && !isPaused) {
+                            handleNext();
+                          }
                         }}
                       />
                     </div>
@@ -849,7 +842,11 @@ export default function TripRecapModal({ isOpen, onClose, itinerary, estBudget }
 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setIsPaused(!isPaused)}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onMouseUp={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    onTouchEnd={(e) => e.stopPropagation()}
+                    onClick={(e) => { e.stopPropagation(); setIsPaused(p => !p); }}
                     className="w-8 h-8 rounded-full bg-white hover:bg-[#F2ECE4] flex items-center justify-center text-[#1E1C1A] border border-[#E8E2D9] transition-colors cursor-pointer shadow-2xs"
                     title={isPaused ? "Resume" : "Pause"}
                   >

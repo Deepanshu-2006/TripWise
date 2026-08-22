@@ -72,6 +72,7 @@ import {
   ChevronRight,
   Receipt
 } from 'lucide-react';
+import LiveTransitLine from '../components/LiveTransitLine';
 import {
   getActivityThumbnail,
   getTransportBetweenStops,
@@ -3958,15 +3959,13 @@ export default function ItineraryPage() {
                               {/* Render Pacing Gap if applicable */}
                               {gapElement}
 
-                              {/* Quiet Typographic Transit Line */}
-                              {idx > 0 && transport && (
-                                <div className="py-6 flex items-center justify-center gap-4 text-[#7A7268] relative z-10">
-                                  <div className="h-px w-12 sm:w-24 bg-[#E6DFD5]" />
-                                  <span className="font-serif italic text-xs sm:text-sm tracking-wide px-3 bg-[#FAF6F0] text-center">
-                                    {transport.icon} {transport.text} between stops
-                                  </span>
-                                  <div className="h-px w-12 sm:w-24 bg-[#E6DFD5]" />
-                                </div>
+                              {/* Live Typographic Transit Line */}
+                              {idx > 0 && (
+                                <LiveTransitLine 
+                                  prevStop={activities[idx - 1]} 
+                                  nextStop={act} 
+                                  idx={idx} 
+                                />
                               )}
 
                               {/* Large Editorial Spread Stops (Alternating Left/Right) */}
@@ -3980,9 +3979,42 @@ export default function ItineraryPage() {
                                 transition={{ type: "spring", damping: 20, stiffness: 100 }}
                               >
                                 {/* Timeline Spine badge */}
-                                <div className="absolute left-6 sm:left-1/2 -top-5 -translate-x-1/2 w-10 h-10 rounded-full border border-[#1E1C1A] bg-[#FAF6F0] text-[#1E1C1A] font-serif text-xs font-bold flex items-center justify-center shadow-xs z-20 transition-all duration-300">
-                                  {stopNum}
-                                </div>
+                                <motion.div 
+                                  className="absolute left-6 sm:left-1/2 -top-5 -translate-x-1/2 w-10 h-10 rounded-full border border-[#1E1C1A] font-serif text-xs font-bold flex items-center justify-center shadow-xs z-20 origin-center overflow-hidden bg-[#FAF6F0]"
+                                  initial="hidden"
+                                  whileInView="visible"
+                                  viewport={{ margin: "-100px" }}
+                                  variants={{
+                                    hidden: { scale: 0.85, opacity: 0, y: 10 },
+                                    visible: { scale: 1, opacity: 1, y: 0 }
+                                  }}
+                                  transition={{ 
+                                    opacity: { duration: 0.3 },
+                                    scale: { type: "spring", stiffness: 350, damping: 15 },
+                                    y: { type: "spring", stiffness: 350, damping: 20 }
+                                  }}
+                                >
+                                  {/* Sweeping liquid fill background */}
+                                  <motion.div 
+                                    className="absolute inset-0 bg-[#1E1C1A] z-0"
+                                    variants={{
+                                      hidden: { y: "100%" },
+                                      visible: { y: "0%" }
+                                    }}
+                                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
+                                  />
+                                  {/* The number text */}
+                                  <motion.span 
+                                    className="relative z-10"
+                                    variants={{
+                                      hidden: { color: "#1E1C1A" },
+                                      visible: { color: "#FFFFFF" }
+                                    }}
+                                    transition={{ duration: 0.3, delay: 0.2 }}
+                                  >
+                                    {stopNum}
+                                  </motion.span>
+                                </motion.div>
 
                                 {/* Image Side Spread with subtle hover scale drift + Secondary detail box on wide viewports below image (Requirement 6) */}
                                 <div className="w-full lg:w-1/2 flex flex-col gap-4 shrink-0">
