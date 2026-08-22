@@ -101,6 +101,7 @@ import TripRecapBanner from '../components/TripRecapBanner';
 const TripRecapModal = dynamic(() => import('../components/TripRecapModal'));
 import { getTripJournalEntries, saveTripJournalEntries, addJournalEntry } from '../../lib/journalApi';
 const CalendarSyncModal = dynamic(() => import('../components/CalendarSyncModal'));
+const TripSetupModal = dynamic(() => import('../components/TripSetupModal'));
 const NotificationsPanel = dynamic(() => import('../components/NotificationsPanel'));
 const LiveProximityBanner = dynamic(() => import('../components/LiveProximityBanner'), { ssr: false });
 
@@ -589,6 +590,7 @@ export default function ItineraryPage() {
   const [isRecapModalOpen, setIsRecapModalOpen] = useState(false);
   const [isOfflineModalOpen, setIsOfflineModalOpen] = useState(false);
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
+  const [isTripSetupOpen, setIsTripSetupOpen] = useState(false);
   const [isNotificationsPanelOpen, setIsNotificationsPanelOpen] = useState(false);
 
   // Tab Scroll State
@@ -601,6 +603,40 @@ export default function ItineraryPage() {
       setCanScrollTabsRight(scrollWidth > clientWidth + Math.ceil(scrollLeft) + 2);
     }
   };
+
+  // Auto-show TripSetupModal after a delay if tasks remain
+  useEffect(() => {
+    if (!activeTripId && !itinerary) return; // wait for data
+    
+    const doneKey = `tw_setup_done_${activeTripId || 'default'}`;
+    let isCalendarDone = false;
+    let isNotifDone = false;
+    
+    try {
+      const doneRaw = localStorage.getItem(doneKey);
+      if (doneRaw) {
+        const parsed = JSON.parse(doneRaw);
+        isCalendarDone = parsed.calendar === true;
+        isNotifDone = parsed.notifications === true;
+      }
+    } catch (e) {}
+    
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'granted') {
+        isNotifDone = true;
+      }
+    }
+
+    // If both are enabled, we never need to remind them again
+    if (isCalendarDone && isNotifDone) return;
+
+    // Otherwise, remind them every time they open the itinerary
+    const timer = setTimeout(() => {
+      setIsTripSetupOpen(true);
+    }, 2500);
+    
+    return () => clearTimeout(timer);
+  }, [activeTripId, itinerary]);
 
   useEffect(() => {
     // Check after a short delay to ensure DOM has rendered
@@ -5257,6 +5293,16 @@ export default function ItineraryPage() {
         onAccept={applyLiveAssistantProposal}
         onReject={() => setLiveAssistantProposal(null)}
         isApplying={isApplyingProposal}
+      />
+
+      {/* ── Trip Setup Modal ────────────────────────────────────────────────── */}
+      <TripSetupModal
+        isOpen={isTripSetupOpen}
+        onClose={() => setIsTripSetupOpen(false)}
+        itinerary={itinerary}
+        tripId={activeTripId || tripId}
+        onOpenCalendar={() => { setIsTripSetupOpen(false); setIsCalendarModalOpen(true); }}
+        onOpenNotifications={() => { setIsTripSetupOpen(false); setIsNotificationsPanelOpen(true); }}
       />
 
       {/* ── Calendar Sync Modal ─────────────────────────────────────────────── */}
