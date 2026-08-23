@@ -109,10 +109,10 @@ function StickyCard({ dest, index, totalCards, handleClick, formatBudget, getCro
       >
         {/* Parallax Image */}
         <motion.div 
-          className="absolute inset-[-15%] w-[130%] h-[130%] pointer-events-none"
+          className="absolute inset-0 md:inset-[-15%] w-full h-full md:w-[130%] md:h-[130%] pointer-events-none max-md:!transform-none"
           style={{ y: imageY }}
         >
-          <Image src={dest.imageUrl} alt={dest.name} fill className="object-cover" sizes="25vw" />
+          <Image src={dest.imageUrl} alt={dest.name} fill className="object-cover" sizes="(max-width: 768px) 100vw, 25vw" />
         </motion.div>
         
         {/* Gradients for text protection */}

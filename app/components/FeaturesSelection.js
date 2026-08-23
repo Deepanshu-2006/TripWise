@@ -469,8 +469,8 @@ function FeaturesSelection() {
 
                                             {/* Expanding active sub-details checkmark list */}
                                             <div 
-                                                className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                                                    isActive ? 'max-h-62.5 opacity-100 mt-1.5' : 'max-h-0 opacity-0 pointer-events-none'
+                                                className={`hidden md:block overflow-hidden transition-all duration-300 ease-in-out ${
+                                                    isActive ? 'max-h-64 opacity-100 mt-1.5' : 'max-h-0 opacity-0 pointer-events-none'
                                                 }`}
                                             >
                                                 <div className="flex flex-col gap-1 border-t border-brand-dark/5 pt-1.5 flex-wrap">
@@ -491,7 +491,7 @@ function FeaturesSelection() {
                         </div>
 
                         {/* Right Column: Live Mock UI Preview */}
-                        <div className="preview-outer-container lg:col-span-7 flex items-center justify-center relative w-full flex-1 min-h-[280px] lg:flex-none lg:h-140 rounded-3xl overflow-hidden shadow-2xl mt-0 lg:mt-0 mb-2 lg:mb-0 order-first lg:order-last shrink-0 lg:shrink-none">
+                        <div className="preview-outer-container lg:col-span-7 flex items-center justify-center relative w-full flex-1 min-h-[260px] md:min-h-[300px] lg:flex-none lg:h-140 rounded-3xl overflow-hidden shadow-2xl mt-0 lg:mt-0 mb-2 lg:mb-0 order-first lg:order-last shrink-0 lg:shrink-none">
                             <div className="w-full h-full bg-[#1C1B1B] border border-white/15 rounded-3xl p-4 sm:p-6 md:p-8 flex flex-col relative overflow-hidden shadow-2xl">
                                 
                                 {/* Inner Preview Window Shell */}
@@ -503,58 +503,92 @@ function FeaturesSelection() {
                                 </div>
 
                                 {/* PREVIEW CONTAINER 1: Smart Day-by-Day Scheduling */}
-                                <div className={`flex flex-col flex-1 transition-all duration-500 ease-in-out absolute inset-x-6 md:inset-x-8 bottom-6 md:bottom-8 top-16 md:top-20 ${
+                                <div className={`flex flex-col flex-1 transition-all duration-500 ease-in-out absolute inset-x-4 md:inset-x-6 bottom-4 top-12 md:top-14 ${
                                     activePreviewTab === 0 ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
                                 }`}>
-                                    <div className="flex justify-between items-center mb-4">
-                                        <div className="flex flex-col">
-                                            <span className="font-mono text-xs font-bold text-[#fe7717]">ACTIVE ITINERARY</span>
-                                            <span className="text-xl font-extrabold text-white">Rome: Day 1 Exploration</span>
+                                    {/* --- DESKTOP VIEW --- */}
+                                    <div className="hidden md:flex flex-col h-full w-full">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <div className="flex flex-col">
+                                                <span className="font-mono text-xs font-bold text-[#fe7717]">ACTIVE ITINERARY</span>
+                                                <span className="text-xl font-extrabold text-white">Rome: Day 1 Exploration</span>
+                                            </div>
+                                            <span className="px-3 py-1 bg-brand-teal/20 text-brand-teal border border-brand-teal/30 rounded-full font-mono text-[10px] font-bold">14,200 STEPS EST.</span>
                                         </div>
-                                        <span className="px-3 py-1 bg-brand-teal/20 text-brand-teal border border-brand-teal/30 rounded-full font-mono text-[10px] font-bold">14,200 STEPS EST.</span>
+
+                                        <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1">
+                                            <div className="flex gap-4 relative">
+                                                <div className="flex flex-col items-center">
+                                                    <div className="w-8 h-8 rounded-full bg-[#fe7717]/20 border border-[#fe7717]/40 flex items-center justify-center text-xs font-bold text-[#fe7717] z-10 shrink-0 font-mono">1</div>
+                                                    <div className="w-0.5 h-16 border-l border-dashed border-white/20 absolute top-8 left-4 -bottom-4" />
+                                                </div>
+                                                <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col">
+                                                    <div className="flex justify-between items-start mb-1">
+                                                        <h4 className="text-sm font-extrabold text-white leading-tight">Colosseum VIP Fast Track Tour</h4>
+                                                        <span className="font-mono text-[10px] font-bold text-white/50">09:30 AM</span>
+                                                    </div>
+                                                    <p className="text-xs text-white/60 leading-normal mb-2">Pre-booked skip-the-line entrance. Highly advised to visit before peak midday temperatures.</p>
+                                                    <div className="inline-flex items-center gap-1.5 text-[9px] font-bold text-green-400 bg-green-400/10 px-2.5 py-0.5 rounded-full w-fit uppercase font-mono">✓ Tickets Confirmed</div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex gap-4 relative mt-2">
+                                                <div className="flex flex-col items-center">
+                                                    <div className="w-8 h-8 rounded-full bg-brand-teal/20 border border-brand-teal/40 flex items-center justify-center text-xs font-bold text-brand-teal z-10 shrink-0 font-mono">2</div>
+                                                    <div className="w-0.5 h-16 border-l border-dashed border-white/20 absolute top-8 left-4 -bottom-4" />
+                                                </div>
+                                                <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col">
+                                                    <div className="flex justify-between items-start mb-1">
+                                                        <h4 className="text-sm font-extrabold text-white leading-tight">Lunch: Osteria da Fortunata</h4>
+                                                        <span className="font-mono text-[10px] font-bold text-white/50">12:45 PM</span>
+                                                    </div>
+                                                    <p className="text-xs text-white/60 leading-normal mb-2">Transit: 12-min walk from Forum Romanum. Hand-rolled strozzapreti pasta recommended.</p>
+                                                    <div className="inline-flex items-center gap-1.5 text-[9px] font-bold text-[#fe7717] bg-[#fe7717]/10 px-2.5 py-0.5 rounded-full w-fit uppercase font-mono">★ highly rated local spot</div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex gap-4 relative mt-2">
+                                                <div className="flex flex-col items-center">
+                                                    <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-xs font-bold text-white/80 z-10 shrink-0 font-mono">3</div>
+                                                </div>
+                                                <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col">
+                                                    <div className="flex justify-between items-start mb-1">
+                                                        <h4 className="text-sm font-extrabold text-white leading-tight">Pantheon &amp; Piazza Navona</h4>
+                                                        <span className="font-mono text-[10px] font-bold text-white/50">03:00 PM</span>
+                                                    </div>
+                                                    <p className="text-xs text-white/60 leading-normal">Free entry. Explored in peak afternoon to take advantage of interior structural shade.</p>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1">
-                                        <div className="flex gap-4 relative">
-                                            <div className="flex flex-col items-center">
-                                                <div className="w-8 h-8 rounded-full bg-[#fe7717]/20 border border-[#fe7717]/40 flex items-center justify-center text-xs font-bold text-[#fe7717] z-10 shrink-0 font-mono">1</div>
-                                                <div className="w-0.5 h-16 border-l border-dashed border-white/20 absolute top-8 left-4 -bottom-4" />
+                                    {/* --- MOBILE VIEW --- */}
+                                    <div className="flex md:hidden flex-col h-full w-full">
+                                        <div className="flex justify-between items-end mb-3">
+                                            <div className="flex flex-col">
+                                                <span className="font-mono text-[10px] font-bold text-[#fe7717]">ACTIVE ITINERARY</span>
+                                                <span className="text-lg font-extrabold text-white">Rome: Day 1</span>
                                             </div>
-                                            <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col">
-                                                <div className="flex justify-between items-start mb-1">
-                                                    <h4 className="text-sm font-extrabold text-white leading-tight">Colosseum VIP Fast Track Tour</h4>
-                                                    <span className="font-mono text-[10px] font-bold text-white/50">09:30 AM</span>
-                                                </div>
-                                                <p className="text-xs text-white/60 leading-normal mb-2">Pre-booked skip-the-line entrance. Highly advised to visit before peak midday temperatures.</p>
-                                                <div className="inline-flex items-center gap-1.5 text-[9px] font-bold text-green-400 bg-green-400/10 px-2.5 py-0.5 rounded-full w-fit uppercase font-mono">✓ Tickets Confirmed</div>
-                                            </div>
+                                            <span className="px-2 py-0.5 bg-brand-teal/20 text-brand-teal border border-brand-teal/30 rounded-full font-mono text-[9px] font-bold shrink-0">14k STEPS</span>
                                         </div>
 
-                                        <div className="flex gap-4 relative mt-2">
-                                            <div className="flex flex-col items-center">
-                                                <div className="w-8 h-8 rounded-full bg-brand-teal/20 border border-brand-teal/40 flex items-center justify-center text-xs font-bold text-brand-teal z-10 shrink-0 font-mono">2</div>
-                                                <div className="w-0.5 h-16 border-l border-dashed border-white/20 absolute top-8 left-4 -bottom-4" />
-                                            </div>
-                                            <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col">
-                                                <div className="flex justify-between items-start mb-1">
-                                                    <h4 className="text-sm font-extrabold text-white leading-tight">Lunch: Osteria da Fortunata</h4>
-                                                    <span className="font-mono text-[10px] font-bold text-white/50">12:45 PM</span>
+                                        <div className="flex-1 bg-white/5 rounded-2xl border border-white/10 p-4 flex flex-col gap-4 justify-center">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-[#fe7717]/20 flex items-center justify-center text-xs font-bold text-[#fe7717] shrink-0">1</div>
+                                                <div className="flex flex-col flex-1 min-w-0">
+                                                    <span className="text-[10px] text-white/50 font-mono">09:30 AM</span>
+                                                    <span className="text-sm font-bold text-white truncate w-full block">Colosseum VIP Tour</span>
+                                                    <span className="text-[9px] text-green-400 font-mono mt-0.5">✓ CONFIRMED</span>
                                                 </div>
-                                                <p className="text-xs text-white/60 leading-normal mb-2">Transit: 12-min walk from Forum Romanum. Hand-rolled strozzapreti pasta recommended.</p>
-                                                <div className="inline-flex items-center gap-1.5 text-[9px] font-bold text-[#fe7717] bg-[#fe7717]/10 px-2.5 py-0.5 rounded-full w-fit uppercase font-mono">★ highly rated local spot</div>
                                             </div>
-                                        </div>
-
-                                        <div className="flex gap-4 relative mt-2">
-                                            <div className="flex flex-col items-center">
-                                                <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-xs font-bold text-white/80 z-10 shrink-0 font-mono">3</div>
-                                            </div>
-                                            <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col">
-                                                <div className="flex justify-between items-start mb-1">
-                                                    <h4 className="text-sm font-extrabold text-white leading-tight">Pantheon &amp; Piazza Navona</h4>
-                                                    <span className="font-mono text-[10px] font-bold text-white/50">03:00 PM</span>
+                                            <div className="w-full border-t border-dashed border-white/10" />
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-brand-teal/20 flex items-center justify-center text-xs font-bold text-brand-teal shrink-0">2</div>
+                                                <div className="flex flex-col flex-1 min-w-0">
+                                                    <span className="text-[10px] text-white/50 font-mono">12:45 PM</span>
+                                                    <span className="text-sm font-bold text-white truncate w-full block">Osteria da Fortunata</span>
+                                                    <span className="text-[9px] text-[#fe7717] font-mono mt-0.5">★ LOCAL SPOT</span>
                                                 </div>
-                                                <p className="text-xs text-white/60 leading-normal">Free entry. Explored in peak afternoon to take advantage of interior structural shade.</p>
                                             </div>
                                         </div>
                                     </div>
@@ -564,48 +598,80 @@ function FeaturesSelection() {
                                 <div className={`flex flex-col flex-1 transition-all duration-500 ease-in-out absolute inset-x-4 md:inset-x-6 bottom-4 top-12 md:top-14 ${
                                     activePreviewTab === 1 ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
                                 }`}>
-                                    <div className="flex justify-between items-center mb-3">
-                                        <div className="flex flex-col">
-                                            <span className="font-mono text-[10px] font-bold text-[#fe7717]">REAL-TIME CURATION</span>
-                                            <span className="text-lg md:text-xl font-extrabold text-white">Hidden Gem Rerouting</span>
+                                    {/* --- DESKTOP VIEW --- */}
+                                    <div className="hidden md:flex flex-col h-full w-full">
+                                        <div className="flex justify-between items-center mb-3">
+                                            <div className="flex flex-col">
+                                                <span className="font-mono text-[10px] font-bold text-[#fe7717]">REAL-TIME CURATION</span>
+                                                <span className="text-xl font-extrabold text-white">Hidden Gem Rerouting</span>
+                                            </div>
+                                            <span className="px-2 py-1 bg-[#fe7717]/20 text-[#fe7717] border border-[#fe7717]/30 rounded-full font-mono text-[10px] font-bold">120+ LOCAL CHEFS AGREE</span>
                                         </div>
-                                        <span className="px-2 py-1 bg-[#fe7717]/20 text-[#fe7717] border border-[#fe7717]/30 rounded-full font-mono text-[10px] font-bold">120+ LOCAL CHEFS AGREE</span>
+
+                                        <div className="flex-1 grid grid-cols-2 gap-3 items-center overflow-y-auto pr-1 pb-1">
+                                            {/* Left: Tourist Trap Card */}
+                                            <div className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 flex-col relative opacity-60">
+                                                <div className="absolute top-3 right-3 px-2 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded font-mono text-[8px] font-bold uppercase">Tourist Zone</div>
+                                                <span className="text-xs font-bold font-mono text-white/40 mb-1 block">STANDARD RECOMMENDATION</span>
+                                                <h4 className="text-base font-extrabold text-white mb-2 leading-tight">Caffè di Trevi</h4>
+                                                <div className="flex items-center gap-1 mb-3">
+                                                    <span className="text-xs font-bold text-yellow-500">3.2 ★</span>
+                                                    <span className="text-white/40 text-[10px]">(850 reviews)</span>
+                                                </div>
+                                                <p className="text-xs text-white/50 leading-relaxed">
+                                                    "Overpriced, frozen carbonara. Charged €15 cover fee for simple table service near the monument."
+                                                </p>
+                                            </div>
+
+                                            {/* Right: Hidden Gem Card */}
+                                            <div className="w-full bg-white/5 border-2 border-brand-teal rounded-2xl p-5 flex flex-col relative shadow-xl shadow-brand-teal/5">
+                                                <div className="absolute top-3 right-3 px-2 py-0.5 bg-brand-teal/20 text-brand-teal border border-brand-teal/30 rounded font-mono text-[8px] font-bold uppercase tracking-wider">Hidden Gem</div>
+                                                <span className="text-xs font-bold font-mono text-brand-teal mb-1">TRIPWISE RECOMMENDS</span>
+                                                <h4 className="text-base font-extrabold text-white mb-2 leading-tight">Osteria Romana</h4>
+                                                <div className="flex items-center gap-1 mb-3">
+                                                    <span className="text-xs font-bold text-[#fe7717]">4.9 ★</span>
+                                                    <span className="text-white/40 text-[10px]">(64 locals voted)</span>
+                                                </div>
+                                                <p className="text-xs text-white/80 leading-relaxed">
+                                                    "Tucked in an alleyway 4 minutes away. Fresh hand-made pasta under €11, with complementary house wine."
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 p-3 bg-brand-teal/10 border border-brand-teal/20 rounded-xl flex items-center gap-3 shrink-0">
+                                            <span className="text-lg">💡</span>
+                                            <span className="text-xs text-white/80 leading-normal font-mono">
+                                                Saved: <strong className="text-brand-teal font-extrabold">€45</strong> on dining costs &amp; cut queue waiting by <strong className="text-brand-teal font-extrabold">35 mins</strong>.
+                                            </span>
+                                        </div>
                                     </div>
 
-                                    <div className="flex-1 flex flex-col md:grid md:grid-cols-2 gap-3 items-center overflow-y-auto pr-1 pb-1">
-                                        {/* Left: Tourist Trap Card */}
-                                        <div className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col relative opacity-60">
-                                            <div className="absolute top-3 right-3 px-2 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded font-mono text-[8px] font-bold uppercase">Tourist Zone</div>
-                                            <span className="text-xs font-bold font-mono text-white/40 mb-1">STANDARD RECOMMENDATION</span>
-                                            <h4 className="text-base font-extrabold text-white mb-2 leading-tight">Caffè di Trevi</h4>
-                                            <div className="flex items-center gap-1 mb-3">
-                                                <span className="text-xs font-bold text-yellow-500">3.2 ★</span>
-                                                <span className="text-white/40 text-[10px]">(850 reviews)</span>
+                                    {/* --- MOBILE VIEW --- */}
+                                    <div className="flex md:hidden flex-col h-full w-full">
+                                        <div className="flex justify-between items-end mb-2">
+                                            <div className="flex flex-col">
+                                                <span className="font-mono text-[10px] font-bold text-[#fe7717]">REAL-TIME CURATION</span>
+                                                <span className="text-lg font-extrabold text-white">Hidden Gem Rerouting</span>
                                             </div>
-                                            <p className="text-xs text-white/50 leading-relaxed">
-                                                "Overpriced, frozen carbonara. Charged €15 cover fee for simple table service near the monument."
-                                            </p>
                                         </div>
 
-                                        {/* Right: Hidden Gem Card */}
-                                        <div className="w-full bg-white/5 border-2 border-brand-teal rounded-2xl p-5 flex flex-col relative shadow-xl shadow-brand-teal/5">
-                                            <div className="absolute top-3 right-3 px-2 py-0.5 bg-brand-teal/20 text-brand-teal border border-brand-teal/30 rounded font-mono text-[8px] font-bold uppercase tracking-wider">Hidden Gem</div>
-                                            <span className="text-xs font-bold font-mono text-brand-teal mb-1">TRIPWISE RECOMMENDS</span>
-                                            <h4 className="text-base font-extrabold text-white mb-2 leading-tight">Osteria Romana</h4>
-                                            <div className="flex items-center gap-1 mb-3">
+                                        <div className="flex-1 bg-gradient-to-br from-brand-teal/10 to-transparent border border-brand-teal/30 rounded-2xl p-3 sm:p-4 flex flex-col justify-center relative overflow-hidden">
+                                            <div className="absolute -right-4 -top-4 text-6xl opacity-10">🍝</div>
+                                            <span className="text-[10px] font-mono font-bold text-brand-teal mb-0.5">TRIPWISE RECOMMENDS</span>
+                                            <h4 className="text-lg font-extrabold text-white mb-0.5">Osteria Romana</h4>
+                                            <div className="flex items-center gap-1.5 mb-2">
                                                 <span className="text-xs font-bold text-[#fe7717]">4.9 ★</span>
-                                                <span className="text-white/40 text-[10px]">(64 locals voted)</span>
+                                                <span className="text-[10px] text-white/50">(64 locals voted)</span>
                                             </div>
-                                            <p className="text-xs text-white/80 leading-relaxed">
-                                                "Tucked in an alleyway 4 minutes away. Fresh hand-made pasta under €11, with complementary house wine."
-                                            </p>
+                                            
+                                            <div className="mt-1 bg-black/30 rounded-lg p-2 flex items-center gap-2">
+                                                <span className="text-red-400 text-sm shrink-0">❌</span>
+                                                <span className="text-[10px] text-white/60 line-through truncate">Caffè di Trevi (Tourist Trap)</span>
+                                            </div>
+                                            
+                                            <div className="mt-2 text-[10px] text-white/80 font-mono border-l-2 border-brand-teal pl-2.5">
+                                                Saved <strong className="text-brand-teal text-xs">€45</strong> on dining
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="mt-4 p-3 bg-brand-teal/10 border border-brand-teal/20 rounded-xl flex items-center gap-3">
-                                        <span className="text-lg">💡</span>
-                                        <span className="text-xs text-white/80 leading-normal font-mono">
-                                            Saved: <strong className="text-brand-teal font-extrabold">€45</strong> on dining costs &amp; cut queue waiting by <strong className="text-brand-teal font-extrabold">35 mins</strong>.
-                                        </span>
                                     </div>
                                 </div>
 
@@ -613,55 +679,101 @@ function FeaturesSelection() {
                                 <div className={`flex flex-col flex-1 transition-all duration-500 ease-in-out absolute inset-x-4 md:inset-x-6 bottom-4 top-12 md:top-14 ${
                                     activePreviewTab === 2 ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
                                 }`}>
-                                    <div className="flex justify-between items-center mb-3">
-                                        <div className="flex flex-col">
-                                            <span className="font-mono text-xs font-bold text-[#fe7717]">FINANCIAL FORECASTING</span>
-                                            <span className="text-lg font-extrabold text-white">Smart Budget Monitor</span>
+                                    {/* --- DESKTOP VIEW --- */}
+                                    <div className="hidden md:flex flex-col h-full w-full">
+                                        <div className="flex justify-between items-center mb-3">
+                                            <div className="flex flex-col">
+                                                <span className="font-mono text-xs font-bold text-[#fe7717]">FINANCIAL FORECASTING</span>
+                                                <span className="text-xl font-extrabold text-white">Smart Budget Monitor</span>
+                                            </div>
+                                            <span className="px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full font-mono text-[10px] font-bold">$340 SAVED</span>
                                         </div>
-                                        <span className="px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full font-mono text-[10px] font-bold">$340 SAVED</span>
+
+                                        <div className="flex-1 grid grid-cols-12 gap-6 items-center overflow-y-auto pr-1 pb-1">
+                                            {/* Left: Progress ring metric */}
+                                            <div className="col-span-5 bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col items-center justify-center text-center">
+                                                <div className="relative w-28 h-28 flex items-center justify-center mb-3">
+                                                    <svg className="w-full h-full transform -rotate-90">
+                                                        <circle cx="50%" cy="50%" r="42%" stroke="rgba(255,255,255,0.05)" strokeWidth="12%" fill="transparent" />
+                                                        <circle cx="50%" cy="50%" r="42%" stroke="#0D9488" strokeWidth="12%" fill="transparent" strokeDasharray="264%" strokeDashoffset="42%" />
+                                                    </svg>
+                                                    <div className="absolute flex flex-col items-center justify-center">
+                                                        <span className="text-xl font-black text-white font-mono">84%</span>
+                                                        <span className="text-[9px] font-bold text-white/40 uppercase">Spent</span>
+                                                    </div>
+                                                </div>
+                                                <span className="text-sm font-extrabold text-white">$1,680 / $2,000</span>
+                                            </div>
+
+                                            {/* Right: Categorical analysis */}
+                                            <div className="col-span-7 flex flex-col gap-3.5">
+                                                {[
+                                                    { name: "Hotels & Stays", amount: "$800", pct: "85%", color: "bg-brand-teal" },
+                                                    { name: "Flights & Transit", amount: "$520", pct: "90%", color: "bg-[#fe7717]" },
+                                                    { name: "Food & Dining", amount: "$360", pct: "72%", color: "bg-yellow-500" }
+                                                ].map((item, idx) => (
+                                                    <div key={idx} className="flex flex-col gap-1.5">
+                                                        <div className="flex justify-between items-center text-xs font-bold">
+                                                            <span className="text-white/80">{item.name}</span>
+                                                            <span className="text-white font-mono">{item.amount}</span>
+                                                        </div>
+                                                        <div className="w-full h-2.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                                                            <div className={`h-full ${item.color} rounded-full transition-all duration-1000`} style={{ width: item.pct }} />
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-4 p-3 bg-[#fe7717]/10 border border-[#fe7717]/20 rounded-xl flex items-center gap-3 shrink-0">
+                                            <span className="text-lg shrink-0">💰</span>
+                                            <span className="text-xs text-white/85 leading-normal font-mono">
+                                                <strong>Cost Alert</strong>: Switching the Rome → Florence train from 05:00 PM to 08:30 PM saves <strong className="text-[#fe7717] font-extrabold">$55</strong>. Apply automatically?
+                                            </span>
+                                        </div>
                                     </div>
 
-                                    <div className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-6 items-center overflow-y-auto pr-1 pb-1">
-                                        {/* Left: Progress ring metric */}
-                                        <div className="md:col-span-5 bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col items-center justify-center text-center w-full h-full">
-                                            <div className="relative w-28 h-28 flex items-center justify-center mb-3">
-                                                <svg className="w-full h-full transform -rotate-90">
-                                                    <circle cx="56" cy="56" r="46" stroke="rgba(255,255,255,0.05)" strokeWidth="8" fill="transparent" />
-                                                    <circle cx="56" cy="56" r="46" stroke="#0D9488" strokeWidth="8" fill="transparent" strokeDasharray="289" strokeDashoffset="46" />
-                                                </svg>
-                                                <div className="absolute flex flex-col items-center justify-center">
-                                                    <span className="text-xl font-black text-white font-mono">84%</span>
-                                                    <span className="text-[9px] font-bold text-white/40 uppercase">Spent</span>
+                                    {/* --- MOBILE VIEW --- */}
+                                    <div className="flex md:hidden flex-col h-full w-full">
+                                        <div className="flex justify-between items-end mb-2">
+                                            <div className="flex flex-col">
+                                                <span className="font-mono text-[10px] font-bold text-[#fe7717]">FORECASTING</span>
+                                                <span className="text-lg font-extrabold text-white">Smart Budget</span>
+                                            </div>
+                                            <span className="px-2 py-0.5 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full font-mono text-[9px] font-bold shrink-0">$340 SAVED</span>
+                                        </div>
+
+                                        <div className="flex-1 flex flex-col justify-center gap-2 sm:gap-3">
+                                            <div className="bg-white/5 rounded-2xl border border-white/10 p-3 flex items-center gap-4">
+                                                <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
+                                                    <svg className="w-full h-full transform -rotate-90">
+                                                        <circle cx="50%" cy="50%" r="40%" stroke="rgba(255,255,255,0.05)" strokeWidth="15%" fill="transparent" />
+                                                        <circle cx="50%" cy="50%" r="40%" stroke="#0D9488" strokeWidth="15%" fill="transparent" strokeDasharray="251%" strokeDashoffset="40%" />
+                                                    </svg>
+                                                    <span className="absolute text-xs font-black text-white font-mono">84%</span>
+                                                </div>
+                                                <div className="flex flex-col w-full">
+                                                    <span className="text-base font-extrabold text-white mb-1.5 tracking-tight">$1.6k / $2k</span>
+                                                    <div className="flex items-center gap-1.5 w-full">
+                                                        <div className="h-1.5 flex-[0.8] bg-brand-teal rounded-full" />
+                                                        <div className="h-1.5 flex-[0.5] bg-[#fe7717] rounded-full" />
+                                                        <div className="h-1.5 flex-[0.3] bg-yellow-500 rounded-full" />
+                                                    </div>
+                                                    <div className="flex justify-between text-[8px] text-white/40 mt-1 font-mono uppercase font-bold">
+                                                        <span>Hotels</span>
+                                                        <span>Transit</span>
+                                                        <span>Food</span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <span className="text-sm font-extrabold text-white">$1,680 / $2,000</span>
+                                            
+                                            <div className="p-2.5 bg-[#fe7717]/10 border border-[#fe7717]/20 rounded-xl flex items-center gap-2.5">
+                                                <span className="text-sm shrink-0">💰</span>
+                                                <span className="text-[10px] text-white/85 leading-tight font-mono">
+                                                    Switching train to 08:30 PM saves <strong className="text-[#fe7717] font-extrabold">$55</strong>.
+                                                </span>
+                                            </div>
                                         </div>
-
-                                        {/* Right: Categorical analysis */}
-                                        <div className="md:col-span-7 flex flex-col gap-3.5 w-full">
-                                            {[
-                                                { name: "Hotels & Stays", amount: "$800", pct: "85%", color: "bg-brand-teal" },
-                                                { name: "Flights & Transit", amount: "$520", pct: "90%", color: "bg-[#fe7717]" },
-                                                { name: "Local Meals & Food", amount: "$360", pct: "72%", color: "bg-yellow-500" }
-                                            ].map((item, idx) => (
-                                                <div key={idx} className="flex flex-col gap-1.5">
-                                                    <div className="flex justify-between items-center text-xs font-bold">
-                                                        <span className="text-white/80">{item.name}</span>
-                                                        <span className="text-white font-mono">{item.amount}</span>
-                                                    </div>
-                                                    <div className="w-full h-2.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
-                                                        <div className={`h-full ${item.color} rounded-full transition-all duration-1000`} style={{ width: item.pct }} />
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-4 p-3 bg-[#fe7717]/10 border border-[#fe7717]/20 rounded-xl flex items-center gap-3">
-                                        <span className="text-lg">💰</span>
-                                        <span className="text-xs text-white/85 leading-normal font-mono">
-                                            <strong>Cost Alert</strong>: Switching the Rome $\rightarrow$ Florence train from 05:00 PM to 08:30 PM saves <strong className="text-[#fe7717] font-extrabold">$55</strong>. Apply automatically?
-                                        </span>
                                     </div>
                                 </div>
 
@@ -669,66 +781,125 @@ function FeaturesSelection() {
                                 <div className={`flex flex-col flex-1 transition-all duration-500 ease-in-out absolute inset-x-4 md:inset-x-6 bottom-4 top-12 md:top-14 ${
                                     activePreviewTab === 3 ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
                                 }`}>
-                                    <div className="flex justify-between items-center mb-3">
-                                        <div className="flex flex-col">
-                                            <span className="font-mono text-[10px] font-bold text-[#fe7717]">SYSTEM SYNC</span>
-                                            <span className="text-lg md:text-xl font-extrabold text-white">Live Booking Voucher</span>
+                                    {/* --- DESKTOP VIEW --- */}
+                                    <div className="hidden md:flex flex-col h-full w-full">
+                                        <div className="flex justify-between items-center mb-3">
+                                            <div className="flex flex-col">
+                                                <span className="font-mono text-[10px] font-bold text-[#fe7717]">SYSTEM SYNC</span>
+                                                <span className="text-xl font-extrabold text-white">Live Booking Voucher</span>
+                                            </div>
+                                            <span className="px-2 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full font-mono text-[10px] font-bold uppercase tracking-widest">On Time</span>
                                         </div>
-                                        <span className="px-2 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full font-mono text-[10px] font-bold uppercase tracking-widest">On Time</span>
+
+                                        <div className="flex-1 w-full flex flex-col gap-3 overflow-y-auto pr-1">
+                                            {/* Mock Flight Boarding Pass */}
+                                            <div className="w-full bg-[#FFF8F5] text-brand-dark rounded-2xl overflow-hidden shadow-lg border border-white/10 flex flex-col">
+                                                <div className="bg-[#1C1B1B] text-[#fe7717] px-4 py-2 border-b border-white/5 flex justify-between items-center">
+                                                    <span className="font-mono text-[10px] font-bold uppercase tracking-wider">BOARDING PASS SYNC</span>
+                                                    <span className="px-2 py-0.5 bg-green-500/10 text-green-400 border border-green-500/20 rounded font-mono text-[8px] font-bold">LIVE STATUS</span>
+                                                </div>
+                                                <div className="p-4 flex justify-between items-center gap-4">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-3xl font-black font-sans leading-none tracking-tight">JFK</span>
+                                                        <span className="text-[10px] font-bold text-secondary-text uppercase mt-1 leading-none">New York</span>
+                                                    </div>
+                                                    
+                                                    <div className="flex-1 flex items-center justify-center relative">
+                                                        <div className="w-full border-t-2 border-dashed border-brand-dark/20" />
+                                                        <div className="absolute bg-[#FFF8F5] px-3 text-[#fe7717] flex items-center justify-center">
+                                                            <svg viewBox="-20 0 56 78" fill="currentColor" className="w-6 h-6 transform rotate-90">
+                                                                <path d="M0 34 L8 0 L16 34 L34 44 L34 52 L16 46 L13 64 L21 70 L21 76 L8 70 L-5 76 L-5 70 L3 64 L0 46 L-18 52 L-18 44 Z" />
+                                                            </svg>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex flex-col items-end">
+                                                        <span className="text-3xl font-black font-sans leading-none tracking-tight">FCO</span>
+                                                        <span className="text-[10px] font-bold text-secondary-text uppercase mt-1 leading-none">Rome</span>
+                                                    </div>
+                                                </div>
+                                                <div className="px-4 pb-4 grid grid-cols-3 gap-2 border-t border-brand-dark/5 pt-3">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[9px] font-bold text-secondary-text uppercase">Flight</span>
+                                                        <span className="text-sm font-extrabold text-brand-dark font-mono mt-0.5">AZ-405</span>
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[9px] font-bold text-secondary-text uppercase">Gate</span>
+                                                        <span className="text-sm font-extrabold text-brand-dark font-mono mt-0.5">G12</span>
+                                                    </div>
+                                                    <div className="flex flex-col items-end">
+                                                        <span className="text-[9px] font-bold text-secondary-text uppercase">Seat</span>
+                                                        <span className="text-sm font-extrabold text-[#fe7717] font-mono mt-0.5">14A</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Mock Hotel Booking */}
+                                            <div className="w-full bg-[#FFF8F5] text-brand-dark rounded-2xl overflow-hidden shadow-lg border border-white/10 flex-col">
+                                                <div className="p-4 flex justify-between items-center gap-4">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[9px] font-bold text-brand-teal uppercase font-mono tracking-wider">BOOKING CONFIRMED</span>
+                                                        <h4 className="text-base font-black text-brand-dark mt-0.5 tracking-tight">Hotel Quirinale Rome</h4>
+                                                        <span className="text-[10px] font-bold text-secondary-text mt-1">Check-in: Today at 14:00</span>
+                                                    </div>
+                                                    <span className="w-12 h-12 rounded-full bg-brand-teal/10 flex items-center justify-center text-[#fe7717] text-2xl font-bold shrink-0">🛎️</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div className="flex-1 w-full flex flex-col gap-3 overflow-y-auto pr-1">
-                                        {/* Mock Flight Boarding Pass */}
-                                        <div className="w-full bg-[#FFF8F5] text-brand-dark rounded-2xl overflow-hidden shadow-lg border border-white/10 flex flex-col">
-                                            <div className="bg-[#1C1B1B] text-[#fe7717] px-3.5 py-1.5 border-b border-white/5 flex justify-between items-center">
-                                                <span className="font-mono text-[10px] font-bold uppercase tracking-wider">BOARDING PASS SYNC</span>
-                                                <span className="px-2 py-0.5 bg-green-500/10 text-green-400 border border-green-500/20 rounded font-mono text-[8px] font-bold">LIVE STATUS</span>
+                                    {/* --- MOBILE VIEW --- */}
+                                    <div className="flex md:hidden flex-col h-full w-full">
+                                        <div className="flex justify-between items-end mb-2">
+                                            <div className="flex flex-col">
+                                                <span className="font-mono text-[10px] font-bold text-[#fe7717]">SYSTEM SYNC</span>
+                                                <span className="text-lg font-extrabold text-white">Live Voucher</span>
                                             </div>
-                                            <div className="p-3.5 flex justify-between items-center gap-4">
-                                                <div className="flex flex-col">
-                                                    <span className="text-2xl font-black font-sans leading-none tracking-tight">JFK</span>
-                                                    <span className="text-[9px] font-bold text-secondary-text uppercase mt-1 leading-none">New York</span>
-                                                </div>
+                                            <span className="px-2 py-0.5 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full font-mono text-[9px] font-bold shrink-0 uppercase">On Time</span>
+                                        </div>
+
+                                        <div className="flex-1 w-full bg-[#FFF8F5] text-brand-dark rounded-xl overflow-hidden shadow-lg border border-white/10 flex flex-col justify-center relative">
+                                            <div className="absolute top-0 inset-x-0 bg-[#1C1B1B] text-[#fe7717] px-3 py-1 flex justify-between items-center z-10 border-b border-white/5">
+                                                <span className="font-mono text-[9px] font-bold uppercase tracking-wider">BOARDING PASS</span>
+                                                <span className="px-1.5 py-0.5 bg-green-500/10 text-green-400 rounded font-mono text-[8px] font-bold">LIVE STATUS</span>
+                                            </div>
+                                            
+                                            <div className="p-3 pt-8 flex flex-col h-full justify-center relative">
+                                                {/* Dashed line background */}
+                                                <div className="absolute inset-x-3 top-1/2 -mt-2 border-t-2 border-dashed border-brand-dark/15" />
                                                 
-                                                <div className="flex-1 flex items-center justify-center relative">
-                                                    <div className="w-full border-t border-dashed border-brand-dark/20" />
-                                                    <div className="absolute bg-[#FFF8F5] px-2 text-[#fe7717] flex items-center justify-center">
-                                                        <svg viewBox="-20 0 56 78" fill="currentColor" className="w-6 h-6 transform rotate-90">
+                                                <div className="flex justify-between items-center relative z-10 mb-2.5">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-2xl font-black leading-none tracking-tight">JFK</span>
+                                                        <span className="text-[9px] font-bold text-secondary-text uppercase mt-0.5">New York</span>
+                                                    </div>
+                                                    
+                                                    <div className="bg-[#FFF8F5] px-1 text-[#fe7717] transform rotate-90">
+                                                        <svg viewBox="-20 0 56 78" fill="currentColor" className="w-4 h-4">
                                                             <path d="M0 34 L8 0 L16 34 L34 44 L34 52 L16 46 L13 64 L21 70 L21 76 L8 70 L-5 76 L-5 70 L3 64 L0 46 L-18 52 L-18 44 Z" />
                                                         </svg>
                                                     </div>
-                                                </div>
 
-                                                <div className="flex flex-col items-end">
-                                                    <span className="text-2xl font-black font-sans leading-none tracking-tight">FCO</span>
-                                                    <span className="text-[9px] font-bold text-secondary-text uppercase mt-1 leading-none">Rome</span>
+                                                    <div className="flex flex-col items-end">
+                                                        <span className="text-2xl font-black leading-none tracking-tight">FCO</span>
+                                                        <span className="text-[9px] font-bold text-secondary-text uppercase mt-0.5">Rome</span>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div className="px-3.5 pb-3 grid grid-cols-3 gap-2 border-t border-brand-dark/5 pt-2.5">
-                                                <div className="flex flex-col">
-                                                    <span className="text-[8px] font-bold text-secondary-text uppercase">Flight</span>
-                                                    <span className="text-xs font-extrabold text-brand-dark font-mono mt-0.5">AZ-405</span>
+                                                
+                                                <div className="flex justify-between bg-black/5 rounded-lg p-2.5">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[8px] font-bold text-secondary-text uppercase">Flight</span>
+                                                        <span className="text-xs font-black font-mono">AZ-405</span>
+                                                    </div>
+                                                    <div className="flex flex-col items-center">
+                                                        <span className="text-[8px] font-bold text-secondary-text uppercase">Gate</span>
+                                                        <span className="text-xs font-black font-mono">G12</span>
+                                                    </div>
+                                                    <div className="flex flex-col items-end">
+                                                        <span className="text-[8px] font-bold text-secondary-text uppercase">Seat</span>
+                                                        <span className="text-xs font-black text-[#fe7717] font-mono">14A</span>
+                                                    </div>
                                                 </div>
-                                                <div className="flex flex-col">
-                                                    <span className="text-[8px] font-bold text-secondary-text uppercase">Gate</span>
-                                                    <span className="text-xs font-extrabold text-brand-dark font-mono mt-0.5">G12</span>
-                                                </div>
-                                                <div className="flex flex-col items-end">
-                                                    <span className="text-[8px] font-bold text-secondary-text uppercase">Seat</span>
-                                                    <span className="text-xs font-extrabold text-[#fe7717] font-mono mt-0.5">14A</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Mock Hotel Booking */}
-                                        <div className="w-full bg-[#FFF8F5] text-brand-dark rounded-2xl overflow-hidden shadow-lg border border-white/10 flex flex-col">
-                                            <div className="p-3.5 flex justify-between items-center gap-4">
-                                                <div className="flex flex-col">
-                                                    <span className="text-[9px] font-bold text-brand-teal uppercase font-mono tracking-wider">BOOKING CONFIRMED</span>
-                                                    <h4 className="text-base font-black text-brand-dark mt-0.5 tracking-tight">Hotel Quirinale Rome</h4>
-                                                    <span className="text-[10px] font-bold text-secondary-text mt-1">Check-in: Today at 14:00</span>
-                                                </div>
-                                                <span className="w-10 h-10 rounded-full bg-brand-teal/10 flex items-center justify-center text-[#fe7717] text-lg font-bold shrink-0">🛎️</span>
                                             </div>
                                         </div>
                                     </div>
