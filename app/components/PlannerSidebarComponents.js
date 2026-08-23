@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Plane } from 'lucide-react';
 
 // ─── RouteRow ─────────────────────────────────────────────────────────────────
@@ -271,3 +271,168 @@ export const renderHighlightedText = (text, highlight) => {
     </>
   );
 };
+
+// ─── StepIndicator ─────────────────────────────────────────────────────────────
+export function StepIndicator({ step }) {
+  const stepOrder = ['input', 'parsing', 'confirming', 'progress'];
+  const currentIdx = stepOrder.indexOf(step);
+  const steps = [
+    { label: 'Prompt',   id: 'input',      icon: '✦' },
+    { label: 'Details',  id: 'parsing',    icon: '◈' },
+    { label: 'Vibe',     id: 'confirming', icon: '◉' },
+    { label: 'Generate', id: 'progress',   icon: '▶' },
+  ];
+
+  return (
+    <div className="flex flex-col gap-2 mb-1">
+      {/* Progress track */}
+      <div className="relative h-[3px] bg-stone-100 rounded-full overflow-visible mx-0.5">
+        <motion.div
+          className="absolute left-0 top-0 h-full rounded-full overflow-hidden"
+          initial={{ width: '2%' }}
+          animate={{ width: currentIdx === 0 ? '2%' : `${(currentIdx / (steps.length - 1)) * 100}%` }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          style={{ background: 'linear-gradient(90deg, #2FA66A, #FF6B2C)' }}
+        >
+          {/* Shimmer on track fill */}
+          <span style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(90deg, transparent 20%, rgba(255,255,255,0.6) 50%, transparent 80%)',
+            animation: 'progress-shimmer 2s ease-in-out infinite',
+          }} />
+        </motion.div>
+
+        {/* Step dots on track */}
+        {steps.map((s, idx) => {
+          const isCompleted = currentIdx > idx;
+          const isActive = currentIdx === idx;
+          const pct = idx === 0 ? 0 : (idx / (steps.length - 1)) * 100;
+          return (
+            <motion.div
+              key={s.id}
+              className="absolute top-1/2 -translate-y-1/2"
+              style={{ left: `${pct}%`, translateX: '-50%' }}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', stiffness: 700, damping: 20, delay: idx * 0.07 }}
+            >
+              <motion.div
+                className={`w-2.5 h-2.5 rounded-full border-2 border-white transition-all ${
+                  isCompleted ? 'bg-[#2FA66A]' : isActive ? 'bg-[#FF6B2C]' : 'bg-stone-200'
+                }`}
+                animate={isActive ? { scale: [1, 1.3, 1] } : { scale: 1 }}
+                transition={{ repeat: isActive ? Infinity : 0, duration: 1.5, ease: 'easeInOut' }}
+                style={isActive ? { animation: 'glow-ring 1.5s ease-in-out infinite' } : isCompleted ? { animation: 'green-glow-ring 2s ease-in-out infinite' } : {}}
+              />
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Step pills row */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide snap-x">
+        {steps.map((s, idx) => {
+          const isCompleted = currentIdx > idx;
+          const isActive    = currentIdx === idx;
+
+          return (
+            <motion.div
+              key={s.id}
+              className={`relative flex-1 shrink-0 snap-center min-w-[95px] md:min-w-0 md:flex-1 flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl cursor-default overflow-hidden select-none ${
+                isActive    ? 'bg-[#FF6B2C]/10'
+              : isCompleted ? 'bg-[#2FA66A]/8'
+              : 'bg-stone-50'
+              }`}
+              initial={{ opacity: 0, y: 10, scale: 0.92 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 24, delay: idx * 0.07 }}
+              whileHover={{
+                y: -3,
+                scale: 1.03,
+                boxShadow: isActive
+                  ? '0 8px 24px rgba(255,107,44,0.25), 0 2px 6px rgba(255,107,44,0.15)'
+                  : isCompleted
+                  ? '0 8px 20px rgba(47,166,106,0.2)'
+                  : '0 6px 18px rgba(0,0,0,0.08)',
+                transition: { type: 'spring', stiffness: 500, damping: 18 }
+              }}
+              whileTap={{ scale: 0.97 }}
+            >
+              {/* Active shimmer sweep */}
+              {isActive && (
+                <span aria-hidden style={{
+                  position: 'absolute', inset: 0, zIndex: 0,
+                  background: 'linear-gradient(105deg, transparent 30%, rgba(255,107,44,0.12) 50%, transparent 70%)',
+                  animation: 'progress-shimmer 2.2s ease-in-out infinite',
+                  pointerEvents: 'none',
+                }} />
+              )}
+
+              {/* Number badge */}
+              <motion.div
+                className={`relative z-10 w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black shrink-0 ${
+                  isCompleted ? 'bg-[#2FA66A] text-white' : isActive ? 'bg-[#FF6B2C] text-white' : 'bg-stone-200 text-stone-400'
+                }`}
+                key={`badge-${s.id}-${isCompleted}`}
+                initial={{ scale: 0, rotate: -20 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: 'spring', stiffness: 800, damping: 18, delay: idx * 0.07 + 0.05 }}
+                whileHover={{ scale: 1.25, rotate: isActive ? -8 : isCompleted ? 6 : 0, transition: { type: 'spring', stiffness: 600, damping: 12 } }}
+                style={isActive ? { animation: 'glow-ring 1.6s ease-in-out infinite' } : isCompleted ? { animation: 'green-glow-ring 2.5s ease-in-out infinite' } : {}}
+              >
+                <AnimatePresence mode="wait">
+                  {isCompleted ? (
+                    <motion.span key="chk" initial={{ scale: 0, rotate: -90 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0, rotate: 90 }} transition={{ type: 'spring', stiffness: 800, damping: 14 }} style={{ display: 'inline-block' }}>✓</motion.span>
+                  ) : (
+                    <motion.span key="num" initial={{ scale: 0, y: -8 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0, y: 8 }} transition={{ type: 'spring', stiffness: 700, damping: 18 }} style={{ display: 'inline-block' }}>{idx + 1}</motion.span>
+                  )}
+                </AnimatePresence>
+
+                {/* Active pulsing ring */}
+                {isActive && (
+                  <motion.span
+                    className="absolute inset-0 rounded-md"
+                    style={{ background: '#FF6B2C', zIndex: -1 }}
+                    animate={{ scale: [1, 1.9], opacity: [0.55, 0] }}
+                    transition={{ repeat: Infinity, duration: 1.2, ease: 'easeOut' }}
+                  />
+                )}
+              </motion.div>
+
+              {/* Label */}
+              <motion.span
+                className={`relative z-10 text-[9px] font-mono font-bold uppercase tracking-wider leading-none ${
+                  isActive ? 'text-[#FF6B2C]' : isCompleted ? 'text-[#2FA66A]' : 'text-stone-400'
+                }`}
+                animate={isActive ? { y: [0, -1, 0], opacity: [0.8, 1, 0.8] } : {}}
+                transition={isActive ? { repeat: Infinity, duration: 2, ease: 'easeInOut' } : {}}
+              >
+                {s.label}
+              </motion.span>
+
+              {/* Active glowing border bottom */}
+              {isActive && (
+                <motion.span
+                  className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full bg-[#FF6B2C]"
+                  initial={{ scaleX: 0, opacity: 0 }}
+                  animate={{ scaleX: 1, opacity: 1 }}
+                  transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ boxShadow: '0 0 8px rgba(255,107,44,0.7)' }}
+                />
+              )}
+              {isCompleted && (
+                <motion.span
+                  className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full bg-[#2FA66A]"
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ duration: 0.4, delay: idx * 0.05, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ boxShadow: '0 0 6px rgba(47,166,106,0.5)' }}
+                />
+              )}
+            </motion.div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
