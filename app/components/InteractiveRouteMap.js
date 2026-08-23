@@ -371,15 +371,30 @@ export default function InteractiveRouteMap({
       ? { title: derivedBasecampTitle, coordinates: basecampHotel?.coordinates || coordinates || activities?.[0]?.coordinates || { lat: 41.9028, lng: 12.4964 }, isBasecamp: true }
       : activities?.[selectedStopIdx - 1];
 
-    if (targetAct && targetAct.coordinates && typeof targetAct.coordinates.lat === 'number' && !isNaN(targetAct.coordinates.lat) && typeof targetAct.coordinates.lng === 'number' && !isNaN(targetAct.coordinates.lng)) {
-      const latLng = window.L?.latLng(targetAct.coordinates.lat, targetAct.coordinates.lng);
-      if (latLng && mapRef.current) {
-        const currentZoom = mapRef.current.getZoom();
-        if (currentZoom >= 14 && !isBasecamp) {
-          mapRef.current.panTo(latLng, { animate: true, duration: 0.45, easeLinearity: 0.25 });
-        } else {
-          mapRef.current.flyTo(latLng, 16, { duration: 0.55, easeLinearity: 0.25 });
-        }
+
+    if (targetAct && targetAct.coordinates) {
+      let lat = targetAct.coordinates.lat;
+      let lng = targetAct.coordinates.lng;
+      if (Array.isArray(targetAct.coordinates)) {
+         lat = targetAct.coordinates[0];
+         lng = targetAct.coordinates[1];
+      }
+      lat = parseFloat(lat);
+      lng = parseFloat(lng);
+
+      if (!isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng)) {
+        const latLng = window.L?.latLng(lat, lng);
+        if (latLng && mapRef.current) {
+          try {
+            const currentZoom = mapRef.current.getZoom();
+            if (currentZoom >= 14 && !isBasecamp) {
+              mapRef.current.panTo(latLng, { animate: true, duration: 0.45, easeLinearity: 0.25 });
+            } else {
+              mapRef.current.flyTo(latLng, 16, { duration: 0.55, easeLinearity: 0.25 });
+            }
+          } catch (e) {
+            console.error("Leaflet camera error:", e);
+          }
 
         setActiveDestination({
           act: targetAct,
@@ -402,6 +417,7 @@ export default function InteractiveRouteMap({
         }
       }
     }
+      }
   }, [selectedStopIdx, isReady, selectedDayIndex, destinationName, activities, coordinates]);
 
   // Inject premium Apple/Linear animation keyframes & styles right on mount
@@ -1566,19 +1582,23 @@ export default function InteractiveRouteMap({
           }, 850);
         };
 
-        if (res.animatedPolyline && selectedStopIdx === null && selectedCategory === 'all') {
-          mapRef.current.flyToBounds(res.animatedPolyline.getBounds(), {
-            paddingTopLeft: [75, 120],
-            paddingBottomRight: [75, 95],
-            maxZoom: 15,
-            animate: true,
-            duration: 0.8,
-            easeLinearity: 0.25
-          });
-          triggerPulse();
-        } else if (res.latLngs.length === 1 && selectedStopIdx === null && selectedCategory === 'all') {
-          mapRef.current.flyTo(res.latLngs[0], 15, { animate: true, duration: 0.8 });
-          triggerPulse();
+        // Only animate map if the container has actual dimensions (prevents NaN crash when hidden on mobile)
+        const mapSize = mapRef.current ? mapRef.current.getSize() : null;
+        if (mapRef.current && mapSize && mapSize.x > 0 && mapSize.y > 0) {
+          if (res.animatedPolyline && selectedStopIdx === null && selectedCategory === 'all') {
+            mapRef.current.flyToBounds(res.animatedPolyline.getBounds(), {
+              paddingTopLeft: [75, 120],
+              paddingBottomRight: [75, 95],
+              maxZoom: 15,
+              animate: true,
+              duration: 0.8,
+              easeLinearity: 0.25
+            });
+            triggerPulse();
+          } else if (res.latLngs.length === 1 && selectedStopIdx === null && selectedCategory === 'all') {
+            mapRef.current.flyTo(res.latLngs[0], 15, { animate: true, duration: 0.8 });
+            triggerPulse();
+          }
         }
       }
     };
@@ -1651,7 +1671,7 @@ export default function InteractiveRouteMap({
       setHeroImageLoaded(false);
     }
     if (act?.coordinates && mapRef.current && window.L) {
-      const latLng = [act.coordinates.lat, act.coordinates.lng];
+      const latLng = Array.isArray(act.coordinates) ? act.coordinates : [act.coordinates.lat, act.coordinates.lng];
       mapRef.current.flyTo(latLng, 16, { duration: 1.2, easeLinearity: 0.25 });
     }
   };
@@ -2190,7 +2210,7 @@ export default function InteractiveRouteMap({
             });
             setHeroImageLoaded(false);
             if (dayStops[newIdx].coordinates && mapRef.current && window.L) {
-              mapRef.current.flyTo([dayStops[newIdx].coordinates.lat, dayStops[newIdx].coordinates.lng], 16, { duration: 1.0, easeLinearity: 0.25 });
+              mapRef.current.flyTo((Array.isArray(dayStops[newIdx].coordinates) ? dayStops[newIdx].coordinates : [dayStops[newIdx].coordinates.lat, dayStops[newIdx].coordinates.lng]), 16, { duration: 1.0, easeLinearity: 0.25 });
             }
           }
         };
@@ -2209,7 +2229,7 @@ export default function InteractiveRouteMap({
             });
             setHeroImageLoaded(false);
             if (dayStops[newIdx].coordinates && mapRef.current && window.L) {
-              mapRef.current.flyTo([dayStops[newIdx].coordinates.lat, dayStops[newIdx].coordinates.lng], 16, { duration: 1.0, easeLinearity: 0.25 });
+              mapRef.current.flyTo((Array.isArray(dayStops[newIdx].coordinates) ? dayStops[newIdx].coordinates : [dayStops[newIdx].coordinates.lat, dayStops[newIdx].coordinates.lng]), 16, { duration: 1.0, easeLinearity: 0.25 });
             }
           }
         };

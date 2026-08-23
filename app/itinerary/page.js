@@ -69,6 +69,7 @@ import {
   BookOpen,
   Save,
   FastForward,
+  ChevronLeft,
   ChevronRight,
   Receipt
 } from 'lucide-react';
@@ -596,11 +597,13 @@ export default function ItineraryPage() {
   // Tab Scroll State
   const tabsContainerRef = useRef(null);
   const [canScrollTabsRight, setCanScrollTabsRight] = useState(false);
+  const [canScrollTabsLeft, setCanScrollTabsLeft] = useState(false);
 
   const checkTabsScroll = () => {
     if (tabsContainerRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = tabsContainerRef.current;
       setCanScrollTabsRight(scrollWidth > clientWidth + Math.ceil(scrollLeft) + 2);
+      setCanScrollTabsLeft(Math.ceil(scrollLeft) > 2);
     }
   };
 
@@ -1889,7 +1892,21 @@ export default function ItineraryPage() {
             </div>
             
             <div className={`absolute right-0 top-0 bottom-[3px] w-14 bg-gradient-to-l from-[#FAF6F0] via-[#FAF6F0]/80 to-transparent pointer-events-none flex items-center justify-end z-10 transition-opacity duration-300 ${canScrollTabsRight ? 'opacity-100' : 'opacity-0'}`}>
-              <ChevronRight className="w-4 h-4 text-[#FF6B2C] opacity-70 animate-pulse mr-1 mt-1" />
+              <motion.div
+                animate={{ x: [0, 4, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <ChevronRight className="w-4 h-4 text-[#FF6B2C] opacity-80 mr-1 mt-1" />
+              </motion.div>
+            </div>
+
+            <div className={`absolute left-0 top-0 bottom-[3px] w-14 bg-gradient-to-r from-[#FAF6F0] via-[#FAF6F0]/80 to-transparent pointer-events-none flex items-center justify-start z-10 transition-opacity duration-300 ${canScrollTabsLeft ? 'opacity-100' : 'opacity-0'}`}>
+              <motion.div
+                animate={{ x: [0, -4, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <ChevronLeft className="w-4 h-4 text-[#FF6B2C] opacity-80 ml-1 mt-1" />
+              </motion.div>
             </div>
           </div>
 
@@ -2877,20 +2894,19 @@ export default function ItineraryPage() {
                               animate={{ pathLength: 1 }}
                               transition={{ duration: 3.5, ease: [0.25, 0.1, 0.25, 1], delay: 0.8 }}
                             />
-                          </svg>
 
-                          {/* Airplane following the path */}
-                          <div
-                            className="flight-plane animate-fly-plane"
-                            style={{ animationDelay: '0.8s' }}
-                          >
-                            <svg viewBox="-30 -30 60 60" className="w-full h-full text-[#FF6B2C] overflow-visible drop-shadow-[0_4px_6px_rgba(255,107,44,0.25)]">
+                            {/* Airplane following the path */}
+                            <g
+                              className="flight-plane animate-fly-plane"
+                              style={{ animationDelay: '0.8s', transformBox: 'fill-box', transformOrigin: 'center' }}
+                            >
                               <path
                                 d="M -8 -4 L 0 -38 L 8 -4 L 26 6 L 26 14 L 8 8 L 5 26 L 13 32 L 13 38 L 0 32 L -13 38 L -13 32 L -5 26 L -8 8 L -26 14 L -26 6 Z"
-                                fill="currentColor"
+                                fill="#FF6B2C"
+                                style={{ filter: 'drop-shadow(0px 4px 6px rgba(255,107,44,0.25))' }}
                               />
-                            </svg>
-                          </div>
+                            </g>
+                          </svg>
                         </div>
                       )}
 

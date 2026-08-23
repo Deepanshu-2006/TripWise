@@ -56,12 +56,15 @@ export default function JournalEntryModal({
       
       // Lock body scroll
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     }
     
     return () => {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     };
   }, [isOpen, existingEntry]);
 
@@ -193,7 +196,11 @@ export default function JournalEntryModal({
             </div>
 
             {/* Scrollable Form Content */}
-            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4 sm:space-y-6">
+            <div 
+              className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4 sm:space-y-6"
+              onWheel={(e) => e.stopPropagation()}
+              onTouchMove={(e) => e.stopPropagation()}
+            >
               
               {/* Rating Section */}
               <div className="flex flex-col items-center justify-center py-1 sm:py-2">
