@@ -8,6 +8,7 @@ export default function ImageCarousel({ query, initialImage, alt, images: propIm
   const [images, setImages] = useState(propImages || (initialImage ? [initialImage] : []));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const [direction, setDirection] = useState(0);
 
   useEffect(() => {
     if (propImages && propImages.length > 0) {
@@ -25,13 +26,14 @@ export default function ImageCarousel({ query, initialImage, alt, images: propIm
         }
       })
       .catch(err => console.error("Failed to fetch carousel images", err));
-  }, [query]);
+  }, [query, propImages]);
 
   // Autoplay
   useEffect(() => {
     if (images.length <= 1 || isHovered) return;
     
     const timer = setInterval(() => {
+      setDirection(1);
       setCurrentIndex((prev) => (prev + 1) % images.length);
     }, 4500);
     
@@ -39,36 +41,86 @@ export default function ImageCarousel({ query, initialImage, alt, images: propIm
   }, [images.length, isHovered]);
 
   const goToNext = (e) => {
-    e.stopPropagation();
-    e.preventDefault();
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    setDirection(1);
     setCurrentIndex((prev) => (prev + 1) % images.length);
   };
 
   const goToPrev = (e) => {
-    e.stopPropagation();
-    e.preventDefault();
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    setDirection(-1);
     setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  const swipeConfidenceThreshold = 10000;
+  const swipePower = (offset, velocity) => {
+    return Math.abs(offset) * velocity;
+  };
+
+  const variants = {
+    enter: (direction) => {
+      return {
+        x: direction > 0 ? '100%' : '-100%',
+        opacity: 0,
+        scale: 0.95
+      };
+    },
+    center: {
+      zIndex: 1,
+      x: 0,
+      opacity: 1,
+      scale: 1
+    },
+    exit: (direction) => {
+      return {
+        zIndex: 0,
+        x: direction < 0 ? '100%' : '-100%',
+        opacity: 0,
+        scale: 0.95
+      };
+    }
   };
 
   return (
     <div 
-      className="w-full h-full relative overflow-hidden group"
+      className="w-full h-full relative overflow-hidden group bg-gray-100"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <AnimatePresence initial={false}>
+      <AnimatePresence initial={false} custom={direction}>
         <motion.img
           key={currentIndex}
           src={images[currentIndex]}
           alt={`${alt} - Image ${currentIndex + 1}`}
-          className="w-full h-full object-cover object-center absolute inset-0"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1, scale: isHovered ? 1.04 : 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ 
-            opacity: { duration: 0.8, ease: 'easeInOut' },
-            scale: { duration: 0.6, ease: 'easeOut' }
+          className="w-full h-full object-cover object-center absolute inset-0 cursor-grab active:cursor-grabbing"
+          custom={direction}
+          variants={variants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{
+            x: { type: "spring", stiffness: 300, damping: 30 },
+            opacity: { duration: 0.2 },
+            scale: { duration: 0.4 }
           }}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={1}
+          onDragEnd={(e, { offset, velocity }) => {
+            const swipe = swipePower(offset.x, velocity.x);
+            if (swipe < -swipeConfidenceThreshold) {
+              goToNext();
+            } else if (swipe > swipeConfidenceThreshold) {
+              goToPrev();
+            }
+          }}
+          whileHover={{ scale: images.length > 1 ? 1 : 1.05, transition: { duration: 0.6 } }}
         />
       </AnimatePresence>
 
@@ -104,3 +156,4 @@ export default function ImageCarousel({ query, initialImage, alt, images: propIm
     </div>
   );
 }
+
