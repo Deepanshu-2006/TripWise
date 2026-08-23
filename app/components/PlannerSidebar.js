@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion, useScroll, useSpring } from 'framer-motion';
 import CustomDatePicker from './CustomDatePicker';
 import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw, Check, Map, Compass, ThumbsUp, ThumbsDown, Users, UserPlus, Landmark, Utensils, Zap, Gem, Star, Lightbulb, Smile, TreePine, Coffee, Palmtree, Banknote, Sun, Footprints, Coins, Plane, Building2, TrendingDown, Mic, MicOff, Flag, AlertTriangle, ShieldCheck, ShieldAlert, CornerDownLeft, Send, ArrowRight, Square, StopCircle } from 'lucide-react';
 import FlagModal from './FlagModal';
@@ -531,6 +531,9 @@ export default function PlannerSidebar({
   onOpenCalendar = null,
   onOpenNotifications = null,
 }) {
+  const scrollRef = useRef(null);
+  const { scrollYProgress } = useScroll({ container: scrollRef });
+  const pathProgress = useSpring(scrollYProgress, { stiffness: 40, damping: 20, restDelta: 0.001 });
   const [internalSelectedDayIndex, setInternalSelectedDayIndex] = useState(0);
   const selectedDayIndex = propSelectedDayIndex !== undefined ? propSelectedDayIndex : internalSelectedDayIndex;
   const [isDayChanging, setIsDayChanging] = useState(false);
@@ -2037,7 +2040,7 @@ export default function PlannerSidebar({
         })()}
       </div>
 
-      <div data-lenis-prevent="true" className="flex-1 overflow-y-auto overflow-x-hidden pr-2 -mr-3 pb-20 scroll-smooth min-h-0">
+      <div id="itinerary-scroll-container" ref={scrollRef} data-lenis-prevent="true" className="flex-1 overflow-y-auto overflow-x-hidden pr-2 -mr-3 pb-20 scroll-smooth min-h-0">
         {/* STATE 0: Prompt Input Setup Page */}
         {step === 'input' && (
           <div className="space-y-8 animate-fade-in">
@@ -2936,7 +2939,26 @@ export default function PlannerSidebar({
             {showFinalCTA && itinerary ? (
               /* LIVE ITINERARY CARDS WORKSPACE IN LEFT SIDEBAR */
               <div className="flex flex-col gap-5 animate-fade-in">
-                <div className="flex items-center justify-between border-b border-[rgba(28,27,27,0.1)] pb-3">
+                <div className="flex md:hidden items-center justify-between border-b border-[rgba(28,27,27,0.1)] pb-3 mb-4">
+                  <div>
+                    <h3 className="text-lg md:text-xl font-black text-[#1C1B1B] leading-tight">
+                      {itinerary.destinationName || 'Your Custom Itinerary'}
+                    </h3>
+                    <p className="text-xs font-bold text-[#FF7A1A] mt-0.5 flex items-center gap-1.5">
+                      <span className="animate-pulse inline-block text-amber-500">⚡</span>
+                      <span>{itinerary.days?.[selectedDayIndex]?.dateLabel || getDayDateString(itinerary?.startDate || startDate, selectedDayIndex) || `Day ${selectedDayIndex + 1}`} • {itinerary.days?.[selectedDayIndex]?.activities?.length || 0} Stops</span>
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleNewPrompt}
+                    className="group px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-bold bg-white border border-[#E6DFD5] text-[#1E1C1A] hover:border-[#FF6B2C]/40 hover:bg-[#FAF6F0] hover:text-[#FF6B2C] transition-all duration-300 cursor-pointer shadow-xs hover:shadow-sm hover:-translate-y-0.5 shrink-0 flex items-center gap-1.5 sm:gap-2"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 text-[#A89F91] group-hover:text-[#FF6B2C] transition-all duration-500 group-hover:rotate-180" />
+                    <span>New Prompt</span>
+                  </button>
+                </div>
+                <div className="hidden md:flex items-center justify-between border-b border-[rgba(28,27,27,0.1)] pb-3">
                   <div>
                     <h3 className="text-lg md:text-xl font-black text-[#1C1B1B] leading-tight">
                       {itinerary.destinationName || 'Your Custom Itinerary'}
@@ -3262,7 +3284,10 @@ export default function PlannerSidebar({
                       className="relative flex flex-col gap-3.5 w-full pb-6"
                     >
                       {/* Point 5 & 1: Subtle orange continuous vertical timeline connecting stops */}
-                      <div className="absolute left-8 top-8 bottom-8 w-0.5 bg-linear-to-b from-[#FF6B2C] via-[#FF6B2C]/50 to-[#FF6B2C]/20 pointer-events-none z-0" />
+                      <motion.div 
+                        style={{ scaleY: scrollRef ? pathProgress : 1, originY: 0 }}
+                        className="absolute left-[31.5px] top-8 bottom-8 w-[3px] bg-linear-to-b from-[#FF6B2C] via-[#FF6B2C] to-[#FF6B2C]/20 shadow-[0_0_12px_rgba(255,107,44,0.8)] pointer-events-none z-0" 
+                      />
 
                       {itinerary.days?.[selectedDayIndex]?.activities?.map((act, idx) => {
                         const stopNum = idx + 1;
@@ -3282,7 +3307,7 @@ export default function PlannerSidebar({
                           <motion.div
                             key={`${selectedDayIndex}-${idx}`}
                             initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0, transition: { duration: 0.26, delay: idx * 0.06, ease: [0.22, 1, 0.36, 1] } }}
+                            whileInView={{ opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } }} viewport={{ once: false, margin: "0px 0px -5% 0px", root: scrollRef }}
                             exit={{ opacity: 0, y: -10, transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] } }}
                             className="flex flex-col gap-2"
                             data-day-idx={selectedDayIndex}
@@ -3290,11 +3315,17 @@ export default function PlannerSidebar({
                           >
                             {/* Point 1 & 10: Transport Connector Between Stops with Uber Integration */}
                             {idx > 0 && transport && (
-                              <div className="relative pl-12 py-2 flex items-center justify-between z-10 pr-1 gap-2">
+                              <motion.div 
+                                initial={{ opacity: 0, scale: 0.9, y: 15 }}
+                                whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                                viewport={{ once: false, margin: "0px 0px -10% 0px", root: scrollRef }}
+                                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                                className="relative pl-[46px] py-2 flex items-center justify-between z-10 pr-1 gap-2"
+                              >
                                 {/* Transport mode pill */}
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FFF8F5] border border-[#ECE8E2] rounded-full text-[11px] font-extrabold text-[#5F5E5A] shadow-2xs">
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FF6B2C] border-transparent rounded-full text-[11px] font-extrabold text-white shadow-[0_4px_12px_rgba(255,107,44,0.3)] shadow-2xs">
                                   <span className="text-xs">{transport.icon}</span>
-                                  <span className="tracking-tight text-[#1C1B1B]">{transport.text}</span>
+                                  <span className="tracking-tight text-white">{transport.text}</span>
                                 </div>
 
                                 {/* Premium Uber Button — uses GPS for pickup, destination coords for dropoff */}
@@ -3350,7 +3381,7 @@ export default function PlannerSidebar({
                                     <span className="text-white text-[11px] font-extrabold leading-tight">Request Ride</span>
                                   </span>
                                 </button>
-                              </div>
+                              </motion.div>
                             )}
 
                             {/* Public Accuracy Warning Banner */}
@@ -3381,132 +3412,151 @@ export default function PlannerSidebar({
                                 handleSelectStop(isSelected ? null : stopNum);
                                 handleHoverStop(stopNum);
                               }}
-                              className={`scroll-mt-40 w-full box-border p-4 rounded-3xl border transition-all duration-300 ease-out flex flex-col gap-3 cursor-pointer select-none relative z-10 ${dragOverStopIdx === idx
-                                  ? 'border-[#FF6B2C] border-2 bg-[#FFF8F5] scale-[1.02] ring-4 ring-[#FF6B2C]/30 shadow-2xl z-30'
+                              className={`scroll-mt-40 w-full box-border rounded-[24px] sm:rounded-3xl border transition-all duration-300 ease-out flex flex-col cursor-pointer select-none relative z-10 overflow-hidden bg-white ${dragOverStopIdx === idx
+                                  ? 'border-[#FF6B2C] border-2 bg-[#FFF8F5] scale-[1.02] ring-4 ring-[#FF6B2C]/30 z-30'
                                   : draggedStopIdx === idx
                                     ? 'opacity-40 border-dashed border-[#FF6B2C] scale-95'
                                     : isSelected
-                                      ? 'border-[#FF6B2C] bg-[#FFF8F5] shadow-xl scale-[1.01] z-20'
+                                      ? 'border-[#FF6B2C] bg-[#FFF8F5] scale-[1.01] z-20 shadow-[0_8px_30px_rgba(255,107,44,0.12)]'
                                       : isHovered || hoveredStopIdx === stopNum
-                                        ? 'border-[#FF6B2C]/40 bg-white shadow-lg -translate-y-1 z-20'
-                                        : 'border-[#E6DFD5]/70 bg-white shadow-sm hover:border-[#FF6B2C]/40 hover:shadow-md hover:-translate-y-0.5'
+                                        ? 'border-stone-200 shadow-[0_12px_40px_rgba(0,0,0,0.08)] -translate-y-1 z-20'
+                                        : 'border-stone-200/50 shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:border-stone-200 hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)]'
                                 }`}
                             >
-                              <div className="flex items-start gap-3.5">
-                                {/* Stop Number Circle / Timeline Node */}
-                                <div className="flex flex-col items-center shrink-0 pt-0.5">
-                                  <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-black transition-all ${isSelected || isHovered
-                                      ? 'bg-[#EC6735] text-white border-[#EC6735] shadow-md scale-110'
-                                      : 'bg-[#FFF2EA] text-[#FF6B2C] border-[#FF6B2C]/30'
+                              <div className="flex flex-col sm:flex-row sm:items-start sm:gap-3.5 sm:p-4">
+                                {/* Stop Number Circle / Timeline Node (Absolute on mobile, Static on desktop) */}
+                                <div className="absolute top-4 left-4 sm:static sm:flex flex-col items-center shrink-0 sm:pt-0.5 z-20">
+                                  <div className={`w-8 h-8 sm:w-7 sm:h-7 rounded-full border-2 flex items-center justify-center text-[13px] sm:text-xs font-black transition-all shadow-lg sm:shadow-none backdrop-blur-md ${isSelected || isHovered
+                                      ? 'bg-[#EC6735] text-white border-[#EC6735] scale-110'
+                                      : 'bg-white/90 text-[#FF6B2C] border-white/40'
                                     }`}>
                                     {stopNum}
                                   </div>
                                 </div>
 
-                                {/* Point 2: Activity Thumbnail (80-100px) */}
-                                <div className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-[#ECE8E2] shadow-2xs group/thumb">
-                                  <img
-                                    src={getActivityThumbnail(act, itinerary?.destinationName || '', idx)}
-                                    alt={act.title}
-                                    className="w-full h-full object-cover transition-transform duration-500 group-hover/thumb:scale-110"
-                                    loading="lazy"
-                                  />
-                                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none" />
-                                  <div className="absolute bottom-2 left-2 flex items-center gap-1 text-[10px] font-extrabold text-white">
-                                    <Star size={10} className="fill-amber-400 text-amber-400" />
-                                    <span>{ratingData.rating}</span>
+                                {/* Responsive wrapper for Thumbnail and Content (Col on Mobile, Row on Desktop) */}
+                                <div className="flex-1 flex flex-col sm:flex-row sm:gap-3.5 min-w-0 w-full">
+                                  
+                                  {/* Point 2: Activity Thumbnail */}
+                                  <div className="relative w-full h-[240px] sm:w-24 sm:h-24 sm:rounded-2xl overflow-hidden shrink-0 bg-[#F2F2F7] group/thumb">
+                                    <img
+                                      src={getActivityThumbnail(act, itinerary?.destinationName || '', idx)}
+                                      alt={act.title}
+                                      className="w-full h-full object-cover transition-transform duration-300 group-hover/thumb:scale-105"
+                                      loading="lazy"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
+                                    <div className="absolute bottom-4 left-4 flex items-center gap-1.5 text-[13px] sm:text-[10px] font-bold text-white drop-shadow-md bg-black/20 backdrop-blur-md px-2 py-1 rounded-lg">
+                                      <Star size={13} className="fill-white text-white" />
+                                      <span>{ratingData.rating}</span>
+                                    </div>
                                   </div>
-                                </div>
 
-                                {/* Main Content Hierarchy */}
-                                <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-                                  <div className="flex items-center justify-between gap-1 w-full">
-                                    <div className="flex items-center gap-1.5">
-                                      <span className="text-[11px] font-mono font-extrabold text-stone-500">{act.time || '10:00 AM'}</span>
-                                      <span className="text-stone-300">•</span>
-                                      <span className="flex items-center gap-1 text-[10px] font-extrabold uppercase text-stone-500 tracking-tight">
-                                        <span className="text-stone-400">{renderPremiumIcon(categoryStyle.icon, 11)}</span> 
-                                        <span>{categoryStyle.name}</span>
-                                      </span>
+                                  {/* Main Content Hierarchy */}
+                                  <div className="flex-1 min-w-0 flex flex-col gap-2 p-4 sm:p-0">
+                                    <div className="flex items-center justify-between gap-1 w-full">
+                                      <div className="flex items-center gap-1.5 flex-wrap">
+                                        <span className="text-[12px] sm:text-[11px] font-semibold text-gray-500">{act.time || '10:00 AM'}</span>
+                                        <span className="text-gray-300 hidden sm:inline">•</span>
+                                        <span className="flex items-center gap-1 text-[12px] sm:text-[10px] font-semibold text-gray-500 tracking-tight capitalize">
+                                          <span className="text-gray-400">{renderPremiumIcon(categoryStyle.icon, 12)}</span> 
+                                          <span>{categoryStyle.name.toLowerCase()}</span>
+                                        </span>
+                                      </div>
+                                      
+                                      {/* Voting & Flagging Actions */}
+                                      <div className="flex items-center shrink-0 bg-[#F7F5F2] rounded-full border border-[#ECE8E2] shadow-2xs overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                                        {(() => {
+                                          const voteData = mockVotes[stopKey] || { up: 0, down: 0, userVote: null };
+                                          const displayUp = voteData.up + (voteData.userVote === 'up' ? 0 : (idx === 0 ? 1 : 0));
+
+                                          return (
+                                            <>
+                                              <button
+                                                onClick={() => handleVote(stopKey, 'up')}
+                                                className={`flex items-center gap-1 pl-2 pr-1.5 sm:pl-2.5 sm:pr-2 py-1 hover:bg-[#FFF8F5] hover:text-[#FF6B2C] transition-colors ${voteData.userVote === 'up' ? 'bg-[#FFF8F5] text-[#FF6B2C]' : 'text-stone-500'}`}
+                                                title="Upvote"
+                                              >
+                                                <ThumbsUp size={11} strokeWidth={2.5} className={voteData.userVote === 'up' ? 'fill-[#FF6B2C]/20' : ''} />
+                                                <span className="text-[9px] sm:text-[10px] font-bold">{displayUp > 0 ? displayUp : ''}</span>
+                                              </button>
+                                              <div className="w-px h-3 bg-[#ECE8E2]"></div>
+                                              <button
+                                                onClick={() => handleVote(stopKey, 'down')}
+                                                className={`flex items-center gap-1 pr-2 pl-1.5 sm:pr-2.5 sm:pl-2 py-1 hover:bg-stone-200 transition-colors ${voteData.userVote === 'down' ? 'bg-stone-200 text-stone-800' : 'text-stone-500'}`}
+                                                title="Downvote"
+                                              >
+                                                <ThumbsDown size={11} strokeWidth={2.5} className={voteData.userVote === 'down' ? 'fill-stone-400/30' : ''} />
+                                              </button>
+                                              <div className="w-px h-3 bg-[#ECE8E2]"></div>
+                                              <button
+                                                onClick={() => setActiveFlagTarget({ placeId: stopKey, placeTitle: act.title })}
+                                                className="px-1.5 sm:px-2 py-1 hover:bg-amber-50 hover:text-amber-600 transition-colors text-stone-400"
+                                                title="Report outdated info on this place"
+                                              >
+                                                <Flag size={10} strokeWidth={2.5} />
+                                              </button>
+                                            </>
+                                          );
+                                        })()}
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-start justify-between gap-2 mt-1 sm:mt-0">
+                                      <h4 className="text-[20px] sm:text-base font-bold text-stone-900 leading-[1.2] tracking-tight">
+                                        {act.title}
+                                      </h4>
                                     </div>
                                     
-                                    {/* Voting & Flagging Actions (Top Right Pill) */}
-                                    <div className="flex items-center shrink-0 bg-[#F7F5F2] rounded-full border border-[#ECE8E2] shadow-2xs overflow-hidden" onClick={(e) => e.stopPropagation()}>
-
-                                      {(() => {
-                                        const voteData = mockVotes[stopKey] || { up: 0, down: 0, userVote: null };
-                                        const displayUp = voteData.up + (voteData.userVote === 'up' ? 0 : (idx === 0 ? 1 : 0));
-
-                                        return (
-                                          <>
-                                            <button
-                                              onClick={() => handleVote(stopKey, 'up')}
-                                              className={`flex items-center gap-1 pl-2.5 pr-2 py-1 hover:bg-[#FFF8F5] hover:text-[#FF6B2C] transition-colors ${voteData.userVote === 'up' ? 'bg-[#FFF8F5] text-[#FF6B2C]' : 'text-stone-500'}`}
-                                              title="Upvote"
-                                            >
-                                              <ThumbsUp size={12} strokeWidth={2.5} className={voteData.userVote === 'up' ? 'fill-[#FF6B2C]/20' : ''} />
-                                              <span className="text-[10px] font-bold">{displayUp > 0 ? displayUp : ''}</span>
-                                            </button>
-                                            <div className="w-px h-3.5 bg-[#ECE8E2]"></div>
-                                            <button
-                                              onClick={() => handleVote(stopKey, 'down')}
-                                              className={`flex items-center gap-1 pr-2.5 pl-2 py-1 hover:bg-stone-200 transition-colors ${voteData.userVote === 'down' ? 'bg-stone-200 text-stone-800' : 'text-stone-500'}`}
-                                              title="Downvote"
-                                            >
-                                              <ThumbsDown size={12} strokeWidth={2.5} className={voteData.userVote === 'down' ? 'fill-stone-400/30' : ''} />
-                                            </button>
-                                            <div className="w-px h-3.5 bg-[#ECE8E2]"></div>
-                                            <button
-                                              onClick={() => setActiveFlagTarget({ placeId: stopKey, placeTitle: act.title })}
-                                              className="px-2 py-1 hover:bg-amber-50 hover:text-amber-600 transition-colors text-stone-400 hover:text-amber-600"
-                                              title="Report outdated info on this place"
-                                            >
-                                              <Flag size={11} strokeWidth={2.5} />
-                                            </button>
-                                          </>
-                                        );
-                                      })()}
-                                    </div>
-                                  </div>
-
-                                  <div className="flex items-start justify-between gap-2">
-                                    <h4 className="text-sm sm:text-base font-black text-[#1C1B1B] leading-snug tracking-tight">
-                                      {act.title}
-                                    </h4>
+                                    {/* Description (line-clamp-2) - MOVED HERE FOR MOBILE, HIDDEN ON DESKTOP */}
+                                    <p className="text-[14px] text-stone-500 leading-[1.6] line-clamp-3 font-medium sm:hidden mt-1">
+                                      {act.description}
+                                    </p>
                                   </div>
                                 </div>
                               </div>
 
-                              {/* Description (line-clamp-2) */}
-                              <p className="text-xs text-[#5F5E5A] leading-relaxed line-clamp-2 pl-12 sm:pl-13 font-normal">
+                              {/* Description (line-clamp-2) - ORIGINAL DESKTOP LOCATION */}
+                              <p className="hidden sm:block text-xs text-[#5F5E5A] leading-relaxed line-clamp-2 pl-13 font-normal mt-1.5">
                                 {act.description}
                               </p>
 
-                              {/* Pills: Duration, Cost, Badges */}
-                              <div className="pl-14 sm:pl-15 flex items-center flex-wrap gap-1.5 pt-0.5 pb-1">
-                                {act.duration && (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#5F5E5A] bg-[#F7F5F2] px-2 py-1 rounded-full border border-[#ECE8E2]">
-                                    <span className="text-stone-400"><Clock size={10} strokeWidth={2.5} /></span> {act.duration}
+                              {/* Premium Metadata & Badges */}
+                              <div className="pl-14 sm:pl-15 flex flex-col gap-2.5 pt-1 pb-3">
+                                {/* Core Stats (Sleek Inline) */}
+                                <div className="flex items-center gap-2.5 text-[11px] font-semibold text-[#8B857F]">
+                                  {act.duration && (
+                                    <div className="flex items-center gap-1">
+                                      <Clock size={12} strokeWidth={2.5} className="text-[#D3CBC0]" />
+                                      <span className="tracking-tight">{act.duration}</span>
+                                    </div>
+                                  )}
+                                  {act.duration && <span className="text-[#E6DFD5] text-[9px]">•</span>}
+                                  <div className="flex items-center gap-1">
+                                    <Banknote size={12} strokeWidth={2.5} className="text-[#D3CBC0]" />
+                                    <span className="tracking-tight">{costInfo.title.replace('💰 ', '')}</span>
+                                  </div>
+                                </div>
+
+                                {/* Premium Badges */}
+                                <div className="flex items-center flex-wrap gap-2">
+                                  {overtourismInfo && (
+                                    <span className="inline-flex items-center gap-1.5 text-[9px] uppercase tracking-wide font-bold text-red-600 bg-red-50/80 px-2 py-1 rounded-md border border-red-200/50 shadow-xs">
+                                      <AlertTriangle className="w-3 h-3 text-red-500" />
+                                      <span>Peak crowds {overtourismInfo.peakHours}</span>
+                                    </span>
+                                  )}
+                                  {iconBadges.map((badge, bIdx) => (
+                                    <span key={bIdx} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#1C1B1B] bg-white px-2.5 py-1 rounded-md border border-[#E6DFD5]/80 shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all cursor-default">
+                                      <span className="opacity-90">{renderPremiumIcon(badge.icon, 11)}</span> 
+                                      <span className="tracking-tight">{badge.text}</span>
+                                    </span>
+                                  ))}
+                                  <span className="inline-flex items-center gap-1.5 text-[9px] font-mono font-bold text-emerald-700 bg-emerald-50/50 px-2 py-1 rounded-md border border-emerald-500/20 shadow-xs ml-auto sm:ml-0">
+                                    <ShieldCheck className="w-3 h-3 text-emerald-500" />
+                                    <span className="tracking-wide">VERIFIED {accuracyData.lastVerifiedAt}</span>
                                   </span>
-                                )}
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#5F5E5A] bg-[#F7F5F2] px-2 py-1 rounded-full border border-[#ECE8E2]">
-                                  <span className="text-stone-400"><Banknote size={10} strokeWidth={2.5} /></span> {costInfo.title.replace('💰 ', '')}
-                                </span>
-                                {overtourismInfo && (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-amber-900 bg-amber-500/15 px-2 py-1 rounded-full border border-amber-500/30">
-                                    <AlertTriangle className="w-3 h-3 text-amber-600" />
-                                    <span>⚠️ Peak crowds {overtourismInfo.peakHours}</span>
-                                  </span>
-                                )}
-                                {iconBadges.map((badge, bIdx) => (
-                                  <span key={bIdx} className={`inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-1 rounded-full border ${badge.colorClass}`}>
-                                    <span className="opacity-80">{renderPremiumIcon(badge.icon, 10)}</span> <span>{badge.text}</span>
-                                  </span>
-                                ))}
-                                <span className="inline-flex items-center gap-1 text-[9px] font-mono font-extrabold text-[#7A7268] bg-[#F7F5F2] px-2 py-1 rounded-full border border-[#ECE8E2]">
-                                  <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                                  <span>Verified {accuracyData.lastVerifiedAt}</span>
-                                </span>
+                                </div>
                               </div>
 
                               {/* Less-Crowded Alternative Spot Swap Banner */}
