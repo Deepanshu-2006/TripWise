@@ -15,7 +15,8 @@ import {
   Check
 } from 'lucide-react';
 import { getTripJournalEntries, removeJournalEntry } from '../../lib/journalApi';
-import JournalEntryModal from './JournalEntryModal';
+import dynamic from 'next/dynamic';
+const JournalEntryModal = dynamic(() => import('./JournalEntryModal'));
 import Animated3DBackground from './Animated3DBackground';
 
 const AnimatedTrashIcon = () => (
