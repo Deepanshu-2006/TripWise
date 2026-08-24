@@ -65,11 +65,60 @@ const getCategoryMeta = (activity, fallbackColor = '#FF6B35') => {
   };
 };
 
+// Safe LatLng constructor to prevent "Invalid LatLng object: (NaN, NaN)"
+const safeLatLng = (lat, lng) => {
+  if (typeof window === 'undefined' || !window.L) return null;
+  const numLat = typeof lat === 'number' ? lat : parseFloat(lat);
+  const numLng = typeof lng === 'number' ? lng : parseFloat(lng);
+  if (isNaN(numLat) || isNaN(numLng) || !Number.isFinite(numLat) || !Number.isFinite(numLng)) return null;
+  if (numLat < -90 || numLat > 90 || numLng < -180 || numLng > 180) return null;
+  try {
+    return window.L.latLng(numLat, numLng);
+  } catch (e) {
+    return null;
+  }
+};
+
+const safeFlyToBounds = (map, bounds, options = {}) => {
+  if (!map || !bounds || typeof window === 'undefined') return;
+  const mapSize = map.getSize ? map.getSize() : null;
+  if (!mapSize || mapSize.x <= 0 || mapSize.y <= 0) return;
+  try {
+    if (typeof bounds.isValid === 'function' && !bounds.isValid()) return;
+    map.flyToBounds(bounds, options);
+  } catch (e) {
+    console.warn("Leaflet safeFlyToBounds ignored:", e);
+  }
+};
+
+const safeFlyTo = (map, latLng, zoom = 15, options = {}) => {
+  if (!map || !latLng || typeof window === 'undefined') return;
+  const mapSize = map.getSize ? map.getSize() : null;
+  if (!mapSize || mapSize.x <= 0 || mapSize.y <= 0) return;
+  try {
+    map.flyTo(latLng, zoom, options);
+  } catch (e) {
+    console.warn("Leaflet safeFlyTo ignored:", e);
+  }
+};
+
+const safePanTo = (map, latLng, options = {}) => {
+  if (!map || !latLng || typeof window === 'undefined') return;
+  const mapSize = map.getSize ? map.getSize() : null;
+  if (!mapSize || mapSize.x <= 0 || mapSize.y <= 0) return;
+  try {
+    map.panTo(latLng, options);
+  } catch (e) {
+    console.warn("Leaflet safePanTo ignored:", e);
+  }
+};
+
 // Helper to compute realistic transit mode and estimated duration between two stops
 const getTransitTelemetry = (p1Coordinates, p2Coordinates) => {
   if (!p1Coordinates || !p2Coordinates || typeof window === 'undefined' || !window.L) return null;
-  const p1 = window.L.latLng(p1Coordinates.lat, p1Coordinates.lng);
-  const p2 = window.L.latLng(p2Coordinates.lat, p2Coordinates.lng);
+  const p1 = safeLatLng(p1Coordinates.lat, p1Coordinates.lng);
+  const p2 = safeLatLng(p2Coordinates.lat, p2Coordinates.lng);
+  if (!p1 || !p2) return null;
   // Apply 1.28x Urban Street Network Circuity Factor to convert straight-line geodesic meters to realistic road/walking route distance
   const distMeters = p1.distanceTo(p2) * 1.28;
   const distKm = (distMeters / 1000).toFixed(1);
@@ -382,19 +431,14 @@ export default function InteractiveRouteMap({
       lat = parseFloat(lat);
       lng = parseFloat(lng);
 
-      if (!isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng)) {
-        const latLng = window.L?.latLng(lat, lng);
-        if (latLng && mapRef.current) {
-          try {
-            const currentZoom = mapRef.current.getZoom();
-            if (currentZoom >= 14 && !isBasecamp) {
-              mapRef.current.panTo(latLng, { animate: true, duration: 0.45, easeLinearity: 0.25 });
-            } else {
-              mapRef.current.flyTo(latLng, 16, { duration: 0.55, easeLinearity: 0.25 });
-            }
-          } catch (e) {
-            console.error("Leaflet camera error:", e);
-          }
+      const latLng = safeLatLng(lat, lng);
+      if (latLng && mapRef.current) {
+        const currentZoom = mapRef.current.getZoom ? mapRef.current.getZoom() : 13;
+        if (currentZoom >= 14 && !isBasecamp) {
+          safePanTo(mapRef.current, latLng, { animate: true, duration: 0.45, easeLinearity: 0.25 });
+        } else {
+          safeFlyTo(mapRef.current, latLng, 16, { duration: 0.55, easeLinearity: 0.25 });
+        }
 
         setActiveDestination({
           act: targetAct,
@@ -417,7 +461,6 @@ export default function InteractiveRouteMap({
         }
       }
     }
-      }
   }, [selectedStopIdx, isReady, selectedDayIndex, destinationName, activities, coordinates]);
 
   // Inject premium Apple/Linear animation keyframes & styles right on mount
@@ -676,12 +719,12 @@ export default function InteractiveRouteMap({
   // Compute attractions within 1.5 km (~15-min walk) real WGS84 geodesic radius around Basecamp Hotel
   const stopsInsideRing = useMemo(() => {
     if (!basecampStop?.coordinates || typeof window === 'undefined' || !window.L) return [];
-    const L = window.L;
-    const baseLatLng = L.latLng(basecampStop.coordinates.lat, basecampStop.coordinates.lng);
+    const baseLatLng = safeLatLng(basecampStop.coordinates.lat, basecampStop.coordinates.lng);
+    if (!baseLatLng) return [];
     return validActivities.filter(act => {
       if (act.isBasecamp) return false;
-      if (!act.coordinates?.lat || !act.coordinates?.lng) return false;
-      const actLatLng = L.latLng(act.coordinates.lat, act.coordinates.lng);
+      const actLatLng = safeLatLng(act.coordinates?.lat, act.coordinates?.lng);
+      if (!actLatLng) return false;
       return baseLatLng.distanceTo(actLatLng) <= 1500;
     });
   }, [basecampStop, validActivities, isReady]);
@@ -690,14 +733,17 @@ export default function InteractiveRouteMap({
   useEffect(() => {
     if (!basecampStop?.coordinates) return;
     const { lat, lng } = basecampStop.coordinates;
+    const numLat = typeof lat === 'number' ? lat : parseFloat(lat);
+    const numLng = typeof lng === 'number' ? lng : parseFloat(lng);
+    if (isNaN(numLat) || isNaN(numLng) || !Number.isFinite(numLat) || !Number.isFinite(numLng)) return;
 
     // 1. Instant curated authentic places for famous destinations
-    const instantPlaces = getKnownRealWalkablePlaces(lat, lng, destinationName);
+    const instantPlaces = getKnownRealWalkablePlaces(numLat, numLng, destinationName);
     setRealWalkablePlaces(instantPlaces);
 
     // 2. Fetch live real places from OpenStreetMap Overpass API around basecamp
     if (typeof window === 'undefined') return;
-    const query = `[out:json][timeout:8];(node["amenity"="cafe"](around:1500,${lat},${lng});node["amenity"~"restaurant|bar|pub"](around:1500,${lat},${lng}););out body 12;`;
+    const query = `[out:json][timeout:8];(node["amenity"="cafe"](around:1500,${numLat},${numLng});node["amenity"~"restaurant|bar|pub"](around:1500,${numLat},${numLng}););out body 12;`;
     fetch('https://overpass-api.de/api/interpreter', {
       method: 'POST',
       body: query
@@ -706,16 +752,16 @@ export default function InteractiveRouteMap({
       .then(data => {
         if (data && data.elements && data.elements.length > 0) {
           const fetchedPlaces = [];
-          const L = window.L;
-          const baseLatLng = L?.latLng(lat, lng);
+          const baseLatLng = safeLatLng(numLat, numLng);
 
           data.elements.forEach(el => {
             if (!el.tags || !el.tags.name) return;
             const placeLat = el.lat;
             const placeLng = el.lon;
-            if (!placeLat || !placeLng) return;
+            const placeLatLng = safeLatLng(placeLat, placeLng);
+            if (!placeLatLng) return;
 
-            const distMeters = baseLatLng ? baseLatLng.distanceTo(L.latLng(placeLat, placeLng)) : 600;
+            const distMeters = baseLatLng ? baseLatLng.distanceTo(placeLatLng) : 600;
             if (distMeters > 1500) return;
 
             const walkMins = Math.max(3, Math.round(distMeters / 80));
@@ -1040,10 +1086,14 @@ export default function InteractiveRouteMap({
       markersRef.current = {};
     }
 
-    let cLat = coordinates?.lat;
-    let cLng = coordinates?.lng;
-    if (typeof cLat !== 'number' || isNaN(cLat)) cLat = activities?.[0]?.coordinates?.lat || 41.9028;
-    if (typeof cLng !== 'number' || isNaN(cLng)) cLng = activities?.[0]?.coordinates?.lng || 12.4964;
+    let cLat = typeof coordinates?.lat === 'number' ? coordinates.lat : parseFloat(coordinates?.lat);
+    let cLng = typeof coordinates?.lng === 'number' ? coordinates.lng : parseFloat(coordinates?.lng);
+    if (isNaN(cLat) || isNaN(cLng) || !Number.isFinite(cLat) || !Number.isFinite(cLng)) {
+      const act0Lat = parseFloat(activities?.[0]?.coordinates?.lat);
+      const act0Lng = parseFloat(activities?.[0]?.coordinates?.lng);
+      cLat = !isNaN(act0Lat) && Number.isFinite(act0Lat) ? act0Lat : 28.6139;
+      cLng = !isNaN(act0Lng) && Number.isFinite(act0Lng) ? act0Lng : 77.2090;
+    }
     const defaultCenter = [cLat, cLng];
 
     const map = window.L.map(mapContainerRef.current, {
@@ -1181,15 +1231,22 @@ export default function InteractiveRouteMap({
 
       const plotSingleDayStops = (dayActivities, dayIdx, isMultiDayMode) => {
         const dayColorMeta = DAY_SIGNATURE_COLORS[dayIdx % DAY_SIGNATURE_COLORS.length];
-        const validActs = (dayActivities || []).filter(
-          (act) => act?.coordinates && typeof act.coordinates.lat === 'number' && !isNaN(act.coordinates.lat) && typeof act.coordinates.lng === 'number' && !isNaN(act.coordinates.lng)
-        );
+        const validActs = (dayActivities || []).map(act => {
+          if (!act || !act.coordinates) return null;
+          const aLat = typeof act.coordinates.lat === 'number' ? act.coordinates.lat : parseFloat(act.coordinates.lat);
+          const aLng = typeof act.coordinates.lng === 'number' ? act.coordinates.lng : parseFloat(act.coordinates.lng);
+          if (isNaN(aLat) || isNaN(aLng) || !Number.isFinite(aLat) || !Number.isFinite(aLng)) return null;
+          return { ...act, coordinates: { lat: aLat, lng: aLng } };
+        }).filter(Boolean);
+
         if (validActs.length === 0) return { latLngs: [], totalMeters: 0, stopsCount: 0, animatedPolyline: null };
 
-        let baseLat = coordinates?.lat;
-        let baseLng = coordinates?.lng;
-        if (typeof baseLat !== 'number' || isNaN(baseLat)) baseLat = validActs[0].coordinates.lat;
-        if (typeof baseLng !== 'number' || isNaN(baseLng)) baseLng = validActs[0].coordinates.lng;
+        let baseLat = typeof coordinates?.lat === 'number' ? coordinates.lat : parseFloat(coordinates?.lat);
+        let baseLng = typeof coordinates?.lng === 'number' ? coordinates.lng : parseFloat(coordinates?.lng);
+        if (isNaN(baseLat) || isNaN(baseLng) || !Number.isFinite(baseLat) || !Number.isFinite(baseLng)) {
+          baseLat = validActs[0].coordinates.lat;
+          baseLng = validActs[0].coordinates.lng;
+        }
 
         const basecampStop = {
           title: derivedBasecampTitle,
@@ -1207,7 +1264,9 @@ export default function InteractiveRouteMap({
         const plottedMarkerCoords = []; // Track marker positions to eliminate pin overlap
 
         dayLoopedStops.forEach((act, idx) => {
-          const rawLatLng = L.latLng(act.coordinates.lat, act.coordinates.lng);
+          const rawLatLng = safeLatLng(act.coordinates?.lat, act.coordinates?.lng);
+          if (!rawLatLng) return;
+
           if (latLngs.length > 0) {
             totalMeters += latLngs[latLngs.length - 1].distanceTo(rawLatLng) * 1.28;
           }
@@ -1228,7 +1287,8 @@ export default function InteractiveRouteMap({
             offsetStep++;
           }
           plottedMarkerCoords.push({ lat: markerLat, lng: markerLng });
-          const latLng = L.latLng(markerLat, markerLng);
+          const latLng = safeLatLng(markerLat, markerLng);
+          if (!latLng) return;
 
           const isBasecamp = act.isBasecamp === true || (idx === 0 && !isMultiDayMode) || (isMultiDayMode && dayIdx === 0 && idx === 0);
           const stopNum = isMultiDayMode ? (isBasecamp ? 0 : idx + (dayIdx === 0 ? 0 : 1)) : idx;
@@ -1548,16 +1608,21 @@ export default function InteractiveRouteMap({
           stopsCount: totalStopsAll
         });
 
-        if (allLatLngs.length > 1 && selectedStopIdx === null && selectedCategory === 'all') {
+        if (allLatLngs.length > 1 && selectedStopIdx === null && selectedCategory === 'all' && mapRef.current) {
           const allPolylineCoords = allLatLngs.map(ll => [ll.lat, ll.lng]);
-          mapRef.current.flyToBounds(L.polyline(allPolylineCoords).getBounds(), {
-            paddingTopLeft: [75, 120],
-            paddingBottomRight: [75, 95],
-            maxZoom: 15,
-            animate: true,
-            duration: 0.8,
-            easeLinearity: 0.25
-          });
+          try {
+            const bounds = L.polyline(allPolylineCoords).getBounds();
+            safeFlyToBounds(mapRef.current, bounds, {
+              paddingTopLeft: [75, 120],
+              paddingBottomRight: [75, 95],
+              maxZoom: 15,
+              animate: true,
+              duration: 0.8,
+              easeLinearity: 0.25
+            });
+          } catch (e) {
+            console.warn("Leaflet polyline bounds error:", e);
+          }
         }
       } else {
         const currentDayIdx = typeof selectedDayIndex === 'number' ? selectedDayIndex : 0;
@@ -1582,21 +1647,24 @@ export default function InteractiveRouteMap({
           }, 850);
         };
 
-        // Only animate map if the container has actual dimensions (prevents NaN crash when hidden on mobile)
-        const mapSize = mapRef.current ? mapRef.current.getSize() : null;
-        if (mapRef.current && mapSize && mapSize.x > 0 && mapSize.y > 0) {
+        // Only animate map if the container has actual dimensions
+        if (mapRef.current) {
           if (res.animatedPolyline && selectedStopIdx === null && selectedCategory === 'all') {
-            mapRef.current.flyToBounds(res.animatedPolyline.getBounds(), {
-              paddingTopLeft: [75, 120],
-              paddingBottomRight: [75, 95],
-              maxZoom: 15,
-              animate: true,
-              duration: 0.8,
-              easeLinearity: 0.25
-            });
-            triggerPulse();
+            try {
+              safeFlyToBounds(mapRef.current, res.animatedPolyline.getBounds(), {
+                paddingTopLeft: [75, 120],
+                paddingBottomRight: [75, 95],
+                maxZoom: 15,
+                animate: true,
+                duration: 0.8,
+                easeLinearity: 0.25
+              });
+              triggerPulse();
+            } catch (e) {
+              console.warn("Leaflet animatedPolyline bounds error:", e);
+            }
           } else if (res.latLngs.length === 1 && selectedStopIdx === null && selectedCategory === 'all') {
-            mapRef.current.flyTo(res.latLngs[0], 15, { animate: true, duration: 0.8 });
+            safeFlyTo(mapRef.current, res.latLngs[0], 15, { animate: true, duration: 0.8 });
             triggerPulse();
           }
         }
@@ -1671,8 +1739,12 @@ export default function InteractiveRouteMap({
       setHeroImageLoaded(false);
     }
     if (act?.coordinates && mapRef.current && window.L) {
-      const latLng = Array.isArray(act.coordinates) ? act.coordinates : [act.coordinates.lat, act.coordinates.lng];
-      mapRef.current.flyTo(latLng, 16, { duration: 1.2, easeLinearity: 0.25 });
+      const lat = Array.isArray(act.coordinates) ? act.coordinates[0] : act.coordinates.lat;
+      const lng = Array.isArray(act.coordinates) ? act.coordinates[1] : act.coordinates.lng;
+      const latLng = safeLatLng(lat, lng);
+      if (latLng) {
+        safeFlyTo(mapRef.current, latLng, 16, { duration: 1.2, easeLinearity: 0.25 });
+      }
     }
   };
 
@@ -1684,12 +1756,25 @@ export default function InteractiveRouteMap({
     const layers = layerGroupRef.current.getLayers();
     const latLngs = [];
     layers.forEach((layer) => {
-      if (layer.getLatLng) latLngs.push(layer.getLatLng());
-      else if (layer.getLatLngs) latLngs.push(...layer.getLatLngs());
+      if (layer.getLatLng) {
+        const ll = layer.getLatLng();
+        if (ll && Number.isFinite(ll.lat) && Number.isFinite(ll.lng)) latLngs.push(ll);
+      } else if (layer.getLatLngs) {
+        const lls = layer.getLatLngs();
+        if (Array.isArray(lls)) {
+          lls.flat(2).forEach(ll => {
+            if (ll && Number.isFinite(ll.lat) && Number.isFinite(ll.lng)) latLngs.push(ll);
+          });
+        }
+      }
     });
     if (latLngs.length > 0 && window.L) {
-      const bounds = window.L.latLngBounds(latLngs);
-      mapRef.current.flyToBounds(bounds, { paddingTopLeft: [75, 120], paddingBottomRight: [75, 95], maxZoom: 15, animate: true, duration: 0.8, easeLinearity: 0.25 });
+      try {
+        const bounds = window.L.latLngBounds(latLngs);
+        safeFlyToBounds(mapRef.current, bounds, { paddingTopLeft: [75, 120], paddingBottomRight: [75, 95], maxZoom: 15, animate: true, duration: 0.8, easeLinearity: 0.25 });
+      } catch (e) {
+        console.warn("Leaflet fitRoute error:", e);
+      }
     }
   };
 
@@ -1719,16 +1804,21 @@ export default function InteractiveRouteMap({
       else if (catId === 'shopping') isMatch = !isBasecamp && meta.label === 'Shopping';
 
       if (isMatch && act.coordinates) {
-        matchingLatLngs.push([act.coordinates.lat, act.coordinates.lng]);
+        const ll = safeLatLng(act.coordinates.lat, act.coordinates.lng);
+        if (ll) matchingLatLngs.push(ll);
       }
     });
 
     if (matchingLatLngs.length > 0 && window.L) {
       if (matchingLatLngs.length === 1) {
-        mapRef.current.flyTo(matchingLatLngs[0], 16, { duration: 0.8, easeLinearity: 0.25 });
+        safeFlyTo(mapRef.current, matchingLatLngs[0], 16, { duration: 0.8, easeLinearity: 0.25 });
       } else {
-        const bounds = window.L.latLngBounds(matchingLatLngs);
-        mapRef.current.flyToBounds(bounds, { paddingTopLeft: [75, 120], paddingBottomRight: [75, 95], maxZoom: 15, animate: true, duration: 0.8, easeLinearity: 0.25 });
+        try {
+          const bounds = window.L.latLngBounds(matchingLatLngs);
+          safeFlyToBounds(mapRef.current, bounds, { paddingTopLeft: [75, 120], paddingBottomRight: [75, 95], maxZoom: 15, animate: true, duration: 0.8, easeLinearity: 0.25 });
+        } catch (e) {
+          console.warn("Leaflet category bounds error:", e);
+        }
       }
     }
   };
