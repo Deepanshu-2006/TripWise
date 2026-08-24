@@ -669,9 +669,10 @@ export const DayScheduleCard = React.memo(function DayScheduleCard({
         onMouseEnter={() => handleHoverStop(stopNum)}
         onMouseLeave={() => handleHoverStop(null)}
         onClick={() => {
-          handleSelectStop(isSelected ? null : stopNum);
-          handleHoverStop(stopNum);
-          setMobileExpanded((prev) => !prev);
+          if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+            handleSelectStop(isSelected ? null : stopNum);
+            handleHoverStop(stopNum);
+          }
         }}
         className={`scroll-mt-40 w-full box-border rounded-2xl sm:rounded-3xl border transition-all duration-300 ease-out flex flex-col cursor-pointer select-none relative z-10 overflow-hidden bg-white
           ${dragOverStopIdx === idx
@@ -679,10 +680,10 @@ export const DayScheduleCard = React.memo(function DayScheduleCard({
             : draggedStopIdx === idx
               ? 'opacity-40 border-dashed border-[#FF6B2C] sm:scale-95'
               : isSelected
-                ? 'border-[#FF6B2C] bg-[#FFF8F5] sm:scale-[1.01] z-20 shadow-[0_8px_30px_rgba(255,107,44,0.12)]'
+                ? 'border-stone-200/50 sm:border-[#FF6B2C] sm:bg-[#FFF8F5] sm:scale-[1.01] z-20 sm:shadow-[0_8px_30px_rgba(255,107,44,0.12)]'
                 : isHovered || hoveredStopIdx === stopNum
                   ? 'border-stone-200 shadow-[0_12px_40px_rgba(0,0,0,0.08)] sm:-translate-y-1 z-20'
-                  : 'border-stone-200/50 shadow-[0_4px_16px_rgba(0,0,0,0.04)] hover:border-stone-200 hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)]'
+                  : 'border-stone-200/50 shadow-[0_4px_16px_rgba(0,0,0,0.04)] sm:hover:border-stone-200 sm:hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)]'
         }`}
       >
 
@@ -707,7 +708,7 @@ export const DayScheduleCard = React.memo(function DayScheduleCard({
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10 pointer-events-none" />
               
               {/* Stop Number Badge */}
-              <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shadow-md backdrop-blur-md transition-all ${isSelected ? 'bg-[#EC6735] text-white ring-2 ring-white/60' : 'bg-white text-[#FF6B2C] border border-[#FF6B2C]/30'}`}>
+              <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shadow-md backdrop-blur-md transition-all ${isSelected ? 'bg-white text-[#FF6B2C] border border-[#FF6B2C]/30 sm:bg-[#EC6735] sm:text-white sm:ring-2 sm:ring-white/60' : 'bg-white text-[#FF6B2C] border border-[#FF6B2C]/30'}`}>
                 {stopNum}
               </div>
 
