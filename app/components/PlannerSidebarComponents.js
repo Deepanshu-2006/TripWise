@@ -1,6 +1,17 @@
 import React, { useState } from 'react';
+import { 
+  Star, Clock, Banknote, AlertTriangle, ShieldCheck, 
+  Compass, Lightbulb, Sparkles, ChevronRight, ThumbsUp, ThumbsDown, Flag, Plane
+} from 'lucide-react';
+import { getActivityThumbnail, getCategoryStyling, getActivityRating, getIconBadges, getAiInsight, formatCost } from './itineraryHelpers';
+import { getPlaceAccuracyStatus } from '../../lib/flaggingStore';
+import { getAttractionOvertourismInfo } from '../../lib/overtourismData';
+
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plane } from 'lucide-react';
+
+import { getDistance } from '../actions/distance';
+import { getTransportBetweenStops } from './itineraryHelpers';
+import { renderPremiumIcon } from './PlannerSidebarUtils';
 
 // ─── RouteRow ─────────────────────────────────────────────────────────────────
 export function RouteRow({ idx, dest, detail, onClick }) {
@@ -330,7 +341,7 @@ export function StepIndicator({ step }) {
       </div>
 
       {/* Step pills row */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide snap-x">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 -mx-1 px-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x">
         {steps.map((s, idx) => {
           const isCompleted = currentIdx > idx;
           const isActive    = currentIdx === idx;
@@ -436,3 +447,390 @@ export function StepIndicator({ step }) {
     </div>
   );
 }
+
+// ─── LiveTransitPill ──────────────────────────────────────────────────────────
+
+export function LiveTransitPill({ prevStop, nextStop, idx }) {
+  const initialTransport = getTransportBetweenStops(prevStop, nextStop, idx);
+  const [transitIcon, setTransitIcon] = React.useState(initialTransport?.icon || '🚶');
+  const [transitText, setTransitText] = React.useState(initialTransport?.text || '');
+  const [transitDist, setTransitDist] = React.useState(initialTransport?.distStr || '');
+  const [mode, setMode] = React.useState(initialTransport?.mode || 'walk');
+
+  React.useEffect(() => {
+    if (!prevStop?.coordinates || !nextStop?.coordinates) return;
+    let isMounted = true;
+    const fetchTrueDistance = async () => {
+      try {
+        const origins = `${prevStop.coordinates.lat},${prevStop.coordinates.lng}`;
+        const destinations = `${nextStop.coordinates.lat},${nextStop.coordinates.lng}`;
+        const data = await getDistance(origins, destinations, mode);
+        
+        if (data.error) return;
+        
+        if (data.status === 'OK' && data.rows[0]?.elements[0]?.status === 'OK') {
+          if (!isMounted) return;
+          
+          const element = data.rows[0].elements[0];
+          let distText = element.distance.text;
+          if (mode === 'walk') {
+             const kmVal = parseFloat(distText.replace(' km', ''));
+             if (kmVal < 1.0 && kmVal > 0) {
+               distText = `${Math.round(kmVal * 1000)}m`;
+             }
+          }
+
+          const durMins = Math.round(element.duration.value / 60);
+          const minLabel = durMins === 1 ? 'min' : 'mins';
+          
+          let finalModeStr = mode;
+          let finalIcon = transitIcon;
+
+          if (mode === 'taxi' || mode === 'driving') {
+             finalModeStr = 'Taxi';
+             finalIcon = '🚕';
+          } else if (mode === 'metro' || mode === 'transit') {
+             finalModeStr = 'Metro';
+             finalIcon = '🚇';
+          } else {
+             finalModeStr = 'walk';
+             finalIcon = '🚶';
+          }
+
+          let newText = '';
+          if (finalModeStr === 'walk') {
+            newText = `${durMins} ${minLabel} walk`;
+          } else {
+            newText = `${finalModeStr} • ${durMins} ${minLabel}`;
+          }
+
+          setTransitIcon(finalIcon);
+          setTransitText(newText);
+          setTransitDist(distText);
+        }
+      } catch (e) {
+        console.error("OSRM Routing API error", e);
+      }
+    };
+
+    const timer = setTimeout(fetchTrueDistance, 300 + (idx * 150));
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [prevStop, nextStop, mode, idx, transitIcon]);
+
+  if (!initialTransport) return null;
+
+  return (
+    <div className="inline-flex items-center gap-2 px-1.5 py-1.5 bg-white/80 backdrop-blur-md border border-stone-200/60 rounded-full shadow-sm text-[11px] font-medium text-stone-600 cursor-default">
+      <div className="flex items-center justify-center w-5 h-5 rounded-full bg-stone-100/80 text-[10px]">
+        {transitIcon}
+      </div>
+      <span className="tracking-tight text-[#1E1C1A] font-bold pr-1">
+        {transitText}
+      </span>
+      <span className="text-[#A39E99] font-bold tracking-wide pl-1.5 pr-2 border-l border-stone-200/60">
+        {transitDist}
+      </span>
+    </div>
+  );
+}
+
+
+
+// ─── DayScheduleCard (Memoized) ────────────────────────────────────────────────
+export const DayScheduleCard = React.memo(function DayScheduleCard({
+  act,
+  idx,
+  selectedDayIndex,
+  itinerary,
+  hoveredStopIdx,
+  selectedStopIdx,
+  dragOverStopIdx,
+  draggedStopIdx,
+  mockVotes,
+  scrollRef,
+  handleDragStart,
+  handleDragOver,
+  handleDragLeave,
+  handleDrop,
+  handleDragEnd,
+  handleHoverStop,
+  handleSelectStop,
+  handleVote,
+  setActiveFlagTarget,
+  handleSwapActivity
+}) {
+  const stopNum = idx + 1;
+  const [mobileExpanded, setMobileExpanded] = React.useState(false);
+  const isHovered = hoveredStopIdx === stopNum;
+  const isSelected = selectedStopIdx === stopNum;
+  const categoryStyle = getCategoryStyling(act);
+  const ratingData = getActivityRating(act, idx);
+  const costInfo = formatCost(act);
+  const iconBadges = getIconBadges(act, idx);
+  const aiInsightText = getAiInsight(act, idx);
+  const transport = getTransportBetweenStops(itinerary.days?.[selectedDayIndex]?.activities?.[idx - 1], act, idx);
+  const stopKey = `${selectedDayIndex}-${idx}`;
+  const accuracyData = getPlaceAccuracyStatus(stopKey, act.title);
+  const overtourismInfo = getAttractionOvertourismInfo(act.title);
+  const voteData = mockVotes[stopKey] || { up: 0, down: 0, userVote: null };
+  const displayUp = voteData.up + (voteData.userVote === 'up' ? 0 : (idx === 0 ? 1 : 0));
+
+  return (
+    <motion.div
+      key={`${selectedDayIndex}-${idx}`}
+      initial={{ opacity: 0, y: 10 }}
+      whileInView={{ opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } }}
+      viewport={{ once: true, margin: "100px", root: scrollRef }}
+      exit={{ opacity: 0, y: -10, transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] } }}
+      className="flex flex-col gap-2"
+      data-day-idx={selectedDayIndex}
+      data-stop-idx={stopNum}
+    >
+      {/* Transport Connector + Uber */}
+      {idx > 0 && transport && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 15 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
+          viewport={{ once: true, margin: "100px", root: scrollRef }}
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          className="relative pl-2 sm:pl-[46px] py-1.5 sm:py-2 flex items-center justify-between z-10 pr-1 gap-2 flex-wrap sm:flex-nowrap"
+        >
+          <LiveTransitPill
+            prevStop={itinerary.days?.[selectedDayIndex]?.activities?.[idx - 1]}
+            nextStop={act}
+            idx={idx}
+          />
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              const prevStop = itinerary.days?.[selectedDayIndex]?.activities?.[idx - 1];
+              const destLat = act.coordinates?.lat;
+              const destLng = act.coordinates?.lng;
+              const destName = act.title + (itinerary?.destinationName ? ', ' + itinerary.destinationName : '');
+              const pickupLat = prevStop?.coordinates?.lat;
+              const pickupLng = prevStop?.coordinates?.lng;
+              const pickupName = prevStop?.title || 'Previous Stop';
+              let url = 'https://m.uber.com/ul/?action=setPickup';
+              if (pickupLat && pickupLng) {
+                url += `&pickup[latitude]=${pickupLat}&pickup[longitude]=${pickupLng}&pickup[nickname]=${encodeURIComponent(pickupName)}`;
+              } else {
+                url += '&pickup=my_location';
+              }
+              url += `&dropoff[formatted_address]=${encodeURIComponent(destName)}`;
+              if (destLat) url += `&dropoff[latitude]=${destLat}`;
+              if (destLng) url += `&dropoff[longitude]=${destLng}`;
+              url += `&dropoff[nickname]=${encodeURIComponent(act.title)}`;
+              window.open(url, '_blank', 'noopener,noreferrer');
+            }}
+            className="group relative inline-flex items-center gap-0 pl-[3px] pr-3.5 sm:pr-4 py-[3px] rounded-full overflow-hidden cursor-pointer select-none shrink-0 transition-all duration-200 hover:scale-[1.04] active:scale-[0.97]"
+            style={{ background: '#000', boxShadow: '0 2px 12px rgba(0,0,0,0.4)' }}
+            title={`Request Uber to ${act.title}`}
+          >
+            <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-500 ease-in-out bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            <span className="relative flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white shrink-0 mr-2">
+              <svg width="10" height="12" viewBox="0 0 11 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0 0H2.64V7.392C2.64 8.6328 3.3792 9.372 4.62 9.372H6.38C7.6208 9.372 8.36 8.6328 8.36 7.392V0H11V7.392C11 10.1376 9.3104 11.88 6.38 11.88H4.62C1.6896 11.88 0 10.1376 0 7.392V0Z" fill="black"/>
+              </svg>
+            </span>
+            <span className="relative flex flex-col items-start leading-none">
+              <span className="text-white/40 text-[7px] font-bold tracking-[0.15em] uppercase">uber</span>
+              <span className="text-white text-[10.5px] font-extrabold leading-tight">Request Ride</span>
+            </span>
+          </button>
+        </motion.div>
+      )}
+
+      {/* Accuracy Warning */}
+      {accuracyData.hasWarning && (
+        <div className="w-full bg-amber-500/10 border border-amber-500/30 rounded-2xl px-3.5 py-2 flex items-center justify-between text-amber-800 text-[11px] font-bold shadow-2xs">
+          <div className="flex items-center gap-1.5">
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <span>⚠️ Recently reported as outdated — verify before visiting</span>
+          </div>
+          <span className="text-[9px] font-mono uppercase bg-amber-500/20 text-amber-900 px-1.5 py-0.5 rounded-md">
+            {accuracyData.topFlag?.reasonLabel || 'Flagged'}
+          </span>
+        </div>
+      )}
+
+      {/* Card wrapper */}
+      <div
+        id={`itinerary-card-${selectedDayIndex}-${stopNum}`}
+        draggable={true}
+        onDragStart={(e) => handleDragStart(e, idx)}
+        onDragOver={(e) => handleDragOver(e, idx)}
+        onDragLeave={handleDragLeave}
+        onDrop={(e) => handleDrop(e, idx)}
+        onDragEnd={handleDragEnd}
+        onMouseEnter={() => handleHoverStop(stopNum)}
+        onMouseLeave={() => handleHoverStop(null)}
+        onClick={() => {
+          handleSelectStop(isSelected ? null : stopNum);
+          handleHoverStop(stopNum);
+          setMobileExpanded((prev) => !prev);
+        }}
+        className={`scroll-mt-40 w-full box-border rounded-2xl sm:rounded-3xl border transition-all duration-300 ease-out flex flex-col cursor-pointer select-none relative z-10 overflow-hidden bg-white
+          ${dragOverStopIdx === idx
+            ? 'border-[#FF6B2C] border-2 bg-[#FFF8F5] sm:scale-[1.02] ring-4 ring-[#FF6B2C]/30 z-30'
+            : draggedStopIdx === idx
+              ? 'opacity-40 border-dashed border-[#FF6B2C] sm:scale-95'
+              : isSelected
+                ? 'border-[#FF6B2C] bg-[#FFF8F5] sm:scale-[1.01] z-20 shadow-[0_8px_30px_rgba(255,107,44,0.12)]'
+                : isHovered || hoveredStopIdx === stopNum
+                  ? 'border-stone-200 shadow-[0_12px_40px_rgba(0,0,0,0.08)] sm:-translate-y-1 z-20'
+                  : 'border-stone-200/50 shadow-[0_4px_16px_rgba(0,0,0,0.04)] hover:border-stone-200 hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)]'
+        }`}
+      >
+
+        {/* Card Body */}
+        <div className="flex flex-col gap-3 p-3.5 sm:p-4">
+          {/* Top Row: Thumbnail + Header info side-by-side */}
+          <div className="flex items-start gap-3">
+            {/* Square Thumbnail with Stop Number & Rating Overlay */}
+            <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden shrink-0 bg-stone-100 border border-stone-200/60 shadow-2xs group/thumb">
+              <img
+                src={getActivityThumbnail(act, itinerary?.destinationName || '', idx)}
+                alt={act.title}
+                className="w-full h-full object-cover transition-transform duration-300 sm:group-hover/thumb:scale-105"
+                loading="lazy"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+              <div className="w-full h-full flex items-center justify-center text-[#FF6B2C]/40 bg-gradient-to-br from-[#FFF5EE] via-[#FAF0E6] to-[#F5EBE1]">
+                {renderPremiumIcon(categoryStyle.icon, 28)}
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10 pointer-events-none" />
+              
+              {/* Stop Number Badge */}
+              <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shadow-md backdrop-blur-md transition-all ${isSelected ? 'bg-[#EC6735] text-white ring-2 ring-white/60' : 'bg-white text-[#FF6B2C] border border-[#FF6B2C]/30'}`}>
+                {stopNum}
+              </div>
+
+              {/* Star Rating Badge */}
+              <div className="absolute bottom-2 left-2 flex items-center gap-1 text-[10px] font-bold text-white drop-shadow-md bg-black/40 backdrop-blur-md px-1.5 py-0.5 rounded-md">
+                <Star size={9} className="fill-amber-400 text-amber-400" />
+                <span>{ratingData.rating}</span>
+              </div>
+            </div>
+
+            {/* Right Details Column */}
+            <div className="flex-1 min-w-0 flex flex-col justify-between self-stretch gap-1">
+              {/* Time + Category Pill */}
+              <div className="flex items-center gap-1.5 flex-wrap text-[11px] font-semibold">
+                <span className="text-stone-800 font-bold shrink-0">{act.time || '10:00 AM'}</span>
+                <span className="text-stone-300 text-[9px] shrink-0">·</span>
+                <span className="inline-flex items-center gap-1 bg-stone-100/90 text-stone-700 font-bold px-2 py-0.5 rounded-md border border-stone-200/60 capitalize">
+                  <span className="text-[#FF6B2C] shrink-0">{renderPremiumIcon(categoryStyle.icon, 11)}</span>
+                  <span>{categoryStyle.name.toLowerCase()}</span>
+                </span>
+              </div>
+
+              {/* Title */}
+              <h4 className="text-[15px] sm:text-base font-bold text-stone-900 leading-[1.25] tracking-tight line-clamp-2">
+                {act.title}
+              </h4>
+
+              {/* Meta Stats: Duration & Cost */}
+              <div className="flex items-center gap-2 text-[11px] font-semibold text-stone-500 flex-wrap">
+                {act.duration && (
+                  <div className="flex items-center gap-1">
+                    <Clock size={11} strokeWidth={2.5} className="text-[#FF6B2C]" />
+                    <span>{act.duration}</span>
+                  </div>
+                )}
+                {act.duration && <span className="text-stone-300 text-[8px]">•</span>}
+                <div className="flex items-center gap-1 text-emerald-700">
+                  <Banknote size={11} strokeWidth={2.5} />
+                  <span>{costInfo.title.replace('💰 ', '')}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Description */}
+          {act.description && (
+            <p className="text-xs sm:text-[13px] text-stone-600 leading-relaxed font-normal">
+              {act.description}
+            </p>
+          )}
+
+          {/* Badges & Actions Row */}
+          <div className="flex items-center justify-between flex-wrap gap-2 pt-0.5">
+            {/* Badges */}
+            <div className="flex items-center flex-wrap gap-1.5">
+              {overtourismInfo && (
+                <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-200/50">
+                  <AlertTriangle className="w-2.5 h-2.5 text-red-500" />
+                  <span>Peak crowds {overtourismInfo.peakHours}</span>
+                </span>
+              )}
+              {iconBadges.map((badge, bIdx) => (
+                <span key={bIdx} className="inline-flex items-center gap-1 text-[10px] font-bold text-[#1C1B1B] bg-white px-2 py-0.5 rounded-md border border-[#E6DFD5]/80 shadow-2xs">
+                  <span className="opacity-90">{renderPremiumIcon(badge.icon, 10)}</span>
+                  <span className="tracking-tight">{badge.text}</span>
+                </span>
+              ))}
+              <span className="inline-flex items-center gap-1 text-[9px] font-mono font-bold text-emerald-700 bg-emerald-50/60 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                <ShieldCheck className="w-2.5 h-2.5 text-emerald-500" />
+                <span>VERIFIED</span>
+              </span>
+            </div>
+
+            {/* Voting Pill */}
+            <div className="flex items-center shrink-0 bg-[#F7F5F2] rounded-full border border-[#ECE8E2] shadow-2xs overflow-hidden ml-auto" onClick={(e) => e.stopPropagation()}>
+              <button onClick={() => handleVote(stopKey, 'up')} className={`flex items-center gap-1 pl-2 pr-1.5 py-1 hover:bg-[#FFF8F5] hover:text-[#FF6B2C] transition-colors ${voteData.userVote === 'up' ? 'bg-[#FFF8F5] text-[#FF6B2C]' : 'text-stone-500'}`}>
+                <ThumbsUp size={10} strokeWidth={2.5} className={voteData.userVote === 'up' ? 'fill-[#FF6B2C]/20' : ''} />
+                <span className="text-[10px] font-bold">{displayUp > 0 ? displayUp : ''}</span>
+              </button>
+              <div className="w-px h-3 bg-[#ECE8E2]" />
+              <button onClick={() => handleVote(stopKey, 'down')} className={`flex items-center px-1.5 py-1 hover:bg-stone-200 transition-colors ${voteData.userVote === 'down' ? 'bg-stone-200 text-stone-800' : 'text-stone-500'}`}>
+                <ThumbsDown size={10} strokeWidth={2.5} className={voteData.userVote === 'down' ? 'fill-stone-400/30' : ''} />
+              </button>
+              <div className="w-px h-3 bg-[#ECE8E2]" />
+              <button onClick={() => setActiveFlagTarget({ placeId: stopKey, placeTitle: act.title })} className="px-1.5 py-1 hover:bg-amber-50 hover:text-amber-600 transition-colors text-stone-400">
+                <Flag size={9} strokeWidth={2.5} />
+              </button>
+            </div>
+          </div>
+
+
+          {/* Alternative Activity if crowded */}
+          {overtourismInfo?.alternativeActivity && (
+            <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200/80 flex items-center justify-between gap-3 select-none" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-2 text-amber-950">
+                <Compass className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <div>
+                  <span className="text-[9px] font-mono font-bold uppercase text-amber-800 tracking-wider block">Less-Crowded Alt</span>
+                  <span className="text-xs font-bold text-amber-950 block">{overtourismInfo.alternativeActivity.title}</span>
+                </div>
+              </div>
+              <button type="button" onClick={() => handleSwapActivity(selectedDayIndex, idx, overtourismInfo.alternativeActivity)} className="px-3 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-all shrink-0 cursor-pointer shadow-2xs">Swap</button>
+            </div>
+          )}
+
+          {/* AI Tip Footer */}
+          <div className="pt-2 border-t border-stone-100" onClick={(e) => e.stopPropagation()}>
+            <details className="group/tip cursor-pointer">
+              <summary className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#FF6B2C] hover:text-[#D95524] select-none">
+                <Lightbulb size={12} strokeWidth={2.5} className="text-[#FF6B2C]" />
+                <span>AI Insight &amp; Tip</span>
+                <span className="text-[9px] opacity-70 group-open/tip:rotate-180 transition-transform ml-0.5"><ChevronRight size={12} /></span>
+              </summary>
+              <div className="mt-2 p-3 rounded-xl bg-[#FFF8F5] border border-[#FF6B2C]/20 text-xs text-[#1C1B1B] font-medium leading-relaxed shadow-2xs flex items-start gap-2">
+                <Sparkles size={13} strokeWidth={2.5} className="text-[#FF6B2C] shrink-0 mt-0.5 opacity-90" />
+                <span>{aiInsightText.replace('✨ ', '')}</span>
+              </div>
+            </details>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+});
+
+
