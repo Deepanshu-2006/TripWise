@@ -122,14 +122,18 @@ export default function ExpenseTrackerView({
   destination = 'Rome, Italy', 
   daysCount = 3,
   collaborators = [],
-  onShowToast = null
+  onShowToast = null,
+  userCurrency = null
 }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
 
   const [expenses, setExpenses] = useState([]);
-  const [homeCurrency, setHomeCurrency] = useState('USD');
-  useEffect(() => { setHomeCurrency(getUserDisplayCurrency()); }, []);
+  const [homeCurrency, setHomeCurrency] = useState(userCurrency || 'USD');
+  useEffect(() => { 
+    if (userCurrency) setHomeCurrency(userCurrency);
+    else setHomeCurrency(getUserDisplayCurrency()); 
+  }, [userCurrency]);
   const [localCurrency, setLocalCurrency] = useState('EUR');
   const [isOffline, setIsOffline] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);

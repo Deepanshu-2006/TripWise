@@ -190,7 +190,7 @@ export default function AIPlannerPage() {
   };
 
   return (
-    <div className="w-full h-[100dvh] min-h-[640px] flex flex-col bg-[#FAF8F5] text-[#1F1F1F] overflow-hidden pt-20 sm:pt-22">
+    <div className="w-full h-[100dvh] flex flex-col bg-[#FAF8F5] text-[#1F1F1F] overflow-hidden fixed inset-0 pt-20 sm:pt-22">
       <Header />
       <Suspense fallback={null}>
         <PromptSeeder onPrompt={setCurrentPrompt} />
@@ -205,8 +205,8 @@ export default function AIPlannerPage() {
       {/* Unified Parent Container (Wrap BOTH Itinerary Panel and Map Section inside one shared parent container) */}
       <div className="flex-1 w-full h-full overflow-hidden p-3 sm:p-4 md:p-6 pb-4 sm:pb-6 flex flex-col min-h-0">
         <div className="flex-1 flex w-full h-full min-h-0 bg-[#FFFFFF] rounded-3xl border border-[#ECE8E2] shadow-[0_20px_60px_rgba(0,0,0,0.06)] overflow-hidden relative">
-          {/* Left Panel: Itinerary & Prompt Controls (One single scrollable container for the entire left panel) */}
-          <div id="itinerary-scroll-container" data-lenis-prevent="true" className="w-full md:w-[42%] lg:w-[40%] xl:w-[38%] h-full overflow-y-auto overflow-x-hidden shrink-0 bg-[#F7F5F2] border-r border-[#ECE8E2] flex flex-col scroll-smooth">
+          {/* Left Panel: Itinerary & Prompt Controls */}
+          <div className="w-full md:w-[42%] lg:w-[40%] xl:w-[38%] h-full overflow-hidden shrink-0 bg-[#F7F5F2] border-r border-[#ECE8E2] flex flex-col">
             <PlannerSidebar
               currentStep={currentStep}
               onStepChange={(newStep) => {
