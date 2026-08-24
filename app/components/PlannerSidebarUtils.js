@@ -175,3 +175,25 @@ export const getDurationMinutes = (durationStr) => {
   }
   return 90;
 };
+
+import { Landmark, Utensils, Zap, Gem, Star, Clock, Banknote, Map, Lightbulb, Sparkles, Ticket, Smile, TreePine, Coffee, Palmtree, Compass } from 'lucide-react';
+export const renderPremiumIcon = (emojiStr, size = 12) => {
+  if (!emojiStr) return <Star size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('🏛')) return <Landmark size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('🍝')) return <Utensils size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('⚡')) return <Zap size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('💎')) return <Gem size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('⭐')) return <Star size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('⏱')) return <Clock size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('💰')) return <Banknote size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('🗺')) return <Map size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('💡')) return <Lightbulb size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('✨')) return <Sparkles size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('🎟')) return <Ticket size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('🎭')) return <Smile size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('🌳') || emojiStr.includes('🌲')) return <TreePine size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('🍷') || emojiStr.includes('☕')) return <Coffee size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('🏖') || emojiStr.includes('🌴')) return <Palmtree size={size} strokeWidth={2.5} />;
+  if (emojiStr.includes('🚶') || emojiStr.includes('🚊')) return <Compass size={size} strokeWidth={2.5} />;
+  return <Star size={size} strokeWidth={2.5} />; 
+};
