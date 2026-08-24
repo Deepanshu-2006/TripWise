@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion, useScroll, useSpring } from 'framer-motion';
 import CustomDatePicker from './CustomDatePicker';
-import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw, Check, Map, Compass, ThumbsUp, ThumbsDown, Users, UserPlus, Landmark, Utensils, Zap, Gem, Star, Lightbulb, Smile, TreePine, Coffee, Palmtree, Banknote, Sun, Footprints, Coins, Plane, Building2, TrendingDown, Mic, MicOff, Flag, AlertTriangle, ShieldCheck, ShieldAlert, CornerDownLeft, Send, ArrowRight, Square, StopCircle } from 'lucide-react';
+import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw, Check, Map, Compass, ThumbsUp, ThumbsDown, Users, UserPlus, Landmark, Utensils, Zap, Gem, Star, Lightbulb, Smile, TreePine, Coffee, Palmtree, Banknote, Sun, Footprints, Coins, Plane, Building2, TrendingDown, Mic, MicOff, Flag, AlertTriangle, ShieldCheck, ShieldAlert, CornerDownLeft, Send, ArrowRight, Square, StopCircle, X } from 'lucide-react';
 import dynamic from 'next/dynamic';
 const FlagModal = dynamic(() => import('./FlagModal'));
 const FlaggingAdminModal = dynamic(() => import('./FlaggingAdminModal'));
@@ -98,7 +98,7 @@ export default function PlannerSidebar({
 
   const [mockVotes, setMockVotes] = useState({});
 
-  const handleVote = (stopKey, type) => {
+  const handleVote = useCallback((stopKey, type) => {
     setMockVotes(prev => {
       const current = prev[stopKey] || { up: 0, down: 0, userVote: null };
       if (current.userVote === type) {
@@ -115,7 +115,7 @@ export default function PlannerSidebar({
       newVotes.userVote = type;
       return { ...prev, [stopKey]: newVotes };
     });
-  };
+  }, []);
 
   useEffect(() => {
     if (tripId) {
@@ -237,7 +237,7 @@ export default function PlannerSidebar({
     setRefineExplanation(null);
   };
 
-  const handleSwapActivity = (dayIdx, actIdx, newActivity) => {
+  const handleSwapActivity = useCallback((dayIdx, actIdx, newActivity) => {
     if (!itinerary || !itinerary.days) return;
     const updatedDays = [...itinerary.days];
     if (updatedDays[dayIdx] && updatedDays[dayIdx].activities) {
@@ -248,14 +248,14 @@ export default function PlannerSidebar({
         onUpdateItinerary({ ...itinerary, days: updatedDays });
       }
     }
-  };
+  }, [itinerary, onUpdateItinerary]);
 
   const [internalHoveredStopIdx, setInternalHoveredStopIdx] = useState(null);
   const hoveredStopIdx = propHoveredStopIdx !== undefined ? propHoveredStopIdx : internalHoveredStopIdx;
-  const handleHoverStop = (idx) => {
+  const handleHoverStop = useCallback((idx) => {
     if (onHoverStop) onHoverStop(idx);
     setInternalHoveredStopIdx(idx);
-  };
+  }, [onHoverStop]);
 
   const [internalSelectedStopIdx, setInternalSelectedStopIdx] = useState(null);
   const selectedStopIdx = propSelectedStopIdx !== undefined ? propSelectedStopIdx : internalSelectedStopIdx;
@@ -287,7 +287,7 @@ export default function PlannerSidebar({
   const handleSelectStop = useCallback((idx, opts = {}) => {
     if (onSelectStop) onSelectStop(idx);
     setInternalSelectedStopIdx(idx);
-    if (!opts.isScrollSync && typeof document !== 'undefined' && idx !== null && idx !== undefined) {
+    if (!opts.isScrollSync && typeof window !== 'undefined' && window.innerWidth >= 768 && idx !== null && idx !== undefined) {
       triggerProgrammaticScroll();
       const cardEl = document.getElementById(`itinerary-card-${selectedDayIndex}-${idx}`);
       if (cardEl) {
@@ -296,9 +296,9 @@ export default function PlannerSidebar({
     }
   }, [onSelectStop, selectedDayIndex]);
 
-  // Automatically scroll card into view when selectedStopIdx changes externally (e.g. Map pin click)
+  // Automatically scroll card into view when selectedStopIdx changes externally (e.g. Map pin click) on desktop
   useEffect(() => {
-    if (selectedStopIdx !== null && selectedStopIdx !== undefined && typeof document !== 'undefined') {
+    if (typeof window !== 'undefined' && window.innerWidth >= 768 && selectedStopIdx !== null && selectedStopIdx !== undefined) {
       // If the change came from outside and wasn't initiated by our own handleSelectStop
       // we need to trigger programmatic scroll so the observer ignores it
       triggerProgrammaticScroll();
@@ -309,9 +309,9 @@ export default function PlannerSidebar({
     }
   }, [selectedStopIdx, selectedDayIndex]);
 
-  // Highly robust scroll-spy to sync map and active stop during user scroll
+  // Highly robust scroll-spy to sync map and active stop during user scroll (Desktop only)
   useEffect(() => {
-    if (typeof document === 'undefined' || !itinerary?.days?.[selectedDayIndex]?.activities) return;
+    if (typeof window === 'undefined' || window.innerWidth < 768 || !itinerary?.days?.[selectedDayIndex]?.activities) return;
 
     // Find the scrollable container. We search up from one of the cards to find the nearest overflow-y-auto parent
     const firstCard = document.querySelector(`[data-day-idx="${selectedDayIndex}"]`);
@@ -383,29 +383,29 @@ export default function PlannerSidebar({
   const [draggedStopIdx, setDraggedStopIdx] = useState(null);
   const [dragOverStopIdx, setDragOverStopIdx] = useState(null);
 
-  const handleDragStart = (e, idx) => {
+  const handleDragStart = useCallback((e, idx) => {
     e.stopPropagation();
     setDraggedStopIdx(idx);
     if (e.dataTransfer) {
       e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData('text/plain', idx.toString());
     }
-  };
+  }, []);
 
-  const handleDragOver = (e, idx) => {
+  const handleDragOver = useCallback((e, idx) => {
     e.preventDefault();
     e.stopPropagation();
     if (draggedStopIdx === null || draggedStopIdx === idx) return;
     if (dragOverStopIdx !== idx) {
       setDragOverStopIdx(idx);
     }
-  };
+  }, [draggedStopIdx, dragOverStopIdx]);
 
-  const handleDragLeave = (e) => {
+  const handleDragLeave = useCallback((e) => {
     e.preventDefault();
-  };
+  }, []);
 
-  const handleDrop = (e, targetIdx) => {
+  const handleDrop = useCallback((e, targetIdx) => {
     e.preventDefault();
     e.stopPropagation();
     setDragOverStopIdx(null);
@@ -448,12 +448,12 @@ export default function PlannerSidebar({
       onUpdateItinerary(updatedItinerary);
     }
     setDraggedStopIdx(null);
-  };
+  }, [draggedStopIdx, itinerary, selectedDayIndex, onUpdateItinerary]);
 
-  const handleDragEnd = () => {
+  const handleDragEnd = useCallback(() => {
     setDraggedStopIdx(null);
     setDragOverStopIdx(null);
-  };
+  }, []);
 
   // Real-Time AI Refinement ("Chat to Modify") State & Handlers
   const [refinePromptInput, setRefinePromptInput] = useState('');
@@ -2479,16 +2479,38 @@ export default function PlannerSidebar({
                           <div className="flex items-center flex-nowrap gap-2 shrink-0 self-end sm:self-auto">
                             <button
                               type="button"
-                              onClick={() => { setShowCopilotDrawer(true); setActiveDrawerTab('ai'); }}
-                              className="inline-flex items-center gap-1.5 h-8.5 px-3.5 rounded-xl bg-[#EC6735] text-white hover:bg-[#D95524] text-xs font-semibold shadow-[0_2px_8px_rgba(236,103,53,0.25)] transition-all duration-200 cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0"
+                              onClick={() => {
+                                if (showCopilotDrawer && activeDrawerTab === 'ai') {
+                                  setShowCopilotDrawer(false);
+                                } else {
+                                  setShowCopilotDrawer(true);
+                                  setActiveDrawerTab('ai');
+                                }
+                              }}
+                              className={`inline-flex items-center gap-1.5 h-8.5 px-3.5 rounded-xl text-xs font-bold shadow-[0_2px_8px_rgba(236,103,53,0.25)] transition-all duration-200 cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0 ${
+                                showCopilotDrawer && activeDrawerTab === 'ai'
+                                  ? 'bg-[#D95524] text-white ring-2 ring-[#EC6735]/40'
+                                  : 'bg-[#EC6735] text-white hover:bg-[#D95524]'
+                              }`}
                             >
                               <Sparkles className="w-3.5 h-3.5 shrink-0" />
                               <span>Optimize Route</span>
                             </button>
                             <button
                               type="button"
-                              onClick={() => { setShowCopilotDrawer(true); setActiveDrawerTab('manual'); }}
-                              className="inline-flex items-center gap-1.5 h-8.5 px-3.5 rounded-xl bg-transparent hover:bg-black/5 text-[#1C1B1B] text-xs font-semibold transition-all duration-200 cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0"
+                              onClick={() => {
+                                if (showCopilotDrawer && activeDrawerTab === 'manual') {
+                                  setShowCopilotDrawer(false);
+                                } else {
+                                  setShowCopilotDrawer(true);
+                                  setActiveDrawerTab('manual');
+                                }
+                              }}
+                              className={`inline-flex items-center gap-1.5 h-8.5 px-3.5 rounded-xl text-[#1C1B1B] text-xs font-bold transition-all duration-200 cursor-pointer hover:-translate-y-0.5 active:scale-95 shrink-0 ${
+                                showCopilotDrawer && activeDrawerTab === 'manual'
+                                  ? 'bg-stone-200 text-stone-900 ring-2 ring-stone-300'
+                                  : 'bg-transparent hover:bg-black/5'
+                              }`}
                               title="Add Stop"
                             >
                               <Plus className="w-3.5 h-3.5 text-[#6B6B6B] shrink-0" />
@@ -2496,169 +2518,158 @@ export default function PlannerSidebar({
                             </button>
                           </div>
                         </div>
+
+                        {/* Seamless Integrated Inline Modifier Bar */}
+                        <div className={`w-full transition-all duration-300 ease-out overflow-hidden ${
+                          showCopilotDrawer || isRefiningDay || refineExplanation
+                            ? 'max-h-[350px] opacity-100 mt-2.5 pt-2.5 border-t border-stone-100'
+                            : 'max-h-0 opacity-0 mt-0 pt-0 border-t-0 pointer-events-none'
+                        }`}>
+                          {activeDrawerTab === 'ai' ? (
+                            <div className="flex flex-col gap-2">
+                              {/* Sleek Search / Prompt Bar */}
+                              <div className="flex items-center gap-2 bg-stone-50/90 border border-stone-200/80 rounded-2xl p-1.5 pl-3 focus-within:border-[#EC6735] focus-within:ring-2 focus-within:ring-[#EC6735]/15 focus-within:bg-white transition-all shadow-2xs">
+                                <Sparkles className="w-4 h-4 text-[#EC6735] shrink-0" />
+                                <input
+                                  type="text"
+                                  value={refinePromptInput}
+                                  onChange={(e) => setRefinePromptInput(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && refinePromptInput.trim() && !isRefiningDay) {
+                                      triggerRefineDay();
+                                    }
+                                  }}
+                                  placeholder="Ask AI to adjust this day (e.g. 'Optimize route pacing', 'Add sunset dinner')..."
+                                  className="flex-1 min-w-0 bg-transparent text-xs text-stone-900 placeholder:text-stone-400 focus:outline-hidden font-normal py-1"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => triggerRefineDay()}
+                                  disabled={isRefiningDay || !refinePromptInput.trim()}
+                                  className="h-7.5 px-3 rounded-xl bg-[#EC6735] text-white hover:bg-[#D95524] text-xs font-semibold flex items-center gap-1 transition-all disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer shrink-0 active:scale-95 shadow-2xs"
+                                >
+                                  {isRefiningDay ? (
+                                    <SpinnerIcon />
+                                  ) : (
+                                    <>
+                                      <span>Update</span>
+                                      <ArrowRight className="w-3 h-3" />
+                                    </>
+                                  )}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => { setShowCopilotDrawer(false); setRefinePromptInput(''); }}
+                                  className="w-6 h-6 rounded-full text-stone-400 hover:text-stone-700 flex items-center justify-center cursor-pointer shrink-0 transition-colors"
+                                  title="Close"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+
+                              {/* Clean Suggestion Tags (Wrap neatly without overflow scrollbars) */}
+                              <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                                {[
+                                  { label: 'Minimize travel', prompt: 'Re-order activities to minimize transit time and distance.' },
+                                  { label: 'Sunset viewpoint', prompt: 'Add a scenic sunset viewpoint before evening dinner.' },
+                                  { label: 'Morning coffee', prompt: 'Add a highly rated artisan coffee roaster in the morning.' },
+                                  { label: 'Local dinner', prompt: 'Recommend a popular local neighborhood dinner spot.' }
+                                ].map((chip, idx) => (
+                                  <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => setRefinePromptInput(chip.prompt)}
+                                    className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-stone-100 hover:bg-stone-200/70 text-stone-600 hover:text-stone-900 border border-stone-200/50 transition-all cursor-pointer active:scale-95"
+                                  >
+                                    {chip.label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col gap-2">
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                <div>
+                                  <input
+                                    type="text"
+                                    value={newStopTime}
+                                    onChange={(e) => setNewStopTime(e.target.value)}
+                                    placeholder="Time (e.g. 06:00 PM)"
+                                    className="w-full bg-stone-50 focus:bg-white text-stone-900 placeholder:text-stone-400 text-xs rounded-xl p-2 border border-stone-200 focus:border-[#EC6735] focus:ring-2 focus:ring-[#EC6735]/15 focus:outline-hidden font-medium"
+                                  />
+                                </div>
+                                <div>
+                                  <select
+                                    value={newStopCategory}
+                                    onChange={(e) => setNewStopCategory(e.target.value)}
+                                    className="w-full bg-stone-50 focus:bg-white text-stone-900 text-xs rounded-xl p-2 border border-stone-200 focus:border-[#EC6735] focus:ring-2 focus:ring-[#EC6735]/15 focus:outline-hidden font-medium cursor-pointer"
+                                  >
+                                    <option value="Highlight">Highlight</option>
+                                    <option value="Food & Dining">Food & Dining</option>
+                                    <option value="Cultural">Cultural</option>
+                                    <option value="Hidden Gem">Hidden Gem</option>
+                                    <option value="Activity">Activity</option>
+                                  </select>
+                                </div>
+                                <div>
+                                  <input
+                                    type="text"
+                                    value={newStopTitle}
+                                    onChange={(e) => setNewStopTitle(e.target.value)}
+                                    placeholder="Stop Title (e.g. Rooftop Aperitivo)"
+                                    className="w-full bg-stone-50 focus:bg-white text-stone-900 placeholder:text-stone-400 text-xs rounded-xl p-2 border border-stone-200 focus:border-[#EC6735] focus:ring-2 focus:ring-[#EC6735]/15 focus:outline-hidden font-medium"
+                                  />
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="text"
+                                  value={newStopDesc}
+                                  onChange={(e) => setNewStopDesc(e.target.value)}
+                                  placeholder="Optional short description or note..."
+                                  className="flex-1 min-w-0 bg-stone-50 focus:bg-white text-stone-900 placeholder:text-stone-400 text-xs rounded-xl p-2 border border-stone-200 focus:border-[#EC6735] focus:ring-2 focus:ring-[#EC6735]/15 focus:outline-hidden font-medium"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={handleAddCustomStop}
+                                  disabled={!newStopTitle.trim()}
+                                  className="h-8 px-3.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer bg-[#EC6735] text-white hover:bg-[#D95524] shadow-xs active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                                >
+                                  <Plus className="w-3.5 h-3.5" />
+                                  <span>Add</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => { setShowCopilotDrawer(false); }}
+                                  className="w-6 h-6 rounded-full text-stone-400 hover:text-stone-700 flex items-center justify-center cursor-pointer shrink-0 transition-colors"
+                                  title="Close"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Refinement Feedback Toast */}
+                          {refineExplanation && (
+                            <div className="mt-2 bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-2 rounded-xl text-xs flex items-center justify-between gap-2 shadow-xs font-medium animate-fade-in">
+                              <span className="flex items-center gap-1.5 min-w-0 truncate">
+                                <span>✨</span>
+                                <span className="truncate">{refineExplanation}</span>
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setRefineExplanation(null)}
+                                className="text-emerald-600 hover:text-emerald-900 font-bold text-xs p-0.5 rounded-md hover:bg-emerald-100 cursor-pointer shrink-0"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     );
                   })()}
-
-                  {/* Unified Floating Modify / Copilot Drawer with Smooth Pop Animation */}
-                  <div className={`w-full transition-all duration-500 ease-in-out overflow-hidden ${showCopilotDrawer || isRefiningDay || refineExplanation
-                      ? 'max-h-115 opacity-100 mt-0.5 mb-1'
-                      : 'max-h-0 opacity-0 mt-0 mb-0 pointer-events-none'
-                    }`}>
-                    <div className="w-full bg-linear-to-r from-[#1C1B1B] via-[#2A2626] to-[#1C1B1B] p-3 rounded-2xl shadow-lg border border-[rgba(255,255,255,0.12)] flex flex-col gap-2.5 relative">
-                      {/* Header & Mode Tabs */}
-                      <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-2.5">
-                        <div className="flex items-center gap-1.5 bg-black/40 p-1 rounded-xl border border-white/10">
-                          <button
-                            type="button"
-                            onClick={() => setActiveDrawerTab('ai')}
-                            className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer flex items-center gap-1 ${activeDrawerTab === 'ai'
-                                ? 'bg-[#EC6735] text-white shadow-xs'
-                                : 'text-stone-300 hover:text-white'
-                              }`}
-                          >
-                            <span>✨</span>
-                            <span>AI Copilot</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setActiveDrawerTab('manual')}
-                            className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer flex items-center gap-1 ${activeDrawerTab === 'manual'
-                                ? 'bg-[#EC6735] text-white shadow-xs'
-                                : 'text-stone-300 hover:text-white'
-                              }`}
-                          >
-                            <span>➕</span>
-                            <span>Add Stop</span>
-                          </button>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => { setShowCopilotDrawer(false); setRefinePromptInput(''); }}
-                          className="text-stone-400 hover:text-white text-sm font-bold w-6 h-6 flex items-center justify-center rounded-lg hover:bg-white/10 cursor-pointer"
-                          title="Close"
-                        >
-                          ✕
-                        </button>
-                      </div>
-
-                      {activeDrawerTab === 'ai' ? (
-                        <>
-                          <textarea
-                            value={refinePromptInput}
-                            onChange={(e) => setRefinePromptInput(e.target.value)}
-                            placeholder="e.g. 'Add a highly rated rooftop bar near the Colosseum for sunset' or 'Replace dinner with authentic Trastevere pasta spot'"
-                            className="w-full bg-black/40 text-white placeholder-stone-400 text-xs rounded-xl p-2.5 border border-white/10 focus:border-[#EC6735] focus:outline-hidden resize-none min-h-14 font-medium"
-                          />
-                          <div className="flex items-center justify-between gap-2 pt-0.5">
-                            <span className="text-[11px] text-stone-400 italic">
-                              ⚡ GeoEngine re-calculates travel times & pacing
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => triggerRefineDay()}
-                              disabled={isRefiningDay || !refinePromptInput.trim()}
-                              className={`h-8 px-4 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${isRefiningDay || !refinePromptInput.trim()
-                                  ? 'bg-white/10 text-stone-400 cursor-not-allowed'
-                                  : 'bg-[#EC6735] text-white hover:bg-[#D95524] shadow-md shadow-[#EC6735]/30 active:scale-95'
-                                }`}
-                            >
-                              {isRefiningDay ? (
-                                <>
-                                  <SpinnerIcon />
-                                  <span>Refining...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <span>Update Route</span>
-                                  <ArrowRightIcon />
-                                </>
-                              )}
-                            </button>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="flex flex-col gap-2.5 pt-0.5">
-                          <div className="grid grid-cols-3 gap-2">
-                            <div>
-                              <label className="block text-[10px] font-extrabold uppercase text-stone-400 mb-1">Time</label>
-                              <input
-                                type="text"
-                                value={newStopTime}
-                                onChange={(e) => setNewStopTime(e.target.value)}
-                                placeholder="06:00 PM"
-                                className="w-full bg-black/40 text-white text-xs rounded-lg p-2 border border-white/10 focus:border-[#EC6735] focus:outline-hidden font-medium"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-[10px] font-extrabold uppercase text-stone-400 mb-1">Type</label>
-                              <select
-                                value={newStopCategory}
-                                onChange={(e) => setNewStopCategory(e.target.value)}
-                                className="w-full bg-black/40 text-white text-xs rounded-lg p-2 border border-white/10 focus:border-[#EC6735] focus:outline-hidden font-medium"
-                              >
-                                <option value="Highlight">Highlight</option>
-                                <option value="Food & Dining">Food & Dining</option>
-                                <option value="Cultural">Cultural</option>
-                                <option value="Hidden Gem">Hidden Gem</option>
-                                <option value="Activity">Activity</option>
-                              </select>
-                            </div>
-                            <div>
-                              <label className="block text-[10px] font-extrabold uppercase text-stone-400 mb-1">Title</label>
-                              <input
-                                type="text"
-                                value={newStopTitle}
-                                onChange={(e) => setNewStopTitle(e.target.value)}
-                                placeholder="e.g. Rooftop Aperitivo"
-                                className="w-full bg-black/40 text-white text-xs rounded-lg p-2 border border-white/10 focus:border-[#EC6735] focus:outline-hidden font-medium"
-                              />
-                            </div>
-                          </div>
-                          <div>
-                            <input
-                              type="text"
-                              value={newStopDesc}
-                              onChange={(e) => setNewStopDesc(e.target.value)}
-                              placeholder="Optional short description or note..."
-                              className="w-full bg-black/40 text-white text-xs rounded-lg p-2 border border-white/10 focus:border-[#EC6735] focus:outline-hidden font-medium"
-                            />
-                          </div>
-                          <div className="flex justify-end pt-1 border-t border-white/10">
-                            <button
-                              type="button"
-                              onClick={handleAddCustomStop}
-                              disabled={!newStopTitle.trim()}
-                              className={`h-8 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 cursor-pointer ${!newStopTitle.trim()
-                                  ? 'bg-white/10 text-stone-400 cursor-not-allowed'
-                                  : 'bg-[#EC6735] text-white hover:bg-[#D95524] shadow-md shadow-[#EC6735]/30 active:scale-95'
-                                }`}
-                            >
-                              <Plus className="w-3.5 h-3.5" />
-                              <span>Insert Stop into Timeline</span>
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* AI / Manual Refinement Feedback Notification */}
-                  {refineExplanation && (
-                    <div className="mt-1 bg-[#10B981]/20 border border-[#10B981]/40 text-[#A7F3D0] px-3 py-2 rounded-xl text-xs flex items-center justify-between gap-2 animate-fade-in font-bold">
-                      <span className="flex items-center gap-1.5">
-                        <span>✅</span>
-                        <span>{refineExplanation}</span>
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setRefineExplanation(null)}
-                        className="text-[#A7F3D0] hover:text-white font-extrabold text-xs ml-2 cursor-pointer"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  )}
                 </div>
 
                 {/* Day Schedule Activities Cards List with Vertical Timeline (Point 4, 5, & 6) */}
