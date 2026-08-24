@@ -31,7 +31,7 @@ const GENERATION_STEPS = [
 ];
 
 const getCoordinatesForDestination = (name) => {
-  if (!name) return { lat: 35.0116, lng: 135.7681 };
+  if (!name || typeof name !== 'string') return { lat: 28.6139, lng: 77.2090 };
   const lower = name.toLowerCase();
   if (lower.includes("kyoto")) return { lat: 35.0116, lng: 135.7681 };
   if (lower.includes("rome")) return { lat: 41.9028, lng: 12.4964 };
@@ -40,7 +40,11 @@ const getCoordinatesForDestination = (name) => {
   if (lower.includes("london")) return { lat: 51.5074, lng: -0.1278 };
   if (lower.includes("paris")) return { lat: 48.8566, lng: 2.3522 };
   if (lower.includes("argentina") || lower.includes("patagonia") || lower.includes("buenos")) return { lat: -34.6037, lng: -58.3816 };
-  return { lat: 35.0116, lng: 135.7681 };
+  if (lower.includes("delhi") || lower.includes("india") || lower.includes("khan market") || lower.includes("janpath") || lower.includes("cp")) return { lat: 28.6139, lng: 77.2090 };
+  if (lower.includes("new york") || lower.includes("nyc")) return { lat: 40.7128, lng: -74.0060 };
+  if (lower.includes("barcelona")) return { lat: 41.3879, lng: 2.1699 };
+  if (lower.includes("dubai")) return { lat: 25.2048, lng: 55.2708 };
+  return { lat: 28.6139, lng: 77.2090 };
 };
 
 export default function LiveTripDashboard({
@@ -148,14 +152,23 @@ export default function LiveTripDashboard({
   const currentDay = itinerary?.days?.[selectedDayIndex] || null;
   const activities = currentDay?.activities || [];
   
-  // Resolve valid coordinates, falling back to destination map coordinates if invalid (e.g. 0,0)
-  const isInvalidCoords = (coords) => !coords || (coords.lat === 0 && coords.lng === 0);
+  // Resolve valid coordinates, falling back to destination map coordinates if invalid (e.g. 0,0, NaN, or string)
+  const isInvalidCoords = (coords) => {
+    if (!coords || typeof coords !== 'object') return true;
+    const lat = typeof coords.lat === 'number' ? coords.lat : parseFloat(coords.lat);
+    const lng = typeof coords.lng === 'number' ? coords.lng : parseFloat(coords.lng);
+    if (isNaN(lat) || isNaN(lng) || !Number.isFinite(lat) || !Number.isFinite(lng)) return true;
+    if (lat === 0 && lng === 0) return true;
+    return false;
+  };
+
+  const safeDestCoords = getCoordinatesForDestination(displayDest);
   const safeCoordinates = !isInvalidCoords(itinerary?.coordinates) 
-    ? itinerary.coordinates 
-    : getCoordinatesForDestination(displayDest);
+    ? { lat: parseFloat(itinerary.coordinates.lat), lng: parseFloat(itinerary.coordinates.lng) }
+    : safeDestCoords;
 
   const routeActivities = activities.map((act, index) => {
-    let actCoords = act.coordinates || act.location;
+    let actCoords = act.coordinates || (typeof act.location === 'object' ? act.location?.coordinates : null);
     let actLocationName = typeof act.location === 'object' ? (act.location?.name || '') : act.location;
 
     if (isInvalidCoords(actCoords)) {
@@ -164,14 +177,21 @@ export default function LiveTripDashboard({
       const radius = 0.005 + (index * 0.001); // Roughly 500m - 1km radius
       return {
         ...act,
-        location: actLocationName,
+        location: actLocationName || act.title,
         coordinates: {
           lat: safeCoordinates.lat + (Math.sin(angle) * radius),
           lng: safeCoordinates.lng + (Math.cos(angle) * radius)
         }
       };
     }
-    return { ...act, location: actLocationName, coordinates: actCoords };
+    return {
+      ...act,
+      location: actLocationName || act.title,
+      coordinates: {
+        lat: typeof actCoords.lat === 'number' ? actCoords.lat : parseFloat(actCoords.lat),
+        lng: typeof actCoords.lng === 'number' ? actCoords.lng : parseFloat(actCoords.lng)
+      }
+    };
   });
 
   return (
