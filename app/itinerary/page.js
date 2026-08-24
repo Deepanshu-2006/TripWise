@@ -123,13 +123,26 @@ export default function ItineraryPage() {
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
   useEffect(() => {
-    setUserCurrency(getUserDisplayCurrency());
+    // Find the native currency from the activities
+    let nativeCurrencyCost = itinerary?.estimatedCost;
+    if (itinerary?.days && itinerary.days.length > 0) {
+      for (const day of itinerary.days) {
+        if (day.activities && day.activities.length > 0) {
+          const actWithCost = day.activities.find(a => a.cost && !String(a.cost).toLowerCase().includes('free'));
+          if (actWithCost) {
+            nativeCurrencyCost = actWithCost.cost;
+            break;
+          }
+        }
+      }
+    }
+    setUserCurrency(getUserDisplayCurrency(nativeCurrencyCost));
     fetchExchangeRates().then(() => setRatesReady(true));
     if (typeof window !== 'undefined') {
       const storedId = localStorage.getItem('tripwise_trip_id');
       if (storedId) setActiveTripId(storedId);
     }
-  }, []);
+  }, [itinerary?.estimatedCost]);
 
   // Navigation & Modal State
   const [activeDay, setActiveDay] = useState(1); 
@@ -2452,6 +2465,7 @@ export default function ItineraryPage() {
                                 d="M -8 -4 L 0 -38 L 8 -4 L 26 6 L 26 14 L 8 8 L 5 26 L 13 32 L 13 38 L 0 32 L -13 38 L -13 32 L -5 26 L -8 8 L -26 14 L -26 6 Z"
                                 fill="#FF6B2C"
                                 style={{ filter: 'drop-shadow(0px 4px 6px rgba(255,107,44,0.25))' }}
+                                transform="scale(0.55)"
                               />
                             </g>
                           </svg>
