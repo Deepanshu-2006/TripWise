@@ -217,7 +217,11 @@ export default function ItineraryMapModal({ activities = [], coordinates = null,
 
     // Build basecamp stop details
     const basecampName = typeof basecampHotel === 'string' ? basecampHotel : (basecampHotel?.name || `${destinationName.split(',')[0]} Basecamp`);
-    const basecampCoords = basecampHotel?.coordinates || (coordinates ? { lat: coordinates.lat, lng: coordinates.lng } : { lat: center[0], lng: center[1] });
+    let bLat = parseFloat(basecampHotel?.coordinates?.lat || coordinates?.lat || center[0]);
+    let bLng = parseFloat(basecampHotel?.coordinates?.lng || coordinates?.lng || center[1]);
+    if (isNaN(bLat) || !Number.isFinite(bLat)) bLat = 28.6139;
+    if (isNaN(bLng) || !Number.isFinite(bLng)) bLng = 77.2090;
+    const basecampCoords = { lat: bLat, lng: bLng };
 
     const basecampStop = {
       isBasecamp: true,
@@ -228,9 +232,24 @@ export default function ItineraryMapModal({ activities = [], coordinates = null,
     const loopedStops = [basecampStop, ...validActs, { ...basecampStop, isReturn: true }];
 
     // Filter out any LatLng with NaN values to prevent Leaflet projection crash
-    const rawLatLngs = loopedStops.map(s => L.latLng(s.coordinates.lat, s.coordinates.lng));
-    const latLngs = rawLatLngs.filter(ll => ll && Number.isFinite(ll.lat) && Number.isFinite(ll.lng));
-    if (latLngs.length < 2) { map.setView([center[0], center[1]], 13); return; }
+    const latLngs = loopedStops.map(s => {
+      if (!s || !s.coordinates) return null;
+      const lat = typeof s.coordinates.lat === 'number' ? s.coordinates.lat : parseFloat(s.coordinates.lat);
+      const lng = typeof s.coordinates.lng === 'number' ? s.coordinates.lng : parseFloat(s.coordinates.lng);
+      if (isNaN(lat) || isNaN(lng) || !Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+      try {
+        return L.latLng(lat, lng);
+      } catch {
+        return null;
+      }
+    }).filter(Boolean);
+
+    if (latLngs.length < 2) { 
+      const c0 = !isNaN(parseFloat(center[0])) ? parseFloat(center[0]) : 28.6139;
+      const c1 = !isNaN(parseFloat(center[1])) ? parseFloat(center[1]) : 77.2090;
+      map.setView([c0, c1], 13); 
+      return; 
+    }
 
     // ── Route layers — 4-layer system matching InteractiveRouteMap exactly ──
     const routeColor = '#EC6735';
