@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { Check, ChevronDown } from 'lucide-react';
 
 const InteractiveRouteMap = dynamic(() => import('./InteractiveRouteMap'), {
   ssr: false,
@@ -75,6 +76,7 @@ export default function LiveTripDashboard({
 
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('map'); // 'map' | 'activities'
+  const [showDayMenu, setShowDayMenu] = useState(false);
   const [internalHoveredStopIdx, setInternalHoveredStopIdx] = useState(null);
   const hoveredStopIdx = propHoveredStopIdx !== undefined ? propHoveredStopIdx : internalHoveredStopIdx;
   const setHoveredStopIdx = (idx) => {
@@ -195,15 +197,15 @@ export default function LiveTripDashboard({
   });
 
   return (
-    <div className="w-full h-full bg-[#FFFFFF] text-[#1F1F1F] relative overflow-hidden flex flex-col p-4 md:p-5 select-none transition-colors duration-500">
+    <div className="w-full h-full bg-[#FFFFFF] text-[#1F1F1F] relative overflow-hidden flex flex-col p-0 md:p-5 select-none transition-colors duration-500">
       {/* Post-Generation / Loaded Dashboard View */}
       {itinerary && !isGenerating && (
           <div className="w-full h-full flex flex-col flex-1 min-h-0 animate-fade-in relative z-10">
-            {/* Single Clean Minimal Header Strip */}
-            <div className="flex items-center justify-between shrink-0 mb-2.5 md:mb-3">
-              <div className="flex items-center gap-2 flex-wrap">
+            {/* Desktop Clean Minimal Header Strip */}
+            <div className="hidden md:flex items-center justify-between shrink-0 mb-2.5 md:mb-3 gap-2">
+              <div className="flex items-center gap-2 flex-wrap min-w-0">
                 {/* Clean Destination Badge */}
-                <div className="flex items-center gap-1.5 bg-[#FFFFFF] px-3 py-1 rounded-2xl border border-[#ECE8E2] shadow-[0_4px_16px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_6px_20px_rgba(0,0,0,0.07)]">
+                <div className="flex items-center gap-1.5 bg-[#FFFFFF] px-3 py-1 rounded-2xl border border-[#ECE8E2] shadow-[0_4px_16px_rgba(0,0,0,0.04)] transition-all duration-300">
                   <span className="text-xs">📍</span>
                   <span className="text-xs font-semibold text-[#1F1F1F] tracking-tight">
                     {displayDest.replace(/\s*\(\s*Demo Mode\s*\)/i, '').trim()}
@@ -213,7 +215,11 @@ export default function LiveTripDashboard({
                 {/* Day selector dropdown/pill */}
                 {itinerary && itinerary.days && itinerary.days.length > 0 ? (
                   <div className="relative group/day">
-                    <div className="flex items-center gap-1.5 bg-[#FF6B2C]/10 hover:bg-[#FF6B2C]/16 text-[#FF6B2C] px-3 py-1 rounded-2xl border border-[#FF6B2C]/30 transition-all duration-250 cursor-pointer shadow-[0_4px_16px_rgba(255,107,44,0.08)] hover:scale-[1.02]">
+                    <button
+                      type="button"
+                      onClick={() => setShowDayMenu(!showDayMenu)}
+                      className="flex items-center gap-1.5 bg-[#FF6B2C]/10 hover:bg-[#FF6B2C]/16 text-[#FF6B2C] px-3 py-1 rounded-2xl border border-[#FF6B2C]/30 transition-all duration-250 cursor-pointer shadow-[0_4px_16px_rgba(255,107,44,0.08)] hover:scale-[1.02]"
+                    >
                       {(() => {
                         const rawLabel = currentDay?.dateLabel || `Day ${selectedDayIndex + 1}`;
                         const parts = rawLabel.split(/\s*[-:|]\s*/);
@@ -222,7 +228,8 @@ export default function LiveTripDashboard({
                         if (!subtitle && parts.length > 1) subtitle = parts.slice(1).join(' ').trim();
                         return (
                           <>
-                            <span className="text-xs font-bold tracking-tight">{dayNum} ▼</span>
+                            <span className="text-xs font-bold tracking-tight">{dayNum}</span>
+                            <ChevronDown size={13} strokeWidth={2.5} className={`transition-transform duration-200 ${showDayMenu ? 'rotate-180' : ''}`} />
                             {subtitle && (
                               <>
                                 <span className="text-[#FF6B2C]/40 font-light">•</span>
@@ -234,24 +241,69 @@ export default function LiveTripDashboard({
                           </>
                         );
                       })()}
-                    </div>
-                    
-                    <select
-                      value={selectedDayIndex}
-                      onChange={(e) => {
-                        const newIdx = parseInt(e.target.value, 10);
-                        setSelectedDayIndex(newIdx);
-                        if (onSelectDay) onSelectDay(newIdx);
-                      }}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer text-xs"
-                      title={currentDay?.dateLabel || `Day ${selectedDayIndex + 1}`}
-                    >
-                      {itinerary.days.map((d, idx) => (
-                        <option key={idx} value={idx} className="bg-white text-[#1F1F1F] font-bold">
-                          {d.dateLabel || `Day ${idx + 1}`}
-                        </option>
-                      ))}
-                    </select>
+                    </button>
+
+                    {/* Custom Premium Day Picker Dropdown Menu */}
+                    {showDayMenu && itinerary.days && itinerary.days.length > 0 && (
+                      <>
+                        <div 
+                          className="fixed inset-0 z-50 bg-black/10 backdrop-blur-xs" 
+                          onClick={() => setShowDayMenu(false)} 
+                        />
+                        <div className="absolute top-full left-0 mt-2 bg-white/95 backdrop-blur-2xl rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.14)] border border-stone-200/80 p-1.5 w-72 max-w-[85vw] max-h-[55vh] overflow-y-auto custom-scrollbar flex flex-col gap-1 z-60 animate-in fade-in zoom-in-95 duration-150">
+                          <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-stone-400">
+                            Select Day
+                          </div>
+                          {itinerary.days.map((d, idx) => {
+                            const isCurrent = (selectedDayIndex || 0) === idx;
+                            const rawLabel = d.dateLabel || `Day ${idx + 1}`;
+                            const parts = rawLabel.split(/\s*[-:|]\s*/);
+                            const dayNum = /^Day\s*\d+/i.test(parts[0]) ? parts[0].trim() : `Day ${idx + 1}`;
+                            let subtitle = parts.length > 1 ? parts.slice(1).join(' ').trim() : null;
+
+                            return (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => {
+                                  setShowDayMenu(false);
+                                  setSelectedDayIndex(idx);
+                                  if (onSelectDay) onSelectDay(idx);
+                                }}
+                                className={`w-full flex items-center justify-between gap-2 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                                  isCurrent
+                                    ? 'bg-[#FFF2EA] text-[#EC6735] font-bold shadow-2xs'
+                                    : 'hover:bg-stone-100 text-stone-700 font-medium'
+                                }`}
+                              >
+                                <div className="flex flex-col min-w-0 flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-xs ${isCurrent ? 'font-black text-[#EC6735]' : 'font-bold text-stone-900'}`}>
+                                      {dayNum}
+                                    </span>
+                                    {d.activities?.length > 0 && (
+                                      <span className="text-[10px] text-stone-400 font-medium">
+                                        • {d.activities.length} stops
+                                      </span>
+                                    )}
+                                  </div>
+                                  {subtitle && (
+                                    <span className={`text-[11px] truncate leading-tight mt-0.5 ${isCurrent ? 'text-[#EC6735]/80' : 'text-stone-500'}`}>
+                                      {subtitle}
+                                    </span>
+                                  )}
+                                </div>
+                                {isCurrent && (
+                                  <div className="w-5 h-5 rounded-full bg-[#EC6735] text-white flex items-center justify-center shrink-0">
+                                    <Check size={12} strokeWidth={3} />
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
                   </div>
                 ) : (
                   <span className="text-xs font-bold text-[#FF6B2C] bg-[#FFF2EA] px-3 py-1 rounded-2xl border border-[#FFDBC8]">
@@ -278,6 +330,7 @@ export default function LiveTripDashboard({
                 activities={routeActivities}
                 allDays={itinerary?.days || []}
                 selectedDayIndex={selectedDayIndex || 0}
+                onSelectDay={setSelectedDayIndex}
                 destinationName={displayDest}
                 coordinates={safeCoordinates}
                 basecampHotel={itinerary?.basecampHotelDetails || itinerary?.basecampHotel || itinerary?.preferences?.basecamp}
