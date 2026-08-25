@@ -3,7 +3,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion, useScroll, useSpring } from 'framer-motion';
 import CustomDatePicker from './CustomDatePicker';
-import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw, Check, Map, Compass, ThumbsUp, ThumbsDown, Users, UserPlus, Landmark, Utensils, Zap, Gem, Star, Lightbulb, Smile, TreePine, Coffee, Palmtree, Banknote, Sun, Footprints, Coins, Plane, Building2, TrendingDown, Mic, MicOff, Flag, AlertTriangle, ShieldCheck, ShieldAlert, CornerDownLeft, Send, ArrowRight, Square, StopCircle, X } from 'lucide-react';
+import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, ChevronDown, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw, Check, Map, Compass, ThumbsUp, ThumbsDown, Users, UserPlus, Landmark, Utensils, Zap, Gem, Star, Lightbulb, Smile, TreePine, Coffee, Palmtree, Banknote, Sun, Footprints, Coins, Plane, Building2, TrendingDown, Mic, MicOff, Flag, AlertTriangle, ShieldCheck, ShieldAlert, CornerDownLeft, CornerDownRight, Send, ArrowRight, ArrowLeft, ArrowUpRight, Share2, Square, StopCircle, X } from 'lucide-react';
+import ImageCarousel from './ImageCarousel';
+const TicketPassModal = dynamic(() => import('./TicketPassModal'), { ssr: false });
 import dynamic from 'next/dynamic';
 const FlagModal = dynamic(() => import('./FlagModal'));
 const FlaggingAdminModal = dynamic(() => import('./FlaggingAdminModal'));
@@ -24,7 +26,6 @@ import {
 import { saveTrip, updateTrip, getTripCollaborators } from '../actions/trips';
 import { activateTracking } from '../../lib/priceTrackingApi';
 import { useRouter } from 'next/navigation';
-import * as htmlToImage from 'html-to-image';
 import { useCollaboration } from './CollaborationProvider';
 import CollaboratorStack from './CollaboratorStack';
 const InviteModal = dynamic(() => import('./InviteModal'));
@@ -78,7 +79,6 @@ export default function PlannerSidebar({
   const [isUnfoldingMap, setIsUnfoldingMap] = useState(false);
   const prefersReducedMotion = useReducedMotion();
   const router = useRouter();
-  const cachedScreenshot = useRef(null);
 
   const collaboration = useCollaboration();
   const realtimeItinerary = collaboration?.itinerary || itinerary;
@@ -94,6 +94,9 @@ export default function PlannerSidebar({
   }, [collaboration, originalOnUpdateItinerary]);
 
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [activePassModal, setActivePassModal] = useState(null);
+  const [isDestinationSaved, setIsDestinationSaved] = useState(false);
+  const [slideDirection, setSlideDirection] = useState(1);
   const [collaboratorsList, setCollaboratorsList] = useState([]);
 
   const [mockVotes, setMockVotes] = useState({});
@@ -117,6 +120,44 @@ export default function PlannerSidebar({
     });
   }, []);
 
+  const [canScroll, setCanScroll] = useState(false);
+  const [isNearBottom, setIsNearBottom] = useState(false);
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      const maxScroll = scrollHeight - clientHeight;
+      setCanScroll(maxScroll > 60);
+      setIsNearBottom(scrollTop > Math.min(220, maxScroll * 0.45));
+    };
+
+    handleScroll();
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll, { passive: true });
+
+    const observer = new ResizeObserver(handleScroll);
+    observer.observe(container);
+
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+      observer.disconnect();
+    };
+  }, [itinerary, selectedDayIndex, isGenerating]);
+
+  const handleScrollIndicatorClick = () => {
+    const container = scrollRef.current;
+    if (!container) return;
+    if (isNearBottom) {
+      container.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      container.scrollBy({ top: 380, behavior: 'smooth' });
+    }
+  };
+
   useEffect(() => {
     if (tripId) {
       getTripCollaborators(tripId).then(list => {
@@ -127,23 +168,11 @@ export default function PlannerSidebar({
 
   const handleDetailedItineraryClick = async () => {
     if (isUnfoldingMap) return;
-
-    // Start pre-fetching the screenshot immediately
-    if (!cachedScreenshot.current) {
-      htmlToImage.toJpeg(document.body, {
-        quality: 0.9,
-        width: window.innerWidth,
-        height: window.innerHeight,
-        pixelRatio: window.devicePixelRatio || 1,
-        backgroundColor: '#F7F5F2'
-      }).then(dataUrl => {
-        cachedScreenshot.current = dataUrl;
-      }).catch(e => console.error(e));
-    }
+    
+    setIsUnfoldingMap(true);
 
     if (prefersReducedMotion) {
-      setIsUnfoldingMap(true);
-      await new Promise(r => setTimeout(r, 2000));
+      await new Promise(r => setTimeout(r, 600));
       if (onOpenCalendar) onOpenCalendar();
       if (onViewItinerary) onViewItinerary();
       else router.push('/itinerary');
@@ -151,60 +180,22 @@ export default function PlannerSidebar({
       return;
     }
 
-    setIsUnfoldingMap(true);
-    await new Promise(r => setTimeout(r, 2000));
-
     try {
-      let dataUrl = cachedScreenshot.current;
-      if (!dataUrl) {
-        dataUrl = await htmlToImage.toJpeg(document.body, {
-          quality: 0.9,
-          width: window.innerWidth,
-          height: window.innerHeight,
-          pixelRatio: window.devicePixelRatio || 1,
-          backgroundColor: '#F7F5F2'
-        });
-      }
-      cachedScreenshot.current = null;
-
+      // Create a smooth fade overlay instead of taking a slow DOM screenshot
       const overlay = document.createElement('div');
       overlay.style.position = 'fixed';
       overlay.style.inset = '0';
-      overlay.style.perspective = '2000px';
       overlay.style.zIndex = '999999';
       overlay.style.pointerEvents = 'none';
-      overlay.style.backgroundColor = '#000'; // Black background for cinematic depth
-
-      // The new page will load in the background. We need a fade layer to reveal it smoothly.
-      const fadeOverlay = document.createElement('div');
-      fadeOverlay.style.position = 'absolute';
-      fadeOverlay.style.inset = '0';
-      fadeOverlay.style.backgroundColor = '#F7F5F2';
-      fadeOverlay.style.transition = 'opacity 1200ms ease-in-out 400ms';
-      overlay.appendChild(fadeOverlay);
-
-      // Create a 3D flipping card with the screenshot
-      const card = document.createElement('div');
-      card.style.position = 'absolute';
-      card.style.inset = '0';
-      card.style.backgroundImage = `url(${dataUrl})`;
-      card.style.backgroundSize = `${window.innerWidth}px ${window.innerHeight}px`;
-      card.style.backgroundPosition = 'top left';
-      card.style.backgroundRepeat = 'no-repeat';
-      card.style.transformOrigin = 'left center';
-      card.style.transition = 'transform 1500ms cubic-bezier(0.25, 1, 0.5, 1), opacity 1500ms ease-in';
-      card.style.willChange = 'transform, opacity';
-      card.style.boxShadow = '20px 0 50px rgba(0,0,0,0.5)';
-
-      overlay.appendChild(card);
+      overlay.style.backgroundColor = '#F7F5F2';
+      overlay.style.opacity = '0';
+      overlay.style.transition = 'opacity 400ms ease-in-out';
+      
       document.body.appendChild(overlay);
 
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          // Flip it open like a massive book cover
-          card.style.transform = 'rotateY(-110deg) scale(0.9) translateX(-100px)';
-          card.style.opacity = '0';
-          fadeOverlay.style.opacity = '0';
+          overlay.style.opacity = '1';
         });
       });
 
@@ -212,18 +203,23 @@ export default function PlannerSidebar({
       setTimeout(() => {
         if (onViewItinerary) onViewItinerary();
         else router.push('/itinerary');
-      }, 50);
+      }, 400);
 
       // Cleanup
       setTimeout(() => {
         if (document.body.contains(overlay)) {
-          document.body.removeChild(overlay);
+          overlay.style.opacity = '0';
+          setTimeout(() => {
+            if (document.body.contains(overlay)) {
+              document.body.removeChild(overlay);
+            }
+          }, 400);
         }
         setIsUnfoldingMap(false);
-      }, 2000);
+      }, 1000);
 
     } catch (e) {
-      console.error('3D transition failed', e);
+      console.error('Transition failed', e);
       if (onViewItinerary) onViewItinerary();
       else router.push('/itinerary');
       setIsUnfoldingMap(false);
@@ -273,6 +269,36 @@ export default function PlannerSidebar({
   useEffect(() => {
     if (propHoveredStopIdx !== undefined) setInternalHoveredStopIdx(propHoveredStopIdx);
   }, [propHoveredStopIdx]);
+
+  // Extract currently selected stop details for the popup card
+  const currentDayActivities = itinerary?.days?.[selectedDayIndex]?.activities || [];
+  const totalDayStops = currentDayActivities.length;
+  const isBasecampSelected = selectedStopIdx === 0;
+  const selectedAct = isBasecampSelected
+    ? (itinerary?.basecampHotelDetails || {
+        title: itinerary?.basecampHotel || 'Basecamp Hotel',
+        location: itinerary?.destinationName || '',
+        category: 'hotel',
+        duration: 'All-Day Hub',
+        description: 'Your primary accommodation and central hub for relaxing between daily excursions.'
+      })
+    : (selectedStopIdx !== null && selectedStopIdx > 0 ? currentDayActivities[selectedStopIdx - 1] : null);
+
+  const popupRatingData = selectedAct ? getActivityRating(selectedAct, itinerary?.destinationName || '', (selectedStopIdx || 1) - 1) : { rating: 4.8, reviews: 120 };
+  const popupCategoryStyle = selectedAct ? getCategoryStyling(selectedAct.category) : { name: 'Sightseeing', icon: 'Landmark' };
+  const popupCostInfo = selectedAct ? formatCost(selectedAct) : { title: 'Free Entry' };
+  const popupAiInsightText = selectedAct ? getAiInsight(selectedAct, itinerary?.destinationName || '') : '';
+  const popupHeroImageUrl = selectedAct ? getActivityThumbnail(selectedAct, itinerary?.destinationName || '', (selectedStopIdx || 1) - 1) : '';
+  const popupGoogleMapsUrl = selectedAct ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${selectedAct.title || ''} ${selectedAct.location || itinerary?.destinationName || ''}`)}` : '';
+  const isDining = selectedAct && (
+    selectedAct.category === 'food' || 
+    selectedAct.category === 'dining' || 
+    selectedAct.category === 'restaurant' || 
+    selectedAct.category === 'cafe' || 
+    selectedAct.category === 'bar' || 
+    /dining|food|restaurant|bistro|cuisine|cafe|lunch|dinner|breakfast|eatery|tasting|tavern|brunch|coffee/i.test(`${selectedAct.title || ''} ${selectedAct.category || ''} ${selectedAct.description || ''}`)
+  );
+
   const isProgrammaticScrollRef = useRef(false);
   const programmaticScrollTimeoutRef = useRef(null);
 
@@ -1356,7 +1382,7 @@ export default function PlannerSidebar({
   };
 
   return (
-    <div className={`w-full flex-1 h-full bg-[#FAF3EE] text-stone-900 p-4 sm:p-6 md:p-8 flex flex-col font-sans select-none border-r border-stone-200/60`}>
+    <div className={`w-full flex-1 h-full bg-[#FAF3EE] text-stone-900 p-4 sm:p-6 md:p-8 flex flex-col font-sans select-none border-r border-stone-200/60 relative`}>
       {/* ── Sticky Header — Desktop only (sm+) ─────────────────────────────── */}
       <div className="hidden sm:block sm:sticky top-0 z-30 bg-[#FAF3EE] pt-3 pb-4 sm:-mx-6 md:-mx-8 sm:px-6 md:px-8 border-b border-stone-200/50 mb-6">
 
@@ -2728,7 +2754,7 @@ export default function PlannerSidebar({
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
-                  className="pt-4 mb-2 flex flex-col gap-4 border-t border-[#ECE8E2]"
+                  className="pt-3 sm:pt-4 mb-2 flex flex-col gap-3 sm:gap-4 border-t border-[#ECE8E2]"
                 >
                   {/* Collaboration Bar */}
                   <div className="group relative overflow-hidden bg-linear-to-r from-orange-50/80 via-white to-orange-50/80 p-3.5 sm:p-4 rounded-[1.25rem] border border-orange-200/60 shadow-sm transition-all hover:shadow-md hover:border-orange-300 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
@@ -2743,7 +2769,7 @@ export default function PlannerSidebar({
                     </div>
                     <button
                       onClick={() => setIsInviteModalOpen(true)}
-                      className="w-full sm:w-auto px-5 py-2.5 text-xs font-bold text-white bg-[#111827] rounded-xl hover:bg-black transition-all shadow-md hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2 group/btn"
+                      className="w-full sm:w-auto h-11 sm:h-auto sm:py-2.5 px-5 text-xs font-bold text-white bg-[#111827] rounded-xl hover:bg-black transition-all shadow-md hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2 group/btn"
                     >
                       <UserPlus size={14} className="group-hover/btn:scale-110 transition-transform" />
                       Invite Friends
@@ -2751,13 +2777,13 @@ export default function PlannerSidebar({
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-3">
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       type="button"
                       onClick={handleDetailedItineraryClick}
-                      className="group w-full sm:w-[48%] h-10 px-4 rounded-2xl font-bold bg-[#F7F5F2] text-[#1C1B1B] hover:bg-[#ECE8E2] transition-colors duration-300 text-xs flex items-center justify-center cursor-pointer z-10 shadow-sm"
+                      className="group w-full sm:w-[48%] h-12 sm:h-10 px-4 rounded-xl sm:rounded-2xl font-bold bg-[#F7F5F2] text-[#1C1B1B] hover:bg-[#ECE8E2] transition-colors duration-300 text-xs flex items-center justify-center cursor-pointer z-10 shadow-sm border border-black/5 sm:border-none"
                     >
                       <AnimatePresence mode="wait">
                         {isUnfoldingMap ? (
@@ -2808,7 +2834,7 @@ export default function PlannerSidebar({
                           setIsConfirming(false);
                         }
                       }}
-                      className={`relative w-full sm:w-[48%] h-10 flex rounded-2xl ${itinerary?.status === 'CONFIRMED' ? '' : 'cursor-pointer group hover:shadow-[0_12px_32px_rgba(255,107,44,0.5)]'} shadow-[0_8px_24px_rgba(255,107,44,0.3)] transition-shadow`}
+                      className={`relative w-full sm:w-[48%] h-12 sm:h-10 flex rounded-xl sm:rounded-2xl ${itinerary?.status === 'CONFIRMED' ? '' : 'cursor-pointer group hover:shadow-[0_12px_32px_rgba(255,107,44,0.5)]'} shadow-[0_4px_12px_rgba(255,107,44,0.3)] sm:shadow-[0_8px_24px_rgba(255,107,44,0.3)] transition-shadow`}
                     >
                       {/* Background Layer: Main (Expands to fill) */}
                       <motion.div
@@ -3145,6 +3171,44 @@ export default function PlannerSidebar({
         )}
       </div>
 
+      {/* Floating Animated Round Pill Arrow Button - Positioned above View Map on phone */}
+      <AnimatePresence>
+        {itinerary && canScroll && selectedStopIdx === null && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.75, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.75, y: 10 }}
+            transition={{ type: 'spring', stiffness: 450, damping: 26 }}
+            className="fixed md:absolute bottom-19 sm:bottom-16 left-1/2 -translate-x-1/2 md:left-auto md:right-6 md:translate-x-0 z-50 pointer-events-auto"
+          >
+            <motion.button
+              type="button"
+              onClick={handleScrollIndicatorClick}
+              whileHover={{ scale: 1.12 }}
+              whileTap={{ scale: 0.88 }}
+              className="w-10 h-10 rounded-full flex items-center justify-center bg-stone-900/95 hover:bg-black text-white shadow-[0_8px_28px_rgba(0,0,0,0.35)] backdrop-blur-xl border border-white/25 active:scale-90 transition-all duration-200 cursor-pointer select-none"
+              title={isNearBottom ? 'Back to top' : 'Scroll down for more'}
+              aria-label={isNearBottom ? 'Scroll to top' : 'Scroll down'}
+            >
+              {/* Super smooth rotating arrow with gentle bounce when pointing down */}
+              <motion.div
+                animate={{ 
+                  rotate: isNearBottom ? 180 : 0,
+                  y: isNearBottom ? 0 : [0, 2.5, 0]
+                }}
+                transition={{ 
+                  rotate: { type: 'spring', stiffness: 380, damping: 22 },
+                  y: { repeat: isNearBottom ? 0 : Infinity, duration: 1.4, ease: 'easeInOut' }
+                }}
+                className="flex items-center justify-center text-[#FF6B2C]"
+              >
+                <ChevronDown size={18} strokeWidth={3} />
+              </motion.div>
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Footer / Subtle Info - Pinned to bottom */}
       <div className="pt-4 mt-auto border-t border-[rgba(28,27,27,0.06)] flex items-center justify-between text-[11px] text-secondary-text shrink-0">
         <span>Powered by TripWise AI</span>
@@ -3163,6 +3227,327 @@ export default function PlannerSidebar({
         onClose={() => setIsInviteModalOpen(false)}
         tripId={tripId}
         currentCollaborators={collaboratorsList}
+      />
+
+      {/* Destination Details Popup Card on Sidebar (Mobile Phone Only) */}
+      <AnimatePresence>
+        {selectedStopIdx !== null && selectedAct && (
+          <div className="sm:hidden fixed inset-0 z-50 flex items-center justify-center p-3.5 pt-24 pb-6 pointer-events-auto">
+            {/* Soft Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => handleSelectStop(null)}
+              className="absolute inset-0 bg-black/50 backdrop-blur-xs cursor-pointer"
+            />
+
+            {/* Popup Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.93, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.93, y: 16 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+              className="relative w-full max-w-md max-h-[calc(100dvh-125px)] bg-white rounded-3xl shadow-[0_24px_64px_rgba(0,0,0,0.3)] border border-stone-200/90 overflow-hidden flex flex-col z-10 select-none text-stone-900 my-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => handleSelectStop(null)}
+                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 hover:bg-black/85 backdrop-blur-md text-white border border-white/25 flex items-center justify-center font-bold transition-all shadow-md active:scale-95 z-30 cursor-pointer"
+                title="Close"
+              >
+                <X size={15} strokeWidth={3} />
+              </button>
+
+              {/* Animated Card Switcher Wrapper */}
+              <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
+                <AnimatePresence mode="wait" custom={slideDirection} initial={false}>
+                  <motion.div
+                    key={selectedStopIdx}
+                    custom={slideDirection}
+                    variants={{
+                      enter: (dir) => ({ x: dir > 0 ? 32 : -32, opacity: 0 }),
+                      center: { x: 0, opacity: 1 },
+                      exit: (dir) => ({ x: dir > 0 ? -32 : 32, opacity: 0 })
+                    }}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex-1 flex flex-col min-h-0 overflow-hidden"
+                  >
+                    {/* Header Image Gallery */}
+                    <div className="w-full h-52 sm:h-56 relative bg-stone-100 shrink-0 group">
+                      <div className="absolute inset-0">
+                        <ImageCarousel
+                          images={selectedAct?.photos?.length > 0 ? selectedAct.photos : undefined}
+                          initialImage={popupHeroImageUrl}
+                          alt={selectedAct.title || 'Destination'}
+                          query={`${selectedAct.title || 'Destination'} ${itinerary?.destinationName || ''}`}
+                        />
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+
+                      {/* Badge top left with animated number */}
+                      <div className="absolute top-3.5 left-3.5 z-10 flex items-center gap-1.5 bg-black/40 backdrop-blur-md text-white text-[11px] font-bold rounded-full p-1 pr-2.5 border border-white/20">
+                        <span className="bg-[#FF6B2C] text-white px-2 py-0.5 rounded-full whitespace-nowrap overflow-hidden inline-flex items-center gap-1">
+                          {isBasecampSelected ? (
+                            'Basecamp'
+                          ) : (
+                            <>
+                              <span>Stop</span>
+                              <div className="relative inline-flex overflow-hidden h-3.5 min-w-[7px] items-center justify-center">
+                                <AnimatePresence mode="popLayout" custom={slideDirection}>
+                                  <motion.span
+                                    key={selectedStopIdx}
+                                    initial={{ y: slideDirection >= 0 ? 10 : -10, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    exit={{ y: slideDirection >= 0 ? -10 : 10, opacity: 0 }}
+                                    transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+                                    className="inline-block font-black"
+                                  >
+                                    {selectedStopIdx}
+                                  </motion.span>
+                                </AnimatePresence>
+                              </div>
+                            </>
+                          )}
+                        </span>
+                        <span className="whitespace-nowrap flex items-center gap-1">
+                          {popupCategoryStyle.name}
+                        </span>
+                      </div>
+
+                      {/* Title & Location */}
+                      <div className="absolute bottom-3.5 left-4 right-4 z-10">
+                        <h3 className="text-lg sm:text-xl font-black text-white tracking-tight leading-tight drop-shadow-md line-clamp-2">
+                          {selectedAct.title}
+                        </h3>
+                        <p className="text-xs sm:text-sm font-medium text-white/90 mt-1 drop-shadow-md flex items-center gap-1 truncate">
+                          <MapPin size={13} className="shrink-0 text-[#FF6B2C]" />
+                          <span>{selectedAct.location || `${itinerary?.destinationName} • ${popupCategoryStyle.name}`}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Scrollable Content Area */}
+                    <div className="flex-1 overflow-y-auto w-full p-4 sm:p-5 flex flex-col gap-3.5 custom-scrollbar">
+                      {/* Key Metrics Grid */}
+                      <div className="grid grid-cols-2 gap-y-2.5 gap-x-3 pb-3 border-b border-stone-200/60">
+                        <div className="flex items-center gap-1.5 text-xs sm:text-sm text-stone-700 font-semibold cursor-default">
+                          <Star size={15} strokeWidth={2.5} className="text-[#FFB000] fill-[#FFB000] shrink-0" />
+                          <span className="text-stone-900 font-bold">{popupRatingData.rating}</span>
+                          <span className="text-[11px] font-medium text-stone-500">({formatReviewCount(popupRatingData.reviews)})</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs sm:text-sm text-stone-700 font-semibold">
+                          <Clock size={15} strokeWidth={2.5} className="text-stone-500 shrink-0" />
+                          <span className="truncate">{selectedAct?.duration || '2 hrs'}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs sm:text-sm text-stone-700 font-semibold">
+                          <Banknote size={15} strokeWidth={2.5} className="text-emerald-600 shrink-0" />
+                          <span className="truncate">{popupCostInfo.title.replace('💰 ', '')}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs sm:text-sm text-stone-700 font-semibold">
+                          <ShieldCheck size={15} strokeWidth={2.5} className="text-emerald-500 shrink-0" />
+                          <span className="text-emerald-700 font-bold text-[11px]">VERIFIED</span>
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      {selectedAct?.description && (
+                        <p className="text-xs sm:text-sm text-stone-600 leading-relaxed font-medium">
+                          {selectedAct.description}
+                        </p>
+                      )}
+
+                      {/* Weather & Live Crowd Chips */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-stone-800 text-[11px] font-bold">
+                          <span>☀️</span>
+                          <span>28°C</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 text-[11px] font-bold">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          <span>Low Crowd</span>
+                        </div>
+                      </div>
+
+                      {/* AI Concierge Insight */}
+                      {popupAiInsightText && (
+                        <div className="bg-[#FFF8F5] rounded-2xl p-3.5 border border-[#FF6B2C]/20 flex flex-col gap-1.5">
+                          <div className="flex items-center gap-1.5 text-[11px] font-extrabold tracking-wide uppercase text-stone-500">
+                            <Sparkles size={13} className="text-[#FF6B2C]" />
+                            <span>TripWise AI Insight</span>
+                          </div>
+                          <p className="text-xs text-stone-700 leading-relaxed font-medium">
+                            {popupAiInsightText.replace('✨ ', '')}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="p-3 sm:p-4 bg-stone-50/90 border-t border-stone-200/80 shrink-0 flex flex-col gap-2 z-20">
+                <div className="flex items-center gap-2 w-full">
+                  {!isBasecampSelected && (
+                    <button
+                      type="button"
+                      onClick={() => setActivePassModal({ activity: selectedAct, dayNum: selectedDayIndex + 1, stopNum: selectedStopIdx })}
+                      className="group flex-1 bg-gradient-to-r from-[#FF6B2C] to-[#E65D20] text-white font-bold rounded-xl h-10 sm:h-11 flex items-center justify-center gap-1.5 px-3 shadow-[0_4px_16px_rgba(255,107,44,0.25)] hover:shadow-lg transition-all duration-200 active:scale-95 cursor-pointer text-xs sm:text-sm select-none"
+                    >
+                      {isDining ? (
+                        <>
+                          {/* Crossed Fork & Knife Silverware Animation */}
+                          <span className="relative inline-flex items-center justify-center w-4 h-4 shrink-0">
+                            {/* Fork (tilts right/crosses on hover & click) */}
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.4"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="w-4 h-4 absolute origin-center transition-all duration-300 ease-out group-hover:rotate-[32deg] group-hover:-translate-x-[1.5px] group-active:rotate-[32deg] group-active:-translate-x-[1.5px]"
+                            >
+                              <path d="M16 2v5a2 2 0 0 1-2 2h0a2 2 0 0 1-2-2V2" />
+                              <path d="M14 2v4" />
+                              <path d="M14 9v13" />
+                            </svg>
+                            {/* Knife (tilts left/crosses on hover & click) */}
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.4"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="w-4 h-4 absolute origin-center transition-all duration-300 ease-out group-hover:-rotate-[32deg] group-hover:translate-x-[1.5px] group-active:-rotate-[32deg] group-active:translate-x-[1.5px]"
+                            >
+                              <path d="M9 2v8a2.5 2.5 0 0 1-2.5-2.5V2a2 2 0 0 1 2.5 0z" />
+                              <path d="M8 10v12" />
+                            </svg>
+                          </span>
+                          <span>Reserve Table</span>
+                        </>
+                      ) : (
+                        <>
+                          <Ticket size={15} strokeWidth={2.5} className="shrink-0 transition-transform duration-300 ease-out group-hover:-rotate-14 group-hover:scale-110 group-active:-rotate-14 group-active:scale-110" />
+                          <span>Tickets</span>
+                          <ArrowRight size={13} strokeWidth={2.5} className="shrink-0 transition-transform duration-300 ease-out group-hover:translate-x-1 group-active:translate-x-1 ml-0.5 opacity-90" />
+                        </>
+                      )}
+                    </button>
+                  )}
+
+                  <a
+                    href={popupGoogleMapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`group flex-1 font-bold rounded-xl h-10 sm:h-11 flex items-center justify-center gap-2 px-4 transition-all duration-200 active:scale-95 cursor-pointer text-xs sm:text-sm select-none ${
+                      isBasecampSelected
+                        ? 'bg-gradient-to-r from-[#FF6B2C] to-[#E65D20] text-white shadow-[0_4px_16px_rgba(255,107,44,0.28)] hover:shadow-[0_6px_20px_rgba(255,107,44,0.38)]'
+                        : 'bg-white hover:bg-stone-100 text-stone-800 border border-stone-200/80 shadow-xs'
+                    }`}
+                  >
+                    {isBasecampSelected ? (
+                      <>
+                        <Navigation size={15} strokeWidth={2.5} className="shrink-0" />
+                        <span>Directions to Hotel</span>
+                        <CornerDownRight size={14} strokeWidth={2.5} className="shrink-0 opacity-90 transition-transform duration-300 ease-out group-hover:translate-x-1 group-hover:translate-y-0.5 group-active:translate-x-1 group-active:translate-y-0.5" />
+                      </>
+                    ) : (
+                      <>
+                        <span>Start Route</span>
+                        <ArrowUpRight size={15} strokeWidth={2.5} className="shrink-0 text-[#FF6B2C] transition-transform duration-300 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:scale-115 group-active:translate-x-0.5 group-active:-translate-y-0.5 group-active:scale-115" />
+                      </>
+                    )}
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsDestinationSaved(prev => !prev)}
+                    className={`group w-10 sm:w-11 h-10 sm:h-11 rounded-xl border flex items-center justify-center transition-all duration-200 active:scale-90 cursor-pointer shrink-0 ${
+                      isDestinationSaved 
+                        ? 'bg-[#FFE8DE] border-[#FF6B2C]/40 text-[#FF6B2C]' 
+                        : 'bg-white border-stone-200/80 hover:bg-stone-100 text-stone-700 shadow-xs'
+                    }`}
+                    title="Save to Wishlist"
+                  >
+                    <Heart size={16} strokeWidth={2.5} className={`transition-transform duration-300 ease-out group-hover:scale-120 group-active:scale-90 ${isDestinationSaved ? 'fill-[#FF6B2C]' : ''}`} />
+                  </button>
+                </div>
+
+                {/* Navigation Between Stops with animated numbers */}
+                <div className="flex items-center justify-between pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSlideDirection(-1);
+                      const prevIdx = isBasecampSelected ? totalDayStops : (selectedStopIdx > 1 ? selectedStopIdx - 1 : 0);
+                      handleSelectStop(prevIdx);
+                    }}
+                    className="flex items-center gap-1 px-3 py-1 rounded-full bg-white hover:bg-stone-100 border border-stone-200/80 text-stone-700 text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-xs"
+                  >
+                    <ArrowLeft size={13} strokeWidth={2.5} />
+                    <span>Prev</span>
+                  </button>
+
+                  <div className="text-[11px] font-bold text-stone-500 tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-stone-200/60 border border-stone-300/40 flex items-center gap-1 overflow-hidden">
+                    {isBasecampSelected ? (
+                      <span>Basecamp</span>
+                    ) : (
+                      <>
+                        <div className="relative inline-flex overflow-hidden h-4 min-w-[9px] items-center justify-center">
+                          <AnimatePresence mode="popLayout" custom={slideDirection}>
+                            <motion.span
+                              key={selectedStopIdx}
+                              initial={{ y: slideDirection >= 0 ? 12 : -12, opacity: 0 }}
+                              animate={{ y: 0, opacity: 1 }}
+                              exit={{ y: slideDirection >= 0 ? -12 : 12, opacity: 0 }}
+                              transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+                              className="text-[#FF6B2C] font-black inline-block"
+                            >
+                              {selectedStopIdx}
+                            </motion.span>
+                          </AnimatePresence>
+                        </div>
+                        <span className="text-stone-400">of</span>
+                        <span className="text-stone-700 font-bold">{totalDayStops}</span>
+                      </>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSlideDirection(1);
+                      const nextIdx = isBasecampSelected ? 1 : (selectedStopIdx < totalDayStops ? selectedStopIdx + 1 : 0);
+                      handleSelectStop(nextIdx);
+                    }}
+                    className="flex items-center gap-1 px-3 py-1 rounded-full bg-white hover:bg-stone-100 border border-stone-200/80 text-stone-700 text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-xs"
+                  >
+                    <span>Next</span>
+                    <ArrowRight size={13} strokeWidth={2.5} />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <TicketPassModal
+        isOpen={Boolean(activePassModal)}
+        onClose={() => setActivePassModal(null)}
+        activity={activePassModal?.activity}
+        dayNumber={activePassModal?.dayNum || 1}
+        stopNumber={activePassModal?.stopNum || 1}
       />
 
       <FlagModal
