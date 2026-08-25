@@ -669,164 +669,83 @@ export const DayScheduleCard = React.memo(function DayScheduleCard({
         onMouseEnter={() => handleHoverStop(stopNum)}
         onMouseLeave={() => handleHoverStop(null)}
         onClick={() => {
-          if (typeof window !== 'undefined' && window.innerWidth >= 768) {
-            handleSelectStop(isSelected ? null : stopNum);
-            handleHoverStop(stopNum);
-          }
+          handleSelectStop(isSelected ? null : stopNum);
+          handleHoverStop(stopNum);
         }}
-        className={`scroll-mt-40 w-full box-border rounded-2xl sm:rounded-3xl border transition-all duration-300 ease-out flex flex-col cursor-pointer select-none relative z-10 overflow-hidden bg-white
+        className={`scroll-mt-40 w-full box-border rounded-2xl border transition-all duration-200 ease-out flex items-center p-3 sm:p-3.5 gap-3 sm:gap-3.5 cursor-pointer select-none relative z-10 overflow-hidden bg-white group active:scale-[0.985]
           ${dragOverStopIdx === idx
             ? 'border-[#FF6B2C] border-2 bg-[#FFF8F5] sm:scale-[1.02] ring-4 ring-[#FF6B2C]/30 z-30'
             : draggedStopIdx === idx
               ? 'opacity-40 border-dashed border-[#FF6B2C] sm:scale-95'
               : isSelected
-                ? 'border-stone-200/50 sm:border-[#FF6B2C] sm:bg-[#FFF8F5] sm:scale-[1.01] z-20 sm:shadow-[0_8px_30px_rgba(255,107,44,0.12)]'
+                ? 'border-[#FF6B2C] bg-[#FFF9F6] shadow-[0_8px_24px_rgba(255,107,44,0.12)] ring-1 ring-[#FF6B2C]/40 z-20'
                 : isHovered || hoveredStopIdx === stopNum
-                  ? 'border-stone-200 shadow-[0_12px_40px_rgba(0,0,0,0.08)] sm:-translate-y-1 z-20'
-                  : 'border-stone-200/50 shadow-[0_4px_16px_rgba(0,0,0,0.04)] sm:hover:border-stone-200 sm:hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)]'
+                  ? 'border-stone-300 shadow-[0_8px_24px_rgba(0,0,0,0.06)] sm:-translate-y-0.5 z-20'
+                  : 'border-stone-200/70 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:border-stone-300 hover:shadow-[0_8px_20px_rgba(0,0,0,0.05)]'
         }`}
       >
-
-        {/* Card Body */}
-        <div className="flex flex-col gap-3 p-3.5 sm:p-4">
-          {/* Top Row: Thumbnail + Header info side-by-side */}
-          <div className="flex items-start gap-3">
-            {/* Square Thumbnail with Stop Number & Rating Overlay */}
-            <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden shrink-0 bg-stone-100 border border-stone-200/60 shadow-2xs group/thumb">
-              <img
-                src={getActivityThumbnail(act, itinerary?.destinationName || '', idx)}
-                alt={act.title}
-                className="w-full h-full object-cover transition-transform duration-300 sm:group-hover/thumb:scale-105"
-                loading="lazy"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-              <div className="w-full h-full flex items-center justify-center text-[#FF6B2C]/40 bg-gradient-to-br from-[#FFF5EE] via-[#FAF0E6] to-[#F5EBE1]">
-                {renderPremiumIcon(categoryStyle.icon, 28)}
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10 pointer-events-none" />
-              
-              {/* Stop Number Badge */}
-              <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shadow-md backdrop-blur-md transition-all ${isSelected ? 'bg-white text-[#FF6B2C] border border-[#FF6B2C]/30 sm:bg-[#EC6735] sm:text-white sm:ring-2 sm:ring-white/60' : 'bg-white text-[#FF6B2C] border border-[#FF6B2C]/30'}`}>
-                {stopNum}
-              </div>
-
-              {/* Star Rating Badge */}
-              <div className="absolute bottom-2 left-2 flex items-center gap-1 text-[10px] font-bold text-white drop-shadow-md bg-black/40 backdrop-blur-md px-1.5 py-0.5 rounded-md">
-                <Star size={9} className="fill-amber-400 text-amber-400" />
-                <span>{ratingData.rating}</span>
-              </div>
-            </div>
-
-            {/* Right Details Column */}
-            <div className="flex-1 min-w-0 flex flex-col justify-between self-stretch gap-1">
-              {/* Time + Category Pill */}
-              <div className="flex items-center gap-1.5 flex-wrap text-[11px] font-semibold">
-                <span className="text-stone-800 font-bold shrink-0">{act.time || '10:00 AM'}</span>
-                <span className="text-stone-300 text-[9px] shrink-0">·</span>
-                <span className="inline-flex items-center gap-1 bg-stone-100/90 text-stone-700 font-bold px-2 py-0.5 rounded-md border border-stone-200/60 capitalize">
-                  <span className="text-[#FF6B2C] shrink-0">{renderPremiumIcon(categoryStyle.icon, 11)}</span>
-                  <span>{categoryStyle.name.toLowerCase()}</span>
-                </span>
-              </div>
-
-              {/* Title */}
-              <h4 className="text-[15px] sm:text-base font-bold text-stone-900 leading-[1.25] tracking-tight line-clamp-2">
-                {act.title}
-              </h4>
-
-              {/* Meta Stats: Duration & Cost */}
-              <div className="flex items-center gap-2 text-[11px] font-semibold text-stone-500 flex-wrap">
-                {act.duration && (
-                  <div className="flex items-center gap-1">
-                    <Clock size={11} strokeWidth={2.5} className="text-[#FF6B2C]" />
-                    <span>{act.duration}</span>
-                  </div>
-                )}
-                {act.duration && <span className="text-stone-300 text-[8px]">•</span>}
-                <div className="flex items-center gap-1 text-emerald-700">
-                  <Banknote size={11} strokeWidth={2.5} />
-                  <span>{costInfo.title.replace('💰 ', '')}</span>
-                </div>
-              </div>
-            </div>
+        {/* Left: Square Thumbnail */}
+        <div className="relative w-18 h-18 sm:w-20 sm:h-20 rounded-xl overflow-hidden shrink-0 bg-stone-100 border border-stone-200/60 shadow-2xs group-hover:scale-102 transition-transform duration-300">
+          <img
+            src={getActivityThumbnail(act, itinerary?.destinationName || '', idx)}
+            alt={act.title}
+            className="w-full h-full object-cover"
+            loading="lazy"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+          <div className="w-full h-full flex items-center justify-center text-[#FF6B2C]/40 bg-gradient-to-br from-[#FFF5EE] via-[#FAF0E6] to-[#F5EBE1]">
+            {renderPremiumIcon(categoryStyle.icon, 24)}
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/15 pointer-events-none" />
+          
+          {/* Stop Number Badge */}
+          <div className={`absolute top-1.5 left-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shadow-sm backdrop-blur-md transition-all ${isSelected ? 'bg-[#FF6B2C] text-white' : 'bg-white text-stone-900 border border-stone-200/80'}`}>
+            {stopNum}
           </div>
 
-          {/* Description */}
-          {act.description && (
-            <p className="text-xs sm:text-[13px] text-stone-600 leading-relaxed font-normal">
-              {act.description}
-            </p>
-          )}
+          {/* Star Rating Badge */}
+          <div className="absolute bottom-1.5 left-1.5 flex items-center gap-0.5 text-[9px] font-bold text-white drop-shadow-md bg-black/50 backdrop-blur-md px-1.5 py-0.5 rounded">
+            <Star size={8} className="fill-amber-400 text-amber-400 shrink-0" />
+            <span>{ratingData.rating}</span>
+          </div>
+        </div>
 
-          {/* Badges & Actions Row */}
-          <div className="flex items-center justify-between flex-wrap gap-2 pt-0.5">
-            {/* Badges */}
-            <div className="flex items-center flex-wrap gap-1.5">
-              {overtourismInfo && (
-                <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-200/50">
-                  <AlertTriangle className="w-2.5 h-2.5 text-red-500" />
-                  <span>Peak crowds {overtourismInfo.peakHours}</span>
-                </span>
-              )}
-              {iconBadges.map((badge, bIdx) => (
-                <span key={bIdx} className="inline-flex items-center gap-1 text-[10px] font-bold text-[#1C1B1B] bg-white px-2 py-0.5 rounded-md border border-[#E6DFD5]/80 shadow-2xs">
-                  <span className="opacity-90">{renderPremiumIcon(badge.icon, 10)}</span>
-                  <span className="tracking-tight">{badge.text}</span>
-                </span>
-              ))}
-              <span className="inline-flex items-center gap-1 text-[9px] font-mono font-bold text-emerald-700 bg-emerald-50/60 px-2 py-0.5 rounded-md border border-emerald-500/20">
-                <ShieldCheck className="w-2.5 h-2.5 text-emerald-500" />
-                <span>VERIFIED</span>
-              </span>
-            </div>
-
-            {/* Voting Pill */}
-            <div className="flex items-center shrink-0 bg-[#F7F5F2] rounded-full border border-[#ECE8E2] shadow-2xs overflow-hidden ml-auto" onClick={(e) => e.stopPropagation()}>
-              <button onClick={() => handleVote(stopKey, 'up')} className={`flex items-center gap-1 pl-2 pr-1.5 py-1 hover:bg-[#FFF8F5] hover:text-[#FF6B2C] transition-colors ${voteData.userVote === 'up' ? 'bg-[#FFF8F5] text-[#FF6B2C]' : 'text-stone-500'}`}>
-                <ThumbsUp size={10} strokeWidth={2.5} className={voteData.userVote === 'up' ? 'fill-[#FF6B2C]/20' : ''} />
-                <span className="text-[10px] font-bold">{displayUp > 0 ? displayUp : ''}</span>
-              </button>
-              <div className="w-px h-3 bg-[#ECE8E2]" />
-              <button onClick={() => handleVote(stopKey, 'down')} className={`flex items-center px-1.5 py-1 hover:bg-stone-200 transition-colors ${voteData.userVote === 'down' ? 'bg-stone-200 text-stone-800' : 'text-stone-500'}`}>
-                <ThumbsDown size={10} strokeWidth={2.5} className={voteData.userVote === 'down' ? 'fill-stone-400/30' : ''} />
-              </button>
-              <div className="w-px h-3 bg-[#ECE8E2]" />
-              <button onClick={() => setActiveFlagTarget({ placeId: stopKey, placeTitle: act.title })} className="px-1.5 py-1 hover:bg-amber-50 hover:text-amber-600 transition-colors text-stone-400">
-                <Flag size={9} strokeWidth={2.5} />
-              </button>
-            </div>
+        {/* Right: Info Column */}
+        <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">
+          {/* Top Line: Time + Category + Duration */}
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-stone-500 flex-wrap">
+            <span className="text-stone-900 font-bold">{act.time || '10:00 AM'}</span>
+            <span className="text-stone-300 text-[8px]">•</span>
+            <span className="inline-flex items-center gap-1 text-stone-700 font-bold capitalize">
+              <span className="text-[#FF6B2C] shrink-0">{renderPremiumIcon(categoryStyle.icon, 11)}</span>
+              <span>{categoryStyle.name.toLowerCase()}</span>
+            </span>
+            {act.duration && (
+              <>
+                <span className="text-stone-300 text-[8px]">•</span>
+                <span>{act.duration}</span>
+              </>
+            )}
           </div>
 
+          {/* Title */}
+          <h4 className={`text-sm sm:text-[15px] font-bold leading-snug tracking-tight line-clamp-1 group-hover:text-[#FF6B2C] transition-colors ${isSelected ? 'text-[#FF6B2C]' : 'text-stone-900'}`}>
+            {act.title}
+          </h4>
 
-          {/* Alternative Activity if crowded */}
-          {overtourismInfo?.alternativeActivity && (
-            <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200/80 flex items-center justify-between gap-3 select-none" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center gap-2 text-amber-950">
-                <Compass className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                <div>
-                  <span className="text-[9px] font-mono font-bold uppercase text-amber-800 tracking-wider block">Less-Crowded Alt</span>
-                  <span className="text-xs font-bold text-amber-950 block">{overtourismInfo.alternativeActivity.title}</span>
-                </div>
-              </div>
-              <button type="button" onClick={() => handleSwapActivity(selectedDayIndex, idx, overtourismInfo.alternativeActivity)} className="px-3 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-all shrink-0 cursor-pointer shadow-2xs">Swap</button>
+          {/* Bottom Line: Cost + Map Cue */}
+          <div className="flex items-center justify-between gap-2 text-[11px] font-medium text-stone-500 pt-0.5">
+            <div className="flex items-center gap-1.5 text-emerald-700 font-semibold truncate">
+              <Banknote size={12} strokeWidth={2.5} className="shrink-0" />
+              <span className="truncate">{costInfo.title.replace('💰 ', '')}</span>
             </div>
-          )}
 
-          {/* AI Tip Footer */}
-          <div className="pt-2 border-t border-stone-100" onClick={(e) => e.stopPropagation()}>
-            <details className="group/tip cursor-pointer">
-              <summary className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#FF6B2C] hover:text-[#D95524] select-none">
-                <Lightbulb size={12} strokeWidth={2.5} className="text-[#FF6B2C]" />
-                <span>AI Insight &amp; Tip</span>
-                <span className="text-[9px] opacity-70 group-open/tip:rotate-180 transition-transform ml-0.5"><ChevronRight size={12} /></span>
-              </summary>
-              <div className="mt-2 p-3 rounded-xl bg-[#FFF8F5] border border-[#FF6B2C]/20 text-xs text-[#1C1B1B] font-medium leading-relaxed shadow-2xs flex items-start gap-2">
-                <Sparkles size={13} strokeWidth={2.5} className="text-[#FF6B2C] shrink-0 mt-0.5 opacity-90" />
-                <span>{aiInsightText.replace('✨ ', '')}</span>
-              </div>
-            </details>
+            <div className="flex items-center gap-1 text-[11px] font-bold text-stone-400 group-hover:text-[#FF6B2C] transition-colors shrink-0">
+              <span className="hidden sm:inline text-[10px] uppercase tracking-wider">Map</span>
+              <ChevronRight size={13} strokeWidth={2.5} className="group-hover:translate-x-0.5 transition-transform" />
+            </div>
           </div>
         </div>
       </div>
