@@ -9,7 +9,7 @@ import {
   Bell, Plane, Hotel, Building2, Bed, BedDouble, AlertCircle, TrendingDown, TrendingUp, Minus, Clock, MapPin, 
   Loader2, ArrowRight, CheckCircle2, Star, SlidersHorizontal, ExternalLink, Info, 
   Sparkles, Map, List, CheckSquare, Square, X, Layers, Scale, DollarSign, Compass,
-  WifiOff, Power
+  WifiOff, Power, Zap
 } from 'lucide-react';
 import { activateTracking, getTrackingState, clearUnreadDrops, searchFlights, searchHotels, saveTrackingSelection, saveTrackingState } from '../../lib/priceTrackingApi';
 import { getUserDisplayCurrency, formatCurrency, convertCurrency } from '../../lib/expenseApi';
@@ -26,16 +26,19 @@ function useDisplayCurrency() {
 }
 
 // Price Distribution Histogram Component
-function PriceDistributionBar({ items = [], type = 'flight', selectedId = null, isLoading = false }) {
+function PriceDistributionBar({ items = [], type = 'flight', selectedId = null, isLoading = false, activeFilter = null, onFilterChange = null }) {
   const displayCurrency = useDisplayCurrency();
   if (isLoading) {
     return (
-      <div className="bg-white/60 border border-[#E6DFD5] rounded-2xl p-3.5 mb-5 animate-pulse">
-        <div className="flex items-center justify-between mb-2">
-          <div className="h-3.5 w-32 bg-[#E6DFD5]/70 rounded" />
-          <div className="h-3.5 w-24 bg-[#E6DFD5]/70 rounded" />
+      <div className="bg-white rounded-3xl p-6 sm:p-7 mb-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] border border-[#EAE4DB]/50 animate-pulse">
+        <div className="flex items-center justify-between mb-8">
+          <div className="h-4 w-40 bg-[#E6DFD5]/60 rounded-full" />
+          <div className="flex gap-4">
+            <div className="h-3 w-16 bg-[#E6DFD5]/60 rounded-full" />
+            <div className="h-3 w-16 bg-[#E6DFD5]/60 rounded-full" />
+          </div>
         </div>
-        <div className="h-7 bg-[#E6DFD5]/40 rounded-xl w-full" />
+        <div className="h-24 bg-[#E6DFD5]/30 rounded-2xl w-full" />
       </div>
     );
   }
@@ -59,63 +62,134 @@ function PriceDistributionBar({ items = [], type = 'flight', selectedId = null, 
   });
 
   const maxCount = Math.max(...buckets.map(b => b.count), 1);
+  const bucketWidth = range / bucketCount;
 
   return (
-    <div className="bg-white/80 backdrop-blur-xs border border-[#E6DFD5] rounded-2xl p-4 mb-5 shadow-xs">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs mb-3 gap-2 sm:gap-0">
-        <span className="font-bold text-[#1E1C1A] flex items-center gap-1.5">
-          <DollarSign className="w-3.5 h-3.5 text-[#FF6B2C]" />
-          <span>Price Distribution ({items.length} {type}s)</span>
-        </span>
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[10px] sm:text-[11px] font-medium text-[#7A7268]">
-          <span className="bg-[#FAF6F0] px-1.5 py-0.5 rounded border border-[#E6DFD5]">Min: <strong className="text-[#1E1C1A]">{formatCurrency(convertCurrency(minPrice, 'USD', displayCurrency), displayCurrency)}</strong></span>
-          <span className="bg-[#FAF6F0] px-1.5 py-0.5 rounded border border-[#E6DFD5]">Avg: <strong className="text-[#1E1C1A]">{formatCurrency(convertCurrency(avgPrice, 'USD', displayCurrency), displayCurrency)}</strong></span>
-          <span className="bg-[#FAF6F0] px-1.5 py-0.5 rounded border border-[#E6DFD5]">Max: <strong className="text-[#1E1C1A]">{formatCurrency(convertCurrency(maxPrice, 'USD', displayCurrency), displayCurrency)}</strong></span>
+    <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-7 mb-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] border border-[#EAE4DB]/50 relative group/graph">
+      
+      {/* Header & Stats */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-10 gap-3 sm:gap-0 relative z-20">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100/50 shrink-0">
+            <DollarSign className="w-4 h-4 text-emerald-500" />
+          </div>
+          <div className="flex flex-col">
+            <span className="font-semibold text-[#1E1C1A] text-[14px] sm:text-[15px] leading-none">Price Distribution</span>
+            <span className="text-[#A89F91] text-[11px] sm:text-xs font-medium mt-1">Found {items.length} {type}s</span>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-5 text-[11px] sm:text-xs font-medium text-[#7A7268]">
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_4px_rgba(52,211,153,0.5)] shrink-0"></span>
+            Min: <span className="text-[#1E1C1A]">{formatCurrency(convertCurrency(minPrice, 'USD', displayCurrency), displayCurrency)}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#D5CBBF] shrink-0"></span>
+            Avg: <span className="text-[#1E1C1A]">{formatCurrency(convertCurrency(avgPrice, 'USD', displayCurrency), displayCurrency)}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-400 shadow-[0_0_4px_rgba(251,113,133,0.5)] shrink-0"></span>
+            Max: <span className="text-[#1E1C1A]">{formatCurrency(convertCurrency(maxPrice, 'USD', displayCurrency), displayCurrency)}</span>
+          </div>
         </div>
       </div>
 
-      {/* Histogram Bars */}
-      <div className="flex items-end gap-1 sm:gap-1.5 h-16 w-full px-1 pt-2">
+      {/* Histogram Area */}
+      <div className="relative h-20 sm:h-32 w-full flex items-end gap-1 mt-2">
+        
+        {/* Subtle Background Grid */}
+        <div className="absolute inset-0 flex flex-col justify-between pointer-events-none z-0">
+          <div className="w-full h-px bg-gradient-to-r from-transparent via-[#E6DFD5]/40 to-transparent"></div>
+          <div className="w-full h-px bg-gradient-to-r from-transparent via-[#E6DFD5]/40 to-transparent"></div>
+          <div className="w-full h-px bg-gradient-to-r from-transparent via-[#E6DFD5]/40 to-transparent"></div>
+        </div>
+        
+        {/* Sleek Average Line */}
+        {(() => {
+          const avgPos = Math.min(100, Math.max(0, ((avgPrice - minPrice) / range) * 100));
+          return (
+            <div 
+              className="absolute top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-[#D5CBBF] to-transparent z-0 pointer-events-none transition-all duration-500"
+              style={{ left: `calc(${avgPos}%)` }}
+            >
+              <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-white border border-[#E6DFD5] text-[#A89F91] text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm tracking-wider">
+                AVG
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* The Bars */}
         {buckets.map((bucket, bIdx) => {
-          const heightPct = Math.max(8, Math.round((bucket.count / maxCount) * 100));
+          const heightPct = bucket.count === 0 ? 0 : Math.max(12, Math.round((bucket.count / maxCount) * 100));
           const hasSelected = bucket.items.some(it => it.id === selectedId);
           const isMinBucket = bucket.items.some(it => it.price === minPrice);
+          const bucketMin = minPrice + (bIdx * bucketWidth);
+          const bucketMax = bucketMin + bucketWidth;
+          const isActiveFilter = activeFilter && activeFilter.min === bucketMin && activeFilter.max === bucketMax;
 
           return (
             <div 
               key={bIdx} 
-              className="flex-1 flex flex-col items-center group relative cursor-pointer h-full justify-end"
-              title={`${bucket.count} option(s) in this range`}
+              className="flex-1 flex flex-col items-center group relative h-full justify-end z-10"
+              onClick={() => {
+                if (bucket.count > 0 && onFilterChange) {
+                  if (isActiveFilter) {
+                    onFilterChange(null);
+                  } else {
+                    onFilterChange({ min: bucketMin, max: bucketMax });
+                  }
+                }
+              }}
             >
-              <motion.div 
-                initial={{ height: '0%', opacity: 0 }}
-                animate={{ height: `${heightPct}%`, opacity: 1 }}
-                transition={{ duration: 0.6, delay: bIdx * 0.04, type: "spring", stiffness: 200, damping: 20 }}
-                className={`w-full rounded-t-md transition-colors duration-300 ${
-                  hasSelected 
-                    ? 'bg-gradient-to-t from-[#FF6B2C] to-[#ff8c5a] shadow-[0_0_12px_rgba(255,107,44,0.4)] border-t border-[#FF6B2C]' 
-                    : isMinBucket 
-                    ? 'bg-gradient-to-t from-emerald-500 to-emerald-400 hover:brightness-110 shadow-[0_0_8px_rgba(16,185,129,0.3)] border-t border-emerald-400' 
-                    : 'bg-gradient-to-t from-[#E6DFD5] to-[#F0EAE1] hover:from-[#D5CBBF] hover:to-[#E6DFD5] border-t border-[#D5CBBF]'
-                }`}
-              />
+              {bucket.count > 0 ? (
+                <motion.div 
+                  initial={{ height: '0%', opacity: 0 }}
+                  animate={{ height: `${heightPct}%`, opacity: 1 }}
+                  whileHover={{ scaleY: 1.05, filter: "brightness(1.05)" }}
+                  transition={{ duration: 0.6, delay: bIdx * 0.04, type: "spring", stiffness: 200, damping: 20 }}
+                  className={`w-full rounded-t-[16px] transition-all duration-300 origin-bottom cursor-pointer border-b-0 ${
+                    isActiveFilter
+                      ? 'bg-gradient-to-t from-[#FF6B2C] to-[#FF8C5A] shadow-[0_4px_16px_rgba(255,107,44,0.35)]'
+                      : hasSelected 
+                      ? 'bg-[#FF6B2C]' 
+                      : isMinBucket 
+                      ? 'bg-emerald-400' 
+                      : 'bg-[#EAE4DB] group-hover:bg-[#D5CBBF]'
+                  } ${!isActiveFilter && activeFilter ? 'opacity-30 grayscale-[50%]' : 'opacity-100'}`}
+                />
+              ) : (
+                <div className={`w-full h-[3px] rounded-full bg-[#F0EBE1] mb-[1px] ${!isActiveFilter && activeFilter ? 'opacity-30' : 'opacity-100'}`} />
+              )}
 
-              {/* Tooltip on hover */}
-              <div className="absolute bottom-full mb-1.5 hidden group-hover:flex flex-col items-center z-10">
-                <div className="bg-[#1E1C1A] text-white text-[10px] font-mono px-2.5 py-1 rounded-md shadow-lg whitespace-nowrap">
-                  {bucket.count} option{bucket.count !== 1 ? 's' : ''}
+              {/* Rich Tooltip on hover */}
+              {bucket.count > 0 && (
+                <div className="absolute bottom-full mb-3 hidden group-hover:flex flex-col items-center z-50 pointer-events-none">
+                  <div className="bg-[#1C1B1B] text-white p-3 rounded-2xl shadow-xl w-max min-w-[150px] border border-white/10 backdrop-blur-xl">
+                    <div className="text-[10px] text-[#A89F91] font-medium mb-2 uppercase tracking-wider flex justify-between gap-4 border-b border-white/10 pb-2">
+                      <span>{formatCurrency(convertCurrency(bucketMin, 'USD', displayCurrency), displayCurrency)} - {formatCurrency(convertCurrency(bucketMax, 'USD', displayCurrency), displayCurrency)}</span>
+                      <span className="text-[#FF6B2C] font-bold">{bucket.count} {type}{bucket.count > 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="space-y-1.5 mt-2 max-h-[120px] overflow-hidden">
+                      {bucket.items.slice(0, 3).map(it => (
+                        <div key={it.id} className="text-[11px] font-medium flex items-center justify-between gap-4 bg-white/5 px-2.5 py-1.5 rounded-lg">
+                          <span className="truncate max-w-[110px] text-[#FAF6F0]">{type === 'flight' ? (it.airline || 'Flight') : it.name}</span>
+                          <span className="font-mono text-emerald-400">{formatCurrency(convertCurrency(it.price, 'USD', displayCurrency), displayCurrency)}</span>
+                        </div>
+                      ))}
+                      {bucket.count > 3 && (
+                        <div className="text-[9.5px] text-[#A89F91] text-center pt-1 italic font-medium">
+                          + {bucket.count - 3} more options
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-[#1C1B1B]" />
                 </div>
-                <div className="w-0 h-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-4 border-t-[#1E1C1A]" />
-              </div>
+              )}
             </div>
           );
         })}
-      </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] text-[#7A7268] font-mono mt-2 border-t border-[#E6DFD5]/50 pt-2">
-        <span className="text-emerald-700 font-bold">Low: {formatCurrency(convertCurrency(minPrice, 'USD', displayCurrency), displayCurrency)}</span>
-        <span className="hidden sm:inline">Spread: {formatCurrency(convertCurrency(maxPrice - minPrice, 'USD', displayCurrency), displayCurrency)}</span>
-        <span>High: {formatCurrency(convertCurrency(maxPrice, 'USD', displayCurrency), displayCurrency)}</span>
       </div>
     </div>
   );
@@ -608,7 +682,8 @@ export default function PriceTracker({
   const [airportActiveIndex, setAirportActiveIndex] = useState(-1);
   const [airportRegionFilter, setAirportRegionFilter] = useState('all');
   const [error, setError] = useState(null);
-
+  const [flightPriceFilter, setFlightPriceFilter] = useState(null);
+  const [hotelPriceFilter, setHotelPriceFilter] = useState(null);
   useEffect(() => {
     if (config.origin && airportSearchInput !== config.origin) {
       setAirportSearchInput(config.origin);
@@ -805,9 +880,9 @@ export default function PriceTracker({
     setIsAnimatingStart(false);
     setError(null);
     try {
-      const state = await activateTracking(tripId, destinationName, {
+      const state = await activateTracking(tripId, {
         startDate,
-        ...config
+        config
       });
       setTrackingState(state);
     } catch (err) {
@@ -1017,8 +1092,9 @@ export default function PriceTracker({
       return hScore < bestScore ? h.id : best;
     }, null) : null;
 
-    const sortedFlights = [...flights]
-      .filter(f => flightStops === 'any' ? true : flightStops === 'nonstop' ? f.stops === 0 : f.stops === 1)
+    const baseFlights = [...flights].filter(f => flightStops === 'any' ? true : flightStops === 'nonstop' ? f.stops === 0 : f.stops === 1);
+    const sortedFlights = [...baseFlights]
+      .filter(f => !flightPriceFilter || (f.price >= flightPriceFilter.min && f.price <= flightPriceFilter.max))
       .sort((a, b) => {
         if (flightSort === 'price') return a.price - b.price;
         if (flightSort === 'duration') return (a.durationMinutes || 0) - (b.durationMinutes || 0);
@@ -1026,8 +1102,9 @@ export default function PriceTracker({
         return 0;
       });
 
-    const sortedHotels = [...hotels]
-      .filter(h => hotelRating === 'any' ? true : h.rating >= parseInt(hotelRating))
+    const baseHotels = [...hotels].filter(h => hotelRating === 'any' ? true : h.rating >= parseInt(hotelRating));
+    const sortedHotels = [...baseHotels]
+      .filter(h => !hotelPriceFilter || (h.price >= hotelPriceFilter.min && h.price <= hotelPriceFilter.max))
       .sort((a, b) => {
         if (hotelSort === 'price') return a.price - b.price;
         if (hotelSort === 'rating') return b.rating - a.rating;
@@ -1291,10 +1368,12 @@ export default function PriceTracker({
 
                   {/* Requirement 1: Price Distribution Bar */}
                   <PriceDistributionBar 
-                    items={sortedFlights} 
+                    items={baseFlights} 
                     type="flight" 
                     selectedId={trackingState.selectedFlight?.id} 
                     isLoading={isLoadingResults} 
+                    activeFilter={flightPriceFilter}
+                    onFilterChange={setFlightPriceFilter}
                   />
 
                   {isLoadingResults ? (
@@ -1327,16 +1406,16 @@ export default function PriceTracker({
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.25, delay: index * 0.03 }}
-                            className={`relative rounded-2xl p-4 sm:p-5 transition-all duration-200 ${
+                            className={`relative rounded-[20px] sm:rounded-3xl p-3.5 sm:p-6 transition-all duration-300 ${
                               isSelected
-                                ? 'bg-[#FFF9F5] border-2 border-[#FF6B2C] shadow-md ring-2 ring-[#FF6B2C]/20'
+                                ? 'bg-white border-2 border-emerald-500 shadow-xl ring-4 ring-emerald-500/10'
                                 : isBestValue
-                                ? 'bg-[#FFFBF7] border-2 border-[#FF6B2C]/70 shadow-sm hover:-translate-y-0.5 hover:shadow-md'
-                                : 'bg-white border border-[#E6DFD5] hover:border-[#FF6B2C]/40 hover:-translate-y-0.5 hover:shadow-md'
+                                ? 'bg-white border border-[#E5E7EB] shadow-lg hover:-translate-y-1 hover:shadow-xl hover:border-[#D1D5DB]'
+                                : 'bg-white border border-[#E5E7EB] shadow-sm hover:-translate-y-1 hover:shadow-xl hover:border-[#D1D5DB]'
                             }`}
                           >
                             {/* Top Badges & Compare Row */}
-                            <div className="flex items-center justify-between gap-2 mb-2.5">
+                            <div className="flex items-start sm:items-center justify-between gap-2 mb-3 sm:mb-4">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 {isBestValue && (
                                   <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider bg-[#FF6B2C] text-white shadow-2xs">
@@ -1390,11 +1469,13 @@ export default function PriceTracker({
                                   <span className="truncate">{flight.airline}</span>
                                   <span className="text-[10px] font-mono text-[#7A7268] bg-[#F5F0E8] px-1.5 py-0.5 rounded shrink-0">{flight.flightNumber}</span>
                                 </div>
-                                <div className="text-xs font-medium text-[#7A7268] mt-0.5 flex flex-wrap items-center gap-1.5 sm:gap-2">
-                                  <span className="font-semibold text-[#1E1C1A]">{flight.departureTime} – {flight.arrivalTime}</span>
-                                  <span>&middot;</span>
-                                  <span>{flight.duration}</span>
-                                  <span>&middot;</span>
+                                <div className="text-[11.5px] sm:text-xs font-medium text-[#7A7268] mt-1 flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="font-semibold text-[#1E1C1A]">{flight.departureTime} – {flight.arrivalTime}</span>
+                                    <span>&middot;</span>
+                                    <span>{flight.duration}</span>
+                                  </div>
+                                  <span className="hidden sm:inline">&middot;</span>
                                   <span className={flight.stops === 0 ? 'text-emerald-700 font-bold' : 'text-[#4A443E]'}>
                                     {flight.stops === 0 ? 'Nonstop' : `1 Stop ${flight.via ? `via ${flight.via}` : ''}`}
                                   </span>
@@ -1403,26 +1484,26 @@ export default function PriceTracker({
                             </div>
 
                             {/* Bottom Price & Select Action Row */}
-                            <div className="pt-3 border-t border-[#E6DFD5]/70 mt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                              <div className="text-left">
-                                <div className="text-xl sm:text-2xl font-serif font-black text-[#1E1C1A] leading-tight">{formatCurrency(convertCurrency(flight.price, 'USD', displayCurrency), displayCurrency)}</div>
-                                <div className="text-[9.5px] sm:text-[10px] text-[#7A7268] uppercase font-bold tracking-wider">Round Trip Total</div>
+                            <div className="pt-3 sm:pt-5 border-t border-[#F3F4F6] mt-3 sm:mt-5 flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4">
+                              <div className="flex flex-col">
+                                <div className="text-[26px] sm:text-4xl font-sans font-black text-[#111827] tracking-tighter leading-none">{formatCurrency(convertCurrency(flight.price, 'USD', displayCurrency), displayCurrency)}</div>
+                                <div className="text-[11px] sm:text-xs font-bold text-[#6B7280] uppercase tracking-wider mt-1.5">Round Trip Total</div>
                               </div>
                               {isSelected ? (
                                 <button 
                                   onClick={() => handleClearSelection('flight')} 
-                                  className="w-full sm:w-auto bg-[#FF6B2C] hover:bg-[#e0591e] active:scale-[0.98] text-white px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                                  className="w-full sm:w-[150px] bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-3.5 rounded-xl text-[14px] font-bold flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(5,150,105,0.3)] transition-all cursor-pointer"
                                 >
-                                  <CheckCircle2 className="w-4 h-4" /> 
-                                  <span>Selected Flight</span>
+                                  <CheckCircle2 className="w-4.5 h-4.5" /> 
+                                  <span>Selected</span>
                                 </button>
                               ) : (
                                 <button 
                                   onClick={() => handleSelectFlight(flight)} 
-                                  className="group/btn relative w-full sm:w-auto overflow-hidden bg-[#1E1C1A] hover:bg-[#FF6B2C] active:scale-[0.98] text-white px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                                  className="group/btn w-full sm:w-[150px] bg-[#111827] hover:bg-black active:scale-95 text-white py-3.5 rounded-xl text-[14px] font-bold flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(0,0,0,0.25)] transition-all cursor-pointer"
                                 >
                                   <span>Select Flight</span>
-                                  <ArrowRight className="w-3.5 h-3.5 text-[#FF6B2C] group-hover/btn:text-white transition-colors" />
+                                  <ArrowRight className="w-4 h-4 text-white/70 group-hover/btn:text-white group-hover/btn:translate-x-1 transition-all" />
                                 </button>
                               )}
                             </div>
@@ -1705,12 +1786,14 @@ export default function PriceTracker({
                       />
                     ) : (
                       <>
-                        {/* Requirement 1: Price Distribution Bar for Hotels */}
+                        {/* Requirement 1: Price Distribution Bar */}
                         <PriceDistributionBar 
-                          items={sortedHotels} 
+                          items={baseHotels} 
                           type="hotel" 
                           selectedId={trackingState.selectedHotel?.id} 
                           isLoading={isLoadingResults} 
+                          activeFilter={hotelPriceFilter}
+                          onFilterChange={setHotelPriceFilter}
                         />
 
                         {isLoadingResults ? (
@@ -1745,22 +1828,22 @@ export default function PriceTracker({
                                   initial={{ opacity: 0, y: 10 }}
                                   animate={{ opacity: 1, y: 0 }}
                                   transition={{ duration: 0.25, delay: index * 0.03 }}
-                                  className={`relative rounded-2xl sm:rounded-3xl overflow-hidden transition-all duration-200 ${
+                                  className={`group relative rounded-2xl sm:rounded-[28px] overflow-hidden flex flex-col sm:flex-row transition-all duration-300 ${
                                     isSelected
-                                      ? 'bg-[#FFF9F5] border-2 border-[#FF6B2C] shadow-md ring-2 ring-[#FF6B2C]/20'
+                                      ? 'bg-white border-2 border-emerald-500 shadow-xl ring-4 ring-emerald-500/10'
                                       : isBestValue
-                                      ? 'bg-[#FFFBF7] border-2 border-[#FF6B2C]/70 shadow-sm hover:-translate-y-0.5 hover:shadow-md'
-                                      : 'bg-white border border-[#E6DFD5] hover:border-[#FF6B2C]/40 hover:-translate-y-0.5 hover:shadow-md'
+                                      ? 'bg-white border border-[#E5E7EB] shadow-lg hover:shadow-xl hover:-translate-y-1 hover:border-[#D1D5DB]'
+                                      : 'bg-white border border-[#E5E7EB] shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-[#D1D5DB]'
                                   }`}
                                 >
                                   {/* Hero Photo with Floating Badges & Compare Action */}
-                                  <div className="relative w-full h-40 sm:h-48 bg-[#F5F0E8] overflow-hidden">
+                                  <div className="relative w-full sm:w-[42%] md:w-[38%] h-36 sm:h-auto sm:min-h-[240px] bg-[#F3F4F6] overflow-hidden shrink-0">
                                     <Image 
                                       src={hotel.image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&h=400&fit=crop'} 
                                       alt={hotel.name} 
                                       fill
-                                      className="object-cover transition-transform duration-500 hover:scale-105"
-                                      sizes="(max-width: 768px) 100vw, 33vw"
+                                      className="object-cover transition-transform duration-700 group-hover:scale-110"
+                                      sizes="(max-width: 768px) 100vw, 40vw"
                                       unoptimized
                                       onError={(e) => {
                                         e.target.src = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&h=400&fit=crop';
@@ -1768,90 +1851,113 @@ export default function PriceTracker({
                                     />
 
                                     {/* Ambient subtle vignette gradient */}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-black/35 pointer-events-none" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/40 pointer-events-none transition-opacity duration-300 group-hover:opacity-90" />
 
-                                    {/* Floating Badges on Top-Left */}
-                                    <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap z-10 max-w-[70%]">
+                                    {/* Badges */}
+                                    <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
                                       {isBestValue && (
-                                        <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-[#FF6B2C] text-white shadow-md">
-                                          ★ Best Value
+                                        <span className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-rose-600 text-white shadow-lg backdrop-blur-md">
+                                          Top Pick
                                         </span>
                                       )}
                                       {isCheapest && !isBestValue && (
-                                        <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-600 text-white shadow-md">
-                                          Cheapest
-                                        </span>
-                                      )}
-                                      {hotel.trend && (
-                                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/95 text-[#1E1C1A] backdrop-blur-md shadow-md flex items-center gap-1">
-                                          {hotel.trend.type === 'down' ? <TrendingDown className="w-3 h-3 text-emerald-600" /> : hotel.trend.type === 'up' ? <TrendingUp className="w-3 h-3 text-amber-600" /> : <Minus className="w-3 h-3 text-stone-500" />}
-                                          <span>{hotel.trend.text}</span>
+                                        <span className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-emerald-600 text-white shadow-lg backdrop-blur-md">
+                                          Best Price
                                         </span>
                                       )}
                                     </div>
 
-                                    {/* Floating Compare Button on Top-Right */}
+                                    {/* Floating Compare Button */}
                                     <button 
                                       onClick={() => toggleHotelShortlist(hotel.id)}
-                                      className="absolute top-3 right-3 z-10 bg-black/60 hover:bg-black/85 active:scale-[0.96] backdrop-blur-md text-white px-3 py-1 rounded-full text-[11px] font-mono font-bold flex items-center gap-1.5 border border-white/20 transition-all cursor-pointer shadow-md"
+                                      className={`absolute top-4 right-4 z-10 backdrop-blur-md px-3 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-2 border transition-all cursor-pointer shadow-lg ${
+                                        isShortlisted 
+                                          ? 'bg-white text-[#111827] border-white' 
+                                          : 'bg-black/40 hover:bg-black/60 text-white border-white/20'
+                                      }`}
                                       title="Compare hotel"
                                     >
-                                      {isShortlisted ? <CheckSquare className="w-3.5 h-3.5 text-[#FF6B2C]" /> : <Square className="w-3.5 h-3.5 text-white/90" />}
+                                      {isShortlisted ? <CheckSquare className="w-3.5 h-3.5" /> : <Square className="w-3.5 h-3.5" />}
                                       <span>Compare</span>
                                     </button>
+                                    
+                                    {/* Bottom Left Info on Image */}
+                                    {hotel.trend && (
+                                      <div className="absolute bottom-4 left-4 z-10 flex items-center gap-1.5 bg-black/50 backdrop-blur-md border border-white/20 text-white px-3 py-1.5 rounded-lg text-[11px] font-semibold shadow-md">
+                                        {hotel.trend.type === 'down' ? <TrendingDown className="w-3.5 h-3.5 text-emerald-400" /> : hotel.trend.type === 'up' ? <TrendingUp className="w-3.5 h-3.5 text-rose-400" /> : <Minus className="w-3.5 h-3.5 text-stone-300" />}
+                                        <span>{hotel.trend.text}</span>
+                                      </div>
+                                    )}
                                   </div>
 
                                   {/* Hotel Details Content */}
-                                  <div className="p-4 sm:p-5 space-y-2.5">
-                                    {/* Hotel Name & Star Rating */}
-                                    <div className="flex items-start justify-between gap-2">
-                                      <h4 className="text-base sm:text-lg font-serif font-black text-[#1E1C1A] leading-tight">
-                                        {hotel.name}
-                                      </h4>
-                                      <div className="flex items-center gap-1 bg-amber-50 text-amber-900 px-2 py-0.5 rounded-md border border-amber-200/80 font-bold text-xs shrink-0">
-                                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /> {hotel.rating}.0
+                                  <div className="p-4 sm:p-6 flex-1 flex flex-col justify-between bg-white relative">
+                                    
+                                    {/* Top Area: Title, Rating, Location */}
+                                    <div className="space-y-3 sm:space-y-4">
+                                      <div className="flex items-start justify-between gap-3">
+                                        <div className="space-y-1 sm:space-y-1.5">
+                                          <h4 className="text-[18px] sm:text-[20px] font-extrabold text-[#111827] leading-tight tracking-tight">
+                                            {hotel.name}
+                                          </h4>
+                                          <div className="flex items-center gap-1.5 text-[13px] font-medium text-[#6B7280]">
+                                            <MapPin className="w-3.5 h-3.5 text-[#9CA3AF]" />
+                                            <span>{hotel.distance} to city center</span>
+                                          </div>
+                                        </div>
+                                        
+                                        {/* Psychological Anchor: Strong Social Proof */}
+                                        <div className="flex flex-col items-end shrink-0">
+                                          <div className="flex items-center gap-1.5 bg-[#F0FDF4] text-[#166534] px-2.5 py-1 rounded-lg font-bold text-sm border border-[#DCFCE7] shadow-sm">
+                                            <span className="leading-none">{hotel.rating}.0</span>
+                                            <Star className="w-3.5 h-3.5 fill-[#166534] text-[#166534] -mt-0.5" />
+                                          </div>
+                                          <span className="text-[10px] font-bold text-[#166534] mt-1.5 uppercase tracking-wider">Exceptional</span>
+                                        </div>
+                                      </div>
+
+                                      {/* Trust & Convenience Indicator */}
+                                      <div className="inline-flex items-center gap-2 text-[11.5px] sm:text-[12.5px] text-[#0F766E] bg-[#F0FDFA] px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl border border-[#CCFBF1] font-medium shadow-sm">
+                                        <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-[#0F766E]" />
+                                        <span><strong>{nearbyStopsCount} of {totalItineraryStops} stops</strong> within a 15-min walk</span>
                                       </div>
                                     </div>
 
-                                    {/* Distance & Itinerary Proximity Pill */}
-                                    <div className="flex flex-wrap items-center gap-2 text-xs text-[#7A7268]">
-                                      <span className="font-medium text-[#7A7268]">{hotel.distance}</span>
-                                      <span>&middot;</span>
-                                      <span className="text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-md font-medium inline-flex items-center gap-1">
-                                        <MapPin className="w-3 h-3 text-emerald-700 shrink-0" />
-                                        <span><strong>{nearbyStopsCount} of {totalItineraryStops}</strong> stops within 15 min</span>
-                                      </span>
-                                    </div>
-
-                                    {/* Bottom Price & Select Action Row */}
-                                    <div className="pt-3 border-t border-[#E6DFD5] mt-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                      <div className="text-left">
-                                        <div className="flex items-baseline gap-1">
-                                          <span className="text-xl sm:text-2xl font-serif font-black text-[#1E1C1A] leading-tight">
+                                    {/* Bottom Area: Price & Action */}
+                                    <div className="mt-4 pt-4 sm:mt-5 sm:pt-5 border-t border-[#F3F4F6] flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4">
+                                      <div className="flex flex-col">
+                                        {/* Subtle Urgency or Anchor */}
+                                        {isBestValue && (
+                                          <span className="text-[11px] font-bold text-rose-600 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                                            <TrendingDown className="w-3.5 h-3.5" /> Price dropped 12%
+                                          </span>
+                                        )}
+                                        <div className="flex items-baseline gap-1.5">
+                                          <span className="text-3xl sm:text-4xl font-black text-[#111827] tracking-tighter leading-none">
                                             {formatCurrency(convertCurrency(hotel.price, 'USD', displayCurrency), displayCurrency)}
                                           </span>
-                                          <span className="text-[10.5px] sm:text-xs text-[#7A7268] font-bold">/night</span>
+                                          <span className="text-[13px] font-bold text-[#6B7280]">/ night</span>
                                         </div>
-                                        <div className="text-[10.5px] sm:text-xs font-medium text-[#7A7268] mt-0.5">
-                                          <span className="font-bold text-[#1E1C1A]">{formatCurrency(convertCurrency(hotel.price * stayNights, 'USD', displayCurrency), displayCurrency)}</span> total ({stayNights} nights)
+                                        <div className="text-[12.5px] font-medium text-[#6B7280] mt-1.5">
+                                          <strong className="text-[#374151]">{formatCurrency(convertCurrency(hotel.price * stayNights, 'USD', displayCurrency), displayCurrency)}</strong> total for {stayNights} nights
                                         </div>
                                       </div>
 
                                       {isSelected ? (
                                         <button 
                                           onClick={() => handleClearSelection('hotel')} 
-                                          className="w-full sm:w-auto bg-[#FF6B2C] hover:bg-[#e0591e] active:scale-[0.98] text-white px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                                          className="w-full sm:w-[150px] bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-3.5 rounded-xl text-[14px] font-bold flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(5,150,105,0.3)] transition-all cursor-pointer"
                                         >
-                                          <CheckCircle2 className="w-4 h-4" /> 
+                                          <CheckCircle2 className="w-4.5 h-4.5" /> 
                                           <span>Selected Stay</span>
                                         </button>
                                       ) : (
                                         <button 
                                           onClick={() => handleSelectHotel(hotel)} 
-                                          className="group/btn relative w-full sm:w-auto overflow-hidden bg-[#1E1C1A] hover:bg-[#FF6B2C] active:scale-[0.98] text-white px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                                          className="group/btn w-full sm:w-[150px] bg-[#111827] hover:bg-black active:scale-95 text-white py-3.5 rounded-xl text-[14px] font-bold flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(0,0,0,0.25)] transition-all cursor-pointer"
                                         >
                                           <span>Select Hotel</span>
-                                          <ArrowRight className="w-3.5 h-3.5 text-[#FF6B2C] group-hover/btn:text-white transition-colors" />
+                                          <ArrowRight className="w-4 h-4 text-white/70 group-hover/btn:text-white group-hover/btn:translate-x-1 transition-all" />
                                         </button>
                                       )}
                                     </div>
@@ -1887,115 +1993,93 @@ export default function PriceTracker({
                   animate={{ y: 0, x: "-50%", opacity: 1, scale: 1 }}
                   exit={{ y: 100, x: "-50%", opacity: 0, scale: 0.92 }}
                   transition={{ type: "spring", stiffness: 450, damping: 28 }}
-                  className="fixed bottom-20 sm:bottom-8 left-1/2 z-[9999] pointer-events-auto select-none max-w-[92vw] sm:max-w-none"
+                  className="fixed bottom-[110px] sm:bottom-8 left-1/2 z-[9999] pointer-events-auto select-none max-w-[92vw] sm:max-w-none"
                 >
-                  {/* Luxury Obsidian Flight Radar Capsule with Group Hover Reactions */}
-                  <div className="group/dock bg-[#1E1C1A]/95 text-white pl-4 pr-2.5 py-2.5 rounded-full shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.15)] border border-white/15 hover:border-[#FF6B2C]/50 flex items-center gap-3.5 backdrop-blur-2xl transition-all duration-300">
+                  {/* Minimal Premium Compare Banner */}
+                  <div className="bg-[#181614]/90 backdrop-blur-xl border border-white/10 text-white pl-3 pr-2 py-2 rounded-full shadow-2xl flex items-center gap-4 transition-all duration-300">
                     
-                    {/* Signature TripWise Animated Flight Radar Badge with Hover Color Shift */}
+                    {/* Animated Badge (Clean & Minimal) */}
                     <div className="flex items-center gap-3">
-                      <div className="relative w-9 h-9 rounded-2xl bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] p-0.5 shadow-md shadow-[#FF6B2C]/35 group-hover/dock:shadow-[0_0_20px_rgba(255,107,44,0.6)] group-hover/dock:scale-105 flex items-center justify-center shrink-0 transition-all duration-300">
-                        {/* Core Disc (White -> Orange on Hover) */}
-                        <div className="w-full h-full rounded-full bg-white group-hover/dock:bg-[#FF6B2C] flex items-center justify-center relative overflow-hidden transition-colors duration-300">
-                          {/* Revolving Dashed Flight Orbit (Orange -> White on Hover) */}
-                          <motion.div 
-                            animate={{ rotate: 360 }}
-                            transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
-                            className="absolute inset-0.75 rounded-full border-[1.5px] border-dashed border-[#FF6B2C]/80 group-hover/dock:border-white/90 transition-colors duration-300"
-                          />
-                          
-                          {/* Animated Coral Center Airplane or Hotel */}
-                          <motion.div
-                            animate={{ 
-                              y: [-0.6, 0.6, -0.6], 
-                              x: isFlight ? [-0.4, 0.4, -0.4] : [0, 0, 0],
-                              scale: isFlight ? [1, 1, 1] : [0.98, 1.04, 0.98],
-                              rotate: isFlight ? [0, 3, 0] : [0, 0, 0] 
-                            }}
-                            transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
-                            className="relative z-10 text-[#FF6B2C] group-hover/dock:text-white flex items-center justify-center transition-colors duration-300"
-                          >
-                            {isFlight ? (
-                              <Plane className="w-3.5 h-3.5 fill-current text-[#FF6B2C] group-hover/dock:text-white transition-colors duration-300" />
-                            ) : (
-                              <Hotel className="w-4 h-4 text-[#FF6B2C] group-hover/dock:text-white stroke-[2.2] transition-colors duration-300" />
-                            )}
-                          </motion.div>
-                        </div>
+                      <div className="relative w-8 h-8 rounded-full bg-[#FF6B2C]/10 flex items-center justify-center shrink-0">
+                        {/* Revolving Dashed Orbit */}
+                        <motion.div 
+                          animate={{ rotate: 360 }}
+                          transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
+                          className="absolute inset-0 rounded-full border border-dashed border-[#FF6B2C]/50"
+                        />
+                        {/* Animated Icon */}
+                        <motion.div
+                          animate={{ 
+                            y: [-0.6, 0.6, -0.6], 
+                            x: isFlight ? [-0.4, 0.4, -0.4] : [0, 0, 0],
+                            scale: isFlight ? [1, 1, 1] : [0.98, 1.04, 0.98],
+                            rotate: isFlight ? [0, 3, 0] : [0, 0, 0] 
+                          }}
+                          transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
+                          className="relative z-10 text-[#FF6B2C] flex items-center justify-center"
+                        >
+                          {isFlight ? (
+                            <Plane className="w-3.5 h-3.5 fill-current" />
+                          ) : (
+                            <Hotel className="w-3.5 h-3.5 stroke-[2]" />
+                          )}
+                        </motion.div>
                       </div>
 
-                      {/* Matchup Preview Chips */}
-                      <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/10 shadow-inner">
-                        {compareItems.slice(0, 2).map((item, idx) => (
-                          <React.Fragment key={item.id}>
-                            {idx > 0 && (
-                              <div className="flex items-center gap-1 px-1">
-                                <span className="w-2 h-px bg-white/30" />
-                                <span className="text-[9px] font-mono font-bold text-[#FF6B2C] uppercase tracking-wider">VS</span>
-                                <span className="w-2 h-px bg-white/30" />
-                              </div>
-                            )}
-                            <div className="flex items-center gap-1.5 text-xs font-bold text-white">
-                              {isFlight ? (
-                                <span className="text-[10px] font-mono text-[#A89F91]">
-                                  {item.airline?.split(' ')[0] || 'FL'}
+                      {/* Matchup Preview Items */}
+                      <div className="flex items-center gap-3 pr-2">
+                        {/* Mobile View: Summarized */}
+                        <div className="sm:hidden flex items-center gap-1.5 text-[13px] font-medium text-white px-2">
+                          <span className="font-bold">{compareItems.length}</span>
+                          <span className="text-[#A89F91]">{isFlight ? 'flights' : 'hotels'}</span>
+                        </div>
+                        
+                        {/* Desktop View: Detailed */}
+                        <div className="hidden sm:flex items-center gap-3">
+                          {compareItems.slice(0, 2).map((item, idx) => (
+                            <React.Fragment key={item.id}>
+                              {idx > 0 && <span className="w-px h-3 bg-white/15" />}
+                              <div className="flex items-center gap-2 text-[13px]">
+                                <span className="truncate max-w-[120px] text-white font-medium">
+                                  {isFlight ? (item.flightNumber || item.airline) : item.name}
                                 </span>
-                              ) : (
-                                <Hotel className="w-3 h-3 text-[#A89F91] stroke-[2]" />
-                              )}
-                              <span className="truncate max-w-[95px] text-[#FAF6F0]">
-                                {isFlight ? (item.flightNumber || item.airline) : item.name}
-                              </span>
-                              <span className="font-serif font-black text-[#FF6B2C] drop-shadow-[0_0_6px_rgba(255,107,44,0.4)]">
-                                {formatCurrency(convertCurrency(item.price, 'USD', displayCurrency), displayCurrency)}
-                              </span>
-                            </div>
-                          </React.Fragment>
-                        ))}
-                        {compareItems.length > 2 && (
-                          <span className="text-[10px] font-mono font-bold text-[#A89F91] pl-0.5">
-                            +{compareItems.length - 2}
-                          </span>
-                        )}
+                                <span className="font-semibold text-[#A89F91]">
+                                  {formatCurrency(convertCurrency(item.price, 'USD', displayCurrency), displayCurrency)}
+                                </span>
+                              </div>
+                            </React.Fragment>
+                          ))}
+                          {compareItems.length > 2 && (
+                            <span className="text-[10px] font-mono font-medium text-[#7A7268]">
+                              +{compareItems.length - 2}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="h-5 w-px bg-white/15" />
-
-                    {/* Flight/Hotel Compare Action Button */}
+                    {/* Compare Action Button (Minimal White) */}
                     <motion.button 
-                      whileHover={{ scale: 1.04, y: -0.5 }}
-                      whileTap={{ scale: 0.96 }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => setIsCompareModalOpen(isFlight ? 'flight' : 'hotel')}
-                      className="group/btn relative bg-[#FF6B2C] hover:bg-[#ff7d45] text-white text-xs font-sans font-bold pl-4 pr-3.5 py-2 rounded-full transition-all shadow-md shadow-[#FF6B2C]/30 flex items-center gap-2 cursor-pointer"
+                      className="bg-white text-black hover:bg-[#F7F5F2] text-[13px] font-semibold px-4 py-2 rounded-full transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                     >
-                      {isFlight ? (
-                        <>
-                          <Plane className="w-3.5 h-3.5 text-white group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 group-hover/btn:scale-110 transition-all duration-300" />
-                          <span>Compare Flight Deals</span>
-                        </>
-                      ) : (
-                        <>
-                          <Building2 className="w-3.5 h-3.5 text-white group-hover/btn:scale-110 transition-transform duration-300" />
-                          <span>Compare Hotel Stays</span>
-                        </>
-                      )}
-                      <ArrowRight className="w-3.5 h-3.5 text-white/80 group-hover/btn:text-white group-hover/btn:translate-x-0.5 transition-all duration-300" />
+                      <span>Compare</span>
                     </motion.button>
 
-                    {/* Tactile Close / Clear Action (Turns Vibrant Red on Hover) */}
+                    {/* Minimal Close Button */}
                     <motion.button 
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={() => {
                         setFlightShortlist([]);
                         setHotelShortlist([]);
                       }}
-                      className="group/close relative w-8 h-8 rounded-full bg-white/10 hover:bg-red-600 border border-white/10 hover:border-red-500/80 text-[#A89F91] hover:text-white flex items-center justify-center transition-all duration-300 cursor-pointer overflow-hidden shadow-xs hover:shadow-[0_0_16px_rgba(239,68,68,0.65)] shrink-0"
-                      title="Clear comparison selection"
+                      className="w-8 h-8 rounded-full hover:bg-white/10 text-[#A89F91] hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                      title="Clear comparison"
                     >
-                      {/* Rotating & Scaling Dismiss Glyph */}
-                      <X className="relative z-10 w-3.5 h-3.5 text-[#A89F91] group-hover/close:text-white group-hover/close:rotate-90 group-hover/close:scale-110 transition-all duration-300 ease-out" />
+                      <X className="w-4 h-4" />
                     </motion.button>
                   </div>
                 </motion.div>
@@ -2330,59 +2414,45 @@ export default function PriceTracker({
           </div>
         </motion.div>
 
-        {/* Watchdog Toggles without Truncation */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4">
-          {/* Flights Watchdog Card */}
+        {/* Watchdog Configuration Toggles */}
+        <div className="bg-white/40 backdrop-blur-md rounded-[20px] border border-[#E6DFD5] overflow-hidden flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-[#E6DFD5] shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+          {/* Flights Toggle */}
           <div 
             onClick={() => setConfig({ ...config, trackFlights: !config.trackFlights })}
-            className={`flex items-center justify-between p-3.5 sm:p-4.5 rounded-2xl border transition-all duration-200 cursor-pointer ${
-              config.trackFlights 
-                ? 'bg-white border-[#FF6B2C] shadow-xs' 
-                : 'bg-white/70 border-[#E6DFD5] opacity-75 hover:opacity-100'
-            }`}
+            className={`flex-1 flex items-center justify-between p-3.5 sm:p-4 cursor-pointer transition-colors duration-200 ${config.trackFlights ? 'bg-white/90' : 'hover:bg-white/60'}`}
           >
-            <div className="flex items-center gap-3 min-w-0 pr-2">
-              <div className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center transition-colors ${
-                config.trackFlights ? 'bg-[#FF6B2C] text-white shadow-xs' : 'bg-[#E6DFD5] text-[#7A7268]'
-              }`}>
-                <Plane className="w-5 h-5" />
+            <div className="flex items-center gap-3">
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${config.trackFlights ? 'bg-[#FFF5EE] text-[#FF6B2C]' : 'bg-[#F5F0E8] text-[#A89F91]'}`}>
+                <Plane className="w-4 h-4" />
               </div>
-              <div className="min-w-0">
-                <p className="text-sm font-serif font-bold text-[#1E1C1A] leading-tight">Flights & Airfare</p>
-                <p className="text-[11px] text-[#7A7268] mt-0.5 leading-snug">Monitors nonstop routes & drops</p>
+              <div className="flex flex-col">
+                <span className={`text-[13px] font-bold tracking-tight transition-colors ${config.trackFlights ? 'text-[#1E1C1A]' : 'text-[#7A7268]'}`}>Flights & Airfare</span>
+                <span className="text-[10px] font-medium text-[#A89F91] mt-0.5">Monitors routes & drops</span>
               </div>
             </div>
-
             {/* Switch */}
-            <div className={`w-11 h-6 shrink-0 rounded-full transition-colors duration-200 relative ${config.trackFlights ? 'bg-[#FF6B2C]' : 'bg-[#D8D0C5]'}`}>
-              <div className={`absolute top-0.5 left-0.5 bg-white w-5 h-5 rounded-full shadow-sm transition-transform duration-200 ${config.trackFlights ? 'translate-x-5' : 'translate-x-0'}`} />
+            <div className={`w-[38px] h-5 shrink-0 rounded-full transition-colors duration-200 relative ${config.trackFlights ? 'bg-[#1E1C1A]' : 'bg-[#D8D0C5]'}`}>
+              <div className={`absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full shadow-sm transition-transform duration-200 ${config.trackFlights ? 'translate-x-[18px]' : 'translate-x-0'}`} />
             </div>
           </div>
 
-          {/* Hotels Watchdog Card */}
+          {/* Hotels Toggle */}
           <div 
             onClick={() => setConfig({ ...config, trackHotels: !config.trackHotels })}
-            className={`flex items-center justify-between p-3.5 sm:p-4.5 rounded-2xl border transition-all duration-200 cursor-pointer ${
-              config.trackHotels 
-                ? 'bg-white border-[#FF6B2C] shadow-xs' 
-                : 'bg-white/70 border-[#E6DFD5] opacity-75 hover:opacity-100'
-            }`}
+            className={`flex-1 flex items-center justify-between p-3.5 sm:p-4 cursor-pointer transition-colors duration-200 ${config.trackHotels ? 'bg-white/90' : 'hover:bg-white/60'}`}
           >
-            <div className="flex items-center gap-3 min-w-0 pr-2">
-              <div className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center transition-colors ${
-                config.trackHotels ? 'bg-[#FF6B2C] text-white shadow-xs' : 'bg-[#E6DFD5] text-[#7A7268]'
-              }`}>
-                <Hotel className="w-5 h-5" />
+            <div className="flex items-center gap-3">
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${config.trackHotels ? 'bg-[#FFF5EE] text-[#FF6B2C]' : 'bg-[#F5F0E8] text-[#A89F91]'}`}>
+                <Hotel className="w-4 h-4" />
               </div>
-              <div className="min-w-0">
-                <p className="text-sm font-serif font-bold text-[#1E1C1A] leading-tight">Hotels & Stays</p>
-                <p className="text-[11px] text-[#7A7268] mt-0.5 leading-snug">Monitors nightly room rates</p>
+              <div className="flex flex-col">
+                <span className={`text-[13px] font-bold tracking-tight transition-colors ${config.trackHotels ? 'text-[#1E1C1A]' : 'text-[#7A7268]'}`}>Hotels & Stays</span>
+                <span className="text-[10px] font-medium text-[#A89F91] mt-0.5">Monitors room rates</span>
               </div>
             </div>
-
             {/* Switch */}
-            <div className={`w-11 h-6 shrink-0 rounded-full transition-colors duration-200 relative ${config.trackHotels ? 'bg-[#FF6B2C]' : 'bg-[#D8D0C5]'}`}>
-              <div className={`absolute top-0.5 left-0.5 bg-white w-5 h-5 rounded-full shadow-sm transition-transform duration-200 ${config.trackHotels ? 'translate-x-5' : 'translate-x-0'}`} />
+            <div className={`w-[38px] h-5 shrink-0 rounded-full transition-colors duration-200 relative ${config.trackHotels ? 'bg-[#1E1C1A]' : 'bg-[#D8D0C5]'}`}>
+              <div className={`absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full shadow-sm transition-transform duration-200 ${config.trackHotels ? 'translate-x-[18px]' : 'translate-x-0'}`} />
             </div>
           </div>
         </div>
