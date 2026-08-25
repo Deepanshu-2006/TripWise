@@ -3,6 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
+import { Map, List } from 'lucide-react';
 import CollaborationProvider from '../../components/CollaborationProvider';
 import PlannerSidebar from '../../components/PlannerSidebar';
 import Header from '../../components/Header';
@@ -51,6 +52,7 @@ export default function AIPlannerPage() {
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
   const [isNotificationsPanelOpen, setIsNotificationsPanelOpen] = useState(false);
   const [isTripSetupOpen, setIsTripSetupOpen] = useState(false);
+  const [mobileView, setMobileView] = useState('list'); // 'list' | 'map'
 
   useEffect(() => {
     async function loadSharedTrip() {
@@ -203,10 +205,10 @@ export default function AIPlannerPage() {
         onRemoteUpdate={(newItin) => setItinerary(newItin)}
       >
       {/* Unified Parent Container (Wrap BOTH Itinerary Panel and Map Section inside one shared parent container) */}
-      <div className="flex-1 w-full h-full overflow-hidden p-3 sm:p-4 md:p-6 pb-4 sm:pb-6 flex flex-col min-h-0">
-        <div className="flex-1 flex w-full h-full min-h-0 bg-[#FFFFFF] rounded-3xl border border-[#ECE8E2] shadow-[0_20px_60px_rgba(0,0,0,0.06)] overflow-hidden relative">
+      <div className={`flex-1 w-full h-full overflow-hidden flex flex-col min-h-0 ${mobileView === 'map' ? 'p-0 sm:p-4 md:p-6 pb-0 sm:pb-6' : 'p-3 sm:p-4 md:p-6 pb-4 sm:pb-6'}`}>
+        <div className={`flex-1 flex w-full h-full min-h-0 bg-[#FFFFFF] overflow-hidden relative ${mobileView === 'map' ? 'rounded-none sm:rounded-3xl border-0 sm:border border-[#ECE8E2] shadow-none sm:shadow-[0_20px_60px_rgba(0,0,0,0.06)]' : 'rounded-3xl border border-[#ECE8E2] shadow-[0_20px_60px_rgba(0,0,0,0.06)]'}`}>
           {/* Left Panel: Itinerary & Prompt Controls */}
-          <div className="w-full md:w-[42%] lg:w-[40%] xl:w-[38%] h-full overflow-hidden shrink-0 bg-[#F7F5F2] border-r border-[#ECE8E2] flex flex-col">
+          <div className={`w-full md:w-[42%] lg:w-[40%] xl:w-[38%] h-full overflow-hidden shrink-0 bg-[#F7F5F2] border-r border-[#ECE8E2] flex flex-col ${mobileView === 'map' ? 'hidden md:flex' : 'flex'}`}>
             <PlannerSidebar
               currentStep={currentStep}
               onStepChange={(newStep) => {
@@ -228,7 +230,9 @@ export default function AIPlannerPage() {
               hoveredStopIdx={hoveredStopIdx}
               onHoverStop={setHoveredStopIdx}
               selectedStopIdx={selectedStopIdx}
-              onSelectStop={setSelectedStopIdx}
+              onSelectStop={(idx) => {
+                setSelectedStopIdx(idx);
+              }}
               onUpdateItinerary={async (updated) => {
                 setItinerary(updated);
                 if (typeof window !== 'undefined') {
@@ -253,6 +257,7 @@ export default function AIPlannerPage() {
                 setItinerary(null);
                 setSelectedDayIndex(0);
                 setSelectedStopIdx(null);
+                setMobileView('list');
                 if (typeof window !== 'undefined') {
                   localStorage.removeItem('tripwise_itinerary');
                   const url = new URL(window.location);
@@ -273,7 +278,7 @@ export default function AIPlannerPage() {
           </div>
 
           {/* Right Panel: Map View & Interactive Dashboard */}
-          <div className="hidden md:flex flex-1 h-full overflow-hidden flex-col bg-[#FFFFFF]">
+          <div className={`flex-1 h-full overflow-hidden flex-col bg-[#FFFFFF] ${mobileView === 'list' ? 'hidden md:flex' : 'flex'}`}>
             <LiveTripDashboard
               destination={itinerary?.destinationName || generatingDestination || currentPrompt}
               itinerary={itinerary}
@@ -283,7 +288,12 @@ export default function AIPlannerPage() {
               hoveredStopIdx={hoveredStopIdx}
               onHoverStop={setHoveredStopIdx}
               selectedStopIdx={selectedStopIdx}
-              onSelectStop={setSelectedStopIdx}
+              onSelectStop={(idx) => {
+                setSelectedStopIdx(idx);
+                if (idx === null && typeof window !== 'undefined' && window.innerWidth < 768) {
+                  setMobileView('list');
+                }
+              }}
               onSelectPrompt={(promptText) => {
                 setCurrentPrompt(promptText);
               }}
@@ -293,6 +303,29 @@ export default function AIPlannerPage() {
         </div>
       </div>
       </CollaborationProvider>
+
+      {/* Floating Toggle Pill for Phone: [ 🗺️ View Map ] / [ 📋 View List ] */}
+      {itinerary && selectedStopIdx === null && (
+        <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-auto animate-fade-in">
+          <button
+            type="button"
+            onClick={() => setMobileView(prev => prev === 'map' ? 'list' : 'map')}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-stone-900 text-white font-semibold text-xs shadow-[0_12px_36px_rgba(0,0,0,0.35)] backdrop-blur-xl border border-white/20 hover:bg-black active:scale-95 transition-all duration-200 cursor-pointer select-none"
+          >
+            {mobileView === 'map' ? (
+              <>
+                <List className="w-4 h-4 text-[#FF6B2C]" />
+                <span>View List</span>
+              </>
+            ) : (
+              <>
+                <Map className="w-4 h-4 text-[#FF6B2C]" />
+                <span>View Map</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
 
       {/* Smart Trip Setup popup — shows only pending tasks */}
       <TripSetupModal

@@ -11,13 +11,17 @@ export default function ImageCarousel({ query, initialImage, alt, images: propIm
   const [direction, setDirection] = useState(0);
 
   useEffect(() => {
+    setCurrentIndex(0);
     if (propImages && propImages.length > 0) {
       setImages(propImages);
       return;
     }
+    if (initialImage) {
+      setImages([initialImage]);
+    }
     if (!query) return;
     
-    // Fetch multiple images
+    // Fetch multiple images in background
     fetch(`/api/images?q=${encodeURIComponent(query)}&count=5`)
       .then(res => res.json())
       .then(data => {
@@ -26,7 +30,7 @@ export default function ImageCarousel({ query, initialImage, alt, images: propIm
         }
       })
       .catch(err => console.error("Failed to fetch carousel images", err));
-  }, [query, propImages]);
+  }, [query, propImages, initialImage]);
 
   // Autoplay
   useEffect(() => {
@@ -124,30 +128,33 @@ export default function ImageCarousel({ query, initialImage, alt, images: propIm
         />
       </AnimatePresence>
 
-      {/* Navigation Controls (Visible on Hover) */}
+      {/* Navigation Controls */}
       {images.length > 1 && (
         <>
           <button 
+            type="button"
             onClick={goToPrev}
-            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 text-white flex items-center justify-center backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 hover:bg-black/60 hover:scale-110"
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/45 hover:bg-black/75 text-white border border-white/25 flex items-center justify-center backdrop-blur-md transition-all duration-200 z-20 hover:scale-110 active:scale-95 shadow-md cursor-pointer"
             aria-label="Previous image"
           >
-            <ChevronLeft size={16} />
-          </button>
-          <button 
-            onClick={goToNext}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 text-white flex items-center justify-center backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 hover:bg-black/60 hover:scale-110"
-            aria-label="Next image"
-          >
-            <ChevronRight size={16} />
+            <ChevronLeft size={16} strokeWidth={2.5} />
           </button>
           
-          {/* Dots */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <button 
+            type="button"
+            onClick={goToNext}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/45 hover:bg-black/75 text-white border border-white/25 flex items-center justify-center backdrop-blur-md transition-all duration-200 z-20 hover:scale-110 active:scale-95 shadow-md cursor-pointer"
+            aria-label="Next image"
+          >
+            <ChevronRight size={16} strokeWidth={2.5} />
+          </button>
+          
+          {/* Progress Dots Pill */}
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/20 shadow-xs pointer-events-none">
             {images.map((_, idx) => (
               <div 
                 key={idx} 
-                className={`h-1.5 rounded-full transition-all duration-300 shadow-sm ${idx === currentIndex ? 'w-4 bg-white' : 'w-1.5 bg-white/60'}`}
+                className={`h-1.5 rounded-full transition-all duration-300 ${idx === currentIndex ? 'w-3.5 bg-white shadow-xs' : 'w-1.5 bg-white/50'}`}
               />
             ))}
           </div>

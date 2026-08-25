@@ -264,13 +264,13 @@ export default function TicketPassModal({
             className="fixed inset-0 bg-[#1E1C1A]/80 backdrop-blur-md"
           />
 
-          {/* Modal Container — Warm Editorial Dossier Styling with Generous Spacing (Point 1) */}
+          {/* Modal Container — Warm Editorial Dossier Styling */}
           <motion.div
             initial={{ opacity: 0, scale: 0.94, y: 24 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 24 }}
             transition={{ type: 'spring', damping: 26, stiffness: 320 }}
-            className="relative w-full max-w-xl my-auto z-10 max-h-[90vh] flex flex-col drop-shadow-2xl"
+            className="relative w-full max-w-xl my-auto z-10 max-h-[78vh] sm:max-h-[82vh] flex flex-col drop-shadow-2xl"
           >
             {/* Action Bar Top Right */}
             <div className="absolute -top-3 right-0 z-50 flex items-center gap-2">
@@ -298,43 +298,42 @@ export default function TicketPassModal({
             {/* ── EDITORIAL DOSSIER PASS CARD ── */}
             <div className="w-full text-[#1E1C1A] relative flex flex-col flex-1 min-h-0">
               
-              {/* TOP HEADER — Warm Editorial Spacing & Serif Display Font (Point 1) */}
+              {/* TOP HEADER */}
               <div 
-                className="p-6 sm:p-8 pt-10 pb-6 relative shrink-0"
+                className="p-4 sm:p-6 pt-6 pb-3 relative shrink-0"
                 style={{
                   background: 'radial-gradient(circle 5px at 50% 0, transparent 5px, #FAF6F0 6px) top / 16px 10px repeat-x, linear-gradient(#FAF6F0, #FAF6F0) bottom / 100% calc(100% - 5px) no-repeat'
                 }}
               >
-                <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-md bg-[#FF6B2C] flex items-center justify-center text-white font-serif font-black text-xs shadow-2xs">
+                    <span className="w-5 h-5 rounded bg-[#FF6B2C] flex items-center justify-center text-white font-serif font-black text-[10px] shadow-2xs">
                       TW
                     </span>
                     <span className="font-mono text-xs tracking-widest uppercase text-[#FF6B2C] font-bold">
                       {headerSubtitle}
                     </span>
                   </div>
-                  <span className="px-3 py-1 rounded-full bg-white border border-[#E6DFD5] text-[#1E1C1A] font-mono text-[11px] font-bold tracking-wider uppercase shadow-2xs">
+                  <span className="px-2.5 py-0.5 rounded-full bg-white border border-[#E6DFD5] text-[#1E1C1A] font-mono text-[10px] font-bold tracking-wider uppercase shadow-2xs">
                     Day {dayNumber} • Stop #{stopNumber}
                   </span>
                 </div>
 
-                <div className="mt-3">
-                  <div className="text-xs font-sans font-bold uppercase tracking-widest text-[#7A7268] mb-1.5">
+                <div className="mt-2">
+                  <div className="text-[11px] font-sans font-bold uppercase tracking-widest text-[#7A7268] mb-1">
                     {cleanDest} • {category}
                   </div>
-                  {/* Same Serif Display Font as Main Stop Cards (Point 1) */}
-                  <h2 className="text-2xl sm:text-4xl font-serif font-black text-[#1E1C1A] tracking-tight leading-snug">
+                  <h2 className="text-xl sm:text-2xl font-serif font-black text-[#1E1C1A] tracking-tight leading-snug line-clamp-2">
                     {title}
                   </h2>
                 </div>
               </div>
 
-              {/* MAIN DOSSIER PASS DETAILS — Generous Whitespace (`space-y-8`) */}
-              <div className="p-6 sm:p-8 sm:pb-10 pt-4 space-y-8 bg-[#FAF6F0] relative overflow-y-auto flex-1">
+              {/* MAIN DOSSIER PASS DETAILS */}
+              <div className="p-4 sm:p-6 pt-3 space-y-4 bg-[#FAF6F0] relative overflow-y-auto flex-1 custom-scrollbar">
                 
-                {/* Expected Cost & Arrival Quick Grid using Standard Label Style (Point 1) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 p-5 sm:p-6 bg-white rounded-2xl border border-[#E6DFD5] shadow-2xs">
+                {/* Expected Cost & Arrival Quick Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 p-4 bg-white rounded-2xl border border-[#E6DFD5] shadow-2xs">
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-xl bg-[#FAF6F0] border border-[#E6DFD5] flex items-center justify-center shrink-0 mt-0.5">
                       {isDining ? <Utensils className="w-4.5 h-4.5 text-[#FF6B2C]" /> : (isNature ? <MapPin className="w-4.5 h-4.5 text-[#FF6B2C]" /> : <Ticket className="w-4.5 h-4.5 text-[#FF6B2C]" />)}
@@ -540,9 +539,9 @@ export default function TicketPassModal({
 
               </div>
 
-              {/* TICKET PERFORATION DIVIDER (Moved to bottom) */}
+              {/* TICKET PERFORATION DIVIDER */}
               <div 
-                className="relative w-full h-10 flex items-center justify-center z-20 shrink-0"
+                className="relative w-full h-6 flex items-center justify-center z-20 shrink-0"
                 style={{
                   background: `
                     radial-gradient(circle 20px at -2px 50%, transparent 20px, #FAF6F0 21px) left / 51% 100% no-repeat,
@@ -550,13 +549,12 @@ export default function TicketPassModal({
                   `
                 }}
               >
-                 {/* Solid thin line like the reference image */}
                  <div className="w-full mx-10 border-t border-[#D2C8BA] opacity-70"></div>
               </div>
 
               {/* FOOTER */}
               <div 
-                className="pt-2 pb-8 flex flex-col items-center justify-center text-xs font-serif italic text-[#7A7268] px-6 sm:px-8 shrink-0 z-20"
+                className="pt-1 pb-5 flex flex-col items-center justify-center text-[11px] font-serif italic text-[#7A7268] px-5 sm:px-6 shrink-0 z-20"
                 style={{
                   background: 'radial-gradient(circle 5px at 50% 100%, transparent 5px, #FAF6F0 6px) bottom / 16px 10px repeat-x, linear-gradient(#FAF6F0, #FAF6F0) top / 100% calc(100% - 5px) no-repeat'
                 }}
