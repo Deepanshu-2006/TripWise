@@ -3,7 +3,7 @@ export default function manifest() {
     name: 'TripWise AI Travel Planner',
     short_name: 'TripWise',
     description: 'AI-powered travel planner with full offline itinerary, emergency info, and map access.',
-    start_url: '/itinerary',
+    start_url: '/',
     display: 'standalone',
     background_color: '#FAF6F0',
     theme_color: '#FF6B2C',

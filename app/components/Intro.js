@@ -391,6 +391,8 @@ const CSS = `
   opacity: 0;
   box-shadow: 0 10px 30px rgba(0,0,0,0.15);
   will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
   transform-origin: bottom center;
 }
 
