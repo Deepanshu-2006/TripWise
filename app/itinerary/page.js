@@ -145,7 +145,19 @@ export default function ItineraryPage() {
   }, [itinerary?.estimatedCost]);
 
   // Navigation & Modal State
-  const [activeDay, setActiveDay] = useState(1); 
+  const [activeDay, setInternalActiveDay] = useState(1);
+  
+  const setActiveDay = (dayOrTab) => {
+    setInternalActiveDay(dayOrTab);
+    setTimeout(() => {
+      const contentPanel = document.getElementById('active-chapter-view') || document.getElementById('dossier-content-panel');
+      if (contentPanel) {
+        // Offset for header + sticky tabs (approx 140px)
+        const y = contentPanel.getBoundingClientRect().top + window.scrollY - 150;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+    }, 250);
+  };
   const [activeModalDay, setActiveModalDay] = useState(null);
   const [isEmergencyModalOpen, setIsEmergencyModalOpen] = useState(false);
   const [isSavedPlacesModalOpen, setIsSavedPlacesModalOpen] = useState(false);
@@ -159,6 +171,8 @@ export default function ItineraryPage() {
   const tabsContainerRef = useRef(null);
   const [canScrollTabsRight, setCanScrollTabsRight] = useState(false);
   const [canScrollTabsLeft, setCanScrollTabsLeft] = useState(false);
+
+
 
   const checkTabsScroll = () => {
     if (tabsContainerRef.current) {
@@ -1512,6 +1526,7 @@ export default function ItineraryPage() {
             <motion.button
               whileTap={{ scale: 0.92 }}
               type="button"
+              aria-label="Open Calendar"
               onClick={() => setIsCalendarModalOpen(true)}
               className="group/btn relative overflow-hidden flex items-center h-[34px] px-2.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] hover:border-[#FF6B2C]/60 hover:shadow-[0_4px_12px_-4px_rgba(255,107,44,0.3)] hover:-translate-y-0.5 hover:scale-[1.02] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer shrink-0"
             >
@@ -1524,6 +1539,7 @@ export default function ItineraryPage() {
             <motion.button
               whileTap={{ scale: 0.92 }}
               type="button"
+              aria-label="Open Notifications"
               onClick={() => setIsNotificationsPanelOpen(true)}
               className="group/btn relative overflow-hidden flex items-center h-[34px] px-2.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] hover:border-[#FF6B2C]/60 hover:shadow-[0_4px_12px_-4px_rgba(255,107,44,0.3)] hover:-translate-y-0.5 hover:scale-[1.02] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer shrink-0"
             >
@@ -1536,6 +1552,7 @@ export default function ItineraryPage() {
               <motion.button
                 whileTap={{ scale: 0.92 }}
                 type="button"
+                aria-label="Print Itinerary"
                 onClick={handlePrintOrDownload}
                 className="group/btn relative overflow-hidden flex items-center h-[34px] px-2.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] hover:border-[#FF6B2C]/60 hover:shadow-[0_4px_12px_-4px_rgba(255,107,44,0.3)] hover:-translate-y-0.5 hover:scale-[1.02] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer"
               >
@@ -1551,6 +1568,7 @@ export default function ItineraryPage() {
             <motion.button
               whileTap={{ scale: 0.92 }}
               type="button"
+              aria-label="Share Itinerary"
               onClick={handleShareDossier}
               className="group/btn relative overflow-hidden flex items-center h-[34px] px-2.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] hover:border-[#FF6B2C]/60 hover:shadow-[0_4px_12px_-4px_rgba(255,107,44,0.3)] hover:-translate-y-0.5 hover:scale-[1.02] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer shrink-0"
             >
@@ -1581,6 +1599,7 @@ export default function ItineraryPage() {
 
             <motion.a
               whileTap={{ scale: 0.92 }}
+              aria-label="Edit in Planner"
               href={itinerary?.id || itinerary?.db_id || activeTripId ? `/ai-planner/new?action=view&trip_id=${itinerary?.id || itinerary?.db_id || activeTripId}` : '/ai-planner'}
               className="group/edit relative overflow-hidden inline-flex items-center gap-0 xl:gap-1.5 px-3 xl:px-5 py-1.5 rounded-full border border-[#FF6B2C] bg-white text-xs font-sans font-bold text-[#FF6B2C] hover:text-white hover:shadow-[0_8px_20px_-6px_rgba(255,107,44,0.6)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer ml-0 xl:ml-1"
             >
@@ -2303,7 +2322,7 @@ export default function ItineraryPage() {
         </aside>
 
         {/* MAIN DOSSIER CONTENT PANEL */}
-        <main className="flex-1 min-w-0 w-full">
+        <main id="dossier-content-panel" className="flex-1 min-w-0 w-full">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeDay}
@@ -2311,7 +2330,7 @@ export default function ItineraryPage() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="w-full flex flex-col gap-16"
+              className="w-full flex flex-col gap-16 transform-gpu will-change-transform will-change-opacity"
             >
 
         {/* THE DOSSIER INDEX (Overview List - Screen Only) */}
@@ -2363,8 +2382,16 @@ export default function ItineraryPage() {
                 return (
                   <div
                     key={dayNum}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => setActiveDay(dayNum)}
-                    className="flex flex-col justify-between p-6 rounded-2xl bg-[#FAF6F0] border border-[#E6DFD5]/80 hover:border-[#FF6B2C]/60 transition-all duration-300 group cursor-pointer"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setActiveDay(dayNum);
+                      }
+                    }}
+                    className="flex flex-col justify-between p-6 rounded-2xl bg-[#FAF6F0] border border-[#E6DFD5]/80 hover:border-[#FF6B2C]/60 transition-all duration-300 group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B2C]"
                   >
                     <div>
                       <div className="flex items-center justify-between mb-3">
@@ -3387,7 +3414,7 @@ export default function ItineraryPage() {
                   const dayDiningRollup = computeDiningRollup(activeDay);
 
                   return (
-                    <div className="flex flex-col">
+                    <div id="active-chapter-view" className="flex flex-col">
                       {/* Chapter Header Card & daylight pacing gradient */}
                       <div className="border-b-2 border-[#1E1C1A] pb-6 mb-8 flex flex-col gap-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">

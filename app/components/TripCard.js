@@ -69,22 +69,22 @@ export default function TripCard({
                 />
                 <div className="absolute inset-0 rounded-full bg-white opacity-0 group-hover/avatar:opacity-100 blur-xs transition-opacity duration-300 z-0" />
               </div>
-              <span className="text-stone-200 text-[11px] font-mono font-bold uppercase tracking-[0.2em] group-hover:text-white transition-colors drop-shadow-md">
-                {authorName}
+              <span className="truncate max-w-[160px] text-stone-200 text-[11px] font-mono font-bold uppercase tracking-[0.2em] group-hover:text-white transition-colors drop-shadow-md">
+                {authorName || 'Anonymous'}
               </span>
             </div>
 
             {/* Title (Destination + Duration) */}
-            <h3 className="text-3xl font-serif font-extrabold text-white mb-4 leading-tight transition-all duration-500 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-white group-hover:to-stone-300 drop-shadow-lg">
-              {destination} &middot; {duration}
+            <h3 className="line-clamp-2 text-3xl font-serif font-extrabold text-white mb-4 leading-tight transition-all duration-500 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-white group-hover:to-stone-300 drop-shadow-lg">
+              {destination || 'Mystery Location'} &middot; {duration || 'Custom Trip'}
             </h3>
 
             {/* Tag Chips (Glassmorphic) */}
             <div className="flex flex-wrap gap-2 mb-6">
-              {tags.map((tag) => (
+              {(tags || []).slice(0, 5).map((tag) => (
                 <span
                   key={tag}
-                  className="bg-white/10 border border-white/20 text-white px-3 py-1 rounded-full uppercase font-mono text-[9px] tracking-[0.15em] font-bold backdrop-blur-md shadow-sm group-hover:border-white/40 transition-colors"
+                  className="truncate max-w-[140px] bg-white/10 border border-white/20 text-white px-3 py-1 rounded-full uppercase font-mono text-[9px] tracking-[0.15em] font-bold backdrop-blur-md shadow-sm group-hover:border-white/40 transition-colors"
                 >
                   {tag}
                 </span>

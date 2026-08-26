@@ -337,14 +337,14 @@ export default function RealTimeAdjuster() {
     }, []);
 
     return (
-        <section ref={sectionRef} className="pt-12 md:pt-16 pb-8 md:pb-12 bg-transparent relative">
+        <section ref={sectionRef} className="pt-12 md:pt-16 pb-48 md:pb-12 bg-transparent relative">
             {/* Ambient decorative glowing spots */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-1/4 left-1/4 -translate-y-1/2 w-87.5 h-87.5 rounded-full bg-[#FF5B1D]/3 blur-[120px]" />
                 <div className="absolute bottom-1/4 right-1/4 w-100 h-100 rounded-full bg-[#FF5B1D]/2 blur-[130px]" />
             </div>
 
-            <div ref={innerContainerRef} className="max-w-6xl mx-auto px-6 relative z-10 will-change-transform overflow-hidden lg:overflow-visible">
+            <div ref={innerContainerRef} className="max-w-6xl mx-auto px-6 relative z-10 will-change-transform">
                 {/* Header */}
                 <div className="text-center max-w-3xl mx-auto mb-6 md:mb-8">
                     <div className="hidden md:inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#FF5B1D]/10 border border-[#FF5B1D]/20 text-[#FF5B1D] font-mono text-[11px] font-bold tracking-wider uppercase rounded-full mb-3 shadow-2xs">
@@ -386,26 +386,26 @@ export default function RealTimeAdjuster() {
 
                         <div
                             ref={phoneRef}
-                            className="relative w-64 h-[495px] sm:w-66 sm:h-[505px] md:w-68 md:h-[515px] rounded-[44px] bg-[#1A191C] border-[3px] border-[#4A4950] will-change-transform z-10"
+                            className="relative w-64 h-[495px] sm:w-66 sm:h-[505px] md:w-68 md:h-[515px] rounded-[46px] bg-gradient-to-br from-[#403f44] via-[#1c1b1f] to-[#2d2c31] border-[1px] border-[#5a5960] will-change-transform z-10 p-[6px]"
                             style={{
-                                boxShadow: '0 0 0 1px rgba(44, 43, 48, 1), 0 0 0 4px rgba(18, 17, 20, 1), 0 30px 70px -15px rgba(0, 0, 0, 0.6), 0 0 60px 0px rgba(255, 91, 29, 0.12), inset 0 0 0px 0px rgba(255, 91, 29, 0)',
+                                boxShadow: '0 0 0 1px rgba(0,0,0,0.8), 0 0 0 3px #18171a, 0 0 0 4.5px rgba(255,255,255,0.1), 0 40px 80px -15px rgba(0, 0, 0, 0.7), 0 0 80px 0px rgba(255, 91, 29, 0.15), inset 0 0 15px rgba(255,255,255,0.05)',
                             }}
                         >
-                            {/* Physical Hardware Side Buttons */}
-                            {/* Left Side: Silent Switch */}
-                            <div className="absolute -left-1.75 top-20 w-1 h-5 bg-linear-to-r from-[#2A292D] to-[#4A4950] rounded-l-sm border-l border-[#626168] shadow-sm" />
+                            {/* Physical Hardware Side Buttons (Titanium Finish) */}
+                            {/* Left Side: Action Button */}
+                            <div className="absolute -left-[3px] top-24 w-[3px] h-6 bg-gradient-to-l from-[#1c1b1f] to-[#403f44] rounded-l-[2px] shadow-[inset_1px_0_1px_rgba(255,255,255,0.2)]" />
                             {/* Left Side: Volume Up */}
-                            <div className="absolute -left-1.75 top-30 w-1 h-10 bg-linear-to-r from-[#2A292D] to-[#4A4950] rounded-l-sm border-l border-[#626168] shadow-sm" />
+                            <div className="absolute -left-[3px] top-36 w-[3px] h-12 bg-gradient-to-l from-[#1c1b1f] to-[#403f44] rounded-l-[2px] shadow-[inset_1px_0_1px_rgba(255,255,255,0.2)]" />
                             {/* Left Side: Volume Down */}
-                            <div className="absolute -left-1.75 top-43 w-1 h-10 bg-linear-to-r from-[#2A292D] to-[#4A4950] rounded-l-sm border-l border-[#626168] shadow-sm" />
+                            <div className="absolute -left-[3px] top-52 w-[3px] h-12 bg-gradient-to-l from-[#1c1b1f] to-[#403f44] rounded-l-[2px] shadow-[inset_1px_0_1px_rgba(255,255,255,0.2)]" />
                             {/* Right Side: Power Button */}
-                            <div className="absolute -right-1.75 top-34 w-1 h-14 bg-linear-to-l from-[#2A292D] to-[#4A4950] rounded-r-sm border-r border-[#626168] shadow-sm" />
+                            <div className="absolute -right-[3px] top-40 w-[3px] h-16 bg-gradient-to-r from-[#1c1b1f] to-[#403f44] rounded-r-[2px] shadow-[inset_-1px_0_1px_rgba(255,255,255,0.2)]" />
 
                             {/* Antenna Bands */}
-                            <div className="absolute top-0 left-14 w-2 h-0.75 bg-[#0F0E11] z-10" />
-                            <div className="absolute top-0 right-14 w-2 h-0.75 bg-[#0F0E11] z-10" />
-                            <div className="absolute bottom-0 left-14 w-2 h-0.75 bg-[#0F0E11] z-10" />
-                            <div className="absolute bottom-0 right-14 w-2 h-0.75 bg-[#0F0E11] z-10" />
+                            <div className="absolute top-0 left-16 w-2 h-[6px] bg-[#0F0E11] z-0" />
+                            <div className="absolute top-0 right-16 w-2 h-[6px] bg-[#0F0E11] z-0" />
+                            <div className="absolute bottom-0 left-16 w-2 h-[6px] bg-[#0F0E11] z-0" />
+                            <div className="absolute bottom-0 right-16 w-2 h-[6px] bg-[#0F0E11] z-0" />
 
                             {/* Cursor arrow element (absolute relative to phone mockup wrapper) */}
                             <div
@@ -424,11 +424,11 @@ export default function RealTimeAdjuster() {
                             </div>
 
                             {/* Inner Screen Display */}
-                            <div className="absolute inset-2 bg-linear-to-b from-[#111014] via-[#0A090C] to-[#070608] rounded-[42px] overflow-hidden border-[2.5px] border-[#0A090C] shadow-2xl flex flex-col justify-between text-white font-sans">
+                            <div className="relative w-full h-full bg-[#000000] rounded-[40px] overflow-hidden border-[4px] border-[#0A090C] shadow-inner flex flex-col justify-between text-white font-sans">
                                 
                                 {/* Realistic Glass Reflection Overlay */}
-                                <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/3 to-white/8 pointer-events-none z-40" />
-                                <div className="absolute top-0 inset-x-0 h-28 bg-linear-to-b from-white/6 to-transparent pointer-events-none z-40" />
+                                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 pointer-events-none z-40" />
+                                <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-40" />
 
                                 {/* OLED Power-On Laser Sheen Beam */}
                                 <div
@@ -444,16 +444,16 @@ export default function RealTimeAdjuster() {
                                 {/* iPhone 15 Pro Dynamic Island */}
                                 <div 
                                     ref={islandRef}
-                                    className="absolute top-1.5 left-1/2 -translate-x-1/2 w-26 h-6.5 rounded-full bg-black z-30 flex items-center justify-between px-2.5 border border-white/10 shadow-[0_4px_12px_rgba(0,0,0,0.9)] will-change-transform origin-center"
+                                    className="absolute top-2 left-1/2 -translate-x-1/2 w-[100px] h-7 rounded-full bg-black z-30 flex items-center justify-between px-2.5 shadow-[0_4px_12px_rgba(0,0,0,1)] will-change-transform origin-center"
                                 >
                                     {/* Front Camera Lens */}
-                                    <div className="w-3 h-3 rounded-full bg-[#121116] border border-white/15 flex items-center justify-center shadow-inner">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500/50 shadow-[0_0_4px_#3b82f6]" />
+                                    <div className="w-3 h-3 rounded-full bg-[#0d0c10] border border-white/5 flex items-center justify-center shadow-[inset_0_1px_2px_rgba(255,255,255,0.1)]">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500/40 shadow-[0_0_3px_#3b82f6]" />
                                     </div>
                                     {/* FaceID & Recording Dot */}
                                     <div className="flex items-center gap-1.5">
-                                        <div className="w-2 h-2 rounded-full bg-[#18171C]" />
-                                        <div className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D] animate-pulse shadow-[0_0_6px_#FF5B1D]" />
+                                        <div className="w-2 h-2 rounded-full bg-[#111]" />
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px_#10b981]" />
                                     </div>
                                 </div>
 
@@ -587,7 +587,7 @@ export default function RealTimeAdjuster() {
                             {/* Event 1: Flight Landing */}
                             <div
                                 ref={el => { cardRefs.current[0] = el; }}
-                                className="timeline-card card-flight relative p-3 md:p-4 rounded-xl border border-brand-dark/10 bg-white/95 backdrop-blur-sm shadow-[0_4px_16px_rgba(0,0,0,0.03)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md hover:border-[#FF5B1D]/35 will-change-transform cursor-default"
+                                className="timeline-card card-flight relative p-3 md:p-4 rounded-xl border border-brand-dark/10 bg-white/95 backdrop-blur-sm shadow-[0_4px_16px_rgba(0,0,0,0.03)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md hover:border-[#FF5B1D]/35 cursor-default"
                             >
                                 {/* Dot Icon */}
                                 <div className="absolute -left-9.5 top-4 w-5 h-5 rounded-full bg-[#FFF8F5] border-2 border-brand-dark/20 flex items-center justify-center z-10 text-[9px] font-black font-sans shadow-2xs">
@@ -612,7 +612,7 @@ export default function RealTimeAdjuster() {
                             {/* Event 2: Hotel Check-In */}
                             <div
                                 ref={el => { cardRefs.current[1] = el; }}
-                                className="timeline-card relative p-3 md:p-4 rounded-xl border border-brand-dark/10 bg-white/95 backdrop-blur-sm shadow-[0_4px_16px_rgba(0,0,0,0.03)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md hover:border-[#FF5B1D]/35 will-change-transform cursor-default"
+                                className="timeline-card relative p-3 md:p-4 rounded-xl border border-brand-dark/10 bg-white/95 backdrop-blur-sm shadow-[0_4px_16px_rgba(0,0,0,0.03)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md hover:border-[#FF5B1D]/35 cursor-default"
                             >
                                 <div className="absolute -left-9.5 top-4 w-5 h-5 rounded-full bg-[#FFF8F5] border-2 border-brand-dark/20 flex items-center justify-center z-10 text-[9px] font-black font-sans shadow-2xs">
                                     02
@@ -636,7 +636,7 @@ export default function RealTimeAdjuster() {
                             {/* Event 3: Colosseum Guided Tour */}
                             <div
                                 ref={el => { cardRefs.current[2] = el; }}
-                                className="timeline-card card-tour relative p-3 md:p-4 rounded-xl border border-brand-dark/10 bg-white/95 backdrop-blur-sm shadow-[0_4px_16px_rgba(0,0,0,0.03)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md hover:border-[#FF5B1D]/35 will-change-transform cursor-default"
+                                className="timeline-card card-tour relative p-3 md:p-4 rounded-xl border border-brand-dark/10 bg-white/95 backdrop-blur-sm shadow-[0_4px_16px_rgba(0,0,0,0.03)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md hover:border-[#FF5B1D]/35 cursor-default"
                             >
                                 <div className="absolute -left-9.5 top-4 w-5 h-5 rounded-full bg-[#FFF8F5] border-2 border-brand-dark/20 flex items-center justify-center z-10 text-[9px] font-black font-sans shadow-2xs">
                                     03
@@ -660,7 +660,7 @@ export default function RealTimeAdjuster() {
                             {/* Event 4: Trastevere Dinner Reservation */}
                             <div
                                 ref={el => { cardRefs.current[3] = el; }}
-                                className="timeline-card card-dinner relative p-3 md:p-4 rounded-xl border border-brand-dark/10 bg-white/95 backdrop-blur-sm shadow-[0_4px_16px_rgba(0,0,0,0.03)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md hover:border-[#FF5B1D]/35 will-change-transform cursor-default"
+                                className="timeline-card card-dinner relative p-3 md:p-4 rounded-xl border border-brand-dark/10 bg-white/95 backdrop-blur-sm shadow-[0_4px_16px_rgba(0,0,0,0.03)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md hover:border-[#FF5B1D]/35 cursor-default"
                             >
                                 <div className="absolute -left-9.5 top-4 w-5 h-5 rounded-full bg-[#FFF8F5] border-2 border-brand-dark/20 flex items-center justify-center z-10 text-[9px] font-black font-sans shadow-2xs">
                                     04
