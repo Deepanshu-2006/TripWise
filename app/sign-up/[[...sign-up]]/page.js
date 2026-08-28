@@ -158,10 +158,10 @@ export default function SignUpPage() {
       )}
 
       {/* Main Content Layout */}
-      <div className="relative z-10 w-full max-w-5xl flex items-center justify-between px-10 gap-20">
+      <div className="relative z-10 w-full max-w-5xl flex flex-col md:flex-row items-center justify-center md:justify-between px-4 md:px-10 gap-0 md:gap-20 min-h-[100svh] md:min-h-0">
         
         {/* Left Side: Floor Lamp */}
-        <div className="relative w-full max-w-100 h-150 flex flex-col items-center justify-end">
+        <div className="absolute md:relative top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 md:translate-x-0 md:translate-y-0 md:top-auto md:left-auto w-[400px] md:w-full md:max-w-100 h-[600px] md:h-150 flex flex-col items-center justify-end pointer-events-none md:pointer-events-auto scale-[0.7] sm:scale-[0.8] md:scale-100 z-10 md:z-auto origin-center">
           
           {/* The Light Beam Container */}
           <motion.div 
@@ -222,7 +222,7 @@ export default function SignUpPage() {
                 rotate: stringRotate, 
                 x: 110 // Shifted slightly further out for the wider 72px head
               }}
-              className={`absolute top-5.5 z-40 flex flex-col items-center ${isLightOn ? 'cursor-default pointer-events-none' : 'cursor-grab active:cursor-grabbing'}`}
+              className={`absolute top-5.5 z-40 flex flex-col items-center pointer-events-auto ${isLightOn ? 'cursor-default pointer-events-none' : 'cursor-grab active:cursor-grabbing'}`}
             >
               <motion.div
                 drag="y"
@@ -241,7 +241,7 @@ export default function SignUpPage() {
 
         {/* Right Side: Ultra-Premium Login Form */}
         <motion.div 
-          className="relative z-30 w-105 shrink-0 p-10 rounded-4xl bg-[#111111]/80 border border-white/4 backdrop-blur-2xl"
+          className="relative z-30 w-full sm:w-[420px] md:w-105 shrink-0 p-6 md:p-10 rounded-3xl md:rounded-4xl bg-[#111111]/85 border border-white/5 backdrop-blur-3xl mx-auto md:mx-0 shadow-2xl"
           style={{ 
             opacity: isLightOn ? 1 : dragOpacity,
             y: isLightOn ? 0 : formY,
