@@ -93,7 +93,7 @@ const IntroCard = ({ itinerary, heroPhoto }) => {
         transition={{ delay: 0.1, type: "spring", stiffness: 350, damping: 25 }}
         className="my-auto relative z-10 w-full bg-white p-2.5 sm:p-3 pb-3.5 sm:pb-4 rounded-3xl border border-[#E8E2D9] shadow-md"
       >
-        <div className="aspect-[16/10] w-full rounded-2xl overflow-hidden relative bg-stone-100 border border-stone-200">
+        <div className="aspect-16/10 w-full rounded-2xl overflow-hidden relative bg-stone-100 border border-stone-200">
           {heroPhoto && (
             <motion.div 
               initial={{ scale: 1 }}
@@ -181,7 +181,7 @@ const RouteMapCard = ({ itinerary }) => {
 
       {/* Timeline List */}
       <div className="relative my-auto py-2">
-        <div className="absolute left-[20px] top-6 bottom-6 w-0.5 bg-[#E8E2D9]" />
+        <div className="absolute left-5 top-6 bottom-6 w-0.5 bg-[#E8E2D9]" />
 
         <div className="space-y-2.5 relative z-10">
           {allStops.map((stop, idx) => (
@@ -451,9 +451,9 @@ const HighlightCard = ({ item }) => (
       initial={{ opacity: 0, scale: 0.92 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ type: "spring", stiffness: 350, damping: 25, delay: 0.12 }}
-      className="relative z-10 my-auto mx-auto w-full max-w-[270px] bg-white p-3 pb-4.5 rounded-2xl shadow-md border border-[#E8E2D9] text-[#1E1C1A]"
+      className="relative z-10 my-auto mx-auto w-full max-w-67.5 bg-white p-3 pb-4.5 rounded-2xl shadow-md border border-[#E8E2D9] text-[#1E1C1A]"
     >
-      <div className="aspect-[4/3] rounded-xl overflow-hidden bg-stone-100 mb-2.5 relative border border-stone-200">
+      <div className="aspect-4/3 rounded-xl overflow-hidden bg-stone-100 mb-2.5 relative border border-stone-200">
         {item.photo ? (
           <img src={item.photo} alt={item.title} className="w-full h-full object-cover" />
         ) : (
@@ -520,7 +520,7 @@ const OutroCard = ({ itinerary, heroPhoto, onDownload, isDownloading, onReplay }
         initial={{ opacity: 0, scale: 0.94, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 350, damping: 25, delay: 0.12 }}
-        className="relative z-10 my-auto mx-auto w-full max-w-[310px] bg-white rounded-3xl p-4 sm:p-5 shadow-xl border border-[#E8E2D9] text-[#1E1C1A] overflow-hidden"
+        className="relative z-10 my-auto mx-auto w-full max-w-77.5 bg-white rounded-3xl p-4 sm:p-5 shadow-xl border border-[#E8E2D9] text-[#1E1C1A] overflow-hidden"
       >
         {/* Left & Right Authentic Semicircular Ticket Notches */}
         <div className="absolute -left-3.5 top-[68%] w-6 h-6 rounded-full bg-[#FAF8F5] border border-[#E8E2D9]" />
@@ -580,7 +580,7 @@ const OutroCard = ({ itinerary, heroPhoto, onDownload, isDownloading, onReplay }
       </motion.div>
 
       {/* High-Priority Clickable Action Buttons */}
-      <div className="relative z-50 flex flex-col gap-2 w-full max-w-[310px] mx-auto pointer-events-auto" data-html2canvas-ignore="true">
+      <div className="relative z-50 flex flex-col gap-2 w-full max-w-77.5 mx-auto pointer-events-auto" data-html2canvas-ignore="true">
         <motion.button 
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.95 }}
@@ -750,7 +750,7 @@ export default function TripRecapModal({ isOpen, onClose, itinerary, estBudget }
   return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[110000] flex items-center justify-center bg-black/80 backdrop-blur-md p-0 sm:p-4">
+        <div className="fixed inset-0 z-110000 flex items-center justify-center bg-black/80 backdrop-blur-md p-0 sm:p-4">
           
           {/* Backdrop Dismiss */}
           <div className="absolute inset-0" onClick={onClose} />
@@ -780,7 +780,7 @@ export default function TripRecapModal({ isOpen, onClose, itinerary, estBudget }
             onMouseLeave={() => setIsPaused(false)}
             onTouchStart={() => setIsPaused(true)}
             onTouchEnd={() => setIsPaused(false)}
-            className="relative w-full h-full sm:max-w-[420px] sm:max-h-[760px] bg-[#FAF8F5] overflow-hidden sm:rounded-[36px] sm:border border-[#E8E2D9] shadow-2xl flex flex-col z-10"
+            className="relative w-full h-full sm:max-w-105 sm:max-h-190 bg-[#FAF8F5] overflow-hidden sm:rounded-[36px] sm:border border-[#E8E2D9] shadow-2xl flex flex-col z-10"
           >
             {/* Top Control Bar with Segmented Progress */}
             <div className="absolute top-0 left-0 right-0 p-4 pt-3.5 z-40 bg-[#FAF8F5]/95 backdrop-blur-md border-b border-[#E8E2D9]/80 pointer-events-none">
@@ -832,7 +832,7 @@ export default function TripRecapModal({ isOpen, onClose, itinerary, estBudget }
               {/* Story Header Controls */}
               <div className="flex items-center justify-between pointer-events-auto">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-serif font-black text-[#1E1C1A] truncate max-w-[160px]">
+                  <span className="text-xs font-serif font-black text-[#1E1C1A] truncate max-w-40">
                     {itinerary?.destinationName || 'Trip'}
                   </span>
                   <span className="text-[9.5px] font-mono text-[#7A7268] bg-[#EFEAE2] border border-[#E0D8CC] px-2 py-0.5 rounded-full font-bold">

@@ -320,11 +320,11 @@ const InviteModal = ({ isOpen, onClose, tripId, currentCollaborators = [] }) => 
                         {/* QR Code */}
                         <div className="border-t border-gray-100 pt-6 mt-2 flex flex-col items-center">
                           <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-5 flex items-center gap-3">
-                            <span className="w-10 h-[1px] bg-[linear-gradient(to_right,transparent,#E5E7EB)]"></span>
+                            <span className="w-10 h-px bg-[linear-gradient(to_right,transparent,#E5E7EB)]"></span>
                             Scan with camera
-                            <span className="w-10 h-[1px] bg-[linear-gradient(to_left,transparent,#E5E7EB)]"></span>
+                            <span className="w-10 h-px bg-[linear-gradient(to_left,transparent,#E5E7EB)]"></span>
                           </p>
-                          <div className="p-1 bg-[linear-gradient(to_bottom,#F3F4F6,#FFFFFF)] border border-gray-200/60 rounded-[32px] shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
+                          <div className="p-1 bg-[linear-gradient(to_bottom,#F3F4F6,#FFFFFF)] border border-gray-200/60 rounded-4xl shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
                             <div className="bg-white p-4 rounded-[28px] group-hover:scale-[1.02] transition-transform">
                               <QRCode value={shareLink} size={130} fgColor="#111827" />
                             </div>

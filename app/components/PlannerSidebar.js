@@ -1,9 +1,8 @@
 'use client';
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion, useScroll, useSpring } from 'framer-motion';
 import CustomDatePicker from './CustomDatePicker';
-import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, DollarSign, ChevronRight, ChevronDown, Plus, ArrowUpDown, MoreHorizontal, CloudSun, RefreshCw, Check, Map, Compass, ThumbsUp, ThumbsDown, Users, UserPlus, Landmark, Utensils, Zap, Gem, Star, Lightbulb, Smile, TreePine, Coffee, Palmtree, Banknote, Sun, Footprints, Coins, Plane, Building2, TrendingDown, Mic, MicOff, Flag, AlertTriangle, ShieldCheck, ShieldAlert, CornerDownLeft, CornerDownRight, Send, ArrowRight, ArrowLeft, ArrowUpRight, Share2, Square, StopCircle, X } from 'lucide-react';
+import { Navigation, Ticket, Heart, Sparkles, MapPin, Clock, ChevronDown, Plus, RefreshCw, Check, Map, Compass, ThumbsUp, ThumbsDown, Users, UserPlus, Landmark, Utensils, Zap, Gem, Star, Lightbulb, Smile, TreePine, Coffee, Palmtree, Banknote, Sun, Footprints, Coins, Plane, Building2, TrendingDown, Mic, MicOff, Flag, AlertTriangle, ShieldCheck, ShieldAlert, CornerDownLeft, CornerDownRight, Send, ArrowRight, ArrowLeft, ArrowUpRight, Share2, Square, StopCircle, X } from 'lucide-react';
 import ImageCarousel from './ImageCarousel';
 const TicketPassModal = dynamic(() => import('./TicketPassModal'), { ssr: false });
 import dynamic from 'next/dynamic';
@@ -66,7 +65,6 @@ export default function PlannerSidebar({
   onGenerate,
   onViewItinerary,
   onOpenCalendar = null,
-  onOpenNotifications = null,
 }) {
   const scrollRef = useRef(null);
   const { scrollYProgress } = useScroll({ container: scrollRef });
@@ -81,7 +79,6 @@ export default function PlannerSidebar({
   const router = useRouter();
 
   const collaboration = useCollaboration();
-  const realtimeItinerary = collaboration?.itinerary || itinerary;
   const activeUsers = collaboration?.activeUsers || [];
 
   const onUpdateItinerary = useCallback(async (newItin) => {
@@ -532,10 +529,6 @@ export default function PlannerSidebar({
     }
   };
 
-  const handleRefineDaySubmit = (e) => {
-    e.preventDefault();
-    triggerRefineDay();
-  };
 
   // State: 'input' | 'parsing' | 'confirming' | 'progress'
   const [localStep, setLocalStep] = useState(() => {
@@ -999,43 +992,8 @@ export default function PlannerSidebar({
     setShowCopilotDrawer(true);
   };
 
-  const handleActivityVote = (dayIdx, activityIdx, voteType) => {
-    if (!itinerary?.days?.[dayIdx]?.activities?.[activityIdx]) return;
-    const currentDays = [...itinerary.days];
-    const currentDay = { ...currentDays[dayIdx] };
-    const currentActivities = [...currentDay.activities];
-    const activity = { ...currentActivities[activityIdx] };
-
-    // Toggle logic: if clicking the same vote type, clear it (0)
-    const newVote = activity.userVote === voteType ? 0 : voteType;
-    activity.userVote = newVote;
-
-    currentActivities[activityIdx] = activity;
-    currentDay.activities = currentActivities;
-    currentDays[dayIdx] = currentDay;
-
-    const updatedItinerary = {
-      ...itinerary,
-      days: currentDays
-    };
-
-    if (onUpdateItinerary) {
-      onUpdateItinerary(updatedItinerary);
-    } else if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem('tripwise_itinerary', JSON.stringify(updatedItinerary));
-        window.dispatchEvent(new Event('storage'));
-      } catch (e) {
-        console.error('Failed to save updated itinerary:', e);
-      }
-    }
-  };
 
   // Check if confirmation state is needed
-  const isMissingRequiredFields =
-    extracted?.duration == null ||
-    extracted?.budget == null ||
-    extracted?.travelStyle == null;
 
   const startProgressTransition = useCallback((selections) => {
     setProgressPercent(0);
@@ -1420,7 +1378,7 @@ export default function PlannerSidebar({
         <StepIndicator step={step} />
       </div>
 
-      <div id="itinerary-scroll-container" ref={scrollRef} data-lenis-prevent="true" className="flex-1 overflow-y-auto overflow-x-hidden pb-20 scroll-smooth min-h-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] sm:[scrollbar-width:auto] sm:pr-2 sm:-mr-3">
+      <div id="itinerary-scroll-container" ref={scrollRef} data-lenis-prevent="true" className="flex-1 overflow-y-auto overflow-x-hidden pb-20 scroll-smooth min-h-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] scrollbar-none sm:scrollbar-auto sm:pr-2 sm:-mr-3">
 
         {/* ── Mobile-only scrollable header (scrolls away on phone) ─────────── */}
         <div className="sm:hidden bg-[#FAF3EE] pt-3 pb-4 -mx-4 px-4 border-b border-stone-200/50 mb-5">
@@ -1480,7 +1438,7 @@ export default function PlannerSidebar({
                   maxLength={400}
                   className={`w-full h-36 pt-4 pb-12 px-4 md:px-5 rounded-2xl bg-white border transition-all duration-300 resize-none font-sans leading-relaxed text-[15px] md:text-base text-stone-900 placeholder:text-stone-400/80 focus:outline-none shadow-sm md:shadow-xs ${
                     isListeningVoice
-                      ? 'border-[#FF6B2C] ring-4 ring-[#FF6B2C]/10 bg-[#FFF9F6] border-l-[4px] border-l-[#FF6B2C]'
+                      ? 'border-[#FF6B2C] ring-4 ring-[#FF6B2C]/10 bg-[#FFF9F6] border-l-4 border-l-[#FF6B2C]'
                       : 'border-stone-200 border-l-[3px] border-l-[#FF6B2C] focus:border-[#FF6B2C]/50 focus:border-l-[#FF6B2C] focus:ring-2 focus:ring-[#FF6B2C]/10'
                   }`}
                 />
@@ -1540,7 +1498,7 @@ export default function PlannerSidebar({
                       title={isListeningVoice ? "Tap to stop recording & transcribe" : "Tap to speak your prompt"}
                       className={`p-2 rounded-full transition-all duration-300 cursor-pointer flex items-center justify-center relative z-10 shadow-sm ${
                         isListeningVoice
-                          ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E0591F] text-white ring-2 ring-white/80 shadow-md shadow-[#FF6B2C]/30 scale-105'
+                          ? 'bg-linear-to-br from-[#FF6B2C] to-[#E0591F] text-white ring-2 ring-white/80 shadow-md shadow-[#FF6B2C]/30 scale-105'
                           : isTranscribingCloud
                           ? 'bg-stone-200 text-stone-400 cursor-not-allowed'
                           : 'bg-stone-100/90 text-stone-600 hover:text-[#FF6B2C] hover:bg-[#FFF2EA] hover:shadow-xs active:scale-95'
@@ -1625,8 +1583,8 @@ export default function PlannerSidebar({
                         }}
                         className={`px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-[10px] sm:rounded-xl text-[9.5px] sm:text-xs font-mono font-bold border cursor-pointer select-none
                           ${active 
-                            ? 'z-20 scale-105 !rotate-0 !translate-y-0 shadow-[0_8px_16px_rgba(255,107,44,0.25)] border-[#FF6B2C] bg-[#FF6B2C] text-white' 
-                            : `z-10 shadow-sm border-stone-200 bg-white text-stone-600 hover:text-[#FF6B2C] hover:border-[#FF6B2C]/30 hover:bg-[#FFF2EA] hover:scale-105 hover:!rotate-0 hover:z-20 md:!rotate-0 md:!translate-y-0 ${scatterTransform}`
+                            ? 'z-20 scale-105 rotate-0! translate-y-0! shadow-[0_8px_16px_rgba(255,107,44,0.25)] border-[#FF6B2C] bg-[#FF6B2C] text-white' 
+                            : `z-10 shadow-sm border-stone-200 bg-white text-stone-600 hover:text-[#FF6B2C] hover:border-[#FF6B2C]/30 hover:bg-[#FFF2EA] hover:scale-105 hover:rotate-0! hover:z-20 md:rotate-0! md:translate-y-0! ${scatterTransform}`
                           }
                         `}
                       >
@@ -1669,7 +1627,7 @@ export default function PlannerSidebar({
                 {showBasecampDropdown && (
                   <div className="absolute z-50 w-full mt-2 bg-white/95 backdrop-blur-xl border border-stone-200/60 rounded-2xl shadow-[0_12px_40px_-12px_rgba(0,0,0,0.15)] overflow-hidden">
                     {basecampSuggestions.length > 0 ? (
-                      <div className="max-h-[280px] overflow-y-auto p-1.5 scrollbar-thin scrollbar-thumb-stone-200 scrollbar-track-transparent">
+                      <div className="max-h-70 overflow-y-auto p-1.5 scrollbar-thin scrollbar-thumb-stone-200 scrollbar-track-transparent">
                         {basecampSuggestions.map((place, idx) => {
                           const hotelName = place.name || place.display_name?.split(',')[0] || '';
                           const hotelAddress = place.display_name || '';
@@ -1695,7 +1653,7 @@ export default function PlannerSidebar({
                                     {renderHighlightedText(hotelName, basecamp)}
                                   </div>
                                   {isRecommended && (
-                                    <span className="shrink-0 text-[8px] font-black uppercase tracking-wider text-[#FF6B2C] bg-[#FFF2EA] px-1.5 py-0.5 rounded-[4px]">Recommended</span>
+                                    <span className="shrink-0 text-[8px] font-black uppercase tracking-wider text-[#FF6B2C] bg-[#FFF2EA] px-1.5 py-0.5 rounded-sm">Recommended</span>
                                   )}
                                 </div>
                                 <div className="text-[10.5px] text-stone-400 truncate mt-0.5 font-medium">
@@ -2221,7 +2179,7 @@ export default function PlannerSidebar({
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                    className="overflow-hidden px-4 pb-4 pt-2 border-t border-[#E6DFD5]/60 bg-gradient-to-b from-[#FAF6F0]/60 to-[#FAF6F0]/20"
+                    className="overflow-hidden px-4 pb-4 pt-2 border-t border-[#E6DFD5]/60 bg-linear-to-b from-[#FAF6F0]/60 to-[#FAF6F0]/20"
                   >
                     <div className="flex flex-col gap-3 pt-1">
                       {/* Label & Active Airport Resolved Name */}
@@ -2439,9 +2397,9 @@ export default function PlannerSidebar({
                         {/* Top Row: Day Navigation Segmented Control + Weather Chip (top-right) */}
                         <div className="flex items-center justify-between gap-3">
                           {itinerary.days && itinerary.days.length > 0 ? (
-                            <div className="flex-1 min-w-0 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                            <div className="flex-1 min-w-0 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] scrollbar-none">
                               <div className="inline-flex items-center gap-1 bg-[#F6F4F1] p-0.5 rounded-full border border-[#ECE8E2] h-7.5 select-none shadow-inner w-max">
-                                {itinerary.days.map((day, idx) => {
+                                {itinerary.days.map((_day, idx) => {
                                 const isSelected = selectedDayIndex === idx;
                                 return (
                                   <button
@@ -2548,7 +2506,7 @@ export default function PlannerSidebar({
                         {/* Seamless Integrated Inline Modifier Bar */}
                         <div className={`w-full transition-all duration-300 ease-out overflow-hidden ${
                           showCopilotDrawer || isRefiningDay || refineExplanation
-                            ? 'max-h-[350px] opacity-100 mt-2.5 pt-2.5 border-t border-stone-100'
+                            ? 'max-h-87.5 opacity-100 mt-2.5 pt-2.5 border-t border-stone-100'
                             : 'max-h-0 opacity-0 mt-0 pt-0 border-t-0 pointer-events-none'
                         }`}>
                           {activeDrawerTab === 'ai' ? (
@@ -2718,7 +2676,7 @@ export default function PlannerSidebar({
                           backgroundRepeat: 'repeat-y',
                           opacity: 1
                         }}
-                        className="absolute left-[31px] sm:left-[29.5px] top-8 bottom-8 w-[3px] pointer-events-none z-0" 
+                        className="absolute left-7.75 sm:left-[29.5px] top-8 bottom-8 w-0.75 pointer-events-none z-0" 
                       />
 
                       {itinerary.days?.[selectedDayIndex]?.activities?.map((act, idx) => (
@@ -2968,7 +2926,7 @@ export default function PlannerSidebar({
                     transition={{ duration: 0.35, ease: 'easeOut' }}
                   >
                     <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent"
+                      className="absolute inset-0 bg-linear-to-r from-transparent via-white/50 to-transparent"
                       animate={{ x: ['-100%', '200%'] }}
                       transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
                     />
@@ -3035,7 +2993,7 @@ export default function PlannerSidebar({
                 <div className="relative flex-1 flex flex-col justify-end overflow-hidden pt-4 pb-2" style={{ minHeight: 110 }}>
                   
                   {/* Glowing Tarmac Horizon Light Gradient */}
-                  <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-[#FF6B2C]/5 via-stone-100/30 to-transparent pointer-events-none" />
+                  <div className="absolute inset-x-0 bottom-0 h-14 bg-linear-to-t from-[#FF6B2C]/5 via-stone-100/30 to-transparent pointer-events-none" />
 
                   {/* Dynamic Streaming Runway Dashes & Beacon Lights */}
                   <div className="absolute bottom-6 left-0 right-0 h-3 flex items-center overflow-hidden pointer-events-none">
@@ -3066,7 +3024,7 @@ export default function PlannerSidebar({
                       /* Idle State — Plane Taxiing & Engine Shimmering on Tarmac */
                       <motion.div
                         key="plane-idle"
-                        className="absolute bottom-[22px] left-4 flex flex-col items-start"
+                        className="absolute bottom-5.5 left-4 flex flex-col items-start"
                         initial={{ opacity: 0, x: -15 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 15 }}
@@ -3076,13 +3034,13 @@ export default function PlannerSidebar({
                         <div className="relative flex items-center">
                           {/* Engine Afterburner Flame */}
                           <motion.div
-                            className="absolute -left-4 top-1/2 -translate-y-1/2 w-6 h-2 rounded-full bg-gradient-to-l from-[#FF6B2C] via-[#FF8C00] to-transparent blur-[2px]"
+                            className="absolute -left-4 top-1/2 -translate-y-1/2 w-6 h-2 rounded-full bg-linear-to-l from-[#FF6B2C] via-[#FF8C00] to-transparent blur-[2px]"
                             animate={{ opacity: [0.5, 1, 0.5], scaleX: [0.8, 1.4, 0.8] }}
                             transition={{ repeat: Infinity, duration: 0.5, ease: 'easeInOut' }}
                           />
                           {/* Heat Distortion Glow */}
                           <motion.div
-                            className="absolute -left-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-[#FF6B2C]/20 blur-[8px]"
+                            className="absolute -left-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-[#FF6B2C]/20 blur-sm"
                             animate={{ scale: [0.9, 1.2, 0.9] }}
                             transition={{ repeat: Infinity, duration: 0.7, ease: 'easeInOut' }}
                           />
@@ -3113,7 +3071,7 @@ export default function PlannerSidebar({
                       /* Complete State — Supersonic Takeoff Lift-Off Animation */
                       <motion.div
                         key="plane-takeoff"
-                        className="absolute bottom-[22px] left-4 z-20"
+                        className="absolute bottom-5.5 left-4 z-20"
                         initial={{ x: 0, y: 0, rotate: 0, opacity: 1, scale: 1 }}
                         animate={{ x: 320, y: -90, rotate: -24, opacity: 0, scale: 1.15 }}
                         transition={{ duration: 1.2, ease: [0.4, 0, 0.2, 1], delay: 0.1 }}
@@ -3121,7 +3079,7 @@ export default function PlannerSidebar({
                         <div className="relative flex items-center">
                           {/* Supersonic Jet Contrail */}
                           <motion.div
-                            className="absolute top-1/2 -left-12 h-[2.5px] rounded-full bg-gradient-to-l from-[#FF6B2C] via-[#FF8C00]/60 to-transparent shadow-[0_0_8px_#FF6B2C]"
+                            className="absolute top-1/2 -left-12 h-[2.5px] rounded-full bg-linear-to-l from-[#FF6B2C] via-[#FF8C00]/60 to-transparent shadow-[0_0_8px_#FF6B2C]"
                             initial={{ width: 0 }}
                             animate={{ width: 110 }}
                             transition={{ duration: 0.9, ease: 'easeOut', delay: 0.15 }}
@@ -3289,7 +3247,7 @@ export default function PlannerSidebar({
                           query={`${selectedAct.title || 'Destination'} ${itinerary?.destinationName || ''}`}
                         />
                       </div>
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+                      <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
                       {/* Badge top left with animated number */}
                       <div className="absolute top-3.5 left-3.5 z-10 flex items-center gap-1.5 bg-black/40 backdrop-blur-md text-white text-[11px] font-bold rounded-full p-1 pr-2.5 border border-white/20">
@@ -3299,7 +3257,7 @@ export default function PlannerSidebar({
                           ) : (
                             <>
                               <span>Stop</span>
-                              <div className="relative inline-flex overflow-hidden h-3.5 min-w-[7px] items-center justify-center">
+                              <div className="relative inline-flex overflow-hidden h-3.5 min-w-1.75 items-center justify-center">
                                 <AnimatePresence mode="popLayout" custom={slideDirection}>
                                   <motion.span
                                     key={selectedStopIdx}
@@ -3399,7 +3357,7 @@ export default function PlannerSidebar({
                     <button
                       type="button"
                       onClick={() => setActivePassModal({ activity: selectedAct, dayNum: selectedDayIndex + 1, stopNum: selectedStopIdx })}
-                      className="group flex-1 bg-gradient-to-r from-[#FF6B2C] to-[#E65D20] text-white font-bold rounded-xl h-10 sm:h-11 flex items-center justify-center gap-1.5 px-3 shadow-[0_4px_16px_rgba(255,107,44,0.25)] hover:shadow-lg transition-all duration-200 active:scale-95 cursor-pointer text-xs sm:text-sm select-none"
+                      className="group flex-1 bg-linear-to-r from-[#FF6B2C] to-[#E65D20] text-white font-bold rounded-xl h-10 sm:h-11 flex items-center justify-center gap-1.5 px-3 shadow-[0_4px_16px_rgba(255,107,44,0.25)] hover:shadow-lg transition-all duration-200 active:scale-95 cursor-pointer text-xs sm:text-sm select-none"
                     >
                       {isDining ? (
                         <>
@@ -3413,7 +3371,7 @@ export default function PlannerSidebar({
                               strokeWidth="2.4"
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              className="w-4 h-4 absolute origin-center transition-all duration-300 ease-out group-hover:rotate-[32deg] group-hover:-translate-x-[1.5px] group-active:rotate-[32deg] group-active:-translate-x-[1.5px]"
+                              className="w-4 h-4 absolute origin-center transition-all duration-300 ease-out group-hover:rotate-32 group-hover:translate-x-[-1.5px] group-active:rotate-32 group-active:translate-x-[-1.5px]"
                             >
                               <path d="M16 2v5a2 2 0 0 1-2 2h0a2 2 0 0 1-2-2V2" />
                               <path d="M14 2v4" />
@@ -3427,7 +3385,7 @@ export default function PlannerSidebar({
                               strokeWidth="2.4"
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              className="w-4 h-4 absolute origin-center transition-all duration-300 ease-out group-hover:-rotate-[32deg] group-hover:translate-x-[1.5px] group-active:-rotate-[32deg] group-active:translate-x-[1.5px]"
+                              className="w-4 h-4 absolute origin-center transition-all duration-300 ease-out group-hover:rotate-[-32deg] group-hover:translate-x-[1.5px] group-active:rotate-[-32deg] group-active:translate-x-[1.5px]"
                             >
                               <path d="M9 2v8a2.5 2.5 0 0 1-2.5-2.5V2a2 2 0 0 1 2.5 0z" />
                               <path d="M8 10v12" />
@@ -3451,7 +3409,7 @@ export default function PlannerSidebar({
                     rel="noopener noreferrer"
                     className={`group flex-1 font-bold rounded-xl h-10 sm:h-11 flex items-center justify-center gap-2 px-4 transition-all duration-200 active:scale-95 cursor-pointer text-xs sm:text-sm select-none ${
                       isBasecampSelected
-                        ? 'bg-gradient-to-r from-[#FF6B2C] to-[#E65D20] text-white shadow-[0_4px_16px_rgba(255,107,44,0.28)] hover:shadow-[0_6px_20px_rgba(255,107,44,0.38)]'
+                        ? 'bg-linear-to-r from-[#FF6B2C] to-[#E65D20] text-white shadow-[0_4px_16px_rgba(255,107,44,0.28)] hover:shadow-[0_6px_20px_rgba(255,107,44,0.38)]'
                         : 'bg-white hover:bg-stone-100 text-stone-800 border border-stone-200/80 shadow-xs'
                     }`}
                   >
@@ -3503,7 +3461,7 @@ export default function PlannerSidebar({
                       <span>Basecamp</span>
                     ) : (
                       <>
-                        <div className="relative inline-flex overflow-hidden h-4 min-w-[9px] items-center justify-center">
+                        <div className="relative inline-flex overflow-hidden h-4 min-w-2.25 items-center justify-center">
                           <AnimatePresence mode="popLayout" custom={slideDirection}>
                             <motion.span
                               key={selectedStopIdx}

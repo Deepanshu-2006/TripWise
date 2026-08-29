@@ -54,7 +54,7 @@ export default function TripCard({
         </div>
 
         {/* Card Content Overlay */}
-        <div className="px-5 pb-6 pt-10 md:px-7 md:pb-8 md:pt-12 flex flex-col grow relative z-10 h-full aspect-[4/5] md:aspect-[3/4] justify-end">
+        <div className="px-5 pb-6 pt-10 md:px-7 md:pb-8 md:pt-12 flex flex-col grow relative z-10 h-full aspect-4/5 md:aspect-3/4 justify-end">
           
           {/* Top/Floating elements could go here, but we focus on bottom weight for cinematic feel */}
           
@@ -69,7 +69,7 @@ export default function TripCard({
                 />
                 <div className="absolute inset-0 rounded-full bg-white opacity-0 group-hover/avatar:opacity-100 blur-xs transition-opacity duration-300 z-0" />
               </div>
-              <span className="truncate max-w-[160px] text-stone-200 text-[11px] font-mono font-bold uppercase tracking-[0.2em] group-hover:text-white transition-colors drop-shadow-md">
+              <span className="truncate max-w-40 text-stone-200 text-[11px] font-mono font-bold uppercase tracking-[0.2em] group-hover:text-white transition-colors drop-shadow-md">
                 {authorName || 'Anonymous'}
               </span>
             </div>
@@ -84,7 +84,7 @@ export default function TripCard({
               {(tags || []).slice(0, 5).map((tag) => (
                 <span
                   key={tag}
-                  className="truncate max-w-[140px] bg-white/10 border border-white/20 text-white px-3 py-1 rounded-full uppercase font-mono text-[9px] tracking-[0.15em] font-bold backdrop-blur-md shadow-sm group-hover:border-white/40 transition-colors"
+                  className="truncate max-w-35 bg-white/10 border border-white/20 text-white px-3 py-1 rounded-full uppercase font-mono text-[9px] tracking-[0.15em] font-bold backdrop-blur-md shadow-sm group-hover:border-white/40 transition-colors"
                 >
                   {tag}
                 </span>
@@ -212,7 +212,7 @@ export default function TripCard({
         <AnimatePresence>
           {(isForking || isSuccess) && (
             <motion.div
-              className="fixed bottom-20 sm:bottom-10 left-1/2 z-[9999] flex items-center justify-center pointer-events-none"
+              className="fixed bottom-20 sm:bottom-10 left-1/2 z-9999 flex items-center justify-center pointer-events-none"
               initial={{ opacity: 0, y: 30, x: "-50%", scale: 0.95 }}
               animate={{ opacity: 1, y: 0, x: "-50%", scale: 1 }}
               exit={{ opacity: 0, y: 20, x: "-50%", scale: 0.95 }}

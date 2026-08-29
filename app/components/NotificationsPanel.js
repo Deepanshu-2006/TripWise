@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, BellOff, X, Check, Info, Plane, Sun, TrendingDown, ChevronRight, AlertCircle } from 'lucide-react';
+import { Bell, BellOff, X, Check, Plane, Sun, TrendingDown, AlertCircle } from 'lucide-react';
 
 // ─── Storage helpers ──────────────────────────────────────────────────────────
 
@@ -78,7 +78,7 @@ function PermissionBadge({ status }) {
 
 // ─── Notification Toggle Card ─────────────────────────────────────────────────
 
-function NotificationCard({ icon, title, description, enabled, onToggle, disabled, tag }) {
+function NotificationCard({ icon, title, description, enabled, onToggle, disabled }) {
   return (
     <div className={`flex items-center gap-3.5 py-3.5 border-b border-stone-100 last:border-0 ${disabled ? 'opacity-50' : ''}`}>
       {/* Icon */}
@@ -98,7 +98,7 @@ function NotificationCard({ icon, title, description, enabled, onToggle, disable
       <button
         onClick={disabled ? undefined : onToggle}
         aria-label={enabled ? `Disable ${title}` : `Enable ${title}`}
-        className={`relative w-[42px] h-6 rounded-full transition-colors duration-300 shrink-0 focus:outline-none ${
+        className={`relative w-10.5 h-6 rounded-full transition-colors duration-300 shrink-0 focus:outline-none ${
           disabled ? 'cursor-not-allowed' : 'cursor-pointer'
         } ${enabled && !disabled ? 'bg-stone-900' : 'bg-stone-200'}`}
       >
@@ -106,7 +106,7 @@ function NotificationCard({ icon, title, description, enabled, onToggle, disable
           layout
           animate={{ x: enabled && !disabled ? 20 : 2 }}
           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-          className="absolute top-[2px] left-0 w-5 h-5 bg-white rounded-full shadow-sm"
+          className="absolute top-0.5 left-0 w-5 h-5 bg-white rounded-full shadow-sm"
         />
       </button>
     </div>
@@ -216,7 +216,7 @@ export default function NotificationsPanel({ isOpen, onClose, itinerary }) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998]"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-9998"
           />
 
           {/* Panel */}
@@ -228,14 +228,14 @@ export default function NotificationsPanel({ isOpen, onClose, itinerary }) {
             drag="y"
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0, bottom: 0.8 }}
-            onDragEnd={(e, { offset, velocity }) => {
+            onDragEnd={(_e, { offset, velocity }) => {
               if (offset.y > 100 || velocity.y > 400) {
                 onClose();
               }
             }}
-            className="fixed z-[9999] inset-x-0 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:max-w-[380px] flex flex-col max-h-[90vh] sm:max-h-[85vh]"
+            className="fixed z-9999 inset-x-0 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:max-w-95 flex flex-col max-h-[90vh] sm:max-h-[85vh]"
           >
-            <div className="bg-white rounded-t-[32px] sm:rounded-3xl shadow-[0_-12px_48px_rgba(0,0,0,0.1)] sm:shadow-[0_24px_64px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05)] flex flex-col h-full overflow-hidden">
+            <div className="bg-white rounded-t-4xl sm:rounded-3xl shadow-[0_-12px_48px_rgba(0,0,0,0.1)] sm:shadow-[0_24px_64px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05)] flex flex-col h-full overflow-hidden">
 
               {/* ── Header ── */}
               <div className="relative px-6 pt-5 pb-4 shrink-0 z-10 flex flex-col items-center border-b border-stone-100">
@@ -350,7 +350,7 @@ export default function NotificationsPanel({ isOpen, onClose, itinerary }) {
 
                 {/* ── Footer ── */}
                 <div className="pt-2">
-                  <p className="text-[10px] text-[#7A7268]/80 font-sans text-center leading-relaxed max-w-[280px] mx-auto">
+                  <p className="text-[10px] text-[#7A7268]/80 font-sans text-center leading-relaxed max-w-70 mx-auto">
                     Notifications are local — no data is sent to any server.
                     {isDenied ? '' : ' They only fire when your browser is running.'}
                   </p>

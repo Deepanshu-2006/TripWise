@@ -53,10 +53,10 @@ export default function LiveProximityBanner({ anchorCoords, actCoords, anchorNam
     <motion.div
       whileHover={{ y: -2, scale: 1.01 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      className="hidden lg:flex items-start gap-4 p-4 rounded-3xl border border-[#E6DFD5]/60 bg-gradient-to-br from-white/95 to-[#FAF6F0]/90 backdrop-blur-md shadow-[0_8px_24px_rgba(30,28,26,0.04)] hover:shadow-[0_12px_32px_rgba(30,28,26,0.08)] transition-shadow relative overflow-hidden"
+      className="hidden lg:flex items-start gap-4 p-4 rounded-3xl border border-[#E6DFD5]/60 bg-linear-to-br from-white/95 to-[#FAF6F0]/90 backdrop-blur-md shadow-[0_8px_24px_rgba(30,28,26,0.04)] hover:shadow-[0_12px_32px_rgba(30,28,26,0.08)] transition-shadow relative overflow-hidden"
     >
       <div className="absolute inset-0 bg-white/40 pointer-events-none z-0"></div>
-      <div className="relative z-10 w-10 h-10 rounded-2xl bg-gradient-to-b from-[#FFF5F0] to-[#FFE8DE] border border-[#FFD5C2]/50 flex items-center justify-center text-[#FF6B2C] shrink-0 shadow-inner">
+      <div className="relative z-10 w-10 h-10 rounded-2xl bg-linear-to-b from-[#FFF5F0] to-[#FFE8DE] border border-[#FFD5C2]/50 flex items-center justify-center text-[#FF6B2C] shrink-0 shadow-inner">
         <MapPin className="w-4 h-4 stroke-[2.2]" />
       </div>
       <div className="relative z-10 flex-1">
@@ -68,7 +68,7 @@ export default function LiveProximityBanner({ anchorCoords, actCoords, anchorNam
               : 'bg-stone-50 text-[#7A7268] border border-stone-200'
           }`}>
             <span className="text-[12px] leading-none">📍</span> 
-            <span className="mt-[1px]">{label}</span>
+            <span className="mt-px">{label}</span>
           </span>
         </div>
         <p className="font-sans text-[13px] text-[#5F5E5A] leading-relaxed">

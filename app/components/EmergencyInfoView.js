@@ -406,12 +406,12 @@ export default function EmergencyInfoView({ destinationName, passportNationality
                     {hosp.name}
                   </h4>
                   {hosp.is24Hours && (
-                    <span className="px-2 py-0.25 rounded-full bg-emerald-100 text-emerald-800 text-[9.5px] sm:text-[10px] font-bold font-mono uppercase">
+                    <span className="px-2 py-px rounded-full bg-emerald-100 text-emerald-800 text-[9.5px] sm:text-[10px] font-bold font-mono uppercase">
                       24/7 ER
                     </span>
                   )}
                   {hosp.traumaCenter && (
-                    <span className="px-2 py-0.25 rounded-full bg-[#FF6B2C]/15 text-[#FF6B2C] text-[9.5px] sm:text-[10px] font-bold font-mono uppercase">
+                    <span className="px-2 py-px rounded-full bg-[#FF6B2C]/15 text-[#FF6B2C] text-[9.5px] sm:text-[10px] font-bold font-mono uppercase">
                       Trauma Center
                     </span>
                   )}

@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, Download, ExternalLink, Check, ChevronDown, ChevronUp, Utensils, MapPin, Plane, Sparkles, RefreshCw } from 'lucide-react';
+import { X, Calendar, Check, ChevronDown, Utensils, MapPin, Plane, RefreshCw } from 'lucide-react';
 import { generateICS, downloadICS, getGoogleCalendarTripUrl, getICSFilename, countCalendarEvents } from '../../lib/calendarSync';
 
 // ─── Calendar Provider Configs ───────────────────────────────────────────────
@@ -112,14 +112,14 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
-      if (typeof window !== 'undefined' && window.__lenis) window.__lenis.stop();
+      if (typeof window !== 'undefined' && window.lenis) window.lenis.stop();
     } else {
       document.body.style.overflow = '';
-      if (typeof window !== 'undefined' && window.__lenis) window.__lenis.start();
+      if (typeof window !== 'undefined' && window.lenis) window.lenis.start();
     }
     return () => {
       document.body.style.overflow = '';
-      if (typeof window !== 'undefined' && window.__lenis) window.__lenis.start();
+      if (typeof window !== 'undefined' && window.lenis) window.lenis.start();
     };
   }, [isOpen]);
 
@@ -174,7 +174,7 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998]"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-9998"
           />
 
           {/* Modal */}
@@ -187,14 +187,14 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
             drag="y"
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0, bottom: 0.8 }}
-            onDragEnd={(e, { offset, velocity }) => {
+            onDragEnd={(_e, { offset, velocity }) => {
               if (offset.y > 100 || velocity.y > 400) {
                 onClose();
               }
             }}
-            className="fixed z-[9999] inset-x-0 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:max-w-[400px] flex flex-col h-auto max-h-[90vh]"
+            className="fixed z-9999 inset-x-0 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:max-w-100 flex flex-col h-auto max-h-[90vh]"
           >
-            <motion.div layout className="bg-white rounded-t-[32px] sm:rounded-3xl shadow-[0_-12px_48px_rgba(0,0,0,0.1)] sm:shadow-[0_24px_64px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05)] flex flex-col h-auto max-h-full overflow-hidden">
+            <motion.div layout className="bg-white rounded-t-4xl sm:rounded-3xl shadow-[0_-12px_48px_rgba(0,0,0,0.1)] sm:shadow-[0_24px_64px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05)] flex flex-col h-auto max-h-full overflow-hidden">
 
               {/* ── Header ── */}
               <div className="relative px-6 pt-5 pb-4 shrink-0 z-10 flex flex-col items-center border-b border-stone-100">
@@ -278,10 +278,10 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.2 }}
-                      className="relative flex flex-col items-center justify-center py-8 px-6 bg-white border border-[#E6DFD5] shadow-sm rounded-[24px] text-center overflow-hidden"
+                      className="relative flex flex-col items-center justify-center py-8 px-6 bg-white border border-[#E6DFD5] shadow-sm rounded-3xl text-center overflow-hidden"
                     >
                       {/* Subtle premium gradient accent (Green for success) */}
-                      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent opacity-50" />
+                      <div className="absolute top-0 inset-x-0 h-1 bg-linear-to-r from-transparent via-emerald-500 to-transparent opacity-50" />
                       
                       <div className="relative w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center mb-4 border border-emerald-100 shadow-xs">
                         <motion.svg
@@ -306,7 +306,7 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
                         Sync Initiated
                       </h3>
                       
-                      <p className="text-[13px] text-[#7A7268] font-sans leading-relaxed max-w-[220px] mb-6">
+                      <p className="text-[13px] text-[#7A7268] font-sans leading-relaxed max-w-55 mb-6">
                         Please ensure you complete the save process inside your calendar app.
                       </p>
                       

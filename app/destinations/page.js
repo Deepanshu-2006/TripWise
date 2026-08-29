@@ -50,7 +50,7 @@ const renderHighlightedText = (text, highlight) => {
     <>
       {parts.map((part, i) =>
         part.toLowerCase() === highlight.toLowerCase() ? (
-          <span key={i} className="text-[#FF6B2C] font-black bg-[#FF6B2C]/10 rounded-[3px] px-[2px]">{part}</span>
+          <span key={i} className="text-[#FF6B2C] font-black bg-[#FF6B2C]/10 rounded-[3px] px-0.5">{part}</span>
         ) : (
           <span key={i}>{part}</span>
         )
@@ -150,12 +150,12 @@ function CustomAIPlanConsole() {
         }}
       >
         {/* Left Column: Top to Bottom (Down) */}
-        <div className="flex animate-marquee-down gap-4 pb-4 w-1/2 max-w-[140px]" style={{ animationDuration: '45s' }}>
+        <div className="flex animate-marquee-down gap-4 pb-4 w-1/2 max-w-35" style={{ animationDuration: '45s' }}>
           {[...DESTINATIONS, ...DESTINATIONS].map((dest, i) => (
             <div key={`bg-card-mob-1-${i}`} className="w-full h-40 bg-[#1A1A1A] rounded-2xl overflow-hidden border border-white/10 shrink-0 shadow-2xl flex flex-col">
               <div className="h-24 bg-stone-900 relative">
                 <Image src={dest.imageUrl} alt="" fill className="object-cover opacity-80" sizes="(max-width: 768px) 100vw, 50vw" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-[#1A1A1A] via-transparent to-transparent" />
               </div>
               <div className="p-3 flex-1 flex flex-col justify-end bg-[#1A1A1A]">
                 <div className="text-white font-serif font-bold mb-0.5 truncate text-sm tracking-wide">{dest.name}</div>
@@ -166,12 +166,12 @@ function CustomAIPlanConsole() {
         </div>
         
         {/* Right Column: Bottom to Top (Up) */}
-        <div className="flex animate-marquee-up gap-4 pb-4 w-1/2 max-w-[140px] mt-16" style={{ animationDuration: '65s' }}>
+        <div className="flex animate-marquee-up gap-4 pb-4 w-1/2 max-w-35 mt-16" style={{ animationDuration: '65s' }}>
           {[...DESTINATIONS].reverse().concat([...DESTINATIONS].reverse()).map((dest, i) => (
             <div key={`bg-card-mob-2-${i}`} className="w-full h-40 bg-[#1A1A1A] rounded-2xl overflow-hidden border border-white/10 shrink-0 shadow-2xl flex flex-col">
               <div className="h-24 bg-stone-900 relative">
                 <Image src={dest.imageUrl} alt="" fill className="object-cover opacity-80" sizes="(max-width: 768px) 100vw, 50vw" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-[#1A1A1A] via-transparent to-transparent" />
               </div>
               <div className="p-3 flex-1 flex flex-col justify-end bg-[#1A1A1A]">
                 <div className="text-white font-serif font-bold mb-0.5 truncate text-sm tracking-wide">{dest.name}</div>
@@ -196,7 +196,7 @@ function CustomAIPlanConsole() {
             <div key={`bg-card-1-${i}`} className="w-48 h-56 bg-[#1A1A1A] rounded-3xl overflow-hidden border border-white/10 shrink-0 shadow-2xl flex flex-col">
               <div className="h-32 bg-stone-900 relative">
                 <Image src={dest.imageUrl} alt="" fill className="object-cover opacity-80" sizes="(max-width: 768px) 100vw, 50vw" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-[#1A1A1A] via-transparent to-transparent" />
               </div>
               <div className="p-4 flex-1 flex flex-col justify-end bg-[#1A1A1A]">
                 <div className="text-white font-serif font-bold mb-0.5 truncate text-lg tracking-wide">{dest.name}</div>
@@ -212,7 +212,7 @@ function CustomAIPlanConsole() {
             <div key={`bg-card-2-${i}`} className="w-48 h-56 bg-[#1A1A1A] rounded-3xl overflow-hidden border border-white/10 shrink-0 shadow-2xl flex flex-col">
               <div className="h-32 bg-stone-900 relative">
                 <Image src={dest.imageUrl} alt="" fill className="object-cover opacity-80" sizes="(max-width: 768px) 100vw, 50vw" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-[#1A1A1A] via-transparent to-transparent" />
               </div>
               <div className="p-4 flex-1 flex flex-col justify-end bg-[#1A1A1A]">
                 <div className="text-white font-serif font-bold mb-0.5 truncate text-lg tracking-wide">{dest.name}</div>
@@ -377,7 +377,7 @@ function SortDropdown({ value, onChange }) {
                       setIsOpen(false);
                     }}
                     className={`w-full flex items-center justify-between px-3.5 py-2.5 hover:bg-stone-50 transition-colors text-left text-xs font-semibold ${
-                      isActive ? 'text-[#FF5B1D] bg-[#FF5B1D]/[0.02]' : 'text-stone-600'
+                      isActive ? 'text-[#FF5B1D] bg-[#FF5B1D]/2' : 'text-stone-600'
                     }`}
                   >
                     <span>{opt}</span>
@@ -421,7 +421,7 @@ function FilterDropdown({ label, options, activeOptions, onToggle, dropdownPosit
         className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-semibold transition-all duration-200 ease-out cursor-pointer whitespace-nowrap select-none flex-1 sm:flex-initial w-full ${
           isOpen || activeCount > 0
             ? 'bg-[#FF5B1D] text-white border-2 border-[#FF5B1D] shadow-[0_6px_20px_rgba(255,91,29,0.35)] -translate-y-0.5'
-            : 'bg-white border border-stone-200/90 text-stone-700 hover:border-[#FF5B1D]/60 hover:text-[#FF5B1D] hover:bg-[#FF5B1D]/[0.05] hover:shadow-[0_6px_16px_rgba(255,91,29,0.15)] hover:-translate-y-0.5'
+            : 'bg-white border border-stone-200/90 text-stone-700 hover:border-[#FF5B1D]/60 hover:text-[#FF5B1D] hover:bg-[#FF5B1D]/5 hover:shadow-[0_6px_16px_rgba(255,91,29,0.15)] hover:-translate-y-0.5'
         }`}
       >
         <span>{label}</span>
@@ -579,7 +579,7 @@ function DestCard({ dest, onClick, isHighlighted }) {
                   />
                 )}
                 {/* Contrast Vignette Overlay for Readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#1C1B1B]/95 via-[#1C1B1B]/30 to-[#1C1B1B]/35 transition-opacity duration-500 group-hover:opacity-85 pointer-events-none" />
+                <div className="absolute inset-0 bg-linear-to-t from-[#1C1B1B]/95 via-[#1C1B1B]/30 to-[#1C1B1B]/35 transition-opacity duration-500 group-hover:opacity-85 pointer-events-none" />
               </div>
               
               {/* Top Info Bar: Category Badge (Left) & Duration Pill (Right) */}
@@ -642,7 +642,7 @@ function DestCard({ dest, onClick, isHighlighted }) {
 
               {/* Compact AI Prompt Preview Box */}
               {dest.prompt && (
-                <div className="mt-2.5 mb-2.5 rounded-xl p-2.5 bg-stone-50/80 border border-stone-200/80 flex flex-col gap-1 shadow-2xs group-hover:border-[#FF5B1D]/35 group-hover:bg-[#FF5B1D]/[0.04] transition-all">
+                <div className="mt-2.5 mb-2.5 rounded-xl p-2.5 bg-stone-50/80 border border-stone-200/80 flex flex-col gap-1 shadow-2xs group-hover:border-[#FF5B1D]/35 group-hover:bg-[#FF5B1D]/4 transition-all">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
                       <span className="w-3.5 h-3.5 rounded-full bg-[#FF5B1D] text-white flex items-center justify-center text-[8px] font-black shadow-xs">✨</span>
@@ -662,7 +662,7 @@ function DestCard({ dest, onClick, isHighlighted }) {
                   className="relative w-full overflow-hidden flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl bg-[#1C1B1B] text-white border border-stone-800 group-hover:border-[#FF5B1D] font-extrabold text-[10px] cursor-pointer tracking-wider uppercase font-mono transition-all duration-300 group-hover:shadow-[0_8px_30px_rgba(255,91,29,0.45)]"
                 >
                   {/* Liquid Orange Jet Fuel Morph Layer */}
-                  <span className="absolute inset-0 bg-gradient-to-r from-[#FF5B1D] via-[#FE7717] to-[#FF5B1D] translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-0" />
+                  <span className="absolute inset-0 bg-linear-to-r from-[#FF5B1D] via-[#FE7717] to-[#FF5B1D] translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-0" />
 
                   {/* Button Text */}
                   <span className="relative z-10 flex items-center justify-center gap-2 group-hover:tracking-widest transition-all duration-300">
@@ -1087,7 +1087,7 @@ export default function DestinationsPage() {
       <Header />
 
       {/* Hero */}
-      <section className="relative w-full h-[550px] md:h-[650px] bg-[#111] overflow-hidden flex items-center pt-[68px]">
+      <section className="relative w-full h-137.5 md:h-162.5 bg-[#111] overflow-hidden flex items-center pt-17">
         {/* Background Images Cross-Fade */}
         <AnimatePresence>
           <motion.img
@@ -1160,7 +1160,7 @@ export default function DestinationsPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-stone-200 overflow-hidden z-[100] max-h-[300px] overflow-y-auto"
+                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-stone-200 overflow-hidden z-100 max-h-75 overflow-y-auto"
                   >
                     {filteredDests.length > 0 ? (
                       filteredDests.slice(0, 5).map(dest => (
@@ -1227,7 +1227,7 @@ export default function DestinationsPage() {
       {viewMode === 'bento' && (
         <div className="sticky top-24 z-40">
           <OrigamiFilterBar>
-            <section className="max-w-6xl mx-auto w-full px-4 sm:px-6 -mt-8 mb-8 min-h-[180px] sm:min-h-[100px] relative pointer-events-none">
+            <section className="max-w-6xl mx-auto w-full px-4 sm:px-6 -mt-8 mb-8 min-h-45 sm:min-h-25 relative pointer-events-none">
               {/* Solid sharp-cornered mask to hide scrolling content that peeks through the rounded corners */}
               <div className={`absolute top-0 bottom-0 left-4 right-4 sm:left-6 sm:right-6 bg-[#FAF8F5] -z-10 transition-opacity duration-500 ${isScrolledPastHero ? 'opacity-100' : 'opacity-0'} sm:block hidden`} />
               

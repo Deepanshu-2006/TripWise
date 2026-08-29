@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react'
-import gsap from 'gsap'
 import { motion, AnimatePresence, useScroll, useTransform, useSpring, useMotionValueEvent } from 'framer-motion'
 import { usePathname } from 'next/navigation'
 import { useAuth } from "@clerk/nextjs";
@@ -11,8 +10,8 @@ import { supabase } from '../../lib/supabase';
 function Header() {
     const { isSignedIn, userId } = useAuth();
     const [isScrolled, setIsScrolled] = useState(false);
-    const [isFlying, setIsFlying] = useState(false);
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [] = useState(false);
+    const [, setIsMobileMenuOpen] = useState(false);
     
     // For My Itinerary trips in mobile menu
     const [userTrips, setUserTrips] = useState([]);
@@ -20,7 +19,7 @@ function Header() {
     const [isLoadingTrips, setIsLoadingTrips] = useState(false);
     
     useEffect(() => {
-        if (isMobileMenuOpen) {
+        if (setIsMobileMenuOpen) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = '';
@@ -28,10 +27,10 @@ function Header() {
         return () => {
             document.body.style.overflow = '';
         };
-    }, [isMobileMenuOpen]);
+    }, [setIsMobileMenuOpen]);
 
     useEffect(() => {
-        if (isMobileMenuOpen && isSignedIn && userId && userTrips.length === 0) {
+        if (setIsMobileMenuOpen && isSignedIn && userId && userTrips.length === 0) {
             async function loadTrips() {
                 try {
                     setIsLoadingTrips(true);
@@ -53,7 +52,7 @@ function Header() {
             }
             loadTrips();
         }
-    }, [isMobileMenuOpen, isSignedIn, userId]);
+    }, [setIsMobileMenuOpen, isSignedIn, userId]);
     
     // Continuous Scroll Interpolation
     const { scrollY } = useScroll();
@@ -102,55 +101,8 @@ function Header() {
     const navTracking = useTransform(trackingRaw, v => `${v}em`);
     
     // Refs for GSAP animation
-    const plane1Ref = useRef(null);
-    const plane2Ref = useRef(null);
-    const plane3Ref = useRef(null);
     const wipeOverlayRef = useRef(null);
 
-    const handleFlyTransition = (e) => {
-        if (e) e.preventDefault();
-        
-        setIsFlying(true);
-        
-        const tl = gsap.timeline();
-
-        // Plane 1: Swoops high and right
-        tl.fromTo(plane1Ref.current, 
-            { x: 0, y: 0, rotation: 0, scale: 0.5, opacity: 0 },
-            { x: window.innerWidth * 0.6, ease: "power2.out", duration: 1.2, opacity: 1 }, 0
-        ).to(plane1Ref.current, 
-            { y: -window.innerHeight * 0.8, rotation: 75, scale: 2, ease: "power3.in", duration: 1.2 }, 0
-        );
-
-        // Plane 2: Swoops far right, lower
-        tl.fromTo(plane2Ref.current, 
-            { x: 0, y: 0, rotation: 0, scale: 0.3, opacity: 0 },
-            { x: window.innerWidth * 0.8, ease: "power1.out", duration: 1.4, opacity: 1 }, 0.1
-        ).to(plane2Ref.current, 
-            { y: -window.innerHeight * 0.3, rotation: 85, scale: 1.2, ease: "power2.in", duration: 1.4 }, 0.1
-        );
-
-        // Plane 3: Swoops left and very high
-        tl.fromTo(plane3Ref.current, 
-            { x: 0, y: 0, rotation: 0, scale: 0.4, opacity: 0 },
-            { x: -window.innerWidth * 0.4, ease: "power2.out", duration: 1.3, opacity: 1 }, 0.05
-        ).to(plane3Ref.current, 
-            { y: -window.innerHeight * 0.9, rotation: -45, scale: 1.5, ease: "power4.in", duration: 1.3 }, 0.05
-        );
-
-        // Cinematic Circle Wipe Transition
-        tl.to(wipeOverlayRef.current, {
-            scale: 250, // Massive scale to cover any screen from the header
-            opacity: 1,
-            duration: 1.0,
-            ease: "power3.inOut"
-        }, 0.4);
-
-        // Wait for the transition to finish
-        setTimeout(() => {
-            window.location.href = isSignedIn ? '/ai-planner/new' : '/sign-in';
-        }, 1300);
-    };
 
     const isLightPage = pathname?.startsWith('/planner') && !pathname?.startsWith('/planner-sidebar');
 
@@ -166,7 +118,7 @@ function Header() {
                 backdropFilter: headerBlur,
                 WebkitBackdropFilter: headerBlur,
             }}
-            className={`fixed left-0 right-0 z-[9999] mx-auto border rounded-full w-[calc(100%-2rem)] transition-colors duration-300 ${
+            className={`fixed left-0 right-0 z-9999 mx-auto border rounded-full w-[calc(100%-2rem)] transition-colors duration-300 ${
                 isLightPage
                     ? "border-[#ECE8E2] hover:border-[#FF6B2C]/30"
                     : "border-white/20 hover:border-white/30"
@@ -294,7 +246,7 @@ function Header() {
                             {isSignedIn ? (
                                 <ProfileDropdown isLightPage={isLightPage} isScrolled={isScrolled} />
                             ) : (
-                                <a href="/sign-in" className={`font-mono text-[11px] font-bold ${isLightPage ? 'text-[#1F1F1F] hover:text-[#FF6B2C]' : 'text-white hover:text-[#FF6B2C]'} uppercase tracking-widest transition-colors py-2 relative nav-link-underline -mt-[2px]`}>
+                                <a href="/sign-in" className={`font-mono text-[11px] font-bold ${isLightPage ? 'text-[#1F1F1F] hover:text-[#FF6B2C]' : 'text-white hover:text-[#FF6B2C]'} uppercase tracking-widest transition-colors py-2 relative nav-link-underline -mt-0.5`}>
                                     Sign In
                                 </a>
                             )}
@@ -304,12 +256,12 @@ function Header() {
                     {/* Mobile Navigation Toggle (Hamburger) */}
                     <div className="md:hidden flex items-center">
                         <button 
-                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                            className={`p-2 focus:outline-none flex flex-col justify-center items-center gap-1.5 z-[10000]`}
+                            onClick={() => setIsMobileMenuOpen(!setIsMobileMenuOpen)}
+                            className={`p-2 focus:outline-none flex flex-col justify-center items-center gap-1.5 z-10000`}
                         >
-                            <span className={`block w-6 h-[2px] rounded-full transition-transform duration-300 ${isMobileMenuOpen ? 'bg-white rotate-45 translate-y-[8px]' : (isLightPage ? 'bg-[#1F1F1F]' : 'bg-white')}`} />
-                            <span className={`block w-6 h-[2px] rounded-full transition-opacity duration-300 ${isMobileMenuOpen ? 'opacity-0' : (isLightPage ? 'bg-[#1F1F1F]' : 'bg-white')}`} />
-                            <span className={`block w-6 h-[2px] rounded-full transition-transform duration-300 ${isMobileMenuOpen ? 'bg-white -rotate-45 -translate-y-[8px]' : (isLightPage ? 'bg-[#1F1F1F]' : 'bg-white')}`} />
+                            <span className={`block w-6 h-0.5 rounded-full transition-transform duration-300 ${setIsMobileMenuOpen ? 'bg-white rotate-45 translate-y-2' : (isLightPage ? 'bg-[#1F1F1F]' : 'bg-white')}`} />
+                            <span className={`block w-6 h-0.5 rounded-full transition-opacity duration-300 ${setIsMobileMenuOpen ? 'opacity-0' : (isLightPage ? 'bg-[#1F1F1F]' : 'bg-white')}`} />
+                            <span className={`block w-6 h-0.5 rounded-full transition-transform duration-300 ${setIsMobileMenuOpen ? 'bg-white -rotate-45 -translate-y-2' : (isLightPage ? 'bg-[#1F1F1F]' : 'bg-white')}`} />
                         </button>
                     </div>
 
@@ -320,14 +272,14 @@ function Header() {
             {/* Cinematic Circle Wipe Transition Overlay */}
             <div 
                 ref={wipeOverlayRef} 
-                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-[#0A0A0A] rounded-full z-[99999] pointer-events-none opacity-0 origin-center" 
+                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-[#0A0A0A] rounded-full z-99999 pointer-events-none opacity-0 origin-center" 
             />
         </motion.header>
 
         {/* Mobile Menu Overlay */}
         <div 
             id="mobile-menu-scroll-container"
-            className={`md:hidden fixed inset-0 h-[100dvh] bg-[#070709]/98 backdrop-blur-3xl z-[9998] flex flex-col items-start justify-start pt-32 pb-8 px-8 overflow-y-auto transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto translate-y-0' : 'opacity-0 pointer-events-none -translate-y-4'}`}
+            className={`md:hidden fixed inset-0 h-dvh bg-[#070709]/98 backdrop-blur-3xl z-9998 flex flex-col items-start justify-start pt-32 pb-8 px-8 overflow-y-auto transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${setIsMobileMenuOpen ? 'opacity-100 pointer-events-auto translate-y-0' : 'opacity-0 pointer-events-none -translate-y-4'}`}
             style={{ left: 0, right: 0, top: 0, bottom: 0 }}
         >
             {/* Navigation Links */}

@@ -91,13 +91,7 @@ const faqNotes = [
   }
 ];
 
-const citiesTrack1 = [
-  "PARIS", "TOKYO", "NEW YORK", "ROME", "BARCELONA", "KYOTO", "AMALFI", "LONDON", "ZURICH", "SANTORINI", "CAPE TOWN", "REYKJAVIK", "BALI", "SYDNEY"
-];
 
-const citiesTrack2 = [
-  "VENICE", "LISBON", "PRAGUE", "AMSTERDAM", "DUBAI", "SEOUL", "BANFF", "FLORENCE", "MARRAKESH", "PATAGONIA", "CAIRO", "VIENNA", "HELSINKI", "ATHENS"
-];
 
 export default function FAQAndMarqueeCTA() {
   const { isSignedIn } = useAuth();
@@ -625,7 +619,7 @@ export default function FAQAndMarqueeCTA() {
                 alt="Rome Colosseum" 
                 className="absolute inset-0 w-full h-full object-cover z-0"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/20 z-10" />
+              <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/35 to-black/20 z-10" />
 
               <div className="relative z-20 flex justify-between items-center gap-1">
                 <span className="px-2 py-0.5 rounded-full bg-black/60 text-white font-mono text-[9px] font-bold backdrop-blur-md border border-white/20 whitespace-nowrap">
@@ -652,7 +646,7 @@ export default function FAQAndMarqueeCTA() {
           {/* ✦ FIGMA SHOWCASE DESTINATION CARD: KYOTO ✦ */}
           <div 
             ref={el => polaroidRefs.current[1] = el}
-            className="absolute top-12 right-2 md:right-6 hidden lg:flex flex-col p-3 bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.16)] border border-stone-200/90 rotate-[12deg] z-0 pointer-events-none w-52 transition-transform duration-300 group"
+            className="absolute top-12 right-2 md:right-6 hidden lg:flex flex-col p-3 bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.16)] border border-stone-200/90 rotate-12 z-0 pointer-events-none w-52 transition-transform duration-300 group"
           >
             {/* Figma Artboard Header */}
             <div className="flex items-center justify-between gap-1 mb-2 px-0.5">
@@ -670,7 +664,7 @@ export default function FAQAndMarqueeCTA() {
                 alt="Kyoto Temple" 
                 className="absolute inset-0 w-full h-full object-cover z-0"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/20 z-10" />
+              <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/35 to-black/20 z-10" />
 
               <div className="relative z-20 flex justify-between items-center gap-1">
                 <span className="px-2 py-0.5 rounded-full bg-black/60 text-white font-mono text-[9px] font-bold backdrop-blur-md border border-white/20 whitespace-nowrap">
@@ -848,7 +842,7 @@ export default function FAQAndMarqueeCTA() {
               <button
                 ref={buttonRef}
                 onClick={handleFlyTransition}
-                className={`group relative inline-flex items-center justify-center w-[85vw] max-w-[280px] sm:w-auto sm:max-w-none px-6 sm:px-12 py-4 sm:py-6 rounded-full bg-[#FF5B1D] text-white font-extrabold text-[15px] sm:text-2xl tracking-wide shadow-[0_0_50px_rgba(249,115,22,0.4)] transition-shadow duration-300 cursor-pointer overflow-visible border border-white/20 ${isFlying ? 'scale-95 shadow-[0_0_80px_rgba(249,115,22,0.8)]' : 'hover:bg-[#ff6c34] hover:shadow-[0_0_80px_rgba(249,115,22,0.6)]'}`}
+                className={`group relative inline-flex items-center justify-center w-[85vw] max-w-70 sm:w-auto sm:max-w-none px-6 sm:px-12 py-4 sm:py-6 rounded-full bg-[#FF5B1D] text-white font-extrabold text-[15px] sm:text-2xl tracking-wide shadow-[0_0_50px_rgba(249,115,22,0.4)] transition-shadow duration-300 cursor-pointer overflow-visible border border-white/20 ${isFlying ? 'scale-95 shadow-[0_0_80px_rgba(249,115,22,0.8)]' : 'hover:bg-[#ff6c34] hover:shadow-[0_0_80px_rgba(249,115,22,0.6)]'}`}
               >
                 {/* Button inner highlight sheen */}
                 <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none">

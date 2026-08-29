@@ -8,10 +8,8 @@ import {
   Edit3, 
   Trash2,
   Calendar,
-  Image as ImageIcon,
   Globe,
   Lock,
-  MessageSquare,
   Check
 } from 'lucide-react';
 import { getTripJournalEntries, removeJournalEntry } from '../../lib/journalApi';
@@ -319,7 +317,7 @@ export default function JournalView({ tripId, itinerary, onEntriesChange }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[100001] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-md"
+              className="fixed inset-0 z-100001 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-md"
               onClick={() => setEntryToDelete(null)}
           >
               {(() => {
@@ -398,7 +396,7 @@ export default function JournalView({ tripId, itinerary, onEntriesChange }) {
                   animate={{ y: 0, opacity: 1, scale: 1 }}
                   exit={{ y: 20, opacity: 0, scale: 0.9 }}
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                  className="fixed bottom-20 sm:bottom-10 left-4 right-4 sm:left-auto sm:right-10 z-[100002] flex items-center justify-between gap-3 bg-[#1E1C1A]/95 backdrop-blur-xl border border-white/15 text-white pl-3.5 sm:pl-5 pr-2 sm:pr-3 py-2.5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden max-w-sm sm:max-w-md mx-auto sm:mx-0"
+                  className="fixed bottom-20 sm:bottom-10 left-4 right-4 sm:left-auto sm:right-10 z-100002 flex items-center justify-between gap-3 bg-[#1E1C1A]/95 backdrop-blur-xl border border-white/15 text-white pl-3.5 sm:pl-5 pr-2 sm:pr-3 py-2.5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden max-w-sm sm:max-w-md mx-auto sm:mx-0"
               >
                   <AnimatedTrashIcon />
                   
@@ -431,7 +429,7 @@ export default function JournalView({ tripId, itinerary, onEntriesChange }) {
       {/* Premium Animated Success Message */}
       <AnimatePresence>
         {successMessage && (
-          <div className="fixed bottom-20 sm:bottom-10 left-4 right-4 sm:left-0 sm:right-0 z-[200000] flex justify-center pointer-events-none">
+          <div className="fixed bottom-20 sm:bottom-10 left-4 right-4 sm:left-0 sm:right-0 z-200000 flex justify-center pointer-events-none">
             <motion.div
               initial={{ opacity: 0, y: 40, scale: 0.85 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -453,7 +451,7 @@ export default function JournalView({ tripId, itinerary, onEntriesChange }) {
                 <h4 className="text-xs sm:text-[13px] font-sans font-bold text-[#1E1C1A] leading-tight mb-0.5">
                   Entry updated successfully
                 </h4>
-                <p className="text-[10.5px] sm:text-[11px] font-sans font-medium text-[#7A7268] truncate max-w-[180px] sm:max-w-[240px] leading-tight">
+                <p className="text-[10.5px] sm:text-[11px] font-sans font-medium text-[#7A7268] truncate max-w-45 sm:max-w-60 leading-tight">
                   {successMessage.title}
                 </p>
               </div>

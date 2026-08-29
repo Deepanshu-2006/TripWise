@@ -107,7 +107,7 @@ export default function LiveTransitLine({ prevStop, nextStop, idx }) {
         
         {/* Animated underline on scroll */}
         <motion.div 
-            className="absolute -bottom-1 left-3 right-3 h-[2px] bg-gradient-to-r from-transparent via-[#FF6B2C]/40 to-transparent rounded-full origin-left"
+            className="absolute -bottom-1 left-3 right-3 h-0.5 bg-linear-to-r from-transparent via-[#FF6B2C]/40 to-transparent rounded-full origin-left"
             initial={{ scaleX: 0, opacity: 0 }}
             whileInView={{ scaleX: 1, opacity: 1 }}
             viewport={{ margin: "-20px" }}

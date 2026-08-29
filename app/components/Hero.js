@@ -443,7 +443,7 @@ const Hero = () => {
     return (
         <section ref={containerRef} id="hero-section" className="relative w-full h-[400vh] md:h-[750vh] bg-[#9D8574]">
             {/* Sticky Viewport Container */}
-            <div ref={stickyRef} className="sticky top-0 w-full h-[100lvh] overflow-hidden flex items-center justify-center">
+            <div ref={stickyRef} className="sticky top-0 w-full h-lvh overflow-hidden flex items-center justify-center">
                 {/* Background Frame Canvas (GPU Accelerated 60 FPS) */}
                 <canvas
                     ref={canvasRef}

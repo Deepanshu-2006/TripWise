@@ -20,7 +20,6 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
   const slideSheetRef = useRef(null);
   const leftBeamRef = useRef(null);
   const topBeamRef = useRef(null);
-  const mobileTopBeamRef = useRef(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -153,7 +152,7 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
   }, []);
 
   return (
-    <div className="relative z-30 w-full max-w-full -mt-[100svh]">
+    <div className="relative z-30 w-full max-w-full mt-[-100svh]">
       <div
         ref={pinWrapperRef}
         id="section-interactive-showcase"
@@ -167,7 +166,7 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
       <div
         ref={topBeamRef}
         aria-hidden="true"
-        className="hidden lg:block absolute top-0 inset-x-0 h-[3px] pointer-events-none z-50"
+        className="hidden lg:block absolute top-0 inset-x-0 h-0.75 pointer-events-none z-50"
         style={{
           background: 'linear-gradient(90deg, transparent 0%, rgba(255,91,29,0.5) 10%, #FF5B1D 50%, rgba(255,91,29,0.5) 90%, transparent 100%)',
           boxShadow: '0 0 22px 3.5px rgba(255, 91, 29, 0.9), 0 2px 28px 5px rgba(255, 91, 29, 0.55)',
@@ -177,7 +176,7 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
       {/* ── Base Section (Live Demo - pinned in viewport) ── */}
       <div 
         ref={baseContainerRef} 
-        className="relative w-full min-h-[100svh] flex flex-col justify-center will-change-transform z-10"
+        className="relative w-full min-h-svh flex flex-col justify-center will-change-transform z-10"
       >
         {baseSection}
       </div>
@@ -200,7 +199,7 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
 
         {/* Slide Section Content */}
         <div className="relative w-full h-full">
-          <div className="sticky top-0 w-full h-[100svh] overflow-hidden flex flex-col justify-start">
+          <div className="sticky top-0 w-full h-svh overflow-hidden flex flex-col justify-start">
             {slideSection}
           </div>
         </div>

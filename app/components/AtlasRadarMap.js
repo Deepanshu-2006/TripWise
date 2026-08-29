@@ -1,25 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 // Star rating helper
-function Stars({ rating }) {
-  const full = Math.floor(rating);
-  return (
-    <div className="flex items-center gap-0.5">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <span
-          key={i}
-          className={`text-xs ${i < full ? 'text-amber-400 font-bold' : 'text-stone-600'}`}
-        >
-          ★
-        </span>
-      ))}
-      <span className="text-xs font-extrabold text-white ml-1">{rating.toFixed(1)}</span>
-    </div>
-  );
-}
 
 // Custom Animated Flight Takeoff Button (Identical to DestCard Jet Takeoff Loop)
 function FlightButton({ label, onClick, isSmall = false }) {
@@ -95,7 +79,6 @@ export default function AtlasRadarMap({ destinations = [], onCardClick }) {
   const activeDest = destinations.find(d => d.id === (hoveredId || selectedId)) || destinations[0];
   const activeCount = destinations.filter(d => d.coords).length;
 
-  const activeXY = getDestXY(activeDest);
 
   const handleSelect = (dest) => {
     setSelectedId(dest.id === selectedId ? null : dest.id);
@@ -104,15 +87,12 @@ export default function AtlasRadarMap({ destinations = [], onCardClick }) {
   return (
     <div className="w-full flex flex-col lg:flex-row gap-4 sm:gap-6 items-stretch font-sans">
       {/* ─── LEFT PANEL: INTERACTIVE FLIGHT MAP ─── */}
-      <div className="lg:w-7/12 xl:w-2/3 bg-[#161618] border border-stone-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 relative overflow-hidden shadow-xl min-h-[460px] sm:min-h-120 sm:min-h-140 flex flex-col justify-between">
+      <div className="lg:w-7/12 xl:w-2/3 bg-[#161618] border border-stone-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 relative overflow-hidden shadow-xl min-h-115 sm:min-h-120 flex flex-col justify-between">
         {/* Elegant Top Header */}
         <div className="relative z-10 flex items-center justify-between pb-3 sm:pb-4 border-b border-stone-800">
           <div className="flex items-center gap-2 sm:gap-2.5">
             <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#FF5B1D]" />
-            <h3 className="text-[11px] sm:text-xs font-mono font-bold tracking-widest text-white uppercase">
-              Global Flight Network
-            </h3>
-          </div>
+                      </div>
           <div className="text-[9px] sm:text-[10px] font-mono text-stone-300 bg-stone-900 px-2.5 sm:px-3 py-1 rounded-full border border-stone-800 flex items-center gap-1.5 shadow-xs">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
             <span>{activeCount} Active Destinations</span>
@@ -121,7 +101,7 @@ export default function AtlasRadarMap({ destinations = [], onCardClick }) {
 
         {/* Interactive SVG Flight Grid Canvas */}
         <div className="relative flex-1 my-3 sm:my-4 w-full flex items-center justify-center">
-          <svg viewBox="0 0 1000 500" className="w-full h-full min-h-[220px] sm:min-h-[320px] lg:min-h-[380px] overflow-visible select-none touch-manipulation">
+          <svg viewBox="0 0 1000 500" className="w-full h-full min-h-55 sm:min-h-80 lg:min-h-95 overflow-visible select-none touch-manipulation">
             <defs>
               <linearGradient id="radarLineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="#FF5B1D" stopOpacity="0.9" />
@@ -325,7 +305,7 @@ export default function AtlasRadarMap({ destinations = [], onCardClick }) {
       </div>
 
       {/* ─── RIGHT PANEL: DESTINATION EXPLORER DRAWER ─── */}
-      <div className="lg:w-5/12 xl:w-1/3 bg-[#161618] border border-stone-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col h-[480px] sm:h-[560px] lg:h-[640px] shadow-xl">
+      <div className="lg:w-5/12 xl:w-1/3 bg-[#161618] border border-stone-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col h-120 sm:h-140h-[640px] shadow-xl">
         <div className="flex items-center justify-between pb-3 sm:pb-3.5 border-b border-stone-800 mb-3 shrink-0">
           <h3 className="text-[11px] sm:text-xs font-mono font-extrabold text-white uppercase tracking-widest flex items-center gap-2">
             <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#FF5B1D]" />

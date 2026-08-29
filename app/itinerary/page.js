@@ -1094,7 +1094,7 @@ export default function ItineraryPage() {
             animate={{ opacity: 1, y: 0, x: '-50%', scale: 1 }}
             exit={{ opacity: 0, y: 20, x: '-50%', scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 450, damping: 25 }}
-            className="fixed bottom-20 sm:bottom-10 left-1/2 z-[99999] pointer-events-auto w-[92%] sm:w-auto max-w-md select-none"
+            className="fixed bottom-20 sm:bottom-10 left-1/2 z-99999 pointer-events-auto w-[92%] sm:w-auto max-w-md select-none"
           >
             <div className={`relative overflow-hidden flex items-center justify-between gap-2.5 px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl shadow-2xl border backdrop-blur-md ${toastMessage.type === 'success' ? 'bg-emerald-50/95 border-emerald-200 text-emerald-900' :
                 toastMessage.type === 'error' ? 'bg-red-50/95 border-red-200 text-red-900' :
@@ -1241,7 +1241,7 @@ export default function ItineraryPage() {
             transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
             className="flex items-center flex-wrap gap-2.5"
           >
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-[#FF6B2C] to-[#E0591F] text-white font-mono text-[10px] font-bold tracking-widest uppercase shadow-md shadow-[#FF6B2C]/25 border border-white/20">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-linear-to-r from-[#FF6B2C] to-[#E0591F] text-white font-mono text-[10px] font-bold tracking-widest uppercase shadow-md shadow-[#FF6B2C]/25 border border-white/20">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
@@ -1270,7 +1270,7 @@ export default function ItineraryPage() {
                 whileTap={{ scale: 0.98 }}
                 className="relative inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-400/30 hover:border-emerald-400/50 text-emerald-100 font-mono text-[10px] font-bold tracking-wider uppercase backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.15)] transition-all duration-300 cursor-pointer"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/0 via-emerald-400/10 to-emerald-400/0 opacity-50 rounded-full" />
+                <div className="absolute inset-0 bg-linear-to-r from-emerald-400/0 via-emerald-400/10 to-emerald-400/0 opacity-50 rounded-full" />
                 <span className="relative z-10 text-emerald-400 animate-pulse">🏡</span>
                 <span className="relative z-10 text-emerald-50">Basecamp: {itinerary?.basecampHotel || itinerary?.preferences?.basecamp}</span>
               </motion.button>
@@ -1282,8 +1282,8 @@ export default function ItineraryPage() {
                 whileTap={{ scale: 0.98 }}
                 className="group/basecamp relative inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/20 hover:border-white/40 text-white/90 hover:text-white font-mono text-[10px] font-bold tracking-wider uppercase backdrop-blur-xl shadow-lg transition-all duration-300 cursor-pointer overflow-visible"
               >
-                <div className="absolute inset-[-1px] rounded-full opacity-0 group-hover/basecamp:opacity-100 transition-opacity duration-500 z-0">
-                   <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#FF6B2C] via-orange-400 to-[#FF6B2C] opacity-40 blur-[4px] animate-pulse" />
+                <div className="absolute -inset-px rounded-full opacity-0 group-hover/basecamp:opacity-100 transition-opacity duration-500 z-0">
+                   <div className="absolute inset-0 rounded-full bg-linear-to-r from-[#FF6B2C] via-orange-400 to-[#FF6B2C] opacity-40 blur-xs animate-pulse" />
                 </div>
                 
                 <div className="absolute inset-0 rounded-full bg-black/20 group-hover/basecamp:bg-black/40 transition-colors duration-300 z-0 border border-white/20 group-hover/basecamp:border-white/40" />
@@ -1372,7 +1372,7 @@ export default function ItineraryPage() {
         onLaunchRecap={() => setIsRecapModalOpen(true)} 
       />
 
-      <div className="sticky top-[66px] sm:top-[70px] z-40 bg-[#FAF6F0]/95 backdrop-blur-md border-b border-[#E6DFD5] pt-3 sm:pt-4 pb-0 px-4 sm:px-6 shadow-2xs transition-all print:hidden">
+      <div className="sticky top-16.5 sm:top-17.5 z-40 bg-[#FAF6F0]/95 backdrop-blur-md border-b border-[#E6DFD5] pt-3 sm:pt-4 pb-0 px-4 sm:px-6 shadow-2xs transition-all print:hidden">
         <div className="max-w-6xl mx-auto w-full flex flex-col sm:flex-row sm:items-end justify-between gap-4 relative">
           
           <div className="relative flex-1 min-w-0 flex items-center">
@@ -1466,7 +1466,7 @@ export default function ItineraryPage() {
               </button>
             </div>
             
-            <div className={`absolute right-0 top-0 bottom-[3px] w-14 bg-gradient-to-l from-[#FAF6F0] via-[#FAF6F0]/80 to-transparent pointer-events-none flex items-center justify-end z-10 transition-opacity duration-300 ${canScrollTabsRight ? 'opacity-100' : 'opacity-0'}`}>
+            <div className={`absolute right-0 top-0 bottom-0.75 w-14 bg-linear-to-l from-[#FAF6F0] via-[#FAF6F0]/80 to-transparent pointer-events-none flex items-center justify-end z-10 transition-opacity duration-300 ${canScrollTabsRight ? 'opacity-100' : 'opacity-0'}`}>
               <motion.div
                 animate={{ x: [0, 4, 0] }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
@@ -1475,7 +1475,7 @@ export default function ItineraryPage() {
               </motion.div>
             </div>
 
-            <div className={`absolute left-0 top-0 bottom-[3px] w-14 bg-gradient-to-r from-[#FAF6F0] via-[#FAF6F0]/80 to-transparent pointer-events-none flex items-center justify-start z-10 transition-opacity duration-300 ${canScrollTabsLeft ? 'opacity-100' : 'opacity-0'}`}>
+            <div className={`absolute left-0 top-0 bottom-0.75 w-14 bg-linear-to-r from-[#FAF6F0] via-[#FAF6F0]/80 to-transparent pointer-events-none flex items-center justify-start z-10 transition-opacity duration-300 ${canScrollTabsLeft ? 'opacity-100' : 'opacity-0'}`}>
               <motion.div
                 animate={{ x: [0, -4, 0] }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
@@ -1514,7 +1514,7 @@ export default function ItineraryPage() {
               <span
                 className={`block w-4 h-[1.8px] rounded-full transition-transform duration-300 ${
                   isMobileDrawerOpen
-                    ? 'bg-white -rotate-45 -translate-y-[5.5px]'
+                    ? 'bg-white -rotate-45 translate-y-[-5.5px]'
                     : 'bg-[#FF6B2C]'
                 }`}
               />
@@ -1528,11 +1528,11 @@ export default function ItineraryPage() {
               type="button"
               aria-label="Open Calendar"
               onClick={() => setIsCalendarModalOpen(true)}
-              className="group/btn relative overflow-hidden flex items-center h-[34px] px-2.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] hover:border-[#FF6B2C]/60 hover:shadow-[0_4px_12px_-4px_rgba(255,107,44,0.3)] hover:-translate-y-0.5 hover:scale-[1.02] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer shrink-0"
+              className="group/btn relative overflow-hidden flex items-center h-8.5 px-2.5 rounded-full border border-[#E6DFD5]/80 bg-linear-to-b from-white to-[#FAF6F0] hover:border-[#FF6B2C]/60 hover:shadow-[0_4px_12px_-4px_rgba(255,107,44,0.3)] hover:-translate-y-0.5 hover:scale-[1.02] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer shrink-0"
             >
-              <div className="absolute top-0 left-[-100%] w-[120%] h-full bg-gradient-to-r from-transparent via-white/90 to-transparent skew-x-[-25deg] group-hover/btn:left-[100%] transition-all duration-700 ease-out z-0 pointer-events-none" />
-              <Calendar className="w-[15px] h-[15px] text-[#1E1C1A] group-hover/btn:text-[#FF6B2C] relative z-10 shrink-0 group-hover/btn:scale-110 group-hover/btn:-rotate-6 transition-all duration-300" />
-              <span className="max-w-0 opacity-0 whitespace-nowrap overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/btn:max-w-[100px] group-hover/btn:opacity-100 group-hover/btn:ml-1.5 text-[10px] font-bold text-[#FF6B2C] relative z-0 -translate-x-3 group-hover/btn:translate-x-0">Calendar</span>
+              <div className="absolute top-0 -left-full w-[120%] h-full bg-linear-to-r from-transparent via-white/90 to-transparent skew-x-[-25deg] group-hover/btn:left-full transition-all duration-700 ease-out z-0 pointer-events-none" />
+              <Calendar className="w-3.75 h-3.75 text-[#1E1C1A] group-hover/btn:text-[#FF6B2C] relative z-10 shrink-0 group-hover/btn:scale-110 group-hover/btn:-rotate-6 transition-all duration-300" />
+              <span className="max-w-0 opacity-0 whitespace-nowrap overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/btn:max-w-25 group-hover/btn:opacity-100 group-hover/btn:ml-1.5 text-[10px] font-bold text-[#FF6B2C] relative z-0 -translate-x-3 group-hover/btn:translate-x-0">Calendar</span>
             </motion.button>
 
             {/* Notifications Button */}
@@ -1541,11 +1541,11 @@ export default function ItineraryPage() {
               type="button"
               aria-label="Open Notifications"
               onClick={() => setIsNotificationsPanelOpen(true)}
-              className="group/btn relative overflow-hidden flex items-center h-[34px] px-2.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] hover:border-[#FF6B2C]/60 hover:shadow-[0_4px_12px_-4px_rgba(255,107,44,0.3)] hover:-translate-y-0.5 hover:scale-[1.02] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer shrink-0"
+              className="group/btn relative overflow-hidden flex items-center h-8.5 px-2.5 rounded-full border border-[#E6DFD5]/80 bg-linear-to-b from-white to-[#FAF6F0] hover:border-[#FF6B2C]/60 hover:shadow-[0_4px_12px_-4px_rgba(255,107,44,0.3)] hover:-translate-y-0.5 hover:scale-[1.02] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer shrink-0"
             >
-              <div className="absolute top-0 left-[-100%] w-[120%] h-full bg-gradient-to-r from-transparent via-white/90 to-transparent skew-x-[-25deg] group-hover/btn:left-[100%] transition-all duration-700 ease-out z-0 pointer-events-none" />
-              <Bell className="w-[15px] h-[15px] text-[#1E1C1A] group-hover/btn:text-[#FF6B2C] relative z-10 shrink-0 group-hover/btn:scale-110 group-hover/btn:rotate-12 transition-all duration-300" />
-              <span className="max-w-0 opacity-0 whitespace-nowrap overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/btn:max-w-[100px] group-hover/btn:opacity-100 group-hover/btn:ml-1.5 text-[10px] font-bold text-[#FF6B2C] relative z-0 -translate-x-3 group-hover/btn:translate-x-0">Notify</span>
+              <div className="absolute top-0 -left-full w-[120%] h-full bg-linear-to-r from-transparent via-white/90 to-transparent skew-x-[-25deg] group-hover/btn:left-full transition-all duration-700 ease-out z-0 pointer-events-none" />
+              <Bell className="w-3.75 h-3.75 text-[#1E1C1A] group-hover/btn:text-[#FF6B2C] relative z-10 shrink-0 group-hover/btn:scale-110 group-hover/btn:rotate-12 transition-all duration-300" />
+              <span className="max-w-0 opacity-0 whitespace-nowrap overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/btn:max-w-25 group-hover/btn:opacity-100 group-hover/btn:ml-1.5 text-[10px] font-bold text-[#FF6B2C] relative z-0 -translate-x-3 group-hover/btn:translate-x-0">Notify</span>
             </motion.button>
 
             <div className="relative group/print shrink-0">
@@ -1554,11 +1554,11 @@ export default function ItineraryPage() {
                 type="button"
                 aria-label="Print Itinerary"
                 onClick={handlePrintOrDownload}
-                className="group/btn relative overflow-hidden flex items-center h-[34px] px-2.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] hover:border-[#FF6B2C]/60 hover:shadow-[0_4px_12px_-4px_rgba(255,107,44,0.3)] hover:-translate-y-0.5 hover:scale-[1.02] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer"
+                className="group/btn relative overflow-hidden flex items-center h-8.5 px-2.5 rounded-full border border-[#E6DFD5]/80 bg-linear-to-b from-white to-[#FAF6F0] hover:border-[#FF6B2C]/60 hover:shadow-[0_4px_12px_-4px_rgba(255,107,44,0.3)] hover:-translate-y-0.5 hover:scale-[1.02] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer"
               >
-                <div className="absolute top-0 left-[-100%] w-[120%] h-full bg-gradient-to-r from-transparent via-white/90 to-transparent skew-x-[-25deg] group-hover/btn:left-[100%] transition-all duration-700 ease-out z-0 pointer-events-none" />
-                <Printer className="w-[15px] h-[15px] text-[#1E1C1A] group-hover/btn:text-[#FF6B2C] relative z-10 shrink-0 group-hover/btn:scale-110 transition-transform duration-300" />
-                <span className="max-w-0 opacity-0 whitespace-nowrap overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/btn:max-w-[120px] group-hover/btn:opacity-100 group-hover/btn:ml-1.5 text-[10px] font-bold text-[#FF6B2C] relative z-0 -translate-x-3 group-hover/btn:translate-x-0">Print</span>
+                <div className="absolute top-0 -left-full w-[120%] h-full bg-linear-to-r from-transparent via-white/90 to-transparent skew-x-[-25deg] group-hover/btn:left-full transition-all duration-700 ease-out z-0 pointer-events-none" />
+                <Printer className="w-3.75 h-3.75 text-[#1E1C1A] group-hover/btn:text-[#FF6B2C] relative z-10 shrink-0 group-hover/btn:scale-110 transition-transform duration-300" />
+                <span className="max-w-0 opacity-0 whitespace-nowrap overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/btn:max-w-30 group-hover/btn:opacity-100 group-hover/btn:ml-1.5 text-[10px] font-bold text-[#FF6B2C] relative z-0 -translate-x-3 group-hover/btn:translate-x-0">Print</span>
               </motion.button>
               <div className="absolute right-0 top-full mt-2.5 opacity-0 translate-y-1 pointer-events-none group-hover/print:opacity-100 group-hover/print:translate-y-0 transition-all duration-300 ease-out z-50 bg-[#1E1C1A] text-white text-[10px] font-sans py-1.5 px-2.5 rounded-lg shadow-lg whitespace-nowrap border border-[#FF6B2C]/40">
                 💡 Tip: Uncheck "Headers and footers" in print dialog
@@ -1570,19 +1570,19 @@ export default function ItineraryPage() {
               type="button"
               aria-label="Share Itinerary"
               onClick={handleShareDossier}
-              className="group/btn relative overflow-hidden flex items-center h-[34px] px-2.5 rounded-full border border-[#E6DFD5]/80 bg-gradient-to-b from-white to-[#FAF6F0] hover:border-[#FF6B2C]/60 hover:shadow-[0_4px_12px_-4px_rgba(255,107,44,0.3)] hover:-translate-y-0.5 hover:scale-[1.02] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer shrink-0"
+              className="group/btn relative overflow-hidden flex items-center h-8.5 px-2.5 rounded-full border border-[#E6DFD5]/80 bg-linear-to-b from-white to-[#FAF6F0] hover:border-[#FF6B2C]/60 hover:shadow-[0_4px_12px_-4px_rgba(255,107,44,0.3)] hover:-translate-y-0.5 hover:scale-[1.02] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer shrink-0"
             >
-              <div className="absolute top-0 left-[-100%] w-[120%] h-full bg-gradient-to-r from-transparent via-white/90 to-transparent skew-x-[-25deg] group-hover/btn:left-[100%] transition-all duration-700 ease-out z-0 pointer-events-none" />
+              <div className="absolute top-0 -left-full w-[120%] h-full bg-linear-to-r from-transparent via-white/90 to-transparent skew-x-[-25deg] group-hover/btn:left-full transition-all duration-700 ease-out z-0 pointer-events-none" />
               
               {shareCopied ? (
                 <>
-                  <CheckCircle2 className="w-[15px] h-[15px] text-emerald-600 relative z-10 shrink-0 group-hover/btn:scale-110 transition-transform duration-300" />
-                  <span className="max-w-0 opacity-0 whitespace-nowrap overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/btn:max-w-[100px] group-hover/btn:opacity-100 group-hover/btn:ml-1.5 text-[10px] font-bold text-emerald-600 relative z-0 -translate-x-3 group-hover/btn:translate-x-0">Copied</span>
+                  <CheckCircle2 className="w-3.75 h-3.75 text-emerald-600 relative z-10 shrink-0 group-hover/btn:scale-110 transition-transform duration-300" />
+                  <span className="max-w-0 opacity-0 whitespace-nowrap overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/btn:max-w-25 group-hover/btn:opacity-100 group-hover/btn:ml-1.5 text-[10px] font-bold text-emerald-600 relative z-0 -translate-x-3 group-hover/btn:translate-x-0">Copied</span>
                 </>
               ) : (
                 <>
-                  <Share2 className="w-[15px] h-[15px] text-[#1E1C1A] group-hover/btn:text-[#FF6B2C] relative z-10 shrink-0 group-hover/btn:scale-110 group-hover/btn:rotate-[15deg] transition-transform duration-300 ease-out" />
-                  <span className="max-w-0 opacity-0 whitespace-nowrap overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/btn:max-w-[100px] group-hover/btn:opacity-100 group-hover/btn:ml-1.5 text-[10px] font-bold text-[#FF6B2C] relative z-0 -translate-x-3 group-hover/btn:translate-x-0">Share</span>
+                  <Share2 className="w-3.75 h-3.75 text-[#1E1C1A] group-hover/btn:text-[#FF6B2C] relative z-10 shrink-0 group-hover/btn:scale-110 group-hover/btn:rotate-15 transition-transform duration-300 ease-out" />
+                  <span className="max-w-0 opacity-0 whitespace-nowrap overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/btn:max-w-25 group-hover/btn:opacity-100 group-hover/btn:ml-1.5 text-[10px] font-bold text-[#FF6B2C] relative z-0 -translate-x-3 group-hover/btn:translate-x-0">Share</span>
                 </>
               )}
             </motion.button>
@@ -1624,7 +1624,7 @@ export default function ItineraryPage() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setIsMobileDrawerOpen(false)}
-                className="fixed inset-0 top-[180px] bg-black/25 backdrop-blur-[2px] z-30 lg:hidden"
+                className="fixed inset-0 top-45 bg-black/25 backdrop-blur-[2px] z-30 lg:hidden"
               />
 
               {/* Tools Panel Emerging from Left Screen Edge */}
@@ -1669,7 +1669,7 @@ export default function ItineraryPage() {
                         onClick={() => { setActiveDay('packing'); setIsMobileDrawerOpen(false); }}
                         className={`relative w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-all duration-150 cursor-pointer select-none group ${
                           isSelected
-                            ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-xs border border-[#FF6B2C]/50 scale-[1.02]'
+                            ? 'bg-linear-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-xs border border-[#FF6B2C]/50 scale-[1.02]'
                             : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent'
                         }`}
                         title="Packing List"
@@ -1729,13 +1729,13 @@ export default function ItineraryPage() {
                         onClick={() => { setActiveDay('visa'); setIsMobileDrawerOpen(false); }}
                         className={`relative w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-all duration-150 cursor-pointer select-none group ${
                           isSelected
-                            ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-xs border border-[#FF6B2C]/50 scale-[1.02]'
+                            ? 'bg-linear-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-xs border border-[#FF6B2C]/50 scale-[1.02]'
                             : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent'
                         }`}
                         title="Visa & Docs"
                       >
                         <div className={`p-1 rounded-lg transition-all relative z-10 group-active:scale-125 group-active:rotate-6 ${
-                          isSelected ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-2xs' : 'bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
+                          isSelected ? 'bg-linear-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-2xs' : 'bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
                         }`}>
                           <FileText className="w-3.5 h-3.5 stroke-[2.2]" />
                         </div>
@@ -1784,7 +1784,7 @@ export default function ItineraryPage() {
                         onClick={() => { setActiveDay('tracking'); setIsMobileDrawerOpen(false); }}
                         className={`relative w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-all duration-150 cursor-pointer select-none group ${
                           isSelected
-                            ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-xs border border-[#FF6B2C]/50 scale-[1.02]'
+                            ? 'bg-linear-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-xs border border-[#FF6B2C]/50 scale-[1.02]'
                             : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent'
                         }`}
                         title="Price Tracking"
@@ -1795,7 +1795,7 @@ export default function ItineraryPage() {
                         </span>
 
                         <div className={`p-1 rounded-lg transition-all relative z-10 group-active:scale-125 group-active:rotate-12 ${
-                          isSelected ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-2xs' : 'bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
+                          isSelected ? 'bg-linear-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-2xs' : 'bg-white text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
                         }`}>
                           <Plane className="w-3.5 h-3.5 stroke-[2.2]" />
                         </div>
@@ -1825,7 +1825,7 @@ export default function ItineraryPage() {
                         onClick={() => { setActiveDay('expenses'); setIsMobileDrawerOpen(false); }}
                         className={`relative w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-all duration-150 cursor-pointer select-none group ${
                           isSelected
-                            ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-xs border border-[#FF6B2C]/50 scale-[1.02]'
+                            ? 'bg-linear-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-xs border border-[#FF6B2C]/50 scale-[1.02]'
                             : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent'
                         }`}
                         title="In-Trip Expense Tracker"
@@ -1860,13 +1860,13 @@ export default function ItineraryPage() {
                         onClick={() => { setActiveDay('emergency'); setIsMobileDrawerOpen(false); }}
                         className={`relative w-full py-1.25 px-1 rounded-xl flex flex-col items-center justify-center gap-0.75 transition-all duration-150 cursor-pointer select-none group ${
                           isSelected
-                            ? 'bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-xs border border-[#FF6B2C]/50 scale-[1.02]'
+                            ? 'bg-linear-to-b from-[#1E1C1A] to-[#2D2A26] text-white shadow-xs border border-[#FF6B2C]/50 scale-[1.02]'
                             : 'bg-[#FAF6F0] hover:bg-[#F5F0E8] text-[#1E1C1A] border border-transparent'
                         }`}
                         title="Emergency Safety Info"
                       >
                         <div className={`p-1 rounded-lg transition-all relative z-10 group-active:scale-125 group-active:rotate-6 ${
-                          isSelected ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-2xs' : 'bg-white text-[#FF6B2C] shadow-2xs'
+                          isSelected ? 'bg-linear-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-2xs' : 'bg-white text-[#FF6B2C] shadow-2xs'
                         }`}>
                           <ShieldAlert className="w-3.5 h-3.5 stroke-[2.2]" />
                         </div>
@@ -1918,7 +1918,7 @@ export default function ItineraryPage() {
       <div className="max-w-6xl mx-auto px-6 py-12 w-full flex items-start gap-8 relative">
         
         {/* DESKTOP VERTICAL UTILITY SIDEBAR RAIL (Desktop Only - hidden on mobile/tablet < lg) */}
-        <aside className="hidden lg:flex flex-col items-center p-2.5 bg-[#FAF6F0]/90 backdrop-blur-xl backdrop-saturate-150 rounded-3xl border border-[#E6DFD5] shadow-[0_12px_36px_rgba(0,0,0,0.06),0_0_20px_rgba(255,107,44,0.04)] lg:-ml-6 xl:-ml-8 lg:mt-8 sticky top-[140px] lg:top-[180px] shrink-0 h-fit z-20 font-sans gap-2 w-28 transition-all duration-200">
+        <aside className="hidden lg:flex flex-col items-center p-2.5 bg-[#FAF6F0]/90 backdrop-blur-xl backdrop-saturate-150 rounded-3xl border border-[#E6DFD5] shadow-[0_12px_36px_rgba(0,0,0,0.06),0_0_20px_rgba(255,107,44,0.04)] lg:-ml-6 xl:-ml-8 lg:mt-8 sticky top-35 lg:top-45 shrink-0 h-fit z-20 font-sans gap-2 w-28 transition-all duration-200">
           
           {/* GROUP 1: PREPARE (Pre-trip planning tools) */}
           <div className="flex flex-col items-center w-full gap-2 pt-1 lg:pt-0">
@@ -1954,7 +1954,7 @@ export default function ItineraryPage() {
                     {isSelected && (
                       <motion.div
                         layoutId="activeToolGliderDesktop"
-                        className="absolute inset-0 bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] rounded-2xl shadow-md border border-[#FF6B2C]/50 z-0"
+                        className="absolute inset-0 bg-linear-to-b from-[#1E1C1A] to-[#2D2A26] rounded-2xl shadow-md border border-[#FF6B2C]/50 z-0"
                         transition={{ type: "spring", stiffness: 450, damping: 30 }}
                       />
                     )}
@@ -2038,13 +2038,13 @@ export default function ItineraryPage() {
                     {isSelected && (
                       <motion.div
                         layoutId="activeToolGliderDesktop"
-                        className="absolute inset-0 bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] rounded-2xl shadow-md border border-[#FF6B2C]/50 z-0"
+                        className="absolute inset-0 bg-linear-to-b from-[#1E1C1A] to-[#2D2A26] rounded-2xl shadow-md border border-[#FF6B2C]/50 z-0"
                         transition={{ type: "spring", stiffness: 450, damping: 30 }}
                       />
                     )}
 
                     <div className={`p-1.5 rounded-xl transition-all relative z-10 ${
-                      isSelected ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-xs' : 'bg-[#FAF6F0] text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
+                      isSelected ? 'bg-linear-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-xs' : 'bg-[#FAF6F0] text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
                     }`}>
                       <FileText className="w-4 h-4 stroke-[2.2]" />
                     </div>
@@ -2125,7 +2125,7 @@ export default function ItineraryPage() {
                     {isSelected && (
                       <motion.div
                         layoutId="activeToolGliderDesktop"
-                        className="absolute inset-0 bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] rounded-2xl shadow-md border border-[#FF6B2C]/50 z-0"
+                        className="absolute inset-0 bg-linear-to-b from-[#1E1C1A] to-[#2D2A26] rounded-2xl shadow-md border border-[#FF6B2C]/50 z-0"
                         transition={{ type: "spring", stiffness: 450, damping: 30 }}
                       />
                     )}
@@ -2137,7 +2137,7 @@ export default function ItineraryPage() {
                     </span>
 
                     <div className={`p-1.5 rounded-xl transition-all relative z-10 ${
-                      isSelected ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-xs' : 'bg-[#FAF6F0] text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
+                      isSelected ? 'bg-linear-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-xs' : 'bg-[#FAF6F0] text-[#1E1C1A] group-hover:text-[#FF6B2C] shadow-2xs'
                     }`}>
                       <Plane className="w-4 h-4 stroke-[2.2]" />
                     </div>
@@ -2190,7 +2190,7 @@ export default function ItineraryPage() {
                     {isSelected && (
                       <motion.div
                         layoutId="activeToolGliderDesktop"
-                        className="absolute inset-0 bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] rounded-2xl shadow-md border border-[#FF6B2C]/50 z-0"
+                        className="absolute inset-0 bg-linear-to-b from-[#1E1C1A] to-[#2D2A26] rounded-2xl shadow-md border border-[#FF6B2C]/50 z-0"
                         transition={{ type: "spring", stiffness: 450, damping: 30 }}
                       />
                     )}
@@ -2248,13 +2248,13 @@ export default function ItineraryPage() {
                     {isSelected && (
                       <motion.div
                         layoutId="activeToolGliderDesktop"
-                        className="absolute inset-0 bg-gradient-to-b from-[#1E1C1A] to-[#2D2A26] rounded-2xl shadow-md border border-[#FF6B2C]/50 z-0"
+                        className="absolute inset-0 bg-linear-to-b from-[#1E1C1A] to-[#2D2A26] rounded-2xl shadow-md border border-[#FF6B2C]/50 z-0"
                         transition={{ type: "spring", stiffness: 450, damping: 30 }}
                       />
                     )}
 
                     <div className={`p-1.5 rounded-xl transition-all relative z-10 ${
-                      isSelected ? 'bg-gradient-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-xs' : 'bg-[#FAF6F0] text-[#FF6B2C] shadow-2xs'
+                      isSelected ? 'bg-linear-to-br from-[#FF6B2C] to-[#E55A1C] text-white shadow-xs' : 'bg-[#FAF6F0] text-[#FF6B2C] shadow-2xs'
                     }`}>
                       <ShieldAlert className="w-4 h-4 stroke-[2.2]" />
                     </div>
@@ -2466,7 +2466,7 @@ export default function ItineraryPage() {
                     <div className="flex flex-col items-center justify-center py-4 sm:py-6 relative overflow-hidden sm:overflow-visible w-full min-h-48 sm:min-h-55">
                       {/* SVG Flight Path & Animated Airplane */}
                       {stampInView && (
-                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[340px] sm:max-w-none sm:w-150 h-72 sm:h-90 pointer-events-none z-0 overflow-hidden sm:overflow-visible opacity-75 sm:opacity-100">
+                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-85 sm:max-w-none sm:w-150 h-72 sm:h-90 pointer-events-none z-0 overflow-hidden sm:overflow-visible opacity-75 sm:opacity-100">
                           <svg
                             viewBox="0 0 600 360"
                             className="w-full h-full overflow-visible"
@@ -2753,7 +2753,7 @@ export default function ItineraryPage() {
                       {portalMounted && createPortal(
                         <AnimatePresence>
                           {showRegenerateConfirm && (
-                            <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4">
+                            <div className="fixed inset-0 z-999999 flex items-center justify-center p-4">
                               <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -3801,7 +3801,7 @@ export default function ItineraryPage() {
                                             }}
                                             className={`relative flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-xl border text-[11px] sm:text-xs font-sans font-bold cursor-pointer group transition-all whitespace-nowrap shadow-2xs hover:shadow-xs ${entry
                                                 ? 'border-[#1E1C1A] bg-[#1E1C1A] text-white hover:bg-stone-800'
-                                                : 'border-[#FF6B2C] bg-gradient-to-r from-[#FF6B2C] to-[#FF7744] text-white hover:brightness-105 shadow-xs'
+                                                : 'border-[#FF6B2C] bg-linear-to-r from-[#FF6B2C] to-[#FF7744] text-white hover:brightness-105 shadow-xs'
                                               }`}
                                           >
                                             <span className="flex items-center justify-center group-hover:scale-110 group-active:scale-135 group-active:-rotate-18 transition-transform duration-300 shrink-0">
@@ -4672,7 +4672,7 @@ export default function ItineraryPage() {
       {/* Skip Confirmation Toast Message */}
       <AnimatePresence>
         {skipConfirmation && (
-          <div className="fixed bottom-20 sm:bottom-10 left-4 right-4 sm:left-auto sm:right-10 z-[100002] flex justify-center sm:justify-end pointer-events-none">
+          <div className="fixed bottom-20 sm:bottom-10 left-4 right-4 sm:left-auto sm:right-10 z-100002 flex justify-center sm:justify-end pointer-events-none">
             <motion.div
               initial={{ y: 35, opacity: 0, scale: 0.94 }}
               animate={{ y: 0, opacity: 1, scale: 1 }}
@@ -4721,7 +4721,7 @@ export default function ItineraryPage() {
       {/* Premium Animated Success Message with Undo */}
       <AnimatePresence>
         {journalSuccessMessage && (
-          <div className="fixed bottom-20 sm:bottom-10 left-4 right-4 sm:left-0 sm:right-0 z-[200000] flex justify-center pointer-events-none">
+          <div className="fixed bottom-20 sm:bottom-10 left-4 right-4 sm:left-0 sm:right-0 z-200000 flex justify-center pointer-events-none">
             <motion.div
               initial={{ opacity: 0, y: 40, scale: 0.85 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -4747,7 +4747,7 @@ export default function ItineraryPage() {
                 <h4 className="text-xs sm:text-[13px] font-sans font-bold text-[#1E1C1A] leading-tight mb-0.5">
                   {journalSuccessMessage.isSkip ? 'Activity Skipped' : (journalSuccessMessage.isNew ? 'Entry saved successfully' : 'Entry updated successfully')}
                 </h4>
-                <p className="text-[10.5px] sm:text-[11px] font-sans font-medium text-[#7A7268] truncate max-w-[150px] sm:max-w-[200px] leading-tight">
+                <p className="text-[10.5px] sm:text-[11px] font-sans font-medium text-[#7A7268] truncate max-w-37.5 sm:max-w-50 leading-tight">
                   {journalSuccessMessage.title}
                 </p>
               </div>
@@ -4817,7 +4817,7 @@ export default function ItineraryPage() {
                   damping: 22, 
                   mass: 0.8 
                 }}
-                className="fixed bottom-6 left-5 sm:left-6 z-[90] lg:hidden print:hidden will-change-transform"
+                className="fixed bottom-6 left-5 sm:left-6 z-90 lg:hidden print:hidden will-change-transform"
               >
                 <button
                   type="button"
@@ -4864,7 +4864,7 @@ export default function ItineraryPage() {
       </AnimatePresence>
 
       {/* PERSISTENT FLOATING EMERGENCY (SOS) BUTTON - ACCESSIBLE FROM ANY TAB */}
-      <div className="fixed bottom-6 right-6 z-[90] print:hidden">
+      <div className="fixed bottom-6 right-6 z-90 print:hidden">
         <button
           type="button"
           onClick={() => setIsEmergencyModalOpen(true)}

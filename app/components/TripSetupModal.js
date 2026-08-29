@@ -93,7 +93,7 @@ export default function TripSetupModal({ isOpen, onClose, itinerary, tripId, onO
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
             onClick={onClose}
-            className="hidden sm:block fixed inset-0 bg-stone-900/40 backdrop-blur-md z-[9998]"
+            className="hidden sm:block fixed inset-0 bg-stone-900/40 backdrop-blur-md z-9998"
           />
 
           <motion.div
@@ -101,9 +101,9 @@ export default function TripSetupModal({ isOpen, onClose, itinerary, tripId, onO
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -15 }}
             transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-            className="fixed z-[9999] top-20 inset-x-4 sm:top-1/2 sm:left-1/2 sm:inset-x-auto sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-[460px] pointer-events-auto"
+            className="fixed z-9999 top-20 inset-x-4 sm:top-1/2 sm:left-1/2 sm:inset-x-auto sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-115 pointer-events-auto"
           >
-            <div className="bg-[#FAF6F0] rounded-[24px] sm:rounded-[28px] shadow-2xl overflow-hidden border border-[#E6DFD5] flex flex-col">
+            <div className="bg-[#FAF6F0] rounded-3xl sm:rounded-[28px] shadow-2xl overflow-hidden border border-[#E6DFD5] flex flex-col">
 
               {/* Header */}
               <div className="relative px-4 py-3 sm:px-8 sm:pt-8 sm:pb-6 border-b border-[#E6DFD5]/60 bg-white sm:bg-white flex flex-row sm:flex-col items-center sm:items-start justify-between sm:justify-start">
@@ -137,7 +137,7 @@ export default function TripSetupModal({ isOpen, onClose, itinerary, tripId, onO
                 <h2 className="hidden sm:block text-[22px] font-serif font-bold text-[#1E1C1A] tracking-tight mt-1">
                   Finalize your itinerary
                 </h2>
-                <p className="hidden sm:block text-[13px] text-[#7A7268] font-sans mt-2 max-w-[300px] leading-relaxed">
+                <p className="hidden sm:block text-[13px] text-[#7A7268] font-sans mt-2 max-w-75 leading-relaxed">
                   {pendingTasks.length === 1 ? 'One final step remains' : `${pendingTasks.length} final steps remain`} to seamlessly integrate this trip with your devices.
                 </p>
               </div>
@@ -150,7 +150,7 @@ export default function TripSetupModal({ isOpen, onClose, itinerary, tripId, onO
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.1, duration: 0.4, ease: "easeOut" }}
-                    className="relative flex flex-row sm:flex-col items-center sm:items-start gap-3 sm:gap-4 p-3 sm:p-5 rounded-[16px] sm:rounded-[20px] bg-[#FAF6F0] sm:bg-white border border-[#E6DFD5]/50 sm:border-[#E6DFD5] shadow-2xs sm:shadow-xs group"
+                    className="relative flex flex-row sm:flex-col items-center sm:items-start gap-3 sm:gap-4 p-3 sm:p-5 rounded-2xl sm:rounded-[20px] bg-[#FAF6F0] sm:bg-white border border-[#E6DFD5]/50 sm:border-[#E6DFD5] shadow-2xs sm:shadow-xs group"
                   >
                     {/* Mobile: Horizontal Row */}
                     <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-[#E6DFD5] bg-white sm:bg-[#FAF6F0] text-[#1E1C1A] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-300">

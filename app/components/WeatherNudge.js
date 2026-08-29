@@ -17,7 +17,7 @@ export default function WeatherNudge({ show, nudgeData, onAdjust, onDismiss }) {
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
           className="fixed bottom-20 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-sm"
         >
-          <div className="bg-[#1E1C1A] text-white p-5 rounded-[2rem] shadow-2xl border border-gray-700 relative overflow-hidden">
+          <div className="bg-[#1E1C1A] text-white p-5 rounded-4xl shadow-2xl border border-gray-700 relative overflow-hidden">
             {/* Background glowing orb effect */}
             <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-20 -mr-10 -mt-10 pointer-events-none ${isExtremeTemp ? 'bg-amber-500' : 'bg-blue-500'}`} />
             

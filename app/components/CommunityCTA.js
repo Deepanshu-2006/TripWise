@@ -200,17 +200,17 @@ export default function CommunityCTA() {
                 {/* Unique Liquid Swipe Button */}
                 <button 
                   onClick={handleShareClick}
-                  className={`group relative inline-flex items-center gap-8 pl-8 pr-2 py-2 bg-[#2A2724] border border-white/5 rounded-full overflow-hidden transition-all duration-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B2C] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1E1C1A] ${isShareClicked ? '!-translate-y-1 !shadow-[0_12px_24px_rgba(255,107,44,0.2)]' : 'hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(255,107,44,0.2)]'}`}
+                  className={`group relative inline-flex items-center gap-8 pl-8 pr-2 py-2 bg-[#2A2724] border border-white/5 rounded-full overflow-hidden transition-all duration-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B2C] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1E1C1A] ${isShareClicked ? '-translate-y-1! shadow-[0_12px_24px_rgba(255,107,44,0.2)]!' : 'hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(255,107,44,0.2)]'}`}
                 >
                   {/* Liquid Swipe Background */}
-                  <div className={`absolute inset-0 bg-[#FF6B2C] translate-x-[101%] group-hover:translate-x-0 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] rounded-full ${isShareClicked ? '!translate-x-0' : ''}`}></div>
+                  <div className={`absolute inset-0 bg-[#FF6B2C] translate-x-[101%] group-hover:translate-x-0 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] rounded-full ${isShareClicked ? 'translate-x-0!' : ''}`}></div>
                   
-                  <span className={`relative z-10 font-sans font-bold text-base text-stone-200 group-hover:text-white transition-colors duration-300 ${isShareClicked ? '!text-white' : ''}`}>
+                  <span className={`relative z-10 font-sans font-bold text-base text-stone-200 group-hover:text-white transition-colors duration-300 ${isShareClicked ? 'text-white!' : ''}`}>
                     Share Your Itinerary
                   </span>
                   
-                  <div className={`relative z-10 w-11 h-11 rounded-full bg-[#FF6B2C] group-hover:bg-white flex items-center justify-center text-white group-hover:text-[#FF6B2C] transition-colors duration-500 shadow-lg ${isShareClicked ? '!bg-white !text-[#FF6B2C]' : ''}`}>
-                    <svg className={`w-5 h-5 transition-transform duration-500 group-hover:translate-x-0.5 ${isShareClicked ? '!translate-x-0.5' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <div className={`relative z-10 w-11 h-11 rounded-full bg-[#FF6B2C] group-hover:bg-white flex items-center justify-center text-white group-hover:text-[#FF6B2C] transition-colors duration-500 shadow-lg ${isShareClicked ? 'bg-white! text-[#FF6B2C]!' : ''}`}>
+                    <svg className={`w-5 h-5 transition-transform duration-500 group-hover:translate-x-0.5 ${isShareClicked ? 'translate-x-0.5!' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                     </svg>
                   </div>

@@ -388,7 +388,7 @@ export default function PassportGrid() {
                             return (
                                 <div
                                     key={card.id}
-                                    className={`boarding-pass w-[85vw] sm:w-[400px] md:w-auto shrink-0 md:shrink ${card.colSpanClass} ${card.rowClass} ${card.splitCol === "left" ? "split-left" : "split-right"} bg-white/95 md:backdrop-blur-md border border-[#4B4745]/15 hover:border-[#0D9488]/50 shadow-md hover:shadow-[0_20px_40px_rgba(13,148,136,0.12)] hover:-translate-y-2 transition-all duration-500 ease-out rounded-2xl flex ${
+                                    className={`boarding-pass w-[85vw] sm:w-100 md:w-auto shrink-0 md:shrink ${card.colSpanClass} ${card.rowClass} ${card.splitCol === "left" ? "split-left" : "split-right"} bg-white/95 md:backdrop-blur-md border border-[#4B4745]/15 hover:border-[#0D9488]/50 shadow-md hover:shadow-[0_20px_40px_rgba(13,148,136,0.12)] hover:-translate-y-2 transition-all duration-500 ease-out rounded-2xl flex ${
                                         isHorizontal ? "flex-col sm:flex-row sm:items-center justify-between" : "flex-col"
                                     } relative overflow-hidden group`}
                                 >

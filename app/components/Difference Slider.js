@@ -1,21 +1,14 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 export default function Destination() {
     const sectionRef = useRef(null);
-    const artboardRef = useRef(null);
-    const badgeRef = useRef(null);
-    const headingRef = useRef(null);
-    const underlinePathRef = useRef(null);
     const containerRef = useRef(null);
 
     const [sliderPos, setSliderPos] = useState(5); // Starts at left edge (0% / 5%)
     const [isRevealed, setIsRevealed] = useState(true);
     const [isDragging, setIsDragging] = useState(false);
-    const [headerVisible, setHeaderVisible] = useState(true);
     const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
@@ -52,7 +45,6 @@ export default function Destination() {
         return () => clearInterval(interval);
     }, [isRevealed]);
 
-    const isRevealedRef = useRef(true);
 
     // Listen to custom slider-progress event emitted by FigmaPinnedSlide scroll scrub
     useEffect(() => {
@@ -206,7 +198,7 @@ export default function Destination() {
         <section 
             ref={sectionRef} 
             id="ai-planner" 
-            className="relative w-full h-[100svh] flex flex-col items-center justify-start lg:justify-center select-none font-sans pt-24 md:pt-28 pb-6 lg:pb-12 px-4 md:px-8 bg-transparent overflow-hidden scroll-mt-24"
+            className="relative w-full h-svh flex flex-col items-center justify-start lg:justify-center select-none font-sans pt-24 md:pt-28 pb-6 lg:pb-12 px-4 md:px-8 bg-transparent overflow-hidden scroll-mt-24"
         >
             {/* Embedded styles for alternate tab jitter, blinking typewriter cursor, slow sticky notes wobble, and clicking frantic cursor */}
             <style>{`
@@ -282,16 +274,14 @@ export default function Destination() {
 
             {/* Centered Heading */}
             <div
-                ref={headingRef}
                 className="text-center mb-6 md:mb-10 shrink-0 flex flex-col items-center md:will-change-transform"
             >
                 {/* Spaced Micro-Badge */}
                 <div 
-                    ref={badgeRef}
                     className="inline-flex items-center justify-center gap-2 px-4 py-1.5 bg-[#FF5B1D]/10 rounded-full font-mono text-xs font-bold tracking-wider uppercase mb-3 border border-[#FF5B1D]/20 select-none"
                 >
                     <span className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D] animate-pulse shrink-0" />
-                    <span className="text-[#FF5B1D] leading-none mt-[1px]">✦ TRIPWISE EXPERIENCE</span>
+                    <span className="text-[#FF5B1D] leading-none mt-px">✦ TRIPWISE EXPERIENCE</span>
                 </div>
                 
                 <h2 className="text-3xl md:text-5xl font-extrabold text-brand-dark tracking-tight leading-tight uppercase font-serif">
@@ -299,7 +289,6 @@ export default function Destination() {
                         reimagined
                         <svg className="absolute -bottom-3 left-0 w-full h-3.5 md:h-4 text-[#FF5B1D] overflow-visible pointer-events-none" viewBox="0 0 100 14" preserveAspectRatio="none">
                             <path 
-                                ref={underlinePathRef}
                                 className="underline-svg-path"
                                 d="M 2,10 C 30,2 60,14 98,6" 
                                 stroke="#FF5B1D" 
@@ -324,13 +313,12 @@ export default function Destination() {
 
             {/* 3D Figma Perspective Canvas Artboard */}
             <div 
-                ref={artboardRef} 
                 className="relative w-full max-w-5xl flex-1 pb-4 md:pb-0 flex flex-col items-center md:will-change-transform"
             >
                 {/* Dynamic Height Split Canvas */}
                 <div
                     ref={containerRef}
-                    className="relative w-full h-full lg:min-h-[550px] rounded-3xl overflow-hidden border border-brand-dark/15 bg-transparent shadow-[0_25px_80px_-15px_rgba(254,119,23,0.12),_0_20px_50px_rgba(0,0,0,0.06)]"
+                    className="relative w-full h-full lg:min-h-137.5 rounded-3xl overflow-hidden border border-brand-dark/15 bg-transparent shadow-[0_25px_80px_-15px_rgba(254,119,23,0.12),0_20px_50px_rgba(0,0,0,0.06)]"
                 >
                 {/* ========================================================
                     LEFT SIDE: THE OLD WAY (Chaotic Red-Black Slate)
@@ -652,7 +640,7 @@ export default function Destination() {
                 <div
                     onMouseDown={handleMouseDown}
                     onTouchStart={handleTouchStart}
-                    className="absolute lg:top-0 lg:bottom-0 left-0 right-0 lg:left-auto lg:right-auto lg:w-8 h-8 lg:h-auto -mt-4 lg:-mt-0 lg:-ml-4 z-30 cursor-ns-resize lg:cursor-ew-resize flex flex-col lg:flex-row items-center justify-center pointer-events-auto touch-none"
+                    className="absolute lg:top-0 lg:bottom-0 left-0 right-0 lg:left-auto lg:right-auto lg:w-8 h-8 lg:h-auto -mt-4 lg:mt-0 lg:-ml-4 z-30 cursor-ns-resize lg:cursor-ew-resize flex flex-col lg:flex-row items-center justify-center pointer-events-auto touch-none"
                     style={{
                         ...(isMobile ? { top: `${sliderPos}%` } : { left: `${sliderPos}%` })
                     }}

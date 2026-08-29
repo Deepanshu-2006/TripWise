@@ -179,7 +179,7 @@ export function PlanButton({ disabled, onClick }) {
         className={`relative rounded-2xl overflow-hidden flex items-center cursor-pointer active:scale-[0.98] ${
           disabled
             ? 'bg-stone-200 text-stone-400 cursor-not-allowed opacity-60'
-            : 'bg-gradient-to-r from-[#FF6B2C] via-[#F96620] to-[#E55A20] text-white'
+            : 'bg-linear-to-r from-[#FF6B2C] via-[#F96620] to-[#E55A20] text-white'
         }`}
       >
         {/* Dark ink fill sweeps from left on hover */}
@@ -274,7 +274,7 @@ export const renderHighlightedText = (text, highlight) => {
     <>
       {parts.map((part, i) =>
         part.toLowerCase() === highlight.toLowerCase() ? (
-          <span key={i} className="text-[#FF6B2C] font-black bg-[#FF6B2C]/10 rounded-[3px] px-[2px]">{part}</span>
+          <span key={i} className="text-[#FF6B2C] font-black bg-[#FF6B2C]/10 rounded-[3px] px-0.5">{part}</span>
         ) : (
           <span key={i}>{part}</span>
         )
@@ -297,7 +297,7 @@ export function StepIndicator({ step }) {
   return (
     <div className="flex flex-col gap-2 mb-1">
       {/* Progress track */}
-      <div className="relative h-[3px] bg-stone-100 rounded-full overflow-visible mx-0.5">
+      <div className="relative h-0.75 bg-stone-100 rounded-full overflow-visible mx-0.5">
         <motion.div
           className="absolute left-0 top-0 h-full rounded-full overflow-hidden"
           initial={{ width: '2%' }}
@@ -341,7 +341,7 @@ export function StepIndicator({ step }) {
       </div>
 
       {/* Step pills row */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 -mx-1 px-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 -mx-1 px-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] scrollbar-none snap-x">
         {steps.map((s, idx) => {
           const isCompleted = currentIdx > idx;
           const isActive    = currentIdx === idx;
@@ -349,7 +349,7 @@ export function StepIndicator({ step }) {
           return (
             <motion.div
               key={s.id}
-              className={`relative flex-1 shrink-0 snap-center min-w-[95px] md:min-w-0 md:flex-1 flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl cursor-default overflow-hidden select-none ${
+              className={`relative flex-1 shrink-0 snap-center min-w-23.75 md:min-w-0 md:flex-1 flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl cursor-default overflow-hidden select-none ${
                 isActive    ? 'bg-[#FF6B2C]/10'
               : isCompleted ? 'bg-[#2FA66A]/8'
               : 'bg-stone-50'
@@ -424,7 +424,7 @@ export function StepIndicator({ step }) {
               {/* Active glowing border bottom */}
               {isActive && (
                 <motion.span
-                  className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full bg-[#FF6B2C]"
+                  className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-[#FF6B2C]"
                   initial={{ scaleX: 0, opacity: 0 }}
                   animate={{ scaleX: 1, opacity: 1 }}
                   transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
@@ -433,7 +433,7 @@ export function StepIndicator({ step }) {
               )}
               {isCompleted && (
                 <motion.span
-                  className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full bg-[#2FA66A]"
+                  className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-[#2FA66A]"
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: 1 }}
                   transition={{ duration: 0.4, delay: idx * 0.05, ease: [0.16, 1, 0.3, 1] }}
@@ -596,7 +596,7 @@ export const DayScheduleCard = React.memo(function DayScheduleCard({
           whileInView={{ opacity: 1, scale: 1, y: 0 }}
           viewport={{ once: true, margin: "100px", root: scrollRef }}
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className="relative pl-2 sm:pl-[46px] py-1.5 sm:py-2 flex items-center justify-between z-10 pr-1 gap-2 flex-wrap sm:flex-nowrap"
+          className="relative pl-2 sm:pl-11.5 py-1.5 sm:py-2 flex items-center justify-between z-10 pr-1 gap-2 flex-wrap sm:flex-nowrap"
         >
           <LiveTransitPill
             prevStop={itinerary.days?.[selectedDayIndex]?.activities?.[idx - 1]}
@@ -626,11 +626,11 @@ export const DayScheduleCard = React.memo(function DayScheduleCard({
               url += `&dropoff[nickname]=${encodeURIComponent(act.title)}`;
               window.open(url, '_blank', 'noopener,noreferrer');
             }}
-            className="group relative inline-flex items-center gap-0 pl-[3px] pr-3.5 sm:pr-4 py-[3px] rounded-full overflow-hidden cursor-pointer select-none shrink-0 transition-all duration-200 hover:scale-[1.04] active:scale-[0.97]"
+            className="group relative inline-flex items-center gap-0 pl-0.75 pr-3.5 sm:pr-4 py-0.75 rounded-full overflow-hidden cursor-pointer select-none shrink-0 transition-all duration-200 hover:scale-[1.04] active:scale-[0.97]"
             style={{ background: '#000', boxShadow: '0 2px 12px rgba(0,0,0,0.4)' }}
             title={`Request Uber to ${act.title}`}
           >
-            <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-500 ease-in-out bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-500 ease-in-out bg-linear-to-r from-transparent via-white/10 to-transparent" />
             <span className="relative flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white shrink-0 mr-2">
               <svg width="10" height="12" viewBox="0 0 11 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M0 0H2.64V7.392C2.64 8.6328 3.3792 9.372 4.62 9.372H6.38C7.6208 9.372 8.36 8.6328 8.36 7.392V0H11V7.392C11 10.1376 9.3104 11.88 6.38 11.88H4.62C1.6896 11.88 0 10.1376 0 7.392V0Z" fill="black"/>
@@ -695,10 +695,10 @@ export const DayScheduleCard = React.memo(function DayScheduleCard({
               e.currentTarget.style.display = 'none';
             }}
           />
-          <div className="w-full h-full flex items-center justify-center text-[#FF6B2C]/40 bg-gradient-to-br from-[#FFF5EE] via-[#FAF0E6] to-[#F5EBE1]">
+          <div className="w-full h-full flex items-center justify-center text-[#FF6B2C]/40 bg-linear-to-br from-[#FFF5EE] via-[#FAF0E6] to-[#F5EBE1]">
             {renderPremiumIcon(categoryStyle.icon, 24)}
           </div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/15 pointer-events-none" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-black/15 pointer-events-none" />
           
           {/* Stop Number Badge */}
           <div className={`absolute top-1.5 left-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shadow-sm backdrop-blur-md transition-all ${isSelected ? 'bg-[#FF6B2C] text-white' : 'bg-white text-stone-900 border border-stone-200/80'}`}>

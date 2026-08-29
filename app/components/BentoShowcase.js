@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import Image from 'next/image';
 
 // Star rating helper
@@ -89,7 +89,7 @@ function MobileCarouselShowcase({ cards, handleClick, formatBudget }) {
       <div 
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex overflow-x-auto snap-x snap-mandatory gap-4 px-5 pb-4 pt-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex overflow-x-auto snap-x snap-mandatory gap-4 px-5 pb-4 pt-4 scrollbar-nonebkit-scrollbar]:hidden"
       >
         {cards.map((dest, i) => (
           <motion.div 
@@ -99,7 +99,7 @@ function MobileCarouselShowcase({ cards, handleClick, formatBudget }) {
             viewport={{ once: true, margin: "50px" }}
             transition={{ duration: 0.5, delay: i * 0.05 }}
             onClick={() => handleClick(dest)}
-            className="shrink-0 w-[85vw] snap-center rounded-[2rem] overflow-hidden shadow-2xl flex flex-col bg-stone-900 relative aspect-[4/5] cursor-pointer"
+            className="shrink-0 w-[85vw] snap-center rounded-4xl overflow-hidden shadow-2xl flex flex-col bg-stone-900 relative aspect-4/5 cursor-pointer"
           >
             {/* Image */}
             <div className="absolute inset-0 w-full h-full pointer-events-none">
@@ -466,7 +466,7 @@ export default function BentoShowcase({ destinations, onCardClick }) {
 
           {/* ─── HORIZONTAL DUO (Bottom Right) ─── */}
           <div className="flex flex-col sm:flex-row gap-5 h-full">
-            {[duoDest1, duoDest2].map((dest, idx) => {
+            {[duoDest1, duoDest2].map((dest) => {
               if (!dest) return null;
               return (
                 <motion.div

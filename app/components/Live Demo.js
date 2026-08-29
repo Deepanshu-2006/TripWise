@@ -386,26 +386,26 @@ export default function RealTimeAdjuster() {
 
                         <div
                             ref={phoneRef}
-                            className="relative w-64 h-[495px] sm:w-66 sm:h-[505px] md:w-68 md:h-[515px] rounded-[46px] bg-gradient-to-br from-[#403f44] via-[#1c1b1f] to-[#2d2c31] border-[1px] border-[#5a5960] md:will-change-transform z-10 p-[6px]"
+                            className="relative w-64 h-123.75 sm:w-66 sm:h-126.25 md:w-68 md:h-128.75 rounded-[46px] bg-linear-to-br from-[#403f44] via-[#1c1b1f] to-[#2d2c31] border border-[#5a5960] md:will-change-transform z-10 p-1.5"
                             style={{
                                 boxShadow: '0 0 0 1px rgba(0,0,0,0.8), 0 0 0 3px #18171a, 0 0 0 4.5px rgba(255,255,255,0.1), 0 40px 80px -15px rgba(0, 0, 0, 0.7), 0 0 80px 0px rgba(255, 91, 29, 0.15), inset 0 0 15px rgba(255,255,255,0.05)',
                             }}
                         >
                             {/* Physical Hardware Side Buttons (Titanium Finish) */}
                             {/* Left Side: Action Button */}
-                            <div className="absolute -left-[3px] top-24 w-[3px] h-6 bg-gradient-to-l from-[#1c1b1f] to-[#403f44] rounded-l-[2px] shadow-[inset_1px_0_1px_rgba(255,255,255,0.2)]" />
+                            <div className="absolute -left-0.75 top-24 w-0.75 h-6 bg-linear-to-l from-[#1c1b1f] to-[#403f44] rounded-l-xs shadow-[inset_1px_0_1px_rgba(255,255,255,0.2)]" />
                             {/* Left Side: Volume Up */}
-                            <div className="absolute -left-[3px] top-36 w-[3px] h-12 bg-gradient-to-l from-[#1c1b1f] to-[#403f44] rounded-l-[2px] shadow-[inset_1px_0_1px_rgba(255,255,255,0.2)]" />
+                            <div className="absolute -left-0.75 top-36 w-0.75 h-12 bg-linear-to-l from-[#1c1b1f] to-[#403f44] rounded-l-xs shadow-[inset_1px_0_1px_rgba(255,255,255,0.2)]" />
                             {/* Left Side: Volume Down */}
-                            <div className="absolute -left-[3px] top-52 w-[3px] h-12 bg-gradient-to-l from-[#1c1b1f] to-[#403f44] rounded-l-[2px] shadow-[inset_1px_0_1px_rgba(255,255,255,0.2)]" />
+                            <div className="absolute -left-0.75 top-52 w-0.75 h-12 bg-linear-to-l from-[#1c1b1f] to-[#403f44] rounded-l-xs shadow-[inset_1px_0_1px_rgba(255,255,255,0.2)]" />
                             {/* Right Side: Power Button */}
-                            <div className="absolute -right-[3px] top-40 w-[3px] h-16 bg-gradient-to-r from-[#1c1b1f] to-[#403f44] rounded-r-[2px] shadow-[inset_-1px_0_1px_rgba(255,255,255,0.2)]" />
+                            <div className="absolute -right-0.75 top-40 w-0.75 h-16 bg-linear-to-r from-[#1c1b1f] to-[#403f44] rounded-r-xs shadow-[inset_-1px_0_1px_rgba(255,255,255,0.2)]" />
 
                             {/* Antenna Bands */}
-                            <div className="absolute top-0 left-16 w-2 h-[6px] bg-[#0F0E11] z-0" />
-                            <div className="absolute top-0 right-16 w-2 h-[6px] bg-[#0F0E11] z-0" />
-                            <div className="absolute bottom-0 left-16 w-2 h-[6px] bg-[#0F0E11] z-0" />
-                            <div className="absolute bottom-0 right-16 w-2 h-[6px] bg-[#0F0E11] z-0" />
+                            <div className="absolute top-0 left-16 w-2 h-1.5 bg-[#0F0E11] z-0" />
+                            <div className="absolute top-0 right-16 w-2 h-1.5 bg-[#0F0E11] z-0" />
+                            <div className="absolute bottom-0 left-16 w-2 h-1.5 bg-[#0F0E11] z-0" />
+                            <div className="absolute bottom-0 right-16 w-2 h-1.5 bg-[#0F0E11] z-0" />
 
                             {/* Cursor arrow element (absolute relative to phone mockup wrapper) */}
                             <div
@@ -424,11 +424,11 @@ export default function RealTimeAdjuster() {
                             </div>
 
                             {/* Inner Screen Display */}
-                            <div className="relative w-full h-full bg-[#000000] rounded-[40px] overflow-hidden border-[4px] border-[#0A090C] shadow-inner flex flex-col justify-between text-white font-sans">
+                            <div className="relative w-full h-full bg-[#000000] rounded-[40px] overflow-hidden border-4 border-[#0A090C] shadow-inner flex flex-col justify-between text-white font-sans">
                                 
                                 {/* Realistic Glass Reflection Overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 pointer-events-none z-40" />
-                                <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-40" />
+                                <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/5 to-white/10 pointer-events-none z-40" />
+                                <div className="absolute top-0 inset-x-0 h-32 bg-linear-to-b from-white/10 to-transparent pointer-events-none z-40" />
 
                                 {/* OLED Power-On Laser Sheen Beam */}
                                 <div
@@ -444,7 +444,7 @@ export default function RealTimeAdjuster() {
                                 {/* iPhone 15 Pro Dynamic Island */}
                                 <div 
                                     ref={islandRef}
-                                    className="absolute top-2 left-1/2 -translate-x-1/2 w-[100px] h-7 rounded-full bg-black z-30 flex items-center justify-between px-2.5 shadow-[0_4px_12px_rgba(0,0,0,1)] md:will-change-transform origin-center"
+                                    className="absolute top-2 left-1/2 -translate-x-1/2 w-25 h-7 rounded-full bg-black z-30 flex items-center justify-between px-2.5 shadow-[0_4px_12px_rgba(0,0,0,1)] md:will-change-transform origin-center"
                                 >
                                     {/* Front Camera Lens */}
                                     <div className="w-3 h-3 rounded-full bg-[#0d0c10] border border-white/5 flex items-center justify-center shadow-[inset_0_1px_2px_rgba(255,255,255,0.1)]">
@@ -469,7 +469,7 @@ export default function RealTimeAdjuster() {
                                             </svg>
                                             {/* Battery Icon */}
                                             <div className="flex items-center">
-                                                <div className="w-4.5 h-2.5 border border-white/70 rounded-[3px] p-[1px] flex items-center">
+                                                <div className="w-4.5 h-2.5 border border-white/70 rounded-[3px] p-px flex items-center">
                                                     <div className="w-full h-full bg-white rounded-[1px]" />
                                                 </div>
                                                 <div className="w-0.5 h-1 bg-white/70 rounded-r-[1px]" />

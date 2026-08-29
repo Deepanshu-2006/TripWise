@@ -12,7 +12,7 @@ import { useUser } from '@clerk/nextjs';
 import { getTripCollaborators } from '../actions/trips';
 import { 
   getTripExpenses, saveTripExpenses, syncPendingExpenses, 
-  SUPPORTED_CURRENCIES, convertCurrency, fetchExchangeRates, calculateDailyPace, getUserDisplayCurrency, getConvertedEstimatedCostNumber
+  SUPPORTED_CURRENCIES, convertCurrency, fetchExchangeRates, getUserDisplayCurrency, getConvertedEstimatedCostNumber
 } from '../../lib/expenseApi';
 // OCR Receipt Extraction Helper
 async function extractReceiptData(imageDataUrl) {
@@ -134,7 +134,7 @@ export default function ExpenseTrackerView({
     if (userCurrency) setHomeCurrency(userCurrency);
     else setHomeCurrency(getUserDisplayCurrency()); 
   }, [userCurrency]);
-  const [localCurrency, setLocalCurrency] = useState('EUR');
+  const [localCurrency] = useState('EUR');
   const [isOffline, setIsOffline] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
@@ -151,7 +151,7 @@ export default function ExpenseTrackerView({
   const [expenseCurrency, setExpenseCurrency] = useState('EUR');
   const [expenseDay, setExpenseDay] = useState('Day 1');
   const [paidBy, setPaidBy] = useState('Me');
-  const [receiptPhoto, setReceiptPhoto] = useState(null);
+  const [, setReceiptPhoto] = useState(null);
   const [receiptPhotoDataUrl, setReceiptPhotoDataUrl] = useState(null);
   const [isScanningOcr, setIsScanningOcr] = useState(false);
   const [ocrConfidenceMsg, setOcrConfidenceMsg] = useState(null);
@@ -575,10 +575,6 @@ export default function ExpenseTrackerView({
     return true;
   });
 
-  const getInitials = (name) => {
-    if (!name) return '?';
-    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-  };
 
   return (
     <div className="w-full space-y-4 sm:space-y-6 font-sans text-[#1E1C1A]">
@@ -648,9 +644,9 @@ export default function ExpenseTrackerView({
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
             onClick={() => fileInputRef.current?.click()}
-            className="group relative px-4 sm:px-5 py-2 rounded-full bg-gradient-to-r from-[#FF6B2C] to-[#E55A1C] text-white text-xs font-sans font-bold transition-all duration-200 flex items-center gap-1.5 cursor-pointer shadow-xs overflow-hidden select-none"
+            className="group relative px-4 sm:px-5 py-2 rounded-full bg-linear-to-r from-[#FF6B2C] to-[#E55A1C] text-white text-xs font-sans font-bold transition-all duration-200 flex items-center gap-1.5 cursor-pointer shadow-xs overflow-hidden select-none"
           >
-            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 pointer-events-none" />
+            <span className="absolute inset-0 bg-linear-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 pointer-events-none" />
             <Camera className="w-3.5 h-3.5 group-hover:rotate-12 group-hover:scale-110 transition-transform duration-200" />
             <span className="relative z-10">Scan Receipt</span>
           </motion.button>
@@ -913,7 +909,7 @@ export default function ExpenseTrackerView({
                 isSelected 
                   ? 'bg-[#1E1C1A] text-white border-[#1E1C1A] shadow-xs' 
                   : isZeroSpend
-                    ? 'bg-[#FAF6F0]/60 border-dashed border-[#E6DFD5] opacity-55 grayscale-[60%] hover:opacity-85 hover:grayscale-0'
+                    ? 'bg-[#FAF6F0]/60 border-dashed border-[#E6DFD5] opacity-55 grayscale-60 hover:opacity-85 hover:grayscale-0'
                     : 'bg-white hover:bg-[#FAF6F0] text-[#1E1C1A] border-[#E6DFD5] shadow-2xs'
               }`}
             >
@@ -922,7 +918,7 @@ export default function ExpenseTrackerView({
                 <motion.div
                   animate={{ x: ['-100%', '200%'] }}
                   transition={{ duration: 2.2, repeat: Infinity, ease: 'linear' }}
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none"
+                  className="absolute inset-0 bg-linear-to-r from-transparent via-white/15 to-transparent pointer-events-none"
                 />
               )}
 
@@ -1047,7 +1043,7 @@ export default function ExpenseTrackerView({
 
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <h4 className="font-serif font-extrabold text-sm sm:text-base text-[#1E1C1A] truncate max-w-[140px] sm:max-w-none">{exp.merchant}</h4>
+                          <h4 className="font-serif font-extrabold text-sm sm:text-base text-[#1E1C1A] truncate max-w-35 sm:max-w-none">{exp.merchant}</h4>
                           <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-[#FAF6F0] border border-[#E6DFD5] text-[9.5px] sm:text-[10px] font-sans font-bold text-[#1E1C1A]">
                             {exp.category}
                           </span>
@@ -1120,7 +1116,7 @@ export default function ExpenseTrackerView({
       {mounted && createPortal(
         <AnimatePresence>
           {showAddModal && (
-            <div className="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4">
+            <div className="fixed inset-0 z-999999 flex items-center justify-center p-3 sm:p-4">
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -1360,7 +1356,7 @@ export default function ExpenseTrackerView({
       {mounted && createPortal(
         <AnimatePresence>
           {previewPhotoUrl && (
-            <div className="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4">
+            <div className="fixed inset-0 z-999999 flex items-center justify-center p-3 sm:p-4">
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

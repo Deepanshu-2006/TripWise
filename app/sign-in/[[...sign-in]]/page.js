@@ -154,7 +154,7 @@ export default function SignInPage() {
         animate={{ scale: [1, 1.08, 1] }}
         transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
       />
-      <div className="md:hidden absolute inset-0 bg-gradient-to-t from-[#030303] via-[#030303]/80 to-[#030303]/40 z-0 pointer-events-none" />
+      <div className="md:hidden absolute inset-0 bg-linear-to-t from-[#030303] via-[#030303]/80 to-[#030303]/40 z-0 pointer-events-none" />
 
       {/* Mobile Branding (TripWise Logo) */}
       <motion.div 
@@ -182,10 +182,10 @@ export default function SignInPage() {
       )}
 
       {/* Main Content Layout */}
-      <div className="relative z-10 w-full max-w-5xl flex flex-col md:flex-row items-center justify-center md:justify-between px-4 md:px-10 gap-0 md:gap-20 min-h-[100svh] md:min-h-0">
+      <div className="relative z-10 w-full max-w-5xl flex flex-col md:flex-row items-center justify-center md:justify-between px-4 md:px-10 gap-0 md:gap-20 min-h-svh md:min-h-0">
         
         {/* Left Side: Floor Lamp */}
-        <div className="hidden md:flex absolute md:relative top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 md:translate-x-0 md:translate-y-0 md:top-auto md:left-auto w-[400px] md:w-full md:max-w-100 h-[600px] md:h-150 flex-col items-center justify-end pointer-events-none md:pointer-events-auto scale-[0.7] sm:scale-[0.8] md:scale-100 z-10 md:z-auto origin-center">
+        <div className="hidden md:flex absolute md:relative top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 md:translate-x-0 md:translate-y-0 md:top-auto md:left-auto w-100 md:w-full md:max-w-100 h-150 md:h-150 flex-col items-center justify-end pointer-events-none md:pointer-events-auto scale-[0.7] sm:scale-[0.8] md:scale-100 z-10 md:z-auto origin-center">
           
           {/* The Light Beam Container */}
           <motion.div 
@@ -265,7 +265,7 @@ export default function SignInPage() {
 
         {/* Right Side: Ultra-Premium Login Form */}
         <motion.div 
-          className="relative z-30 w-full max-w-[360px] sm:max-w-none sm:w-[420px] md:w-105 shrink-0 p-4 sm:p-8 md:p-10 rounded-[24px] md:rounded-4xl bg-[#111111]/85 border border-white/5 backdrop-blur-3xl mx-auto md:mx-0 shadow-2xl max-md:!opacity-100 max-md:!translate-y-0 max-md:!pointer-events-auto"
+          className="relative z-30 w-full max-w-90 sm:max-w-none sm:w-105 md:w-105 shrink-0 p-4 sm:p-8 md:p-10 rounded-3xl md:rounded-4xl bg-[#111111]/85 border border-white/5 backdrop-blur-3xl mx-auto md:mx-0 shadow-2xl max-md:opacity-100! max-md:translate-y-0! max-md:pointer-events-auto!"
           style={{ 
             opacity: isLightOn ? 1 : dragOpacity,
             y: isLightOn ? 0 : formY,

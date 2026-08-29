@@ -192,7 +192,7 @@ export default function AIPlannerPage() {
   };
 
   return (
-    <div className="w-full h-[100dvh] flex flex-col bg-[#FAF8F5] text-[#1F1F1F] overflow-hidden fixed inset-0 pt-20 sm:pt-22">
+    <div className="w-full h-dvh flex flex-col bg-[#FAF8F5] text-[#1F1F1F] overflow-hidden fixed inset-0 pt-20 sm:pt-22">
       <Header />
       <Suspense fallback={null}>
         <PromptSeeder onPrompt={setCurrentPrompt} />

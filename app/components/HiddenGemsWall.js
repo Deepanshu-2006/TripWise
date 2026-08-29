@@ -233,7 +233,7 @@ export default function HiddenGemsWall() {
                 exit={{ opacity: 0, rotateX: 40, y: 40 }}
                 transition={{ duration: 0.7, type: 'spring', bounce: 0.4 }}
                 whileHover={{ y: -5 }}
-                className={`relative rounded-3xl overflow-hidden group cursor-pointer h-80 sm:h-96 md:h-[450px] bg-stone-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.12)]`}
+                className={`relative rounded-3xl overflow-hidden group cursor-pointer h-80 sm:h-96 md:h-112.5 bg-stone-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.12)]`}
               >
             <Image 
               src={gem.image_url || gem.imageUrl} 

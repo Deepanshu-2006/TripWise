@@ -28,7 +28,7 @@ export default function EmergencyModal({ isOpen, onClose, destinationName, passp
     <AnimatePresence>
       <div
         data-lenis-prevent="true"
-        className="fixed inset-0 z-[999999] flex items-end sm:items-center justify-center p-0 sm:p-6 font-sans overflow-hidden"
+        className="fixed inset-0 z-999999 flex items-end sm:items-center justify-center p-0 sm:p-6 font-sans overflow-hidden"
       >
         
         {/* BACKDROP */}
