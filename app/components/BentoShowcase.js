@@ -52,133 +52,137 @@ function HandDrawnAnnotations({ destId }) {
   );
 }
 
-function StickyCard({ dest, index, totalCards, handleClick, formatBudget, getCrowdBadgeStyle }) {
-  const containerRef = useRef(null);
-  
-  // 1. Scroll tracker for Stacking
-  const { scrollYProgress: rawStackProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "start -100%"]
-  });
-  const stackProgress = useSpring(rawStackProgress, { stiffness: 100, damping: 20, restDelta: 0.001 });
+function MobileCarouselShowcase({ cards, handleClick, formatBudget }) {
+  const scrollRef = useRef(null);
+  const [activeIndex, setActiveIndex] = useState(0);
 
-  // 2. Scroll tracker for Internal Parallax
-  const { scrollYProgress: rawViewProgress } = useScroll({
-    target: containerRef,
-    offset: ["start end", "end start"]
-  });
-  const viewProgress = useSpring(rawViewProgress, { stiffness: 100, damping: 20, restDelta: 0.001 });
+  const handleScroll = (e) => {
+    if (!scrollRef.current) return;
+    // Calculate which card is currently centered
+    const scrollLeft = e.target.scrollLeft;
+    // Each card is roughly 85vw wide plus 16px (1rem) gap
+    const cardWidth = window.innerWidth * 0.85 + 16;
+    const index = Math.round(scrollLeft / cardWidth);
+    
+    // Ensure index stays within bounds
+    if (index >= 0 && index < cards.length && index !== activeIndex) {
+      setActiveIndex(index);
+    }
+  };
+  const scrollNext = () => {
+    if (scrollRef.current) {
+      const cardWidth = window.innerWidth * 0.85 + 16;
+      scrollRef.current.scrollBy({ left: cardWidth, behavior: 'smooth' });
+    }
+  };
 
-  // Stacking Transforms (Shrink and fade when scrolling past this specific card)
-  const stackScale = useTransform(stackProgress, [0, 1], [1, 0.95]);
-  const stackOpacity = useTransform(stackProgress, [0, 1], [1, 0.6]);
-  
-  // Calculate final fan angle based on index (e.g. -9, -3, 3, 9)
-  const targetRotate = (index - (totalCards - 1) / 2) * 6;
-  
-  // Fan out all cards based on the entire showcase's scroll progress
-  const rotate = useTransform(dest.showcaseProgress, [0, 1], [0, targetRotate]);
-  
-  // Parallax Transform
-  const imageY = useTransform(viewProgress, [0, 1], ["-15%", "15%"]);
-
-  // Increased base offset from 80 to 160 to clear the navbar and filters button
-  const stickyTop = 160 + index * 20;
+  const scrollPrev = () => {
+    if (scrollRef.current) {
+      const cardWidth = window.innerWidth * 0.85 + 16;
+      scrollRef.current.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+    }
+  };
 
   return (
-    <motion.div 
-      ref={containerRef}
-      className="sticky w-full mb-6"
-      style={{ 
-        top: `${stickyTop}px`, 
-        zIndex: index + 10,
-        scale: stackScale,
-        opacity: stackOpacity,
-        rotate,
-        transformOrigin: "bottom center"
-      }}
-    >
-      <motion.div 
-        initial={{ opacity: 0, y: 50, scale: 0.95 }}
-        whileInView={{ opacity: 1, y: 0, scale: 1 }}
-        viewport={{ once: true, margin: "-50px" }}
-        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-        className="relative w-full h-[65vh] rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col bg-stone-900 cursor-pointer"
-        style={{ boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.2), 0 20px 50px rgba(0,0,0,0.5)" }}
-        onClick={() => handleClick(dest)}
+    <div className="sm:hidden w-full relative mt-8 mb-4">
+      {/* Horizontal Snap Carousel */}
+      <div 
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="flex overflow-x-auto snap-x snap-mandatory gap-4 px-5 pb-4 pt-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
-        {/* Parallax Image */}
-        <motion.div 
-          className="absolute inset-0 md:inset-[-15%] w-full h-full md:w-[130%] md:h-[130%] pointer-events-none max-md:!transform-none"
-          style={{ y: imageY }}
-        >
-          <Image src={dest.imageUrl} alt={dest.name} fill className="object-cover" sizes="(max-width: 768px) 100vw, 25vw" />
-        </motion.div>
-        
-        {/* Gradients for text protection */}
-        <div className="absolute inset-0 bg-linear-to-b from-black/40 via-transparent to-transparent pointer-events-none" />
-        <div className="absolute inset-0 bg-linear-to-t from-stone-950 via-stone-900/50 to-transparent pointer-events-none" />
-        
-        {/* Top Badges (Unified Glass) */}
-        <div className="absolute top-5 inset-x-5 z-20 flex items-center justify-between gap-2 pointer-events-none">
-          <span className="text-[9px] font-bold px-2.5 py-1 rounded-full text-white bg-black/20 backdrop-blur-md border border-white/20 uppercase tracking-widest shadow-sm whitespace-nowrap overflow-hidden text-ellipsis">
-            {dest.badge?.replace(/[^\x00-\x7F]/g, '') || "TOP PICK"}
-          </span>
-          {dest.crowdLevel && (
-            <span className="text-[9px] font-bold px-2.5 py-1 rounded-full text-white bg-black/20 backdrop-blur-md border border-white/20 shadow-sm flex items-center gap-1.5 whitespace-nowrap">
-              <span className={`w-1.5 h-1.5 rounded-full ${
-                dest.crowdLevel.includes('Low') ? 'bg-emerald-400' :
-                dest.crowdLevel.includes('Moderate') ? 'bg-amber-400' : 'bg-rose-400'
-              }`} />
-              <span className="uppercase tracking-widest">{dest.crowdLevel}</span>
-            </span>
-          )}
-        </div>
-
-        {/* Content & Dock */}
-        <div className="relative z-10 mt-auto flex flex-col pointer-events-none">
-          <div className="px-5 pb-5 drop-shadow-2xl">
-            <p className="text-white/80 text-[9px] font-bold uppercase tracking-[0.4em] mb-1 drop-shadow-md">{dest.country}</p>
-            <h3 className="text-5xl font-serif font-bold italic text-white tracking-tighter leading-none drop-shadow-xl">{dest.name}</h3>
-          </div>
-          
-          {/* The App Dock */}
-          <div className="w-full bg-white/10 backdrop-blur-2xl border-t border-white/20 px-5 py-3.5 flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <Stars rating={dest.rating} theme="dark" />
-            </div>
-            <span className="text-[10px] font-bold text-white tracking-widest uppercase">
-              {formatBudget(dest.budget)}
-            </span>
-          </div>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-function MobileStickyShowcase({ cards, handleClick, formatBudget, getCrowdBadgeStyle }) {
-  const showcaseRef = useRef(null);
-  const { scrollYProgress: rawShowcaseProgress } = useScroll({
-    target: showcaseRef,
-    offset: ["start start", "end end"]
-  });
-  const smoothShowcaseProgress = useSpring(rawShowcaseProgress, { stiffness: 100, damping: 20, restDelta: 0.001 });
-
-  return (
-    <div ref={showcaseRef} className="sm:hidden block w-full relative mt-8 pb-[30vh]">
-      <div className="flex flex-col px-5" style={{ perspective: "1500px" }}>
         {cards.map((dest, i) => (
-          <StickyCard 
+          <motion.div 
             key={dest.id}
-            dest={{...dest, showcaseProgress: smoothShowcaseProgress}}
-            index={i}
-            totalCards={cards.length}
-            handleClick={handleClick}
-            formatBudget={formatBudget}
-            getCrowdBadgeStyle={getCrowdBadgeStyle}
-          />
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true, margin: "50px" }}
+            transition={{ duration: 0.5, delay: i * 0.05 }}
+            onClick={() => handleClick(dest)}
+            className="shrink-0 w-[85vw] snap-center rounded-[2rem] overflow-hidden shadow-2xl flex flex-col bg-stone-900 relative aspect-[4/5] cursor-pointer"
+          >
+            {/* Image */}
+            <div className="absolute inset-0 w-full h-full pointer-events-none">
+              <Image src={dest.imageUrl} alt={dest.name} fill className="object-cover" sizes="(max-width: 768px) 100vw, 25vw" />
+            </div>
+            
+            {/* Gradients */}
+            <div className="absolute inset-0 bg-linear-to-b from-black/40 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-linear-to-t from-stone-950 via-stone-900/50 to-transparent pointer-events-none" />
+            
+            {/* Top Badges */}
+            <div className="absolute top-5 inset-x-5 z-20 flex items-center justify-between gap-2 pointer-events-none">
+              <span className="text-[9px] font-bold px-2.5 py-1 rounded-full text-white bg-black/20 backdrop-blur-md border border-white/20 uppercase tracking-widest shadow-sm truncate">
+                {dest.badge?.replace(/[^\x00-\x7F]/g, '') || "TOP PICK"}
+              </span>
+              {dest.crowdLevel && (
+                <span className="text-[9px] font-bold px-2.5 py-1 rounded-full text-white bg-black/20 backdrop-blur-md border border-white/20 shadow-sm flex items-center gap-1.5 shrink-0">
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    dest.crowdLevel.includes('Low') ? 'bg-emerald-400' :
+                    dest.crowdLevel.includes('Moderate') ? 'bg-amber-400' : 'bg-rose-400'
+                  }`} />
+                  <span className="uppercase tracking-widest">{dest.crowdLevel}</span>
+                </span>
+              )}
+            </div>
+
+            {/* Content & Dock */}
+            <div className="relative z-10 mt-auto flex flex-col pointer-events-none">
+              <div className="px-5 pb-5 drop-shadow-2xl">
+                <p className="text-white/80 text-[9px] font-bold uppercase tracking-[0.4em] mb-1 drop-shadow-md">{dest.country}</p>
+                <h3 className="text-5xl font-serif font-bold italic text-white tracking-tighter leading-none drop-shadow-xl">{dest.name}</h3>
+              </div>
+              
+              <div className="w-full bg-white/10 backdrop-blur-2xl border-t border-white/20 px-5 py-3.5 flex items-center justify-between">
+                <div className="flex items-center gap-1">
+                  <Stars rating={dest.rating} theme="dark" />
+                </div>
+                <span className="text-[10px] font-bold text-white tracking-widest uppercase">
+                  {formatBudget(dest.budget)}
+                </span>
+              </div>
+            </div>
+          </motion.div>
         ))}
+      </div>
+      
+      {/* Navigation Controls */}
+      <div className="flex justify-between items-center px-8 mt-2">
+        {/* Previous Button */}
+        <button 
+          onClick={scrollPrev}
+          disabled={activeIndex === 0}
+          className="w-8 h-8 rounded-full bg-stone-200/50 flex items-center justify-center text-stone-500 hover:bg-stone-300 hover:text-stone-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        {/* Scroll Indicators (Dots) */}
+        <div className="flex justify-center items-center gap-2 h-4">
+          {cards.map((_, i) => (
+            <div 
+              key={i} 
+              className={`rounded-full transition-all duration-300 ${
+                i === activeIndex 
+                  ? 'w-5 h-1.5 bg-[#F4703C] shadow-sm' 
+                  : 'w-1.5 h-1.5 bg-stone-300 hover:bg-stone-400'
+              }`} 
+            />
+          ))}
+        </div>
+
+        {/* Next Button */}
+        <button 
+          onClick={scrollNext}
+          disabled={activeIndex === cards.length - 1}
+          className="w-8 h-8 rounded-full bg-stone-200/50 flex items-center justify-center text-stone-500 hover:bg-stone-300 hover:text-stone-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
       </div>
     </div>
   );
@@ -277,11 +281,10 @@ export default function BentoShowcase({ destinations, onCardClick }) {
         )}
       </AnimatePresence>
 
-      <MobileStickyShowcase 
+      <MobileCarouselShowcase 
         cards={[coverDest, megaOptions[0], duoDest1, duoDest2].filter(Boolean)}
         handleClick={handleClick}
         formatBudget={formatBudget}
-        getCrowdBadgeStyle={getCrowdBadgeStyle}
       />
 
       {/* True Editorial Masonry Layout */}

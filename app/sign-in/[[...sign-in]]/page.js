@@ -241,7 +241,7 @@ export default function SignInPage() {
 
         {/* Right Side: Ultra-Premium Login Form */}
         <motion.div 
-          className="relative z-30 w-full sm:w-[420px] md:w-105 shrink-0 p-6 md:p-10 rounded-3xl md:rounded-4xl bg-[#111111]/85 border border-white/5 backdrop-blur-3xl mx-auto md:mx-0 shadow-2xl"
+          className="relative z-30 w-full sm:w-[420px] md:w-105 shrink-0 p-5 sm:p-8 md:p-10 rounded-3xl md:rounded-4xl bg-[#111111]/85 border border-white/5 backdrop-blur-3xl mx-auto md:mx-0 shadow-2xl max-w-full"
           style={{ 
             opacity: isLightOn ? 1 : dragOpacity,
             y: isLightOn ? 0 : formY,
@@ -268,19 +268,19 @@ export default function SignInPage() {
                 colorTextSecondary: '#A1A1AA',
               },
               elements: {
-                cardBox: "!shadow-none !border-none !bg-transparent",
+                cardBox: "!shadow-none !border-none !bg-transparent !w-full",
                 rootBox: "!w-full !flex !justify-center",
-                card: "!bg-transparent !shadow-none !border-none",
-                headerTitle: "!text-white !font-sans !font-medium !text-[28px] !tracking-tight !text-center !mb-6",
+                card: "!bg-transparent !shadow-none !border-none !p-0 !w-full",
+                headerTitle: "!text-white !font-sans !font-medium !text-[24px] sm:!text-[28px] !tracking-tight !text-center !mb-6",
                 headerSubtitle: "!hidden", 
-                formButtonPrimary: "!bg-gradient-to-r !from-[#8253FF] !to-[#A37BFF] hover:!opacity-90 !text-white !text-[14px] !font-bold !uppercase !tracking-[0.1em] !rounded-xl !py-4 !mt-2 transition-all !shadow-[0_0_30px_rgba(130,83,255,0.3)] !border-none !w-full",
+                formButtonPrimary: "!bg-gradient-to-r !from-[#8253FF] !to-[#A37BFF] hover:!opacity-90 !text-white !text-[13px] sm:!text-[14px] !font-bold !uppercase !tracking-[0.1em] !rounded-xl !py-4 !mt-2 transition-all !shadow-[0_0_30px_rgba(130,83,255,0.3)] !border-none !w-full",
                 formFieldLabel: "!hidden", 
-                formFieldInput: "!bg-white/5 !border !border-white/[0.1] !text-white !rounded-xl !px-5 !py-4 !mb-4 focus:!ring-1 focus:!ring-[#8253FF] focus:!border-[#8253FF] placeholder:!text-stone-400 placeholder:!font-light transition-all !w-full !text-[15px]",
-                footer: "!bg-transparent",
-                footerActionText: "!text-stone-400 !text-[14px]",
-                footerActionLink: "!text-[#8253FF] hover:!text-[#A37BFF] !text-[14px] !font-medium",
-                socialButtonsBlockButton: "!bg-white/5 !border !border-white/[0.1] hover:!bg-white/10 !text-white transition-all !rounded-xl !py-4 !w-full !mb-2",
-                socialButtonsBlockButtonText: "!font-sans !font-medium !text-[15px] !text-white",
+                formFieldInput: "!bg-white/5 !border !border-white/[0.1] !text-white !rounded-xl !px-4 sm:!px-5 !py-3.5 sm:!py-4 !mb-4 focus:!ring-1 focus:!ring-[#8253FF] focus:!border-[#8253FF] placeholder:!text-stone-400 placeholder:!font-light transition-all !w-full !text-[14px] sm:!text-[15px]",
+                footer: "!bg-transparent !p-0 !mt-6",
+                footerActionText: "!text-stone-400 !text-[13px] sm:!text-[14px]",
+                footerActionLink: "!text-[#8253FF] hover:!text-[#A37BFF] !text-[13px] sm:!text-[14px] !font-medium",
+                socialButtonsBlockButton: "!bg-white/5 !border !border-white/[0.1] hover:!bg-white/10 !text-white transition-all !rounded-xl !py-3.5 sm:!py-4 !w-full !mb-2 !px-2",
+                socialButtonsBlockButtonText: "!font-sans !font-medium !text-[14px] sm:!text-[15px] !text-white",
                 dividerLine: "!bg-white/[0.1]",
                 dividerText: "!text-stone-400 !font-sans !text-[13px] !px-4",
                 formFieldAction: "!text-[#8253FF] hover:!text-[#A37BFF] !text-xs !font-medium !absolute !right-2 !top-0 !-mt-6",

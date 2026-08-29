@@ -176,6 +176,7 @@ export default function FAQAndMarqueeCTA() {
 
   // ✦ Creative 3D Origami Paper Unfold & Stamped Dispatch Reveal ✦
   const toggleStickyNote = (index) => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
     const isOpening = openIdx !== index;
     const prevIdx = openIdx;
 
@@ -184,11 +185,11 @@ export default function FAQAndMarqueeCTA() {
       gsap.to(contentRefs.current[prevIdx], {
         height: 0,
         opacity: 0,
-        rotateX: -45,
+        rotateX: isMobile ? 0 : -45,
         transformOrigin: 'top center',
         duration: 0.28,
         ease: "power2.in",
-        force3D: true,
+        force3D: !isMobile,
       });
       if (noteRefs.current[prevIdx]) {
         gsap.to(noteRefs.current[prevIdx], {
@@ -199,7 +200,7 @@ export default function FAQAndMarqueeCTA() {
           opacity: isOpening ? 0.4 : 1,
           duration: 0.35,
           ease: "power2.out",
-          force3D: true,
+          force3D: !isMobile,
         });
       }
     }
@@ -213,13 +214,13 @@ export default function FAQAndMarqueeCTA() {
       if (activeEl) {
         gsap.to(activeEl, {
           rotate: 0,
-          rotateX: -5,
-          scale: 1.05,
-          y: -12,
+          rotateX: isMobile ? 0 : -5,
+          scale: isMobile ? 1.02 : 1.05,
+          y: isMobile ? -6 : -12,
           opacity: 1,
           duration: 0.45,
           ease: "back.out(2.0)",
-          force3D: true,
+          force3D: !isMobile,
         });
 
         // Pushpin Head Pulse
@@ -236,13 +237,13 @@ export default function FAQAndMarqueeCTA() {
       noteRefs.current.forEach((el, i) => {
         if (!el || i === index) return;
         gsap.to(el, {
-          scale: 0.94,
-          rotateX: 8,
-          y: 8,
-          opacity: 0.4,
+          scale: isMobile ? 0.98 : 0.94,
+          rotateX: isMobile ? 0 : 8,
+          y: isMobile ? 4 : 8,
+          opacity: isMobile ? 0.6 : 0.4,
           duration: 0.4,
           ease: "power2.out",
-          force3D: true,
+          force3D: !isMobile,
         });
       });
 
@@ -250,14 +251,14 @@ export default function FAQAndMarqueeCTA() {
       const target = contentRefs.current[index];
       if (target) {
         gsap.fromTo(target,
-          { height: 0, opacity: 0, rotateX: -65, transformOrigin: 'top center' },
+          { height: isMobile ? 'auto' : 0, opacity: 0, rotateX: isMobile ? 0 : -65, transformOrigin: 'top center' },
           {
             height: 'auto',
             opacity: 1,
             rotateX: 0,
             duration: 0.5,
             ease: "back.out(1.8)",
-            force3D: true,
+            force3D: !isMobile,
           }
         );
 
@@ -292,7 +293,7 @@ export default function FAQAndMarqueeCTA() {
           opacity: 1,
           duration: 0.4,
           ease: "back.out(1.5)",
-          force3D: true,
+          force3D: !isMobile,
         });
       });
     }
@@ -715,7 +716,7 @@ export default function FAQAndMarqueeCTA() {
                   <div
                     key={note.id}
                     ref={(el) => (noteRefs.current[i] = el)}
-                    className={`sticky-note-card group relative cursor-pointer transition-shadow duration-300 rounded-2xl p-6 md:p-7 md:will-change-transform transform-gpu ${
+                    className={`sticky-note-card group relative cursor-pointer transition-shadow duration-300 rounded-2xl p-6 md:p-7 md:will-change-transform md:transform-gpu ${
                       isOpen 
                         ? 'z-50 shadow-[0_30px_70px_-12px_rgba(255,91,29,0.3)] ring-2 ring-[#FF5B1D]' 
                         : 'z-20 shadow-[0_12px_30px_-8px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)]'
@@ -724,7 +725,6 @@ export default function FAQAndMarqueeCTA() {
                       backgroundColor: note.bg,
                       border: `1.5px solid ${note.borderColor}`,
                       transformOrigin: 'top center',
-                      opacity: openIdx === null || isOpen ? 1 : 0.5,
                       backfaceVisibility: 'hidden',
                       WebkitBackfaceVisibility: 'hidden',
                     }}
@@ -744,19 +744,18 @@ export default function FAQAndMarqueeCTA() {
                             : '0 4px 10px rgba(0,0,0,0.35)',
                         }}
                       >
-                        <div className="absolute top-0.5 left-1 w-1.5 h-1.5 rounded-full bg-white/80 blur-[0.4px]" />
+                        <div className="absolute top-0.5 left-1 w-1.5 h-1.5 rounded-full bg-white/80 md:blur-[0.4px]" />
                       </div>
                     </div>
 
                     <div 
-                      className="absolute -top-3 left-6 w-16 h-5 pointer-events-none z-20 opacity-85"
+                      className="absolute -top-3 left-6 w-16 h-5 pointer-events-none z-20 opacity-85 md:backdrop-blur-[2px]"
                       style={{
                         background: 'linear-gradient(135deg, rgba(255,255,255,0.75) 0%, rgba(255,245,230,0.55) 100%)',
                         borderLeft: '1px dashed rgba(0,0,0,0.12)',
                         borderRight: '1px dashed rgba(0,0,0,0.12)',
                         transform: `rotate(${note.tapeAngle})`,
                         boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                        backdropFilter: 'blur(2px)',
                       }}
                     />
 

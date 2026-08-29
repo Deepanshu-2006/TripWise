@@ -368,10 +368,11 @@ const Hero = () => {
             const canvas = canvasRef.current;
             if (!canvas) return;
             const dpr = Math.min(window.devicePixelRatio || 1, 2); // Cap at 2x for optimal 60fps GPU performance
-            canvas.width = window.innerWidth * dpr;
-            canvas.height = window.innerHeight * dpr;
-            canvas.style.width = `${window.innerWidth}px`;
-            canvas.style.height = `${window.innerHeight}px`;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
 
             const ctx = canvas.getContext('2d');
             ctx.imageSmoothingEnabled = true;
@@ -389,12 +390,23 @@ const Hero = () => {
         handleResize();
         window.addEventListener('resize', handleResize);
 
+        // Mutable state for the animation loop
+        let targetProgress = 0;
+        let currentLerpedProgress = 0;
+
         // 60 FPS Decoupled Render Loop (combines frame drawing + overlay animation)
         const renderLoop = () => {
-            const target = targetFrameIndexRef.current;
-            if (target !== currentRenderedIndexRef.current) {
-                drawFrame(target);
-                animateOverlays(target);
+            // Draw images discretely
+            const targetIdx = targetFrameIndexRef.current;
+            if (targetIdx !== currentRenderedIndexRef.current) {
+                drawFrame(targetIdx);
+            }
+
+            // Animate text overlays with buttery-smooth floating-point precision
+            const diff = targetProgress - currentLerpedProgress;
+            if (Math.abs(diff) > 0.00001) {
+                currentLerpedProgress += diff * 0.15; // Super smooth custom lerp
+                animateOverlays(currentLerpedProgress * (FRAME_COUNT - 1));
             }
         };
         gsap.ticker.add(renderLoop);
@@ -405,13 +417,14 @@ const Hero = () => {
                 trigger: containerRef.current,
                 start: 'top top',
                 end: 'bottom bottom',
-                scrub: 0.15, // Tight 0.15s scrub for smooth momentum-feeling scroll
+                scrub: 1.2, // 1.2s scrub for luxurious momentum (eliminates slow-scroll jank)
                 pin: stickyRef.current,
                 onUpdate: (self) => {
-                    const progress = self.progress;
+                    targetProgress = self.progress;
+
                     const frameIdx = Math.min(
                         FRAME_COUNT - 1,
-                        Math.max(0, Math.round(progress * (FRAME_COUNT - 1)))
+                        Math.max(0, Math.round(self.progress * (FRAME_COUNT - 1)))
                     );
                     targetFrameIndexRef.current = frameIdx;
                 }
@@ -428,9 +441,9 @@ const Hero = () => {
     const loadingPercentage = Math.round((loadedCount / FRAME_COUNT) * 100);
 
     return (
-        <section ref={containerRef} id="hero-section" className="relative w-full h-[400vh] md:h-[750vh] bg-brand-sand">
+        <section ref={containerRef} id="hero-section" className="relative w-full h-[400vh] md:h-[750vh] bg-[#9D8574]">
             {/* Sticky Viewport Container */}
-            <div ref={stickyRef} className="sticky top-0 w-full h-screen overflow-hidden flex items-center justify-center">
+            <div ref={stickyRef} className="sticky top-0 w-full h-[100lvh] overflow-hidden flex items-center justify-center">
                 {/* Background Frame Canvas (GPU Accelerated 60 FPS) */}
                 <canvas
                     ref={canvasRef}
@@ -438,7 +451,7 @@ const Hero = () => {
                 />
 
                 {/* Subtle Cinematic Vignette Overlay */}
-                <div className="absolute inset-0 bg-linear-to-t from-brand-sand via-transparent to-brand-sand/30 pointer-events-none z-1" />
+                <div className="absolute inset-0 bg-linear-to-t from-[#9D8574] via-transparent to-[#9D8574]/30 pointer-events-none z-1" />
 
 
 

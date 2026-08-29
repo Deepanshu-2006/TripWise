@@ -54,7 +54,7 @@ export default function TripCard({
         </div>
 
         {/* Card Content Overlay */}
-        <div className="px-7 pb-8 pt-12 flex flex-col grow relative z-10 h-full min-h-110 justify-end">
+        <div className="px-5 pb-6 pt-10 md:px-7 md:pb-8 md:pt-12 flex flex-col grow relative z-10 h-full aspect-[4/5] md:aspect-[3/4] justify-end">
           
           {/* Top/Floating elements could go here, but we focus on bottom weight for cinematic feel */}
           
