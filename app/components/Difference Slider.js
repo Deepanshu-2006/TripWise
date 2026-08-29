@@ -283,7 +283,7 @@ export default function Destination() {
             {/* Centered Heading */}
             <div
                 ref={headingRef}
-                className="text-center mb-6 md:mb-10 shrink-0 flex flex-col items-center will-change-transform"
+                className="text-center mb-6 md:mb-10 shrink-0 flex flex-col items-center md:will-change-transform"
             >
                 {/* Spaced Micro-Badge */}
                 <div 
@@ -325,7 +325,7 @@ export default function Destination() {
             {/* 3D Figma Perspective Canvas Artboard */}
             <div 
                 ref={artboardRef} 
-                className="relative w-full max-w-5xl flex-1 pb-4 md:pb-0 flex flex-col items-center will-change-transform"
+                className="relative w-full max-w-5xl flex-1 pb-4 md:pb-0 flex flex-col items-center md:will-change-transform"
             >
                 {/* Dynamic Height Split Canvas */}
                 <div
@@ -421,17 +421,17 @@ export default function Destination() {
 
                     {/* Three absolute Sticky Notes with frosted paper tapes */}
                     <div className="absolute top-[12%] right-[10%] w-24 h-24 bg-[#FEF08A] border border-yellow-300 shadow-md p-3 z-30 font-mono text-[9px] text-yellow-900 leading-tight select-none animate-wobble-yellow">
-                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-3.5 bg-white/20 border border-white/10 backdrop-blur-[1px] -rotate-2" />
+                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-3.5 bg-white/20 border border-white/10 md:backdrop-blur-[1px] -rotate-2" />
                         <span>check visa?? need photos</span>
                     </div>
 
                     <div className="absolute bottom-[20%] right-[6%] w-24 h-24 bg-[#FECDD3] border border-pink-300 shadow-md p-3 z-30 font-mono text-[9px] text-pink-900 leading-tight select-none animate-wobble-pink">
-                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-3.5 bg-white/20 border border-white/10 backdrop-blur-[1px] rotate-3" />
+                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-3.5 bg-white/20 border border-white/10 md:backdrop-blur-[1px] rotate-3" />
                         <span>hotel near colosseum?</span>
                     </div>
 
                     <div className="absolute bottom-[10%] left-[6%] w-24 h-24 bg-[#BFDBFE] border border-blue-300 shadow-md p-3 z-30 font-mono text-[9px] text-blue-900 leading-tight select-none animate-wobble-blue">
-                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-3.5 bg-white/20 border border-white/10 backdrop-blur-[1px] -rotate-1" />
+                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-3.5 bg-white/20 border border-white/10 md:backdrop-blur-[1px] -rotate-1" />
                         <span>budget ??? too much!!</span>
                     </div>
 

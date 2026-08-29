@@ -694,7 +694,7 @@ export default function FAQAndMarqueeCTA() {
           </div>
 
           <div className="max-w-6xl mx-auto px-4 md:px-8 relative z-10">
-            <div ref={faqHeaderRef} className="text-center mb-14 md:mb-18 will-change-transform">
+            <div ref={faqHeaderRef} className="text-center mb-14 md:mb-18 md:will-change-transform">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FF5B1D]/10 border border-[#FF5B1D]/20 text-[#FF5B1D] text-xs font-bold tracking-widest uppercase mb-4 shadow-2xs">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D] animate-pulse" />
                 📌 TRAVEL PINBOARD • DISPATCHES &amp; QUERIES
@@ -715,7 +715,7 @@ export default function FAQAndMarqueeCTA() {
                   <div
                     key={note.id}
                     ref={(el) => (noteRefs.current[i] = el)}
-                    className={`sticky-note-card group relative cursor-pointer transition-shadow duration-300 rounded-2xl p-6 md:p-7 will-change-transform transform-gpu ${
+                    className={`sticky-note-card group relative cursor-pointer transition-shadow duration-300 rounded-2xl p-6 md:p-7 md:will-change-transform transform-gpu ${
                       isOpen 
                         ? 'z-50 shadow-[0_30px_70px_-12px_rgba(255,91,29,0.3)] ring-2 ring-[#FF5B1D]' 
                         : 'z-20 shadow-[0_12px_30px_-8px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)]'

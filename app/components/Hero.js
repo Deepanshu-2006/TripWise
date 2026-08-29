@@ -458,7 +458,7 @@ const Hero = () => {
                         >
                             {/* Premium Scroll prompt positioned at the absolute bottom */}
                             <div className="absolute -bottom-8 md:-bottom-18 flex flex-col items-center gap-2 animate-bounce">
-                                <span className="font-mono text-[9px] md:text-[10px] font-bold text-[#180F0F] uppercase tracking-[0.2em] bg-white/30 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/40 shadow-sm text-center">
+                                <span className="font-mono text-[9px] md:text-[10px] font-bold text-[#180F0F] uppercase tracking-[0.2em] bg-white/60 md:bg-white/30 md:backdrop-blur-md px-4 py-1.5 rounded-full border border-white/40 shadow-sm text-center">
                                     Scroll to Explore
                                 </span>
                                 <svg className="w-4 h-4 text-[#180F0F]/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -472,7 +472,7 @@ const Hero = () => {
                             ref={stage2Ref}
                             className="absolute inset-x-0 bottom-12 md:bottom-20 flex flex-col items-center opacity-0 pointer-events-none transition-all duration-300 ease-out"
                         >
-                            <div className="flex items-center gap-2 md:gap-4 px-4 md:px-7 py-3 md:py-3.5 bg-[#1C1B1B] backdrop-blur-md rounded-full shadow-lg border border-white/50 text-[#fe7717] font-mono text-[10px] sm:text-xs md:text-base font-bold text-center">
+                            <div className="flex items-center gap-2 md:gap-4 px-4 md:px-7 py-3 md:py-3.5 bg-[#1C1B1B]/95 md:bg-[#1C1B1B] md:backdrop-blur-md rounded-full shadow-lg border border-white/50 text-[#fe7717] font-mono text-[10px] sm:text-xs md:text-base font-bold text-center">
                                 <span className="flex h-3 w-3 md:h-5 md:w-5 relative shrink-0">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#fe7717] opacity-75"></span>
                                     <span className="relative inline-flex rounded-full h-3 w-3 md:h-5 md:w-5 bg-[#fe7717] animate-pulse"></span>
@@ -511,7 +511,7 @@ const Hero = () => {
                                     </span>
                                 ))}
                             </h2>
-                            <p className="uppercase stage3-sub text-[9px] sm:text-[11px] md:text-xs font-bold text-[#fe7717] px-4 md:px-6 py-2 md:py-2.5 bg-[#1C1B1B] backdrop-blur-md rounded-full shadow-lg border border-white/20 font-mono tracking-[0.16em] transition-all duration-300 ease-out mt-4 md:mt-6 text-center">
+                            <p className="uppercase stage3-sub text-[9px] sm:text-[11px] md:text-xs font-bold text-[#fe7717] px-4 md:px-6 py-2 md:py-2.5 bg-[#1C1B1B]/95 md:bg-[#1C1B1B] md:backdrop-blur-md rounded-full shadow-lg border border-white/20 font-mono tracking-[0.16em] transition-all duration-300 ease-out mt-4 md:mt-6 text-center">
                                 From a single sentence to a full itinerary
                             </p>
                         </div>

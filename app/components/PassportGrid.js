@@ -350,8 +350,8 @@ export default function PassportGrid() {
         <section ref={sectionRef} className="pt-28 pb-4 md:py-36 bg-[#FFF8F5] relative overflow-hidden border-t border-brand-dark/5">
             {/* Ambient background glow decoration */}
             <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-1/3 left-1/4 -translate-y-1/2 w-96 h-96 rounded-full bg-[#0D9488]/5 blur-[140px]" />
-                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-[#FF5B1D]/5 blur-[140px]" />
+                <div className="hidden md:block absolute top-1/3 left-1/4 -translate-y-1/2 w-96 h-96 rounded-full bg-[#0D9488]/5 blur-[140px]" />
+                <div className="hidden md:block absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-[#FF5B1D]/5 blur-[140px]" />
             </div>
 
             <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
@@ -388,7 +388,7 @@ export default function PassportGrid() {
                             return (
                                 <div
                                     key={card.id}
-                                    className={`boarding-pass w-[85vw] sm:w-[400px] md:w-auto shrink-0 md:shrink ${card.colSpanClass} ${card.rowClass} ${card.splitCol === "left" ? "split-left" : "split-right"} bg-white/95 backdrop-blur-md border border-[#4B4745]/15 hover:border-[#0D9488]/50 shadow-md hover:shadow-[0_20px_40px_rgba(13,148,136,0.12)] hover:-translate-y-2 transition-all duration-500 ease-out rounded-2xl flex ${
+                                    className={`boarding-pass w-[85vw] sm:w-[400px] md:w-auto shrink-0 md:shrink ${card.colSpanClass} ${card.rowClass} ${card.splitCol === "left" ? "split-left" : "split-right"} bg-white/95 md:backdrop-blur-md border border-[#4B4745]/15 hover:border-[#0D9488]/50 shadow-md hover:shadow-[0_20px_40px_rgba(13,148,136,0.12)] hover:-translate-y-2 transition-all duration-500 ease-out rounded-2xl flex ${
                                         isHorizontal ? "flex-col sm:flex-row sm:items-center justify-between" : "flex-col"
                                     } relative overflow-hidden group`}
                                 >
