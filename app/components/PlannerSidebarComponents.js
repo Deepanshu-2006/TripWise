@@ -331,9 +331,9 @@ export function StepIndicator({ step }) {
                 className={`w-2.5 h-2.5 rounded-full border-2 border-white transition-all ${
                   isCompleted ? 'bg-[#2FA66A]' : isActive ? 'bg-[#FF6B2C]' : 'bg-stone-200'
                 }`}
-                animate={isActive ? { scale: [1, 1.3, 1] } : { scale: 1 }}
-                transition={{ repeat: isActive ? Infinity : 0, duration: 1.5, ease: 'easeInOut' }}
-                style={isActive ? { animation: 'glow-ring 1.5s ease-in-out infinite' } : isCompleted ? { animation: 'green-glow-ring 2s ease-in-out infinite' } : {}}
+                animate={{ scale: isActive ? 1.2 : 1 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                style={isActive ? { animation: 'glow-ring 1.5s ease-in-out infinite', willChange: 'transform, box-shadow' } : isCompleted ? { animation: 'green-glow-ring 2s ease-in-out infinite', willChange: 'transform, box-shadow' } : {}}
               />
             </motion.div>
           );
@@ -389,7 +389,7 @@ export function StepIndicator({ step }) {
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ type: 'spring', stiffness: 800, damping: 18, delay: idx * 0.07 + 0.05 }}
                 whileHover={{ scale: 1.25, rotate: isActive ? -8 : isCompleted ? 6 : 0, transition: { type: 'spring', stiffness: 600, damping: 12 } }}
-                style={isActive ? { animation: 'glow-ring 1.6s ease-in-out infinite' } : isCompleted ? { animation: 'green-glow-ring 2.5s ease-in-out infinite' } : {}}
+                style={isActive ? { animation: 'glow-ring 1.6s ease-in-out infinite', willChange: 'transform, box-shadow' } : isCompleted ? { animation: 'green-glow-ring 2.5s ease-in-out infinite', willChange: 'transform, box-shadow' } : {}}
               >
                 <AnimatePresence mode="wait">
                   {isCompleted ? (

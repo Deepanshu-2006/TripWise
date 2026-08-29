@@ -377,7 +377,7 @@ export default function RealTimeAdjuster() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 lg:gap-12 items-start lg:items-center relative">
 
                     {/* Left Column: Realistic iPhone Titanium Frame */}
-                    <div className="col-start-1 row-start-1 lg:col-span-5 flex flex-col items-center justify-center py-2 relative z-10 -mt-12 lg:mt-0">
+                    <div className="col-start-1 row-start-1 lg:col-span-5 flex flex-col items-center justify-center py-2 relative z-10 mt-2 lg:mt-0">
                         {/* Ground Contact Shadow */}
                         <div
                             ref={phoneShadowRef}

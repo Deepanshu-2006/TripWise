@@ -290,12 +290,11 @@ function Header() {
                             );
                         })()}
                         
-                        {/* Account Controls */}
                         <div className="flex items-center shrink-0">
                             {isSignedIn ? (
                                 <ProfileDropdown isLightPage={isLightPage} isScrolled={isScrolled} />
                             ) : (
-                                <a href="/sign-in" className={`font-mono text-[11px] font-bold ${isLightPage ? 'text-[#1F1F1F] hover:text-[#FF6B2C]' : 'text-white hover:text-[#FF6B2C]'} uppercase tracking-widest transition-colors py-2 relative nav-link-underline`}>
+                                <a href="/sign-in" className={`font-mono text-[11px] font-bold ${isLightPage ? 'text-[#1F1F1F] hover:text-[#FF6B2C]' : 'text-white hover:text-[#FF6B2C]'} uppercase tracking-widest transition-colors py-2 relative nav-link-underline -mt-[2px]`}>
                                     Sign In
                                 </a>
                             )}
@@ -327,7 +326,8 @@ function Header() {
 
         {/* Mobile Menu Overlay */}
         <div 
-            className={`md:hidden fixed inset-0 min-h-screen bg-[#070709]/98 backdrop-blur-3xl z-[9998] flex flex-col items-start justify-between pt-32 pb-12 px-8 overflow-y-auto transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto translate-y-0' : 'opacity-0 pointer-events-none -translate-y-4'}`}
+            id="mobile-menu-scroll-container"
+            className={`md:hidden fixed inset-0 h-[100dvh] bg-[#070709]/98 backdrop-blur-3xl z-[9998] flex flex-col items-start justify-start pt-32 pb-8 px-8 overflow-y-auto transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto translate-y-0' : 'opacity-0 pointer-events-none -translate-y-4'}`}
             style={{ left: 0, right: 0, top: 0, bottom: 0 }}
         >
             {/* Navigation Links */}
@@ -344,7 +344,16 @@ function Header() {
                     item.action === 'toggleTrips' ? (
                         <div key={item.name} className="w-full flex flex-col">
                             <button 
-                                onClick={() => setShowMobileTrips(!showMobileTrips)}
+                                onClick={() => {
+                                    const nextState = !showMobileTrips;
+                                    setShowMobileTrips(nextState);
+                                    if (nextState) {
+                                        setTimeout(() => {
+                                            const container = document.getElementById('mobile-menu-scroll-container');
+                                            if (container) container.scrollBy({ top: 250, behavior: 'smooth' });
+                                        }, 150);
+                                    }
+                                }}
                                 className="group flex flex-col w-full py-4 border-b border-white/5 active:bg-white/5 transition-colors text-left"
                             >
                                 <div className="flex items-start justify-between w-full">
@@ -411,7 +420,7 @@ function Header() {
             </div>
 
             {/* Bottom Account Footer */}
-            <div className="w-full mt-12 pt-6 flex flex-col items-center justify-center">
+            <div className="w-full mt-auto pt-10 pb-12 flex flex-col items-center justify-center shrink-0">
                 {isSignedIn ? (
                     <div className="flex items-center justify-between w-full px-2 py-4 bg-white/5 rounded-2xl border border-white/10">
                         <span className="font-mono text-[10px] tracking-widest uppercase text-white/50 pl-4">Account</span>

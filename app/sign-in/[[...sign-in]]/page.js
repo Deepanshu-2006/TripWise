@@ -147,10 +147,34 @@ export default function SignInPage() {
         transition={{ duration: 0.5, times: [0, 0.1, 0.3, 1] }} 
       />
       
+      {/* Mobile Background Image (TripWise Vibe) */}
+      <motion.div 
+        className="md:hidden absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-40 mix-blend-luminosity" 
+        style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1000&auto=format&fit=crop)' }}
+        animate={{ scale: [1, 1.08, 1] }}
+        transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+      />
+      <div className="md:hidden absolute inset-0 bg-gradient-to-t from-[#030303] via-[#030303]/80 to-[#030303]/40 z-0 pointer-events-none" />
+
+      {/* Mobile Branding (TripWise Logo) */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+        className="md:hidden absolute top-12 left-0 right-0 z-20 flex flex-col items-center justify-center pointer-events-none"
+      >
+        <span className="font-sans font-extrabold text-[26px] tracking-tight leading-none text-white select-none">
+          Trip<span className="text-[#FF6B2C]">Wise</span>
+        </span>
+        <span className="font-sans font-bold text-[8px] tracking-[0.3em] text-[#8CA3A8] select-none mt-1.5 leading-none">
+          AI TRIP PLANNER
+        </span>
+      </motion.div>
+
       {/* Top Instruction Text */}
       {!isLightOn && (
         <motion.div 
-          className="absolute top-24 text-stone-600 font-sans text-[11px] font-bold tracking-[0.3em] uppercase pointer-events-none"
+          className="hidden md:block absolute top-24 text-stone-600 font-sans text-[11px] font-bold tracking-[0.3em] uppercase pointer-events-none"
           style={{ opacity: textOpacity }}
         >
           Pull the string to toggle login
@@ -161,7 +185,7 @@ export default function SignInPage() {
       <div className="relative z-10 w-full max-w-5xl flex flex-col md:flex-row items-center justify-center md:justify-between px-4 md:px-10 gap-0 md:gap-20 min-h-[100svh] md:min-h-0">
         
         {/* Left Side: Floor Lamp */}
-        <div className="absolute md:relative top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 md:translate-x-0 md:translate-y-0 md:top-auto md:left-auto w-[400px] md:w-full md:max-w-100 h-[600px] md:h-150 flex flex-col items-center justify-end pointer-events-none md:pointer-events-auto scale-[0.7] sm:scale-[0.8] md:scale-100 z-10 md:z-auto origin-center">
+        <div className="hidden md:flex absolute md:relative top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 md:translate-x-0 md:translate-y-0 md:top-auto md:left-auto w-[400px] md:w-full md:max-w-100 h-[600px] md:h-150 flex-col items-center justify-end pointer-events-none md:pointer-events-auto scale-[0.7] sm:scale-[0.8] md:scale-100 z-10 md:z-auto origin-center">
           
           {/* The Light Beam Container */}
           <motion.div 
@@ -241,7 +265,7 @@ export default function SignInPage() {
 
         {/* Right Side: Ultra-Premium Login Form */}
         <motion.div 
-          className="relative z-30 w-full sm:w-[420px] md:w-105 shrink-0 p-5 sm:p-8 md:p-10 rounded-3xl md:rounded-4xl bg-[#111111]/85 border border-white/5 backdrop-blur-3xl mx-auto md:mx-0 shadow-2xl max-w-full"
+          className="relative z-30 w-full max-w-[360px] sm:max-w-none sm:w-[420px] md:w-105 shrink-0 p-4 sm:p-8 md:p-10 rounded-[24px] md:rounded-4xl bg-[#111111]/85 border border-white/5 backdrop-blur-3xl mx-auto md:mx-0 shadow-2xl max-md:!opacity-100 max-md:!translate-y-0 max-md:!pointer-events-auto"
           style={{ 
             opacity: isLightOn ? 1 : dragOpacity,
             y: isLightOn ? 0 : formY,
@@ -268,19 +292,19 @@ export default function SignInPage() {
                 colorTextSecondary: '#A1A1AA',
               },
               elements: {
-                cardBox: "!shadow-none !border-none !bg-transparent !w-full",
+                cardBox: "!shadow-none !border-none !bg-transparent",
                 rootBox: "!w-full !flex !justify-center",
-                card: "!bg-transparent !shadow-none !border-none !p-0 !w-full",
-                headerTitle: "!text-white !font-sans !font-medium !text-[24px] sm:!text-[28px] !tracking-tight !text-center !mb-6",
+                card: "!bg-transparent !shadow-none !border-none !px-2 sm:!px-0",
+                headerTitle: "!text-white !font-sans !font-medium !text-[20px] sm:!text-[28px] !tracking-tight !text-center !mb-4 sm:!mb-6",
                 headerSubtitle: "!hidden", 
-                formButtonPrimary: "!bg-gradient-to-r !from-[#8253FF] !to-[#A37BFF] hover:!opacity-90 !text-white !text-[13px] sm:!text-[14px] !font-bold !uppercase !tracking-[0.1em] !rounded-xl !py-4 !mt-2 transition-all !shadow-[0_0_30px_rgba(130,83,255,0.3)] !border-none !w-full",
+                formButtonPrimary: "!bg-gradient-to-r !from-[#8253FF] !to-[#A37BFF] hover:!opacity-90 !text-white !text-[12px] sm:!text-[14px] !font-bold !uppercase !tracking-[0.1em] !rounded-xl !py-3 sm:!py-4 !mt-2 transition-all !shadow-[0_0_30px_rgba(130,83,255,0.3)] !border-none !w-full",
                 formFieldLabel: "!hidden", 
-                formFieldInput: "!bg-white/5 !border !border-white/[0.1] !text-white !rounded-xl !px-4 sm:!px-5 !py-3.5 sm:!py-4 !mb-4 focus:!ring-1 focus:!ring-[#8253FF] focus:!border-[#8253FF] placeholder:!text-stone-400 placeholder:!font-light transition-all !w-full !text-[14px] sm:!text-[15px]",
-                footer: "!bg-transparent !p-0 !mt-6",
-                footerActionText: "!text-stone-400 !text-[13px] sm:!text-[14px]",
-                footerActionLink: "!text-[#8253FF] hover:!text-[#A37BFF] !text-[13px] sm:!text-[14px] !font-medium",
-                socialButtonsBlockButton: "!bg-white/5 !border !border-white/[0.1] hover:!bg-white/10 !text-white transition-all !rounded-xl !py-3.5 sm:!py-4 !w-full !mb-2 !px-2",
-                socialButtonsBlockButtonText: "!font-sans !font-medium !text-[14px] sm:!text-[15px] !text-white",
+                formFieldInput: "!bg-white/5 !border !border-white/[0.1] !text-white !rounded-xl !px-4 sm:!px-5 !py-3 sm:!py-4 !mb-3 sm:!mb-4 focus:!ring-1 focus:!ring-[#8253FF] focus:!border-[#8253FF] placeholder:!text-stone-400 placeholder:!font-light transition-all !w-full !text-[14px] sm:!text-[15px]",
+                footer: "!bg-transparent !p-0 !mt-5 sm:!mt-6",
+                footerActionText: "!text-stone-400 !text-[12px] sm:!text-[14px]",
+                footerActionLink: "!text-[#8253FF] hover:!text-[#A37BFF] !text-[12px] sm:!text-[14px] !font-medium",
+                socialButtonsBlockButton: "!bg-white/5 !border !border-white/[0.1] hover:!bg-white/10 !text-white transition-all !rounded-xl !py-3 sm:!py-4 !w-full !mb-1.5 sm:!mb-2 !px-2",
+                socialButtonsBlockButtonText: "!font-sans !font-medium !text-[13px] sm:!text-[15px] !text-white",
                 dividerLine: "!bg-white/[0.1]",
                 dividerText: "!text-stone-400 !font-sans !text-[13px] !px-4",
                 formFieldAction: "!text-[#8253FF] hover:!text-[#A37BFF] !text-xs !font-medium !absolute !right-2 !top-0 !-mt-6",

@@ -531,3 +531,35 @@ html.lenis, html.lenis body {
     stroke-dashoffset: 0;
   }
 }
+
+/* Hardware-accelerated smooth animations for Planner steps */
+@keyframes glow-ring {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 44, 0.4);
+    transform: scale(1) translateZ(0);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(255, 107, 44, 0);
+    transform: scale(1.1) translateZ(0);
+  }
+}
+
+@keyframes green-glow-ring {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(47, 166, 106, 0.4);
+    transform: scale(1) translateZ(0);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(47, 166, 106, 0);
+    transform: scale(1.1) translateZ(0);
+  }
+}
+
+@keyframes progress-shimmer {
+  0% {
+    transform: translateX(-100%) translateZ(0);
+  }
+  100% {
+    transform: translateX(100%) translateZ(0);
+  }
+}
