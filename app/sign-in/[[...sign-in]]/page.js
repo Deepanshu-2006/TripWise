@@ -46,7 +46,6 @@ export default function SignInPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isLightOn, setIsLightOn] = useState(false);
-  const [bgIndex, setBgIndex] = useState(0);
   
   // Motion Values
   const dragY = useMotionValue(0);
@@ -62,15 +61,9 @@ export default function SignInPage() {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    
-    // Crossfade background timer for mobile
-    const bgInterval = setInterval(() => {
-      setBgIndex((prev) => (prev + 1) % 4);
-    }, 5000);
 
     return () => {
       window.removeEventListener('resize', checkMobile);
-      clearInterval(bgInterval);
     };
   }, []);
 
