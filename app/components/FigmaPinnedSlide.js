@@ -54,7 +54,7 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
         },
       });
 
-      // Fade out top luminous beam and border as section scrolls into the top half
+      // Fade out top luminous beam as section scrolls into the top half
       gsap.to(topBeamRef.current, {
         opacity: 0,
         ease: 'power1.inOut',
@@ -62,18 +62,6 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
           trigger: pinWrapper,
           start: 'top 50%',
           end: 'top 15%', // Faded fully before hitting the nav bar
-          scrub: true,
-        },
-      });
-
-      gsap.to(pinWrapper, {
-        borderColor: 'transparent',
-        boxShadow: 'none',
-        ease: 'power1.inOut',
-        scrollTrigger: {
-          trigger: pinWrapper,
-          start: 'top 50%',
-          end: 'top 15%',
           scrub: true,
         },
       });
@@ -106,20 +94,12 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
           window.dispatchEvent(new CustomEvent('slide-overlay-progress', { detail: progress }));
 
           // Fade out the leading edge of the slide sheet as it hits the left edge of the screen
-          // Initially hidden at 0, ramps up quickly, then fades out
           if (leftBeamRef.current) {
             let opacity = 0;
             if (progress > 0) {
                 opacity = Math.min(1, progress * 20) * Math.max(0, 1 - (progress * 1.5));
             }
             leftBeamRef.current.style.opacity = opacity;
-          }
-          if (slideSheetRef.current) {
-             slideSheetRef.current.style.borderColor = `rgba(255, 91, 29, ${Math.max(0, 1 - (progress * 1.5))})`;
-             // Flatten out the rounded corners as it fully covers the screen
-             const radius = Math.max(0, 56 * (1 - Math.pow(progress, 4))); // stays rounded until very end
-             slideSheetRef.current.style.borderTopLeftRadius = `${radius}px`;
-             slideSheetRef.current.style.borderBottomLeftRadius = `${radius}px`;
           }
 
           // ✦ WHEN PAGE COMES TO 50%: Automatically glide slider 0% -> 50% (Underline draws 0% -> 100% in 1:1 sync) ✦
@@ -184,7 +164,7 @@ export default function FigmaPinnedSlide({ baseSection, slideSection }) {
       {/* ── Sliding Layer (Difference Slider - slides LEFT from right) ── */}
       <div
         ref={slideSheetRef}
-        className="absolute top-0 bottom-0 inset-x-0 w-full h-full z-30 bg-[#FFF8F5] rounded-l-[36px] border-l-2 border-[#FF5B1D] flex flex-col justify-start will-change-transform"
+        className="absolute top-0 bottom-0 inset-x-0 w-full h-full z-30 bg-[#FFF8F5] flex flex-col justify-start will-change-transform"
       >
         {/* Left Leading Edge Luminous Laser Beam */}
         <div

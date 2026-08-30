@@ -10,8 +10,7 @@ import { supabase } from '../../lib/supabase';
 function Header() {
     const { isSignedIn, userId } = useAuth();
     const [isScrolled, setIsScrolled] = useState(false);
-    const [] = useState(false);
-    const [, setIsMobileMenuOpen] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
     // For My Itinerary trips in mobile menu
     const [userTrips, setUserTrips] = useState([]);
@@ -19,7 +18,7 @@ function Header() {
     const [isLoadingTrips, setIsLoadingTrips] = useState(false);
     
     useEffect(() => {
-        if (setIsMobileMenuOpen) {
+        if (isMobileMenuOpen) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = '';
@@ -27,10 +26,10 @@ function Header() {
         return () => {
             document.body.style.overflow = '';
         };
-    }, [setIsMobileMenuOpen]);
+    }, [isMobileMenuOpen]);
 
     useEffect(() => {
-        if (setIsMobileMenuOpen && isSignedIn && userId && userTrips.length === 0) {
+        if (isMobileMenuOpen && isSignedIn && userId && userTrips.length === 0) {
             async function loadTrips() {
                 try {
                     setIsLoadingTrips(true);
@@ -52,7 +51,7 @@ function Header() {
             }
             loadTrips();
         }
-    }, [setIsMobileMenuOpen, isSignedIn, userId]);
+    }, [isMobileMenuOpen, isSignedIn, userId]);
     
     // Continuous Scroll Interpolation
     const { scrollY } = useScroll();
@@ -256,12 +255,12 @@ function Header() {
                     {/* Mobile Navigation Toggle (Hamburger) */}
                     <div className="md:hidden flex items-center">
                         <button 
-                            onClick={() => setIsMobileMenuOpen(!setIsMobileMenuOpen)}
+                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                             className={`p-2 focus:outline-none flex flex-col justify-center items-center gap-1.5 z-10000`}
                         >
-                            <span className={`block w-6 h-0.5 rounded-full transition-transform duration-300 ${setIsMobileMenuOpen ? 'bg-white rotate-45 translate-y-2' : (isLightPage ? 'bg-[#1F1F1F]' : 'bg-white')}`} />
-                            <span className={`block w-6 h-0.5 rounded-full transition-opacity duration-300 ${setIsMobileMenuOpen ? 'opacity-0' : (isLightPage ? 'bg-[#1F1F1F]' : 'bg-white')}`} />
-                            <span className={`block w-6 h-0.5 rounded-full transition-transform duration-300 ${setIsMobileMenuOpen ? 'bg-white -rotate-45 -translate-y-2' : (isLightPage ? 'bg-[#1F1F1F]' : 'bg-white')}`} />
+                            <span className={`block w-6 h-0.5 rounded-full transition-transform duration-300 ${isMobileMenuOpen ? 'bg-white rotate-45 translate-y-2' : (isLightPage ? 'bg-[#1F1F1F]' : 'bg-white')}`} />
+                            <span className={`block w-6 h-0.5 rounded-full transition-opacity duration-300 ${isMobileMenuOpen ? 'opacity-0' : (isLightPage ? 'bg-[#1F1F1F]' : 'bg-white')}`} />
+                            <span className={`block w-6 h-0.5 rounded-full transition-transform duration-300 ${isMobileMenuOpen ? 'bg-white -rotate-45 -translate-y-2' : (isLightPage ? 'bg-[#1F1F1F]' : 'bg-white')}`} />
                         </button>
                     </div>
 
@@ -279,7 +278,7 @@ function Header() {
         {/* Mobile Menu Overlay */}
         <div 
             id="mobile-menu-scroll-container"
-            className={`md:hidden fixed inset-0 h-dvh bg-[#070709]/98 backdrop-blur-3xl z-9998 flex flex-col items-start justify-start pt-32 pb-8 px-8 overflow-y-auto transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${setIsMobileMenuOpen ? 'opacity-100 pointer-events-auto translate-y-0' : 'opacity-0 pointer-events-none -translate-y-4'}`}
+            className={`md:hidden fixed inset-0 h-dvh bg-[#070709]/98 backdrop-blur-3xl z-9998 flex flex-col items-start justify-start pt-32 pb-8 px-8 overflow-y-auto transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto translate-y-0' : 'opacity-0 pointer-events-none -translate-y-4'}`}
             style={{ left: 0, right: 0, top: 0, bottom: 0 }}
         >
             {/* Navigation Links */}

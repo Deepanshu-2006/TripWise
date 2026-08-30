@@ -22,7 +22,7 @@ export default function SavedPlacesModal({ isOpen, onClose, savedStops, itinerar
   }
 
   return (
-    <div className="fixed inset-0 z-[150000] flex items-center justify-center p-4 sm:p-6 pointer-events-auto">
+    <div className="fixed inset-0 z-150000 flex items-center justify-center p-4 sm:p-6 pointer-events-auto">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -71,7 +71,7 @@ export default function SavedPlacesModal({ isOpen, onClose, savedStops, itinerar
               className="flex flex-col items-center justify-center py-20 text-center relative overflow-hidden rounded-3xl"
             >
               {/* Decorative background elements */}
-              <div className="absolute inset-0 bg-gradient-to-b from-[#FAF6F0] to-[#FFF0E8]/30 z-0" />
+              <div className="absolute inset-0 bg-linear-to-b from-[#FAF6F0] to-[#FFF0E8]/30 z-0" />
               
               <div className="relative z-10 mb-8">
                 <motion.div 
@@ -127,7 +127,7 @@ export default function SavedPlacesModal({ isOpen, onClose, savedStops, itinerar
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.4 }}
-                className="text-sm font-sans text-[#7A7268] max-w-[280px] leading-relaxed relative z-10"
+                className="text-sm font-sans text-[#7A7268] max-w-70 leading-relaxed relative z-10"
               >
                 Click the <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-[#F5F0E8] mx-1"><Bookmark className="w-3 h-3 text-[#7A7268]" /></span> button on any activity to save it here for quick access.
               </motion.p>

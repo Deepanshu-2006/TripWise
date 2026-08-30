@@ -467,7 +467,7 @@ const Hero = () => {
                         {/* STAGE 1: Main Hero Landing View */}
                         <div
                             ref={stage1Ref}
-                            className="absolute inset-0 flex flex-col items-center justify-end pointer-events-auto transition-all duration-300 ease-out z-20"
+                            className="absolute inset-0 flex flex-col items-center justify-end pointer-events-auto z-20 will-change-transform"
                         >
                             {/* Premium Scroll prompt positioned at the absolute bottom */}
                             <div className="absolute -bottom-8 md:-bottom-18 flex flex-col items-center gap-2 animate-bounce">
@@ -483,7 +483,7 @@ const Hero = () => {
                         {/* STAGE 2: Typing/Thinking Assistant Line */}
                         <div
                             ref={stage2Ref}
-                            className="absolute inset-x-0 bottom-12 md:bottom-20 flex flex-col items-center opacity-0 pointer-events-none transition-all duration-300 ease-out"
+                            className="absolute inset-x-0 bottom-12 md:bottom-20 flex flex-col items-center opacity-0 pointer-events-none will-change-transform"
                         >
                             <div className="flex items-center gap-2 md:gap-4 px-4 md:px-7 py-3 md:py-3.5 bg-[#1C1B1B]/95 md:bg-[#1C1B1B] md:backdrop-blur-md rounded-full shadow-lg border border-white/50 text-[#fe7717] font-mono text-[10px] sm:text-xs md:text-base font-bold text-center">
                                 <span className="flex h-3 w-3 md:h-5 md:w-5 relative shrink-0">
@@ -502,19 +502,19 @@ const Hero = () => {
                         {/* PERSISTENT HERO HEADER & CTA OVERLAY (Visible during Stage 1 & 2) */}
                         <div
                             ref={persistentCtaRef}
-                            className="absolute inset-0 flex flex-col justify-between items-center py-4 px-6 md:py-8 md:px-8 z-20 pointer-events-none opacity-0 transition-opacity duration-300 ease-out"
+                            className="absolute inset-0 flex flex-col justify-between items-center py-4 px-6 md:py-8 md:px-8 z-20 pointer-events-none opacity-0 will-change-transform"
                         />
 
                         {/* STAGE 3: Globe Spin-Up Hero Headline (Staggered words) */}
                         <div
                             ref={stage3Ref}
-                            className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none max-w-2xl transition-all duration-300 ease-out px-4"
+                            className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none max-w-2xl px-4 will-change-transform"
                         >
                             <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold text-brand-dark tracking-tight leading-[1.15] mb-4 select-none">
                                 {['Your', 'AI', 'Travel', 'Planner,', 'Reimagined.'].map((word, idx) => (
                                     <span
                                         key={idx}
-                                        className="stage3-word inline-block mr-[0.25em] transition-all duration-300 ease-out"
+                                        className="stage3-word inline-block mr-[0.25em] will-change-transform"
                                         style={{
                                             color: (idx === 1 || idx === 2) ? '#fe7717' : 'inherit',
                                             textShadow: '0 4px 20px rgba(255, 248, 245, 0.95), 0 2px 8px rgba(255, 248, 245, 0.9), 0 1px 2px rgba(255, 248, 245, 0.85)'
@@ -524,7 +524,7 @@ const Hero = () => {
                                     </span>
                                 ))}
                             </h2>
-                            <p className="uppercase stage3-sub text-[9px] sm:text-[11px] md:text-xs font-bold text-[#fe7717] px-4 md:px-6 py-2 md:py-2.5 bg-[#1C1B1B]/95 md:bg-[#1C1B1B] md:backdrop-blur-md rounded-full shadow-lg border border-white/20 font-mono tracking-[0.16em] transition-all duration-300 ease-out mt-4 md:mt-6 text-center">
+                            <p className="uppercase stage3-sub text-[9px] sm:text-[11px] md:text-xs font-bold text-[#fe7717] px-4 md:px-6 py-2 md:py-2.5 bg-[#1C1B1B]/95 md:bg-[#1C1B1B] md:backdrop-blur-md rounded-full shadow-lg border border-white/20 font-mono tracking-[0.16em] mt-4 md:mt-6 text-center will-change-transform">
                                 From a single sentence to a full itinerary
                             </p>
                         </div>
@@ -532,13 +532,13 @@ const Hero = () => {
                         {/* STAGE 4: Map Reveal (Staggered words) */}
                         <div
                             ref={stage4Ref}
-                            className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none max-w-3xl transition-all duration-300 ease-out translate-x-2 sm:translate-x-6 md:translate-x-20 px-4"
+                            className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none max-w-3xl translate-x-2 sm:translate-x-6 md:translate-x-20 px-4 will-change-transform"
                         >
                             <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold text-brand-dark tracking-tight leading-[1.15] select-none text-center">
                                 {['Real', 'Places.', 'Real', 'Plans.', 'Built', 'in', 'Seconds.'].map((word, idx) => (
                                     <span
                                         key={idx}
-                                        className="stage4-word inline-block mr-[0.25em] transition-all duration-300 ease-out"
+                                        className="stage4-word inline-block mr-[0.25em] will-change-transform"
                                         style={{
                                             color: (idx === 0 || idx === 2) ? '#fe7717' : (idx === 6) ? 'var(--brand-teal)' : 'inherit',
                                             textShadow: '0 4px 20px rgba(255, 248, 245, 0.95), 0 2px 8px rgba(255, 248, 245, 0.9), 0 1px 2px rgba(255, 248, 245, 0.85)'
@@ -553,10 +553,10 @@ const Hero = () => {
                         {/* STAGE 5: Itinerary Cards Stacking & CTA */}
                         <div
                             ref={stage5Ref}
-                            className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none max-w-2xl transition-all duration-300 ease-out px-4 text-center"
+                            className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none max-w-2xl px-4 text-center will-change-transform"
                         >
                             <h2
-                                className="stage5-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-brand-dark tracking-tight mb-6 md:mb-8 transition-all duration-300 ease-out select-none"
+                                className="stage5-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-brand-dark tracking-tight mb-6 md:mb-8 select-none will-change-transform"
                                 style={{
                                     textShadow: '0 4px 20px rgba(255, 248, 245, 0.95), 0 2px 8px rgba(255, 248, 245, 0.9), 0 1px 2px rgba(255, 248, 245, 0.85)'
                                 }}

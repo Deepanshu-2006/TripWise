@@ -13,11 +13,11 @@ const STATUS_STEPS = [
 ];
 
 const DESTINATION_IMAGES = [
-  "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=2020&auto=format&fit=crop", // Paris
-  "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?q=80&w=1974&auto=format&fit=crop", // Tokyo
-  "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=2070&auto=format&fit=crop", // Sydney
-  "https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=1996&auto=format&fit=crop", // Rome
-  "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=80&w=2070&auto=format&fit=crop", // London
+  "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=600&auto=format&fit=crop", // Paris
+  "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?q=80&w=600&auto=format&fit=crop", // Tokyo
+  "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=600&auto=format&fit=crop", // Sydney
+  "https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=600&auto=format&fit=crop", // Rome
+  "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=80&w=600&auto=format&fit=crop", // London
 ];
 
 export default function MinimalLoader() {
@@ -149,15 +149,24 @@ export default function MinimalLoader() {
         exitElements,
         {
           opacity: 0,
-          y: -15,
-          duration: 0.3,
-          ease: 'power2.in',
+          y: -25,
+          duration: 0.6,
+          ease: 'power3.inOut',
+          stagger: 0.02
         },
         'complete'
       );
     }
 
-    tl.to('.ml-fan-card', { opacity: 0, duration: 0.3, ease: 'power2.in' }, 'complete');
+    // Parallax swoop down for fan cards
+    tl.to('.ml-fan-card', { 
+        y: '+=200', 
+        opacity: 0, 
+        scale: 0.9,
+        duration: 0.8, 
+        ease: 'power3.inOut',
+        stagger: 0.04
+    }, 'complete');
 
     tl.add(() => {
         const sourceSvg = document.getElementById('intro-logo-svg');
@@ -210,22 +219,24 @@ export default function MinimalLoader() {
 
         document.body.appendChild(clone);
 
-        // Screen Swipe Up
+        // Screen Swipe Up (Buttery smooth custom ease)
         gsap.to(overlayRef.current, {
             y: '-100vh',
-            duration: 1.0,
-            ease: "power3.inOut"
+            scale: 0.98,
+            borderRadius: '0 0 40px 40px',
+            duration: 1.4,
+            ease: "expo.inOut"
         });
 
         // Plane flight to Navbar with a significant delay
-        const flightDuration = 0.8;
+        const flightDuration = 0.9;
         gsap.to(clone, {
             x: targetRect.left,
             y: targetRect.top,
             opacity: 1,
             duration: flightDuration,
-            delay: 0.9, // Delayed so it appears right at the end of the swipe up
-            ease: "power2.out",
+            delay: 1.1, // Delayed to match the new 1.4s expo ease
+            ease: "expo.out",
             onComplete: () => {
                 if (targetPlane) targetPlane.style.opacity = '1';
                 if (clone) clone.remove();
@@ -365,6 +376,9 @@ const CSS = `
   user-select: none;
   font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
   overflow: hidden;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 /* ── Fan Images ──────────────────────────────────────────────── */
