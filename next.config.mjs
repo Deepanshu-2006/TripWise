@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   /* config options here */
-  allowedDevOrigins: ['192.168.1.24', '192.168.0.104'],
+  allowedDevOrigins: ['192.168.1.24', '192.168.0.104', 'dull-radios-find.loca.lt'],
   reactCompiler: true,
   images: {
     localPatterns: [

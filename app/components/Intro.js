@@ -219,12 +219,11 @@ export default function MinimalLoader() {
 
         document.body.appendChild(clone);
 
-        // Screen Swipe Up (Buttery smooth custom ease)
+        // Screen Swipe Up (Pure GPU transform, zero layout thrashing)
         gsap.to(overlayRef.current, {
-            y: '-100vh',
-            scale: 0.98,
-            borderRadius: '0 0 40px 40px',
-            duration: 1.4,
+            yPercent: -100,
+            force3D: true,
+            duration: 1.0,
             ease: "expo.inOut"
         });
 
@@ -235,7 +234,7 @@ export default function MinimalLoader() {
             y: targetRect.top,
             opacity: 1,
             duration: flightDuration,
-            delay: 1.1, // Delayed to match the new 1.4s expo ease
+            delay: 0.8, // Delayed to match the new 1.0s expo ease
             ease: "expo.out",
             onComplete: () => {
                 if (targetPlane) targetPlane.style.opacity = '1';
