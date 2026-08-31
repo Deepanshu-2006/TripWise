@@ -409,10 +409,10 @@ function FeaturesSelection() {
 
                 <div 
                     ref={contentWrapperRef} 
-                    className="max-w-7xl mx-auto px-6 relative z-10 w-full h-full flex flex-col justify-start pt-[95px] sm:pt-[105px] lg:pt-16 pb-4 will-change-transform transition-all"
+                    className="max-w-7xl mx-auto px-6 relative z-10 w-full h-full flex flex-col justify-start pt-[75px] sm:pt-[85px] lg:pt-16 pb-4 will-change-transform transition-all"
                 >
                     {/* Header Block */}
-                    <div className="text-center max-w-3xl mx-auto mb-3">
+                    <div className="text-center max-w-3xl mx-auto mb-2 md:mb-3">
                         <div className="inline-block px-4 py-1 bg-[#1C1B1B] backdrop-blur-md rounded-full shadow-md border border-white/20 text-[#fe7717] font-mono text-[10px] md:text-[12px] font-bold tracking-[0.16em] uppercase mb-1">
                             Why TripWise?
                         </div>
@@ -422,7 +422,7 @@ function FeaturesSelection() {
                     </div>
 
                     {/* Features Split Grid */}
-                    <div className="flex flex-col lg:grid lg:grid-cols-12 gap-5 lg:gap-6 lg:items-center flex-1 min-h-0 w-full">
+                    <div className="flex flex-col lg:grid lg:grid-cols-12 gap-4 lg:gap-6 lg:items-center flex-1 min-h-0 w-full">
                         {/* Left Column: Interactive Selector List */}
                         <div 
                             ref={cardsContainerRef}
@@ -491,415 +491,317 @@ function FeaturesSelection() {
                         </div>
 
                         {/* Right Column: Live Mock UI Preview */}
-                        <div className="preview-outer-container lg:col-span-7 flex items-center justify-center relative w-full flex-1 min-h-[260px] md:min-h-[300px] lg:flex-none lg:h-140 rounded-3xl overflow-hidden shadow-2xl mt-0 lg:mt-0 mb-2 lg:mb-0 order-first lg:order-last shrink-0 lg:shrink-none">
-                            <div className="w-full h-full bg-[#1C1B1B] border border-white/15 rounded-3xl p-4 sm:p-6 md:p-8 flex flex-col relative overflow-hidden shadow-2xl">
+                        <div className="preview-outer-container lg:col-span-7 flex items-center justify-center relative w-full flex-1 min-h-[220px] sm:min-h-[240px] md:min-h-[300px] lg:flex-none lg:h-140 rounded-3xl overflow-hidden mt-0 lg:mt-0 mb-2 lg:mb-0 order-first lg:order-last shrink-0 lg:shrink-none">
+                            <div className="w-full h-full bg-[#181819] border border-white/[0.06] rounded-3xl p-3 sm:p-5 md:p-7 flex flex-col relative overflow-hidden">
                                 
-                                {/* Inner Preview Window Shell */}
-                                <div className="flex items-center gap-1.5 border-b border-white/10 pb-4 mb-6">
-                                    <span className="w-3.5 h-3.5 rounded-full bg-red-500/80" />
-                                    <span className="w-3.5 h-3.5 rounded-full bg-yellow-500/80" />
-                                    <span className="w-3.5 h-3.5 rounded-full bg-green-500/80" />
-                                    <span className="ml-4 font-mono text-xs text-white/40 tracking-wider">TRIPWISE_DASHBOARD_V4</span>
+                                {/* Minimal top bar */}
+                                <div className="flex items-center justify-between border-b border-white/[0.05] pb-3 md:pb-4 mb-4 md:mb-5">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-[#EC6735]" />
+                                        <span className="font-mono text-[10px] text-white/25 tracking-[0.2em] uppercase">TripWise</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <div className="w-1 h-1 rounded-full bg-white/[0.08]" />
+                                        <div className="w-1 h-1 rounded-full bg-white/[0.08]" />
+                                        <div className="w-1 h-1 rounded-full bg-white/[0.08]" />
+                                    </div>
                                 </div>
 
-                                {/* PREVIEW CONTAINER 1: Smart Day-by-Day Scheduling */}
-                                <div className={`flex flex-col flex-1 transition-all duration-500 ease-in-out absolute inset-x-4 md:inset-x-6 bottom-4 top-12 md:top-14 ${
+                                {/* PANEL 1 — Itinerary */}
+                                <div className={`flex flex-col flex-1 transition-all duration-500 ease-in-out absolute inset-x-3 sm:inset-x-5 md:inset-x-7 bottom-3 md:bottom-5 top-11 md:top-[3.75rem] ${
                                     activePreviewTab === 0 ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
                                 }`}>
-                                    {/* --- DESKTOP VIEW --- */}
-                                    <div className="hidden md:flex flex-col h-full w-full">
-                                        <div className="flex justify-between items-center mb-4">
-                                            <div className="flex flex-col">
-                                                <span className="font-mono text-xs font-bold text-[#fe7717]">ACTIVE ITINERARY</span>
-                                                <span className="text-xl font-extrabold text-white">Rome: Day 1 Exploration</span>
+                                    {/* Desktop */}
+                                    <div className="hidden md:flex flex-col h-full">
+                                        <div className="flex items-baseline justify-between mb-6">
+                                            <div>
+                                                <p className="font-mono text-[9px] text-[#EC6735] uppercase tracking-[0.2em] mb-1">Day 1 · Rome</p>
+                                                <h4 className="text-base font-semibold text-white tracking-tight">Your Itinerary</h4>
                                             </div>
-                                            <span className="px-3 py-1 bg-brand-teal/20 text-brand-teal border border-brand-teal/30 rounded-full font-mono text-[10px] font-bold">14,200 STEPS EST.</span>
+                                            <span className="text-[10px] font-mono text-white/25">3 stops · 5.4 km</span>
                                         </div>
-
-                                        <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1">
-                                            <div className="flex gap-4 relative">
-                                                <div className="flex flex-col items-center">
-                                                    <div className="w-8 h-8 rounded-full bg-[#fe7717]/20 border border-[#fe7717]/40 flex items-center justify-center text-xs font-bold text-[#fe7717] z-10 shrink-0 font-mono">1</div>
-                                                    <div className="w-0.5 h-16 border-l border-dashed border-white/20 absolute top-8 left-4 -bottom-4" />
-                                                </div>
-                                                <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col">
-                                                    <div className="flex justify-between items-start mb-1">
-                                                        <h4 className="text-sm font-extrabold text-white leading-tight">Colosseum VIP Fast Track Tour</h4>
-                                                        <span className="font-mono text-[10px] font-bold text-white/50">09:30 AM</span>
+                                        <div className="flex-1 flex flex-col">
+                                            {[
+                                                { time: '09:30', label: 'Colosseum VIP Tour', sub: 'Skip-the-line · Pre-booked', active: true },
+                                                { time: '12:45', label: 'Osteria da Fortunata', sub: '12 min walk · Local favourite', active: false },
+                                                { time: '15:00', label: 'Pantheon & Piazza Navona', sub: 'Free entry · 20 min transit', active: false },
+                                            ].map((stop, i) => (
+                                                <div key={i} className="flex gap-4">
+                                                    <div className="flex flex-col items-center pt-[5px]">
+                                                        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${stop.active ? 'bg-[#EC6735]' : 'bg-white/20'}`} />
+                                                        {i < 2 && <div className="w-px flex-1 bg-white/[0.07] mt-1.5 mb-1" />}
                                                     </div>
-                                                    <p className="text-xs text-white/60 leading-normal mb-2">Pre-booked skip-the-line entrance. Highly advised to visit before peak midday temperatures.</p>
-                                                    <div className="inline-flex items-center gap-1.5 text-[9px] font-bold text-green-400 bg-green-400/10 px-2.5 py-0.5 rounded-full w-fit uppercase font-mono">✓ Tickets Confirmed</div>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex gap-4 relative mt-2">
-                                                <div className="flex flex-col items-center">
-                                                    <div className="w-8 h-8 rounded-full bg-brand-teal/20 border border-brand-teal/40 flex items-center justify-center text-xs font-bold text-brand-teal z-10 shrink-0 font-mono">2</div>
-                                                    <div className="w-0.5 h-16 border-l border-dashed border-white/20 absolute top-8 left-4 -bottom-4" />
-                                                </div>
-                                                <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col">
-                                                    <div className="flex justify-between items-start mb-1">
-                                                        <h4 className="text-sm font-extrabold text-white leading-tight">Lunch: Osteria da Fortunata</h4>
-                                                        <span className="font-mono text-[10px] font-bold text-white/50">12:45 PM</span>
+                                                    <div className={`flex-1 ${i < 2 ? 'pb-5' : ''}`}>
+                                                        <div className="flex items-baseline justify-between gap-2">
+                                                            <span className={`text-sm font-medium leading-tight ${stop.active ? 'text-white' : 'text-white/50'}`}>{stop.label}</span>
+                                                            <span className="font-mono text-[10px] text-white/25 shrink-0">{stop.time}</span>
+                                                        </div>
+                                                        <p className="text-[11px] text-white/25 mt-0.5">{stop.sub}</p>
+                                                        {stop.active && <span className="text-[9px] font-mono text-[#EC6735]/70 mt-1 block">✓ Confirmed</span>}
                                                     </div>
-                                                    <p className="text-xs text-white/60 leading-normal mb-2">Transit: 12-min walk from Forum Romanum. Hand-rolled strozzapreti pasta recommended.</p>
-                                                    <div className="inline-flex items-center gap-1.5 text-[9px] font-bold text-[#fe7717] bg-[#fe7717]/10 px-2.5 py-0.5 rounded-full w-fit uppercase font-mono">★ highly rated local spot</div>
                                                 </div>
-                                            </div>
-
-                                            <div className="flex gap-4 relative mt-2">
-                                                <div className="flex flex-col items-center">
-                                                    <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-xs font-bold text-white/80 z-10 shrink-0 font-mono">3</div>
-                                                </div>
-                                                <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col">
-                                                    <div className="flex justify-between items-start mb-1">
-                                                        <h4 className="text-sm font-extrabold text-white leading-tight">Pantheon &amp; Piazza Navona</h4>
-                                                        <span className="font-mono text-[10px] font-bold text-white/50">03:00 PM</span>
-                                                    </div>
-                                                    <p className="text-xs text-white/60 leading-normal">Free entry. Explored in peak afternoon to take advantage of interior structural shade.</p>
-                                                </div>
-                                            </div>
+                                            ))}
+                                        </div>
+                                        <div className="border-t border-white/[0.05] pt-3.5 flex items-center justify-between">
+                                            <span className="text-[10px] font-mono text-white/20 uppercase tracking-widest">Est. walking</span>
+                                            <span className="text-[10px] font-mono text-white/35">14,200 steps</span>
                                         </div>
                                     </div>
-
-                                    {/* --- MOBILE VIEW --- */}
-                                    <div className="flex md:hidden flex-col h-full w-full">
-                                        <div className="flex justify-between items-end mb-3">
-                                            <div className="flex flex-col">
-                                                <span className="font-mono text-[10px] font-bold text-[#fe7717]">ACTIVE ITINERARY</span>
-                                                <span className="text-lg font-extrabold text-white">Rome: Day 1</span>
+                                    {/* Mobile */}
+                                    <div className="flex md:hidden flex-col h-full">
+                                        <div className="flex items-baseline justify-between mb-4">
+                                            <div>
+                                                <p className="font-mono text-[9px] text-[#EC6735] uppercase tracking-[0.18em] mb-0.5">Day 1 · Rome</p>
+                                                <span className="text-sm font-semibold text-white">Your Itinerary</span>
                                             </div>
-                                            <span className="px-2 py-0.5 bg-brand-teal/20 text-brand-teal border border-brand-teal/30 rounded-full font-mono text-[9px] font-bold shrink-0">14k STEPS</span>
+                                            <span className="text-[10px] font-mono text-white/25">3 stops</span>
                                         </div>
-
-                                        <div className="flex-1 bg-white/5 rounded-2xl border border-white/10 p-4 flex flex-col gap-4 justify-center">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-[#fe7717]/20 flex items-center justify-center text-xs font-bold text-[#fe7717] shrink-0">1</div>
-                                                <div className="flex flex-col flex-1 min-w-0">
-                                                    <span className="text-[10px] text-white/50 font-mono">09:30 AM</span>
-                                                    <span className="text-sm font-bold text-white truncate w-full block">Colosseum VIP Tour</span>
-                                                    <span className="text-[9px] text-green-400 font-mono mt-0.5">✓ CONFIRMED</span>
+                                        <div className="flex-1 flex flex-col">
+                                            {[
+                                                { time: '09:30', label: 'Colosseum VIP Tour', confirmed: true, active: true },
+                                                { time: '12:45', label: 'Osteria da Fortunata', confirmed: false, active: false },
+                                            ].map((stop, i) => (
+                                                <div key={i} className="flex gap-3">
+                                                    <div className="flex flex-col items-center pt-[5px]">
+                                                        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${stop.active ? 'bg-[#EC6735]' : 'bg-white/20'}`} />
+                                                        {i < 1 && <div className="w-px flex-1 bg-white/[0.07] mt-1.5 mb-1" />}
+                                                    </div>
+                                                    <div className="flex-1 pb-4">
+                                                        <div className="flex items-baseline justify-between gap-2">
+                                                            <span className={`text-sm font-medium ${stop.active ? 'text-white' : 'text-white/50'}`}>{stop.label}</span>
+                                                            <span className="font-mono text-[10px] text-white/25 shrink-0">{stop.time}</span>
+                                                        </div>
+                                                        {stop.confirmed && <span className="text-[9px] font-mono text-[#EC6735]/70 mt-0.5 block">✓ Confirmed</span>}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div className="w-full border-t border-dashed border-white/10" />
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-brand-teal/20 flex items-center justify-center text-xs font-bold text-brand-teal shrink-0">2</div>
-                                                <div className="flex flex-col flex-1 min-w-0">
-                                                    <span className="text-[10px] text-white/50 font-mono">12:45 PM</span>
-                                                    <span className="text-sm font-bold text-white truncate w-full block">Osteria da Fortunata</span>
-                                                    <span className="text-[9px] text-[#fe7717] font-mono mt-0.5">★ LOCAL SPOT</span>
-                                                </div>
-                                            </div>
+                                            ))}
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* PREVIEW CONTAINER 2: Local Hidden Gems */}
-                                <div className={`flex flex-col flex-1 transition-all duration-500 ease-in-out absolute inset-x-4 md:inset-x-6 bottom-4 top-12 md:top-14 ${
+                                {/* PANEL 2 — Local Gems */}
+                                <div className={`flex flex-col flex-1 transition-all duration-500 ease-in-out absolute inset-x-3 sm:inset-x-5 md:inset-x-7 bottom-3 md:bottom-5 top-11 md:top-[3.75rem] ${
                                     activePreviewTab === 1 ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
                                 }`}>
-                                    {/* --- DESKTOP VIEW --- */}
-                                    <div className="hidden md:flex flex-col h-full w-full">
-                                        <div className="flex justify-between items-center mb-3">
-                                            <div className="flex flex-col">
-                                                <span className="font-mono text-[10px] font-bold text-[#fe7717]">REAL-TIME CURATION</span>
-                                                <span className="text-xl font-extrabold text-white">Hidden Gem Rerouting</span>
-                                            </div>
-                                            <span className="px-2 py-1 bg-[#fe7717]/20 text-[#fe7717] border border-[#fe7717]/30 rounded-full font-mono text-[10px] font-bold">120+ LOCAL CHEFS AGREE</span>
+                                    {/* Desktop */}
+                                    <div className="hidden md:flex flex-col h-full">
+                                        <div className="mb-6">
+                                            <p className="font-mono text-[9px] text-[#EC6735] uppercase tracking-[0.2em] mb-1">Local Intelligence</p>
+                                            <h4 className="text-base font-semibold text-white tracking-tight">Skip the Tourist Trap</h4>
                                         </div>
-
-                                        <div className="flex-1 grid grid-cols-2 gap-3 items-center overflow-y-auto pr-1 pb-1">
-                                            {/* Left: Tourist Trap Card */}
-                                            <div className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 flex-col relative opacity-60">
-                                                <div className="absolute top-3 right-3 px-2 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded font-mono text-[8px] font-bold uppercase">Tourist Zone</div>
-                                                <span className="text-xs font-bold font-mono text-white/40 mb-1 block">STANDARD RECOMMENDATION</span>
-                                                <h4 className="text-base font-extrabold text-white mb-2 leading-tight">Caffè di Trevi</h4>
-                                                <div className="flex items-center gap-1 mb-3">
-                                                    <span className="text-xs font-bold text-yellow-500">3.2 ★</span>
-                                                    <span className="text-white/40 text-[10px]">(850 reviews)</span>
+                                        <div className="flex-1 flex flex-col">
+                                            <div className="flex items-start gap-4 py-4 border-b border-white/[0.05]">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-white/15 mt-1.5 shrink-0" />
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-baseline justify-between gap-2">
+                                                        <span className="text-sm text-white/25 line-through">Caffè di Trevi</span>
+                                                        <span className="text-[9px] font-mono text-white/15 shrink-0">Skipped</span>
+                                                    </div>
+                                                    <p className="text-[11px] text-white/20 mt-0.5">3.2 ★ · Overpriced · Tourist area</p>
                                                 </div>
-                                                <p className="text-xs text-white/50 leading-relaxed">
-                                                    "Overpriced, frozen carbonara. Charged €15 cover fee for simple table service near the monument."
-                                                </p>
                                             </div>
-
-                                            {/* Right: Hidden Gem Card */}
-                                            <div className="w-full bg-white/5 border-2 border-brand-teal rounded-2xl p-5 flex flex-col relative shadow-xl shadow-brand-teal/5">
-                                                <div className="absolute top-3 right-3 px-2 py-0.5 bg-brand-teal/20 text-brand-teal border border-brand-teal/30 rounded font-mono text-[8px] font-bold uppercase tracking-wider">Hidden Gem</div>
-                                                <span className="text-xs font-bold font-mono text-brand-teal mb-1">TRIPWISE RECOMMENDS</span>
-                                                <h4 className="text-base font-extrabold text-white mb-2 leading-tight">Osteria Romana</h4>
-                                                <div className="flex items-center gap-1 mb-3">
-                                                    <span className="text-xs font-bold text-[#fe7717]">4.9 ★</span>
-                                                    <span className="text-white/40 text-[10px]">(64 locals voted)</span>
+                                            <div className="flex items-start gap-4 py-4">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-[#EC6735] mt-1.5 shrink-0" />
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-baseline justify-between gap-2">
+                                                        <span className="text-sm text-white font-medium">Osteria Romana</span>
+                                                        <span className="text-[9px] font-mono text-[#EC6735]/60 shrink-0">TripWise pick</span>
+                                                    </div>
+                                                    <p className="text-[11px] text-white/40 mt-0.5">4.9 ★ · 4 min walk · Under €11</p>
+                                                    <p className="text-[11px] text-white/25 mt-1.5 italic leading-relaxed">"Fresh hand-made pasta, house wine included."</p>
                                                 </div>
-                                                <p className="text-xs text-white/80 leading-relaxed">
-                                                    "Tucked in an alleyway 4 minutes away. Fresh hand-made pasta under €11, with complementary house wine."
-                                                </p>
                                             </div>
                                         </div>
-                                        <div className="mt-4 p-3 bg-brand-teal/10 border border-brand-teal/20 rounded-xl flex items-center gap-3 shrink-0">
-                                            <span className="text-lg">💡</span>
-                                            <span className="text-xs text-white/80 leading-normal font-mono">
-                                                Saved: <strong className="text-brand-teal font-extrabold">€45</strong> on dining costs &amp; cut queue waiting by <strong className="text-brand-teal font-extrabold">35 mins</strong>.
-                                            </span>
+                                        <div className="border-t border-white/[0.05] pt-3.5 flex items-center justify-between">
+                                            <span className="text-[10px] font-mono text-white/20 uppercase tracking-widest">Estimated savings</span>
+                                            <span className="text-[10px] font-mono text-white/35">€45 · 35 min saved</span>
                                         </div>
                                     </div>
-
-                                    {/* --- MOBILE VIEW --- */}
-                                    <div className="flex md:hidden flex-col h-full w-full">
-                                        <div className="flex justify-between items-end mb-2">
-                                            <div className="flex flex-col">
-                                                <span className="font-mono text-[10px] font-bold text-[#fe7717]">REAL-TIME CURATION</span>
-                                                <span className="text-lg font-extrabold text-white">Hidden Gem Rerouting</span>
-                                            </div>
+                                    {/* Mobile */}
+                                    <div className="flex md:hidden flex-col h-full">
+                                        <div className="mb-4">
+                                            <p className="font-mono text-[9px] text-[#EC6735] uppercase tracking-[0.18em] mb-0.5">Local Intelligence</p>
+                                            <span className="text-sm font-semibold text-white">Skip the Tourist Trap</span>
                                         </div>
-
-                                        <div className="flex-1 bg-gradient-to-br from-brand-teal/10 to-transparent border border-brand-teal/30 rounded-2xl p-3 sm:p-4 flex flex-col justify-center relative overflow-hidden">
-                                            <div className="absolute -right-4 -top-4 text-6xl opacity-10">🍝</div>
-                                            <span className="text-[10px] font-mono font-bold text-brand-teal mb-0.5">TRIPWISE RECOMMENDS</span>
-                                            <h4 className="text-lg font-extrabold text-white mb-0.5">Osteria Romana</h4>
-                                            <div className="flex items-center gap-1.5 mb-2">
-                                                <span className="text-xs font-bold text-[#fe7717]">4.9 ★</span>
-                                                <span className="text-[10px] text-white/50">(64 locals voted)</span>
+                                        <div className="flex-1 flex flex-col">
+                                            <div className="flex items-start gap-3 py-3 border-b border-white/[0.05]">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-white/15 mt-1.5 shrink-0" />
+                                                <div>
+                                                    <span className="text-sm text-white/25 line-through block">Caffè di Trevi</span>
+                                                    <span className="text-[10px] text-white/20 font-mono">3.2 ★ · Overpriced</span>
+                                                </div>
                                             </div>
-                                            
-                                            <div className="mt-1 bg-black/30 rounded-lg p-2 flex items-center gap-2">
-                                                <span className="text-red-400 text-sm shrink-0">❌</span>
-                                                <span className="text-[10px] text-white/60 line-through truncate">Caffè di Trevi (Tourist Trap)</span>
-                                            </div>
-                                            
-                                            <div className="mt-2 text-[10px] text-white/80 font-mono border-l-2 border-brand-teal pl-2.5">
-                                                Saved <strong className="text-brand-teal text-xs">€45</strong> on dining
+                                            <div className="flex items-start gap-3 py-3">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-[#EC6735] mt-1.5 shrink-0" />
+                                                <div>
+                                                    <span className="text-sm text-white font-medium block">Osteria Romana</span>
+                                                    <span className="text-[10px] text-[#EC6735]/65 font-mono">4.9 ★ · Saved €45</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* PREVIEW CONTAINER 3: Budget Optimization */}
-                                <div className={`flex flex-col flex-1 transition-all duration-500 ease-in-out absolute inset-x-4 md:inset-x-6 bottom-4 top-12 md:top-14 ${
+                                {/* PANEL 3 — Budget */}
+                                <div className={`flex flex-col flex-1 transition-all duration-500 ease-in-out absolute inset-x-3 sm:inset-x-5 md:inset-x-7 bottom-3 md:bottom-5 top-11 md:top-[3.75rem] ${
                                     activePreviewTab === 2 ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
                                 }`}>
-                                    {/* --- DESKTOP VIEW --- */}
-                                    <div className="hidden md:flex flex-col h-full w-full">
-                                        <div className="flex justify-between items-center mb-3">
-                                            <div className="flex flex-col">
-                                                <span className="font-mono text-xs font-bold text-[#fe7717]">FINANCIAL FORECASTING</span>
-                                                <span className="text-xl font-extrabold text-white">Smart Budget Monitor</span>
-                                            </div>
-                                            <span className="px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full font-mono text-[10px] font-bold">$340 SAVED</span>
+                                    {/* Desktop */}
+                                    <div className="hidden md:flex flex-col h-full">
+                                        <div className="mb-6">
+                                            <p className="font-mono text-[9px] text-[#EC6735] uppercase tracking-[0.2em] mb-1">Financial Overview</p>
+                                            <h4 className="text-base font-semibold text-white tracking-tight">Budget Breakdown</h4>
                                         </div>
-
-                                        <div className="flex-1 grid grid-cols-12 gap-6 items-center overflow-y-auto pr-1 pb-1">
-                                            {/* Left: Progress ring metric */}
-                                            <div className="col-span-5 bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col items-center justify-center text-center">
-                                                <div className="relative w-28 h-28 flex items-center justify-center mb-3">
-                                                    <svg className="w-full h-full transform -rotate-90">
-                                                        <circle cx="50%" cy="50%" r="42%" stroke="rgba(255,255,255,0.05)" strokeWidth="12%" fill="transparent" />
-                                                        <circle cx="50%" cy="50%" r="42%" stroke="#0D9488" strokeWidth="12%" fill="transparent" strokeDasharray="264%" strokeDashoffset="42%" />
-                                                    </svg>
-                                                    <div className="absolute flex flex-col items-center justify-center">
-                                                        <span className="text-xl font-black text-white font-mono">84%</span>
-                                                        <span className="text-[9px] font-bold text-white/40 uppercase">Spent</span>
+                                        <div className="flex items-end gap-2 mb-7">
+                                            <span className="text-[2.5rem] font-black text-white tracking-tight leading-none">$1,680</span>
+                                            <span className="text-white/20 font-mono text-sm mb-1">/ $2,000</span>
+                                            <span className="ml-auto text-[10px] font-mono text-white/35 mb-1">$340 under budget</span>
+                                        </div>
+                                        <div className="flex-1 flex flex-col gap-4">
+                                            {[
+                                                { name: 'Hotels & Stays', amount: '$800', pct: 85 },
+                                                { name: 'Flights & Transit', amount: '$520', pct: 90 },
+                                                { name: 'Food & Dining', amount: '$360', pct: 72 },
+                                            ].map((item) => (
+                                                <div key={item.name}>
+                                                    <div className="flex justify-between items-baseline mb-2">
+                                                        <span className="text-[11px] text-white/45">{item.name}</span>
+                                                        <span className="text-[11px] font-mono text-white/35">{item.amount}</span>
+                                                    </div>
+                                                    <div className="w-full h-px bg-white/[0.07]">
+                                                        <div className="h-full bg-white/30" style={{ width: `${item.pct}%` }} />
                                                     </div>
                                                 </div>
-                                                <span className="text-sm font-extrabold text-white">$1,680 / $2,000</span>
-                                            </div>
-
-                                            {/* Right: Categorical analysis */}
-                                            <div className="col-span-7 flex flex-col gap-3.5">
-                                                {[
-                                                    { name: "Hotels & Stays", amount: "$800", pct: "85%", color: "bg-brand-teal" },
-                                                    { name: "Flights & Transit", amount: "$520", pct: "90%", color: "bg-[#fe7717]" },
-                                                    { name: "Food & Dining", amount: "$360", pct: "72%", color: "bg-yellow-500" }
-                                                ].map((item, idx) => (
-                                                    <div key={idx} className="flex flex-col gap-1.5">
-                                                        <div className="flex justify-between items-center text-xs font-bold">
-                                                            <span className="text-white/80">{item.name}</span>
-                                                            <span className="text-white font-mono">{item.amount}</span>
-                                                        </div>
-                                                        <div className="w-full h-2.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
-                                                            <div className={`h-full ${item.color} rounded-full transition-all duration-1000`} style={{ width: item.pct }} />
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
+                                            ))}
                                         </div>
-
-                                        <div className="mt-4 p-3 bg-[#fe7717]/10 border border-[#fe7717]/20 rounded-xl flex items-center gap-3 shrink-0">
-                                            <span className="text-lg shrink-0">💰</span>
-                                            <span className="text-xs text-white/85 leading-normal font-mono">
-                                                <strong>Cost Alert</strong>: Switching the Rome → Florence train from 05:00 PM to 08:30 PM saves <strong className="text-[#fe7717] font-extrabold">$55</strong>. Apply automatically?
-                                            </span>
+                                        <div className="border-t border-white/[0.05] pt-3.5 mt-4">
+                                            <p className="text-[11px] text-white/35 leading-relaxed">
+                                                Shifting Rome → Florence train to 08:30 PM saves <span className="text-[#EC6735]">$55</span>.
+                                            </p>
                                         </div>
                                     </div>
-
-                                    {/* --- MOBILE VIEW --- */}
-                                    <div className="flex md:hidden flex-col h-full w-full">
-                                        <div className="flex justify-between items-end mb-2">
-                                            <div className="flex flex-col">
-                                                <span className="font-mono text-[10px] font-bold text-[#fe7717]">FORECASTING</span>
-                                                <span className="text-lg font-extrabold text-white">Smart Budget</span>
+                                    {/* Mobile */}
+                                    <div className="flex md:hidden flex-col h-full">
+                                        <div className="mb-4">
+                                            <p className="font-mono text-[9px] text-[#EC6735] uppercase tracking-[0.18em] mb-0.5">Financial Overview</p>
+                                            <div className="flex items-end gap-2">
+                                                <span className="text-2xl font-black text-white tracking-tight leading-none">$1,680</span>
+                                                <span className="text-white/20 font-mono text-xs mb-0.5">/ $2,000</span>
                                             </div>
-                                            <span className="px-2 py-0.5 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full font-mono text-[9px] font-bold shrink-0">$340 SAVED</span>
                                         </div>
-
-                                        <div className="flex-1 flex flex-col justify-center gap-2 sm:gap-3">
-                                            <div className="bg-white/5 rounded-2xl border border-white/10 p-3 flex items-center gap-4">
-                                                <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
-                                                    <svg className="w-full h-full transform -rotate-90">
-                                                        <circle cx="50%" cy="50%" r="40%" stroke="rgba(255,255,255,0.05)" strokeWidth="15%" fill="transparent" />
-                                                        <circle cx="50%" cy="50%" r="40%" stroke="#0D9488" strokeWidth="15%" fill="transparent" strokeDasharray="251%" strokeDashoffset="40%" />
-                                                    </svg>
-                                                    <span className="absolute text-xs font-black text-white font-mono">84%</span>
-                                                </div>
-                                                <div className="flex flex-col w-full">
-                                                    <span className="text-base font-extrabold text-white mb-1.5 tracking-tight">$1.6k / $2k</span>
-                                                    <div className="flex items-center gap-1.5 w-full">
-                                                        <div className="h-1.5 flex-[0.8] bg-brand-teal rounded-full" />
-                                                        <div className="h-1.5 flex-[0.5] bg-[#fe7717] rounded-full" />
-                                                        <div className="h-1.5 flex-[0.3] bg-yellow-500 rounded-full" />
+                                        <div className="flex-1 flex flex-col gap-4">
+                                            {[
+                                                { name: 'Hotels', pct: 85 },
+                                                { name: 'Flights', pct: 90 },
+                                                { name: 'Food', pct: 72 },
+                                            ].map((item) => (
+                                                <div key={item.name}>
+                                                    <div className="flex justify-between mb-1.5">
+                                                        <span className="text-[11px] text-white/40">{item.name}</span>
+                                                        <span className="text-[11px] font-mono text-white/25">{item.pct}%</span>
                                                     </div>
-                                                    <div className="flex justify-between text-[8px] text-white/40 mt-1 font-mono uppercase font-bold">
-                                                        <span>Hotels</span>
-                                                        <span>Transit</span>
-                                                        <span>Food</span>
+                                                    <div className="w-full h-px bg-white/[0.07]">
+                                                        <div className="h-full bg-white/30" style={{ width: `${item.pct}%` }} />
                                                     </div>
                                                 </div>
-                                            </div>
-                                            
-                                            <div className="p-2.5 bg-[#fe7717]/10 border border-[#fe7717]/20 rounded-xl flex items-center gap-2.5">
-                                                <span className="text-sm shrink-0">💰</span>
-                                                <span className="text-[10px] text-white/85 leading-tight font-mono">
-                                                    Switching train to 08:30 PM saves <strong className="text-[#fe7717] font-extrabold">$55</strong>.
-                                                </span>
-                                            </div>
+                                            ))}
+                                            <p className="text-[10px] text-white/25 font-mono pt-2 border-t border-white/[0.05]">
+                                                Train shift saves <span className="text-[#EC6735]">$55</span>
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* PREVIEW CONTAINER 4: Flight & Hotel Integration */}
-                                <div className={`flex flex-col flex-1 transition-all duration-500 ease-in-out absolute inset-x-4 md:inset-x-6 bottom-4 top-12 md:top-14 ${
+                                {/* PANEL 4 — Bookings */}
+                                <div className={`flex flex-col flex-1 transition-all duration-500 ease-in-out absolute inset-x-3 sm:inset-x-5 md:inset-x-7 bottom-3 md:bottom-5 top-11 md:top-[3.75rem] ${
                                     activePreviewTab === 3 ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
                                 }`}>
-                                    {/* --- DESKTOP VIEW --- */}
-                                    <div className="hidden md:flex flex-col h-full w-full">
-                                        <div className="flex justify-between items-center mb-3">
-                                            <div className="flex flex-col">
-                                                <span className="font-mono text-[10px] font-bold text-[#fe7717]">SYSTEM SYNC</span>
-                                                <span className="text-xl font-extrabold text-white">Live Booking Voucher</span>
-                                            </div>
-                                            <span className="px-2 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full font-mono text-[10px] font-bold uppercase tracking-widest">On Time</span>
+                                    {/* Desktop */}
+                                    <div className="hidden md:flex flex-col h-full">
+                                        <div className="mb-6">
+                                            <p className="font-mono text-[9px] text-[#EC6735] uppercase tracking-[0.2em] mb-1">Live Sync</p>
+                                            <h4 className="text-base font-semibold text-white tracking-tight">Booking Vouchers</h4>
                                         </div>
-
-                                        <div className="flex-1 w-full flex flex-col gap-3 overflow-y-auto pr-1">
-                                            {/* Mock Flight Boarding Pass */}
-                                            <div className="w-full bg-[#FFF8F5] text-brand-dark rounded-2xl overflow-hidden shadow-lg border border-white/10 flex flex-col">
-                                                <div className="bg-[#1C1B1B] text-[#fe7717] px-4 py-2 border-b border-white/5 flex justify-between items-center">
-                                                    <span className="font-mono text-[10px] font-bold uppercase tracking-wider">BOARDING PASS SYNC</span>
-                                                    <span className="px-2 py-0.5 bg-green-500/10 text-green-400 border border-green-500/20 rounded font-mono text-[8px] font-bold">LIVE STATUS</span>
+                                        <div className="flex-1 flex flex-col gap-2.5">
+                                            {/* Flight */}
+                                            <div className="border border-white/[0.07] rounded-2xl overflow-hidden">
+                                                <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.05]">
+                                                    <span className="font-mono text-[9px] text-white/30 uppercase tracking-[0.15em]">Flight · AZ-405</span>
+                                                    <span className="flex items-center gap-1.5 text-[9px] font-mono text-white/35">
+                                                        <span className="w-1 h-1 rounded-full bg-white/30 animate-pulse" />
+                                                        On Time
+                                                    </span>
                                                 </div>
-                                                <div className="p-4 flex justify-between items-center gap-4">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-3xl font-black font-sans leading-none tracking-tight">JFK</span>
-                                                        <span className="text-[10px] font-bold text-secondary-text uppercase mt-1 leading-none">New York</span>
+                                                <div className="px-4 py-4 flex items-center justify-between gap-4">
+                                                    <div>
+                                                        <p className="text-2xl font-black text-white leading-none tracking-tight">JFK</p>
+                                                        <p className="text-[10px] text-white/30 mt-1 font-mono">New York</p>
                                                     </div>
-                                                    
-                                                    <div className="flex-1 flex items-center justify-center relative">
-                                                        <div className="w-full border-t-2 border-dashed border-brand-dark/20" />
-                                                        <div className="absolute bg-[#FFF8F5] px-3 text-[#fe7717] flex items-center justify-center">
-                                                            <svg viewBox="-20 0 56 78" fill="currentColor" className="w-6 h-6 transform rotate-90">
-                                                                <path d="M0 34 L8 0 L16 34 L34 44 L34 52 L16 46 L13 64 L21 70 L21 76 L8 70 L-5 76 L-5 70 L3 64 L0 46 L-18 52 L-18 44 Z" />
-                                                            </svg>
+                                                    <div className="flex-1 flex flex-col items-center gap-1">
+                                                        <div className="w-full h-px" style={{ backgroundImage: 'repeating-linear-gradient(to right, rgba(255,255,255,0.1) 0, rgba(255,255,255,0.1) 4px, transparent 4px, transparent 8px)' }} />
+                                                        <span className="text-[#EC6735] text-xs">✈</span>
+                                                        <span className="text-[9px] text-white/20 font-mono">8h 45m</span>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="text-2xl font-black text-white leading-none tracking-tight">FCO</p>
+                                                        <p className="text-[10px] text-white/30 mt-1 font-mono">Rome</p>
+                                                    </div>
+                                                </div>
+                                                <div className="border-t border-dashed border-white/[0.05] px-4 py-3 flex items-center justify-between">
+                                                    <div className="flex gap-6">
+                                                        <div>
+                                                            <p className="text-[9px] text-white/20 font-mono">Gate</p>
+                                                            <p className="text-sm font-semibold text-white font-mono">G12</p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-[9px] text-white/20 font-mono">Seat</p>
+                                                            <p className="text-sm font-semibold text-[#EC6735] font-mono">14A</p>
                                                         </div>
                                                     </div>
-
-                                                    <div className="flex flex-col items-end">
-                                                        <span className="text-3xl font-black font-sans leading-none tracking-tight">FCO</span>
-                                                        <span className="text-[10px] font-bold text-secondary-text uppercase mt-1 leading-none">Rome</span>
-                                                    </div>
-                                                </div>
-                                                <div className="px-4 pb-4 grid grid-cols-3 gap-2 border-t border-brand-dark/5 pt-3">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[9px] font-bold text-secondary-text uppercase">Flight</span>
-                                                        <span className="text-sm font-extrabold text-brand-dark font-mono mt-0.5">AZ-405</span>
-                                                    </div>
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[9px] font-bold text-secondary-text uppercase">Gate</span>
-                                                        <span className="text-sm font-extrabold text-brand-dark font-mono mt-0.5">G12</span>
-                                                    </div>
-                                                    <div className="flex flex-col items-end">
-                                                        <span className="text-[9px] font-bold text-secondary-text uppercase">Seat</span>
-                                                        <span className="text-sm font-extrabold text-[#fe7717] font-mono mt-0.5">14A</span>
+                                                    <div className="text-right">
+                                                        <p className="text-[9px] text-white/20 font-mono">Departs</p>
+                                                        <p className="text-sm font-semibold text-white font-mono">09:15</p>
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            {/* Mock Hotel Booking */}
-                                            <div className="w-full bg-[#FFF8F5] text-brand-dark rounded-2xl overflow-hidden shadow-lg border border-white/10 flex-col">
-                                                <div className="p-4 flex justify-between items-center gap-4">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[9px] font-bold text-brand-teal uppercase font-mono tracking-wider">BOOKING CONFIRMED</span>
-                                                        <h4 className="text-base font-black text-brand-dark mt-0.5 tracking-tight">Hotel Quirinale Rome</h4>
-                                                        <span className="text-[10px] font-bold text-secondary-text mt-1">Check-in: Today at 14:00</span>
-                                                    </div>
-                                                    <span className="w-12 h-12 rounded-full bg-brand-teal/10 flex items-center justify-center text-[#fe7717] text-2xl font-bold shrink-0">🛎️</span>
+                                            {/* Hotel */}
+                                            <div className="flex items-center justify-between px-4 py-3.5 border border-white/[0.07] rounded-2xl">
+                                                <div>
+                                                    <p className="text-sm font-medium text-white">Hotel Quirinale</p>
+                                                    <p className="text-[11px] text-white/30 mt-0.5">Check-in today · 14:00</p>
                                                 </div>
+                                                <span className="text-[9px] font-mono text-white/25">Confirmed</span>
                                             </div>
+                                        </div>
+                                        <div className="border-t border-white/[0.05] pt-3.5 mt-1">
+                                            <p className="text-[10px] font-mono text-white/20 uppercase tracking-widest">4 bookings synced</p>
                                         </div>
                                     </div>
-
-                                    {/* --- MOBILE VIEW --- */}
-                                    <div className="flex md:hidden flex-col h-full w-full">
-                                        <div className="flex justify-between items-end mb-2">
-                                            <div className="flex flex-col">
-                                                <span className="font-mono text-[10px] font-bold text-[#fe7717]">SYSTEM SYNC</span>
-                                                <span className="text-lg font-extrabold text-white">Live Voucher</span>
-                                            </div>
-                                            <span className="px-2 py-0.5 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full font-mono text-[9px] font-bold shrink-0 uppercase">On Time</span>
+                                    {/* Mobile */}
+                                    <div className="flex md:hidden flex-col h-full">
+                                        <div className="mb-4">
+                                            <p className="font-mono text-[9px] text-[#EC6735] uppercase tracking-[0.18em] mb-0.5">Live Sync</p>
+                                            <span className="text-sm font-semibold text-white">Booking Vouchers</span>
                                         </div>
-
-                                        <div className="flex-1 w-full bg-[#FFF8F5] text-brand-dark rounded-xl overflow-hidden shadow-lg border border-white/10 flex flex-col justify-center relative">
-                                            <div className="absolute top-0 inset-x-0 bg-[#1C1B1B] text-[#fe7717] px-3 py-1 flex justify-between items-center z-10 border-b border-white/5">
-                                                <span className="font-mono text-[9px] font-bold uppercase tracking-wider">BOARDING PASS</span>
-                                                <span className="px-1.5 py-0.5 bg-green-500/10 text-green-400 rounded font-mono text-[8px] font-bold">LIVE STATUS</span>
+                                        <div className="flex-1 flex flex-col gap-2.5">
+                                            <div className="border border-white/[0.07] rounded-xl p-3">
+                                                <div className="flex items-center justify-between mb-2.5">
+                                                    <span className="font-mono text-[9px] text-white/25">AZ-405</span>
+                                                    <span className="text-[9px] font-mono text-white/25">On Time</span>
+                                                </div>
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="text-xl font-black text-white tracking-tight">JFK</span>
+                                                    <span className="text-[#EC6735] text-xs">✈</span>
+                                                    <span className="text-xl font-black text-white tracking-tight">FCO</span>
+                                                </div>
+                                                <p className="text-[9px] font-mono text-white/25">Gate G12 · Seat <span className="text-[#EC6735]">14A</span> · 09:15</p>
                                             </div>
-                                            
-                                            <div className="p-3 pt-8 flex flex-col h-full justify-center relative">
-                                                {/* Dashed line background */}
-                                                <div className="absolute inset-x-3 top-1/2 -mt-2 border-t-2 border-dashed border-brand-dark/15" />
-                                                
-                                                <div className="flex justify-between items-center relative z-10 mb-2.5">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-2xl font-black leading-none tracking-tight">JFK</span>
-                                                        <span className="text-[9px] font-bold text-secondary-text uppercase mt-0.5">New York</span>
-                                                    </div>
-                                                    
-                                                    <div className="bg-[#FFF8F5] px-1 text-[#fe7717] transform rotate-90">
-                                                        <svg viewBox="-20 0 56 78" fill="currentColor" className="w-4 h-4">
-                                                            <path d="M0 34 L8 0 L16 34 L34 44 L34 52 L16 46 L13 64 L21 70 L21 76 L8 70 L-5 76 L-5 70 L3 64 L0 46 L-18 52 L-18 44 Z" />
-                                                        </svg>
-                                                    </div>
-
-                                                    <div className="flex flex-col items-end">
-                                                        <span className="text-2xl font-black leading-none tracking-tight">FCO</span>
-                                                        <span className="text-[9px] font-bold text-secondary-text uppercase mt-0.5">Rome</span>
-                                                    </div>
+                                            <div className="flex items-center justify-between px-3 py-2.5 border border-white/[0.07] rounded-xl">
+                                                <div>
+                                                    <p className="text-sm font-medium text-white">Hotel Quirinale</p>
+                                                    <p className="text-[10px] text-white/30">Check-in 14:00</p>
                                                 </div>
-                                                
-                                                <div className="flex justify-between bg-black/5 rounded-lg p-2.5">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[8px] font-bold text-secondary-text uppercase">Flight</span>
-                                                        <span className="text-xs font-black font-mono">AZ-405</span>
-                                                    </div>
-                                                    <div className="flex flex-col items-center">
-                                                        <span className="text-[8px] font-bold text-secondary-text uppercase">Gate</span>
-                                                        <span className="text-xs font-black font-mono">G12</span>
-                                                    </div>
-                                                    <div className="flex flex-col items-end">
-                                                        <span className="text-[8px] font-bold text-secondary-text uppercase">Seat</span>
-                                                        <span className="text-xs font-black text-[#fe7717] font-mono">14A</span>
-                                                    </div>
-                                                </div>
+                                                <span className="text-[9px] font-mono text-white/30">Confirmed</span>
                                             </div>
                                         </div>
                                     </div>
