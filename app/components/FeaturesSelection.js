@@ -558,12 +558,12 @@ function FeaturesSelection() {
                                     </div>
                                     {/* Mobile */}
                                     <div className="flex md:hidden flex-col h-full">
-                                        <div className="flex items-baseline justify-between mb-4">
+                                        <div className="flex items-end justify-between mb-4">
                                             <div>
-                                                <p className="font-mono text-[9px] text-[#EC6735] uppercase tracking-[0.18em] mb-0.5">Day 1 · Rome</p>
-                                                <span className="text-sm font-semibold text-white">Your Itinerary</span>
+                                                <p className="font-mono text-[9px] text-[#EC6735] uppercase tracking-[0.18em] mb-1.5">Day 1 · Rome</p>
+                                                <h4 className="text-xl font-black text-white tracking-tight leading-none">Your Itinerary</h4>
                                             </div>
-                                            <span className="text-[10px] font-mono text-white/25">3 stops</span>
+                                            <span className="text-[10px] font-mono text-white/20 mb-0.5">3 stops</span>
                                         </div>
                                         <div className="flex-1 flex flex-col">
                                             {[
@@ -571,16 +571,22 @@ function FeaturesSelection() {
                                                 { time: '12:45', label: 'Osteria da Fortunata', confirmed: false, active: false },
                                             ].map((stop, i) => (
                                                 <div key={i} className="flex gap-3">
-                                                    <div className="flex flex-col items-center pt-[5px]">
-                                                        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${stop.active ? 'bg-[#EC6735]' : 'bg-white/20'}`} />
-                                                        {i < 1 && <div className="w-px flex-1 bg-white/[0.07] mt-1.5 mb-1" />}
+                                                    <div className="w-8 shrink-0 pt-0.5">
+                                                        <span className={`font-mono text-[9px] tabular-nums block ${stop.active ? 'text-white/45' : 'text-white/18'}`}>{stop.time}</span>
                                                     </div>
-                                                    <div className="flex-1 pb-4">
-                                                        <div className="flex items-baseline justify-between gap-2">
-                                                            <span className={`text-sm font-medium ${stop.active ? 'text-white' : 'text-white/50'}`}>{stop.label}</span>
-                                                            <span className="font-mono text-[10px] text-white/25 shrink-0">{stop.time}</span>
-                                                        </div>
-                                                        {stop.confirmed && <span className="text-[9px] font-mono text-[#EC6735]/70 mt-0.5 block">✓ Confirmed</span>}
+                                                    <div className="flex flex-col items-center">
+                                                        <div className={`rounded-full shrink-0 mt-1 ${stop.active ? 'w-1.5 h-1.5 bg-[#EC6735]' : 'w-1 h-1 bg-white/15'}`} />
+                                                        {i < 1 && <div className="w-px flex-1 bg-white/[0.06] my-1" />}
+                                                    </div>
+                                                    <div className={`flex-1 ${i < 1 ? 'pb-3' : ''}`}>
+                                                        {stop.active ? (
+                                                            <div className="border-l border-[#EC6735]/30 pl-2">
+                                                                <span className="text-sm font-bold text-white leading-tight block">{stop.label}</span>
+                                                                {stop.confirmed && <span className="text-[8px] font-mono text-[#EC6735]/70 mt-1 block tracking-wide">✓ Confirmed</span>}
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-xs font-normal text-white/25 leading-tight block pt-[1px]">{stop.label}</span>
+                                                        )}
                                                     </div>
                                                 </div>
                                             ))}
@@ -636,22 +642,35 @@ function FeaturesSelection() {
                                     {/* Mobile */}
                                     <div className="flex md:hidden flex-col h-full">
                                         <div className="mb-4">
-                                            <p className="font-mono text-[9px] text-[#EC6735] uppercase tracking-[0.18em] mb-0.5">Local Intelligence</p>
-                                            <span className="text-sm font-semibold text-white">Skip the Tourist Trap</span>
+                                            <p className="font-mono text-[9px] text-[#EC6735] uppercase tracking-[0.18em] mb-1.5">Local Intelligence</p>
+                                            <h4 className="text-xl font-black text-white tracking-tight leading-none">Skip the<br/>Tourist Trap</h4>
                                         </div>
-                                        <div className="flex-1 flex flex-col">
-                                            <div className="flex items-start gap-3 py-3 border-b border-white/[0.05]">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-white/15 mt-1.5 shrink-0" />
-                                                <div>
-                                                    <span className="text-sm text-white/25 line-through block">Caffè di Trevi</span>
-                                                    <span className="text-[10px] text-white/20 font-mono">3.2 ★ · Overpriced</span>
+                                        <div className="flex-1 flex flex-col gap-2">
+                                            {/* Rejected — entire row ghosted */}
+                                            <div className="flex items-start gap-3 opacity-20 px-1">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-white mt-1.5 shrink-0" />
+                                                <div className="flex-1">
+                                                    <div className="flex items-baseline justify-between">
+                                                        <span className="text-sm font-medium text-white line-through">Caffè di Trevi</span>
+                                                        <span className="text-[8px] font-mono text-white uppercase tracking-widest">Skip</span>
+                                                    </div>
+                                                    <p className="text-[9px] text-white mt-0.5">3.2 ★ · Tourist area</p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-start gap-3 py-3">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-[#EC6735] mt-1.5 shrink-0" />
-                                                <div>
-                                                    <span className="text-sm text-white font-medium block">Osteria Romana</span>
-                                                    <span className="text-[10px] text-[#EC6735]/65 font-mono">4.9 ★ · Saved €45</span>
+                                            {/* Recommended — elevated with bg */}
+                                            <div className="flex items-start gap-3 bg-white/[0.04] rounded-xl p-3 -mx-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-[#EC6735] mt-1 shrink-0" />
+                                                <div className="flex-1">
+                                                    <div className="flex items-baseline justify-between mb-1.5">
+                                                        <span className="text-sm font-bold text-white">Osteria Romana</span>
+                                                        <span className="text-[8px] font-mono text-[#EC6735]/70 uppercase tracking-widest">Pick</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-lg font-black text-white/70 font-mono leading-none">4.9</span>
+                                                        <div>
+                                                            <p className="text-[9px] text-white/45">Saved €45</p>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -709,30 +728,38 @@ function FeaturesSelection() {
                                     {/* Mobile */}
                                     <div className="flex md:hidden flex-col h-full">
                                         <div className="mb-4">
-                                            <p className="font-mono text-[9px] text-[#EC6735] uppercase tracking-[0.18em] mb-0.5">Financial Overview</p>
-                                            <div className="flex items-end gap-2">
-                                                <span className="text-2xl font-black text-white tracking-tight leading-none">$1,680</span>
-                                                <span className="text-white/20 font-mono text-xs mb-0.5">/ $2,000</span>
+                                            <p className="font-mono text-[9px] text-[#EC6735] uppercase tracking-[0.18em] mb-1.5">Financial Overview</p>
+                                            <h4 className="text-xl font-black text-white tracking-tight leading-none mb-3">Budget Breakdown</h4>
+                                            
+                                            <div className="flex items-end gap-2 mb-3">
+                                                <span className="text-[2rem] font-black text-white tracking-tight leading-none">$1,680</span>
+                                                <div className="flex flex-col mb-1">
+                                                    <span className="text-[9px] font-mono text-white/25 leading-none mb-0.5">of $2,000</span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="flex-1 flex flex-col gap-4">
+                                        {/* Single segmented bar */}
+                                        <div className="w-full h-1 rounded-full overflow-hidden flex gap-[2px] mb-4">
+                                            <div className="h-full bg-white/45 rounded-l-full" style={{ width: '40%' }} />
+                                            <div className="h-full bg-white/25" style={{ width: '26%' }} />
+                                            <div className="h-full bg-white/15" style={{ width: '18%' }} />
+                                            <div className="flex-1 h-full bg-white/[0.04] rounded-r-full" />
+                                        </div>
+                                        {/* Category list — no bars, just type */}
+                                        <div className="flex-1 flex flex-col">
                                             {[
-                                                { name: 'Hotels', pct: 85 },
-                                                { name: 'Flights', pct: 90 },
-                                                { name: 'Food', pct: 72 },
-                                            ].map((item) => (
-                                                <div key={item.name}>
-                                                    <div className="flex justify-between mb-1.5">
+                                                { name: 'Hotels', amount: '$800', pct: '48%' },
+                                                { name: 'Flights', amount: '$520', pct: '31%' },
+                                            ].map((item, i) => (
+                                                <div key={item.name} className={`flex items-baseline justify-between py-1.5 ${i === 0 ? 'border-b border-white/[0.05]' : ''}`}>
+                                                    <div className="flex items-baseline gap-2">
                                                         <span className="text-[11px] text-white/40">{item.name}</span>
-                                                        <span className="text-[11px] font-mono text-white/25">{item.pct}%</span>
                                                     </div>
-                                                    <div className="w-full h-px bg-white/[0.07]">
-                                                        <div className="h-full bg-white/30" style={{ width: `${item.pct}%` }} />
-                                                    </div>
+                                                    <span className="text-xs font-bold text-white/50 font-mono tabular-nums">{item.amount}</span>
                                                 </div>
                                             ))}
-                                            <p className="text-[10px] text-white/25 font-mono pt-2 border-t border-white/[0.05]">
-                                                Train shift saves <span className="text-[#EC6735]">$55</span>
+                                            <p className="text-[9px] text-white/30 pt-2 border-t border-white/[0.05] mt-2">
+                                                Train shift saves <span className="text-[#EC6735] font-semibold">$55</span>
                                             </p>
                                         </div>
                                     </div>
@@ -806,8 +833,8 @@ function FeaturesSelection() {
                                     {/* Mobile */}
                                     <div className="flex md:hidden flex-col h-full">
                                         <div className="mb-4">
-                                            <p className="font-mono text-[9px] text-[#EC6735] uppercase tracking-[0.18em] mb-0.5">Live Sync</p>
-                                            <span className="text-sm font-semibold text-white">Booking Vouchers</span>
+                                            <p className="font-mono text-[9px] text-[#EC6735] uppercase tracking-[0.18em] mb-1.5">Live Sync</p>
+                                            <h4 className="text-xl font-black text-white tracking-tight leading-none">Booking Vouchers</h4>
                                         </div>
                                         <div className="flex-1 flex flex-col gap-2.5">
                                             <div className="border border-white/[0.07] rounded-xl p-3">
