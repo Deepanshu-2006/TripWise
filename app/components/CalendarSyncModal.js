@@ -112,14 +112,23 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
-      if (typeof window !== 'undefined' && window.lenis) window.lenis.stop();
+      if (typeof window !== 'undefined') {
+        const lenis = window.__lenis || window.lenis;
+        if (lenis && typeof lenis.stop === 'function') lenis.stop();
+      }
     } else {
       document.body.style.overflow = '';
-      if (typeof window !== 'undefined' && window.lenis) window.lenis.start();
+      if (typeof window !== 'undefined') {
+        const lenis = window.__lenis || window.lenis;
+        if (lenis && typeof lenis.start === 'function') lenis.start();
+      }
     }
     return () => {
       document.body.style.overflow = '';
-      if (typeof window !== 'undefined' && window.lenis) window.lenis.start();
+      if (typeof window !== 'undefined') {
+        const lenis = window.__lenis || window.lenis;
+        if (lenis && typeof lenis.start === 'function') lenis.start();
+      }
     };
   }, [isOpen]);
 

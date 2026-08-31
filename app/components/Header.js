@@ -168,11 +168,13 @@ function Header() {
                                 strokeLinecap="round"
                             />
                             <circle cx="24" cy="170" r="9" fill="#0D9488" />
-                            <g id="navbar-plane" transform="translate(136,28) rotate(45)">
-                                <path
-                                    d="M0 34 L8 0 L16 34 L34 44 L34 52 L16 46 L13 64 L21 70 L21 76 L8 70 L-5 76 L-5 70 L3 64 L0 46 L-18 52 L-18 44 Z"
-                                    fill="#fe7717"
-                                />
+                            <g transform="translate(136,28) rotate(45)">
+                                <g id="navbar-plane" className="transition-transform duration-[800ms] ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-8 group-hover:translate-x-1.5">
+                                    <path
+                                        d="M0 34 L8 0 L16 34 L34 44 L34 52 L16 46 L13 64 L21 70 L21 76 L8 70 L-5 76 L-5 70 L3 64 L0 46 L-18 52 L-18 44 Z"
+                                        fill="#fe7717"
+                                    />
+                                </g>
                             </g>
                         </svg>
                     </div>
