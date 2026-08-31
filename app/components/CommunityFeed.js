@@ -284,65 +284,61 @@ export default function CommunityFeed() {
       <div className="w-full">
         
         {/* Header & Filter Bar */}
-        <div className="flex flex-col xl:flex-row flex-wrap justify-between items-start xl:items-end mb-10 gap-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-10 gap-6">
           <div>
-            <h2 className="text-[#F4703C] font-mono font-bold text-xs uppercase tracking-[0.2em] mb-3">
+            <p className="text-[#F4703C] font-mono font-bold text-[10px] uppercase tracking-[0.22em] mb-2">
               Community Trips
-            </h2>
-            <h3 className="text-3xl font-serif font-bold text-stone-900 mb-2 leading-tight flex items-center gap-4">
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-serif font-bold text-stone-900 leading-tight tracking-tight">
               Shared Itineraries
-            </h3>
-            <p className="text-stone-500 text-sm">Discover and fork trips from fellow travelers.</p>
+            </h2>
+            <p className="text-stone-400 text-sm mt-1.5 font-light">Discover and fork trips from fellow travelers.</p>
           </div>
 
-          <div className="flex flex-col sm:flex-row flex-wrap items-center gap-4 w-full xl:w-auto shrink-0">
-            {/* Pill Filters */}
-            <div className="flex p-1.5 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.04)] rounded-full border border-stone-200/60 w-full sm:w-auto shrink-0 relative overflow-x-auto hide-scrollbar snap-x snap-mandatory">
+          <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-3 w-full sm:w-auto shrink-0">
+            {/* Underline-tab filters */}
+            <div className="flex items-center gap-1 border-b border-stone-200 w-full sm:w-auto">
               {FILTERS.map(filter => {
                 const isActive = activeFilter === filter;
                 return (
                   <button
                     key={filter}
                     onClick={() => setActiveFilter(filter)}
-                    className={`relative flex items-center justify-center flex-none px-5 py-2.5 rounded-full text-xs font-mono uppercase font-bold transition-all duration-300 snap-start ${
-                      isActive ? 'text-white' : 'text-stone-500 hover:text-stone-900 hover:bg-stone-50'
+                    className={`relative pb-2.5 px-3 text-[11px] font-mono uppercase tracking-[0.14em] font-bold transition-colors duration-200 ${
+                      isActive ? 'text-stone-900' : 'text-stone-400 hover:text-stone-600'
                     }`}
                   >
                     {isActive && (
                       <motion.div
-                        layoutId="activeFilterPill"
-                        className="absolute inset-0 bg-[#F4703C] rounded-full shadow-[0_4px_15px_rgba(244,112,60,0.3)]"
-                        transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
+                        layoutId="activeFilterUnderline"
+                        className="absolute bottom-0 left-0 right-0 h-[2px] bg-stone-900 rounded-full"
+                        transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
                       />
                     )}
-                    <span className="relative z-10">{filter}</span>
+                    {filter}
                   </button>
                 );
               })}
             </div>
 
             {/* Custom Destination Dropdown */}
-            <div className="relative w-full sm:w-56 group z-50">
-              <button 
+            <div className="relative w-full sm:w-48 group z-50">
+              <button
                 onClick={() => {
-                  // A simple way to toggle dropdown state
                   const event = new CustomEvent('toggle-dropdown');
                   document.dispatchEvent(event);
                 }}
-                className={`w-full flex items-center justify-between bg-white shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-stone-200/60 text-stone-700 text-xs font-mono font-bold uppercase rounded-full pl-6 pr-5 h-11.5 focus:outline-none focus:border-[#F4703C]/50 focus:ring-1 focus:ring-[#F4703C]/20 transition-all cursor-pointer hover:border-[#F4703C] hover:text-stone-900 dropdown-trigger`}
+                className="w-full flex items-center justify-between bg-stone-50 border border-stone-200 text-stone-600 text-[11px] font-mono font-bold uppercase tracking-[0.12em] rounded-xl pl-4 pr-3 h-10 focus:outline-none hover:border-stone-400 transition-colors cursor-pointer dropdown-trigger"
               >
-                <span>{activeDestination}</span>
-                <span className="text-stone-400 group-hover:text-[#F4703C] transition-colors duration-300">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                </span>
+                <span className="truncate">{activeDestination}</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 ml-2">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
               </button>
-              
-              <CustomDropdown 
-                options={DESTINATIONS} 
-                activeOption={activeDestination} 
-                onSelect={setActiveDestination} 
+              <CustomDropdown
+                options={DESTINATIONS}
+                activeOption={activeDestination}
+                onSelect={setActiveDestination}
               />
             </div>
           </div>
