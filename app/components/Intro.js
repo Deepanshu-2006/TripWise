@@ -149,23 +149,30 @@ export default function MinimalLoader() {
         exitElements,
         {
           opacity: 0,
-          y: -25,
-          duration: 0.6,
-          ease: 'power3.inOut',
-          stagger: 0.02
+          y: -15,
+          duration: 0.3, // Faster exit
+          ease: 'power2.out',
+          stagger: 0.02,
+          onStart: () => {
+            if (statusRef.current) {
+              statusRef.current.style.backdropFilter = 'none';
+              statusRef.current.style.webkitBackdropFilter = 'none';
+            }
+          }
         },
         'complete'
       );
     }
 
-    // Parallax swoop down for fan cards
-    tl.to('.ml-fan-card', { 
-        y: '+=200', 
+    tl.to('.ml-fan-container', { 
         opacity: 0, 
-        scale: 0.9,
-        duration: 0.8, 
-        ease: 'power3.inOut',
-        stagger: 0.04
+        scale: 0.95,
+        duration: 0.3, 
+        ease: 'power2.inOut',
+        onComplete: () => {
+          const fanContainer = document.querySelector('.ml-fan-container');
+          if (fanContainer) fanContainer.style.display = 'none';
+        }
     }, 'complete');
 
     tl.add(() => {
@@ -178,37 +185,27 @@ export default function MinimalLoader() {
             return;
         }
 
-        // Hide target plane temporarily
         targetPlane.style.opacity = '0';
 
-        // Get absolute coordinates
-        const sourceRect = sourceSvg.getBoundingClientRect();
         const targetRect = targetSvg.getBoundingClientRect();
-
-        // Create a fixed clone
         const clone = sourceSvg.cloneNode(true);
         clone.id = 'flying-plane-clone';
         
-        // Hide non-plane elements in the clone
         const clonePath = clone.querySelector('#intro-path');
         const cloneCircle = clone.querySelector('#intro-circle');
         if (clonePath) clonePath.style.opacity = '0';
         if (cloneCircle) cloneCircle.style.opacity = '0';
         
-        // We want the source SVG to just fade out, not physically travel.
-        gsap.to(sourceSvg, {
-            opacity: 0,
-            duration: 0.4,
-            ease: "power2.out"
-        });
+        gsap.to(sourceSvg, { opacity: 0, duration: 0.1, ease: "none" });
 
-        // Position clone offset slightly bottom-left of the target, scaled and hidden
         gsap.set(clone, {
             position: 'fixed',
             top: 0,
             left: 0,
-            x: targetRect.left - 40, // Offset to the left
-            y: targetRect.top + 40,  // Offset to the bottom
+            x: targetRect.left - 60, 
+            y: targetRect.top + 80,  
+            rotation: -15, // Bank the plane slightly for takeoff
+            scale: 0.8,    // Start smaller to simulate depth
             width: targetRect.width,
             height: targetRect.height,
             opacity: 0,
@@ -219,40 +216,46 @@ export default function MinimalLoader() {
 
         document.body.appendChild(clone);
 
-        // Screen Swipe Up (Pure GPU transform, zero layout thrashing)
-        gsap.to(overlayRef.current, {
-            yPercent: -100,
-            force3D: true,
-            duration: 1.0,
-            ease: "expo.inOut"
-        });
-
-        // Plane flight to Navbar with a significant delay
-        const flightDuration = 0.9;
-        gsap.to(clone, {
-            x: targetRect.left,
-            y: targetRect.top,
-            opacity: 1,
-            duration: flightDuration,
-            delay: 0.8, // Delayed to match the new 1.0s expo ease
-            ease: "expo.out",
-            onComplete: () => {
-                if (targetPlane) targetPlane.style.opacity = '1';
-                if (clone) clone.remove();
-                
-                // Finally fade out the transparent overlay to unmount if it didn't finish
+        requestAnimationFrame(() => {
+            if (overlayRef.current) {
+                // Force mobile GPU to composite the layers behind the overlay *before* it moves 
+                // by making the overlay technically translucent. This prevents massive paint lag!
+                overlayRef.current.style.backgroundColor = 'rgba(255, 248, 245, 0.99)';
+                overlayRef.current.style.transition = 'transform 0.65s cubic-bezier(0.25, 1, 0.5, 1)';
+            }
+            
+            requestAnimationFrame(() => {
+                // Screen Swipe Up
                 if (overlayRef.current) {
-                    gsap.to(overlayRef.current, {
-                        opacity: 0,
-                        duration: 0.3,
-                        onComplete: () => {
+                    overlayRef.current.style.transform = 'translate3d(0, -100%, 0)';
+                }
+
+                gsap.to(clone, {
+                    x: targetRect.left,
+                    y: targetRect.top,
+                    rotation: 0,
+                    scale: 1,
+                    opacity: 1,
+                    duration: 0.85,
+                    delay: 0.1, 
+                    ease: "back.out(1.2)", // Swoops in with a nice physics-based overshoot
+                    force3D: true, // Forces GPU acceleration on the flying plane
+                    onComplete: () => {
+                        if (targetPlane) targetPlane.style.opacity = '1';
+                        if (clone) clone.remove();
+                        
+                        if (overlayRef.current) {
+                            gsap.to(overlayRef.current, {
+                                opacity: 0,
+                                duration: 0.1,
+                                onComplete: () => cleanAndExit()
+                            });
+                        } else {
                             cleanAndExit();
                         }
-                    });
-                } else {
-                    cleanAndExit();
-                }
-            }
+                    }
+                });
+            });
         });
     }, 'complete+=0.3');
 
@@ -287,9 +290,12 @@ export default function MinimalLoader() {
       >
         {/* Fan Background Container */}
         <div className="ml-fan-container">
-          {DESTINATION_IMAGES.map((src, i) => (
-            <img key={i} src={src} alt="Destination" className="ml-fan-card" />
-          ))}
+          {DESTINATION_IMAGES.map((src, i) => {
+            const zIndex = 10 - Math.abs(2 - i);
+            return (
+              <img key={i} src={src} alt="Destination" className="ml-fan-card" style={{ zIndex }} />
+            );
+          })}
         </div>
 
         {/* Skip button */}
