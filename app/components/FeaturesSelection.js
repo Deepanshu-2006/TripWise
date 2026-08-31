@@ -513,12 +513,12 @@ function FeaturesSelection() {
                                 }`}>
                                     {/* Desktop */}
                                     <div className="hidden md:flex flex-col h-full">
-                                        <div className="flex items-baseline justify-between mb-6">
+                                        <div className="flex items-end justify-between mb-5">
                                             <div>
-                                                <p className="font-mono text-[9px] text-[#EC6735] uppercase tracking-[0.2em] mb-1">Day 1 · Rome</p>
-                                                <h4 className="text-base font-semibold text-white tracking-tight">Your Itinerary</h4>
+                                                <p className="font-mono text-[9px] text-[#EC6735] uppercase tracking-[0.2em] mb-2">Day 1 · Rome</p>
+                                                <h4 className="text-2xl font-black text-white tracking-tight leading-none">Your Itinerary</h4>
                                             </div>
-                                            <span className="text-[10px] font-mono text-white/25">3 stops · 5.4 km</span>
+                                            <span className="text-[10px] font-mono text-white/20 mb-0.5">3 stops · 5.4 km</span>
                                         </div>
                                         <div className="flex-1 flex flex-col">
                                             {[
@@ -526,25 +526,34 @@ function FeaturesSelection() {
                                                 { time: '12:45', label: 'Osteria da Fortunata', sub: '12 min walk · Local favourite', active: false },
                                                 { time: '15:00', label: 'Pantheon & Piazza Navona', sub: 'Free entry · 20 min transit', active: false },
                                             ].map((stop, i) => (
-                                                <div key={i} className="flex gap-4">
-                                                    <div className="flex flex-col items-center pt-[5px]">
-                                                        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${stop.active ? 'bg-[#EC6735]' : 'bg-white/20'}`} />
-                                                        {i < 2 && <div className="w-px flex-1 bg-white/[0.07] mt-1.5 mb-1" />}
+                                                <div key={i} className="flex gap-3">
+                                                    {/* Fixed-width time column */}
+                                                    <div className="w-9 shrink-0 pt-[3px]">
+                                                        <span className={`font-mono text-[10px] tabular-nums block ${stop.active ? 'text-white/45' : 'text-white/18'}`}>{stop.time}</span>
                                                     </div>
-                                                    <div className={`flex-1 ${i < 2 ? 'pb-5' : ''}`}>
-                                                        <div className="flex items-baseline justify-between gap-2">
-                                                            <span className={`text-sm font-medium leading-tight ${stop.active ? 'text-white' : 'text-white/50'}`}>{stop.label}</span>
-                                                            <span className="font-mono text-[10px] text-white/25 shrink-0">{stop.time}</span>
-                                                        </div>
-                                                        <p className="text-[11px] text-white/25 mt-0.5">{stop.sub}</p>
-                                                        {stop.active && <span className="text-[9px] font-mono text-[#EC6735]/70 mt-1 block">✓ Confirmed</span>}
+                                                    {/* Rail */}
+                                                    <div className="flex flex-col items-center">
+                                                        <div className={`rounded-full shrink-0 mt-1.5 ${stop.active ? 'w-2 h-2 bg-[#EC6735]' : 'w-1.5 h-1.5 bg-white/15'}`} />
+                                                        {i < 2 && <div className="w-px flex-1 bg-white/[0.06] my-1.5" />}
+                                                    </div>
+                                                    {/* Content */}
+                                                    <div className={`flex-1 ${i < 2 ? 'pb-4' : ''}`}>
+                                                        {stop.active ? (
+                                                            <div className="border-l border-[#EC6735]/30 pl-3">
+                                                                <span className="text-base font-bold text-white leading-tight block">{stop.label}</span>
+                                                                <p className="text-[11px] text-white/40 mt-0.5">{stop.sub}</p>
+                                                                <span className="text-[9px] font-mono text-[#EC6735]/70 mt-1.5 block tracking-wide">✓ Confirmed</span>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-sm font-normal text-white/25 leading-tight block pt-0.5">{stop.label}</span>
+                                                        )}
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
-                                        <div className="border-t border-white/[0.05] pt-3.5 flex items-center justify-between">
-                                            <span className="text-[10px] font-mono text-white/20 uppercase tracking-widest">Est. walking</span>
-                                            <span className="text-[10px] font-mono text-white/35">14,200 steps</span>
+                                        <div className="border-t border-white/[0.05] pt-3 flex items-center justify-between">
+                                            <span className="text-[9px] font-mono text-white/20 uppercase tracking-widest">Est. walking</span>
+                                            <span className="text-sm font-bold text-white/40 font-mono tabular-nums">14,200 <span className="text-[10px] font-normal text-white/20">steps</span></span>
                                         </div>
                                     </div>
                                     {/* Mobile */}
@@ -585,36 +594,43 @@ function FeaturesSelection() {
                                 }`}>
                                     {/* Desktop */}
                                     <div className="hidden md:flex flex-col h-full">
-                                        <div className="mb-6">
-                                            <p className="font-mono text-[9px] text-[#EC6735] uppercase tracking-[0.2em] mb-1">Local Intelligence</p>
-                                            <h4 className="text-base font-semibold text-white tracking-tight">Skip the Tourist Trap</h4>
+                                        <div className="mb-5">
+                                            <p className="font-mono text-[9px] text-[#EC6735] uppercase tracking-[0.2em] mb-2">Local Intelligence</p>
+                                            <h4 className="text-2xl font-black text-white tracking-tight leading-none">Skip the<br/>Tourist Trap</h4>
                                         </div>
-                                        <div className="flex-1 flex flex-col">
-                                            <div className="flex items-start gap-4 py-4 border-b border-white/[0.05]">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-white/15 mt-1.5 shrink-0" />
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-baseline justify-between gap-2">
-                                                        <span className="text-sm text-white/25 line-through">Caffè di Trevi</span>
-                                                        <span className="text-[9px] font-mono text-white/15 shrink-0">Skipped</span>
+                                        <div className="flex-1 flex flex-col gap-3">
+                                            {/* Rejected — entire row ghosted */}
+                                            <div className="flex items-start gap-3.5 opacity-20">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-white mt-2 shrink-0" />
+                                                <div className="flex-1">
+                                                    <div className="flex items-baseline justify-between">
+                                                        <span className="text-base font-medium text-white line-through">Caffè di Trevi</span>
+                                                        <span className="text-[9px] font-mono text-white uppercase tracking-widest">Skip</span>
                                                     </div>
-                                                    <p className="text-[11px] text-white/20 mt-0.5">3.2 ★ · Overpriced · Tourist area</p>
+                                                    <p className="text-[11px] text-white mt-0.5">3.2 ★ · Tourist area · Overpriced</p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-start gap-4 py-4">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-[#EC6735] mt-1.5 shrink-0" />
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-baseline justify-between gap-2">
-                                                        <span className="text-sm text-white font-medium">Osteria Romana</span>
-                                                        <span className="text-[9px] font-mono text-[#EC6735]/60 shrink-0">TripWise pick</span>
+                                            {/* Recommended — elevated with bg */}
+                                            <div className="flex items-start gap-3.5 bg-white/[0.04] rounded-xl p-3.5 -mx-1">
+                                                <div className="w-2 h-2 rounded-full bg-[#EC6735] mt-1.5 shrink-0" />
+                                                <div className="flex-1">
+                                                    <div className="flex items-baseline justify-between mb-2">
+                                                        <span className="text-base font-bold text-white">Osteria Romana</span>
+                                                        <span className="text-[9px] font-mono text-[#EC6735]/70 uppercase tracking-widest">Pick</span>
                                                     </div>
-                                                    <p className="text-[11px] text-white/40 mt-0.5">4.9 ★ · 4 min walk · Under €11</p>
-                                                    <p className="text-[11px] text-white/25 mt-1.5 italic leading-relaxed">"Fresh hand-made pasta, house wine included."</p>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-2xl font-black text-white/70 font-mono leading-none">4.9</span>
+                                                        <div>
+                                                            <p className="text-[10px] text-white/45">4 min walk · Under €11</p>
+                                                            <p className="text-[10px] text-white/25 mt-0.5 italic">Hand-made pasta, house wine</p>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="border-t border-white/[0.05] pt-3.5 flex items-center justify-between">
-                                            <span className="text-[10px] font-mono text-white/20 uppercase tracking-widest">Estimated savings</span>
-                                            <span className="text-[10px] font-mono text-white/35">€45 · 35 min saved</span>
+                                        <div className="border-t border-white/[0.05] pt-3 flex items-center justify-between">
+                                            <span className="text-[9px] font-mono text-white/20 uppercase tracking-widest">Estimated savings</span>
+                                            <span className="text-sm font-bold text-white/40">€45 <span className="text-[10px] font-normal text-white/20">· 35 min saved</span></span>
                                         </div>
                                     </div>
                                     {/* Mobile */}
@@ -648,35 +664,45 @@ function FeaturesSelection() {
                                 }`}>
                                     {/* Desktop */}
                                     <div className="hidden md:flex flex-col h-full">
-                                        <div className="mb-6">
-                                            <p className="font-mono text-[9px] text-[#EC6735] uppercase tracking-[0.2em] mb-1">Financial Overview</p>
-                                            <h4 className="text-base font-semibold text-white tracking-tight">Budget Breakdown</h4>
+                                        <div className="mb-4">
+                                            <p className="font-mono text-[9px] text-[#EC6735] uppercase tracking-[0.2em] mb-2">Financial Overview</p>
+                                            <h4 className="text-2xl font-black text-white tracking-tight leading-none">Budget Breakdown</h4>
                                         </div>
-                                        <div className="flex items-end gap-2 mb-7">
-                                            <span className="text-[2.5rem] font-black text-white tracking-tight leading-none">$1,680</span>
-                                            <span className="text-white/20 font-mono text-sm mb-1">/ $2,000</span>
-                                            <span className="ml-auto text-[10px] font-mono text-white/35 mb-1">$340 under budget</span>
+                                        {/* Hero number */}
+                                        <div className="flex items-end gap-3 mb-4">
+                                            <span className="text-[3rem] font-black text-white tracking-tight leading-none">$1,680</span>
+                                            <div className="flex flex-col mb-1.5">
+                                                <span className="text-[10px] font-mono text-white/25 leading-none mb-1">of $2,000</span>
+                                                <span className="text-[9px] font-mono text-[#EC6735]/70 uppercase tracking-wide">$340 under budget</span>
+                                            </div>
                                         </div>
-                                        <div className="flex-1 flex flex-col gap-4">
+                                        {/* Single segmented bar */}
+                                        <div className="w-full h-1.5 rounded-full overflow-hidden flex gap-[2px] mb-5">
+                                            <div className="h-full bg-white/45 rounded-l-full" style={{ width: '40%' }} />
+                                            <div className="h-full bg-white/25" style={{ width: '26%' }} />
+                                            <div className="h-full bg-white/15" style={{ width: '18%' }} />
+                                            <div className="flex-1 h-full bg-white/[0.04] rounded-r-full" />
+                                        </div>
+                                        {/* Category list — no bars, just type */}
+                                        <div className="flex-1 flex flex-col">
                                             {[
-                                                { name: 'Hotels & Stays', amount: '$800', pct: 85 },
-                                                { name: 'Flights & Transit', amount: '$520', pct: 90 },
-                                                { name: 'Food & Dining', amount: '$360', pct: 72 },
-                                            ].map((item) => (
-                                                <div key={item.name}>
-                                                    <div className="flex justify-between items-baseline mb-2">
-                                                        <span className="text-[11px] text-white/45">{item.name}</span>
-                                                        <span className="text-[11px] font-mono text-white/35">{item.amount}</span>
+                                                { name: 'Hotels & Stays', amount: '$800', pct: '48%' },
+                                                { name: 'Flights & Transit', amount: '$520', pct: '31%' },
+                                                { name: 'Food & Dining', amount: '$360', pct: '21%' },
+                                            ].map((item, i) => (
+                                                <div key={item.name} className={`flex items-baseline justify-between py-2.5 ${i < 2 ? 'border-b border-white/[0.05]' : ''}`}>
+                                                    <div className="flex items-baseline gap-2">
+                                                        <span className="text-xs text-white/40">{item.name}</span>
+                                                        <span className="text-[9px] font-mono text-white/20">{item.pct}</span>
                                                     </div>
-                                                    <div className="w-full h-px bg-white/[0.07]">
-                                                        <div className="h-full bg-white/30" style={{ width: `${item.pct}%` }} />
-                                                    </div>
+                                                    <span className="text-sm font-bold text-white/50 font-mono tabular-nums">{item.amount}</span>
                                                 </div>
                                             ))}
                                         </div>
-                                        <div className="border-t border-white/[0.05] pt-3.5 mt-4">
-                                            <p className="text-[11px] text-white/35 leading-relaxed">
-                                                Shifting Rome → Florence train to 08:30 PM saves <span className="text-[#EC6735]">$55</span>.
+                                        <div className="border-t border-white/[0.05] pt-3">
+                                            <p className="text-[9px] font-mono text-white/20 uppercase tracking-widest mb-1">Insight</p>
+                                            <p className="text-xs text-white/40 leading-relaxed">
+                                                Rome → Florence train shift saves <span className="text-[#EC6735] font-semibold">$55</span>. Apply?
                                             </p>
                                         </div>
                                     </div>
@@ -719,8 +745,8 @@ function FeaturesSelection() {
                                     {/* Desktop */}
                                     <div className="hidden md:flex flex-col h-full">
                                         <div className="mb-6">
-                                            <p className="font-mono text-[9px] text-[#EC6735] uppercase tracking-[0.2em] mb-1">Live Sync</p>
-                                            <h4 className="text-base font-semibold text-white tracking-tight">Booking Vouchers</h4>
+                                            <p className="font-mono text-[9px] text-[#EC6735] uppercase tracking-[0.2em] mb-2">Live Sync</p>
+                                            <h4 className="text-2xl font-black text-white tracking-tight leading-none">Booking Vouchers</h4>
                                         </div>
                                         <div className="flex-1 flex flex-col gap-2.5">
                                             {/* Flight */}
