@@ -2,21 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ShieldAlert,
-  PhoneCall,
-  Building2,
-  Stethoscope,
-  MapPin,
-  ExternalLink,
-  Navigation,
-  AlertTriangle,
-  Book,
-  CheckCircle2,
-  WifiOff,
-  RefreshCw
-} from 'lucide-react';
+import { ExternalLink, Navigation, RefreshCw } from 'lucide-react';
 import { fetchEmergencyInfo } from '../../lib/emergencyApi';
 
 export default function EmergencyInfoView({ destinationName, passportNationality, onOpenSettings }) {
@@ -82,25 +68,20 @@ export default function EmergencyInfoView({ destinationName, passportNationality
 
   if (loading && !data) {
     return (
-      <div className="py-20 flex flex-col items-center justify-center font-sans">
-        <div className="w-8 h-8 border-3 border-[#E6DFD5] border-t-[#FF6B2C] rounded-full animate-spin mb-3" />
-        <p className="text-xs font-mono uppercase tracking-widest text-[#7A7268]">Gathering critical safety data…</p>
+      <div className="py-32 flex flex-col items-center justify-center font-sans">
+        <div className="w-4 h-4 border-2 border-stone-200 border-t-stone-900 rounded-full animate-spin mb-4" />
+        <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-stone-400">Loading Directory...</p>
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="bg-white border border-[#E6DFD5] rounded-3xl p-10 text-center flex flex-col items-center gap-4 font-sans">
-        <div className="w-14 h-14 rounded-full bg-[#FAF6F0] flex items-center justify-center text-[#FF6B2C]">
-          <AlertTriangle className="w-7 h-7" />
-        </div>
-        <div>
-          <h3 className="text-xl font-serif font-bold text-[#1E1C1A]">Information Unavailable</h3>
-          <p className="text-sm text-[#7A7268] mt-1 max-w-md mx-auto">
-            Unable to retrieve safety data for this destination. In an emergency, dial local emergency services directly.
-          </p>
-        </div>
+      <div className="py-20 text-center font-sans px-6">
+        <h3 className="text-lg font-black text-stone-900 mb-2">Directory Unavailable</h3>
+        <p className="text-sm text-stone-500">
+          Unable to retrieve safety data for this destination. In an emergency, dial local emergency services directly.
+        </p>
       </div>
     );
   }
@@ -109,224 +90,118 @@ export default function EmergencyInfoView({ destinationName, passportNationality
   const isLiveLocation = hospitals.locationSource === 'live';
 
   return (
-    <div className="flex flex-col gap-4 sm:gap-6 font-sans">
+    <div className="flex flex-col gap-10 font-sans pb-10">
       
-      {/* PERSISTENT EMERGENCY SAFETY DISCLAIMER BANNER */}
-      <div className="bg-[#FFF5F2] border border-[#FF6B2C]/30 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-2xs flex items-start sm:items-center justify-between gap-3 sm:gap-4">
-        <div className="flex items-start sm:items-center gap-3 sm:gap-4">
-          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-[#FF6B2C] text-white flex items-center justify-center shrink-0 shadow-xs">
-            <ShieldAlert className="w-4.5 h-4.5 sm:w-5 sm:h-5 stroke-[2.2]" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-mono text-[9.5px] sm:text-[10px] font-extrabold uppercase tracking-widest text-[#FF6B2C] bg-[#FF6B2C]/10 px-2 py-0.5 rounded-md">
-                Critical Safety Notice
+      {/* HEADER / DISCLAIMER */}
+      <div className="flex flex-col items-center text-center pt-2 pb-6 border-b border-stone-200">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D] animate-pulse" />
+          <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-stone-500">
+            Official Directory • {data.countryMatched}
+          </span>
+          {data.criticalForOffline && (
+            <>
+              <span className="text-stone-300">•</span>
+              <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-emerald-600">
+                Offline Ready
               </span>
-              {data.criticalForOffline && (
-                <span className="font-mono text-[8.5px] sm:text-[9px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-md flex items-center gap-1">
-                  <WifiOff className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> Offline Ready
-                </span>
-              )}
-            </div>
-            <p className="text-[11px] sm:text-xs font-semibold text-[#1E1C1A] mt-1 leading-snug">
-              In an emergency, dial local emergency numbers directly.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* SECTION 1: LOCAL EMERGENCY NUMBERS (Compact 3-dialer mobile grid) */}
-      <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#E6DFD5] p-4 sm:p-6 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-[#E6DFD5] pb-3 mb-3.5 sm:mb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#FAF6F0] border border-[#E6DFD5] flex items-center justify-center text-[#FF6B2C] shrink-0">
-              <PhoneCall className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="text-[9.5px] sm:text-[10px] font-mono uppercase tracking-widest text-[#7A7268] font-bold block">
-                Immediate Response
-              </span>
-              <h3 className="text-base sm:text-lg font-serif font-black text-[#1E1C1A] leading-tight">
-                Emergency Numbers · {data.countryMatched}
-              </h3>
-            </div>
-          </div>
-          {emergencyNumbers.note && (
-            <span className="text-[11px] sm:text-xs font-serif italic text-[#7A7268] self-start sm:self-center">
-              💡 {emergencyNumbers.note}
-            </span>
+            </>
           )}
         </div>
-
-        <div className="grid grid-cols-3 gap-2 sm:gap-4">
-          
-          {/* POLICE CARD */}
-          <div className="bg-[#FAF6F0] border border-[#E6DFD5] rounded-xl sm:rounded-2xl p-2.5 sm:p-4 flex flex-col justify-between items-center sm:items-stretch text-center sm:text-left transition-all hover:border-[#FF6B2C]/50 shadow-2xs">
-            <div className="w-full">
-              <div className="flex items-center justify-center sm:justify-between text-[9px] sm:text-xs font-mono font-bold uppercase tracking-wider text-[#7A7268] mb-1 sm:mb-1.5">
-                <span className="truncate">Police</span>
-                <span className="text-xs sm:text-sm hidden sm:inline">👮‍♂️</span>
-              </div>
-              <div className="text-lg sm:text-2xl lg:text-3xl font-serif font-black text-[#1E1C1A] tracking-tight">
-                {emergencyNumbers.police}
-              </div>
-            </div>
-            <a
-              href={`tel:${emergencyNumbers.police.split('/')[0].trim()}`}
-              className="mt-2 sm:mt-3.5 w-full py-1.5 sm:py-2.5 px-1 sm:px-3 rounded-lg sm:rounded-xl bg-[#1E1C1A] text-white hover:bg-[#FF6B2C] active:scale-95 text-[11px] sm:text-xs font-bold font-sans flex items-center justify-center gap-1 sm:gap-1.5 transition-all shadow-2xs"
-            >
-              <PhoneCall className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              <span>Call</span>
-            </a>
-          </div>
-
-          {/* FIRE CARD */}
-          <div className="bg-[#FAF6F0] border border-[#E6DFD5] rounded-xl sm:rounded-2xl p-2.5 sm:p-4 flex flex-col justify-between items-center sm:items-stretch text-center sm:text-left transition-all hover:border-[#FF6B2C]/50 shadow-2xs">
-            <div className="w-full">
-              <div className="flex items-center justify-center sm:justify-between text-[9px] sm:text-xs font-mono font-bold uppercase tracking-wider text-[#7A7268] mb-1 sm:mb-1.5">
-                <span className="truncate">Fire</span>
-                <span className="text-xs sm:text-sm hidden sm:inline">🚒</span>
-              </div>
-              <div className="text-lg sm:text-2xl lg:text-3xl font-serif font-black text-[#1E1C1A] tracking-tight">
-                {emergencyNumbers.fire}
-              </div>
-            </div>
-            <a
-              href={`tel:${emergencyNumbers.fire.split('/')[0].trim()}`}
-              className="mt-2 sm:mt-3.5 w-full py-1.5 sm:py-2.5 px-1 sm:px-3 rounded-lg sm:rounded-xl bg-[#1E1C1A] text-white hover:bg-[#FF6B2C] active:scale-95 text-[11px] sm:text-xs font-bold font-sans flex items-center justify-center gap-1 sm:gap-1.5 transition-all shadow-2xs"
-            >
-              <PhoneCall className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              <span>Call</span>
-            </a>
-          </div>
-
-          {/* AMBULANCE CARD */}
-          <div className="bg-[#FAF6F0] border border-[#E6DFD5] rounded-xl sm:rounded-2xl p-2.5 sm:p-4 flex flex-col justify-between items-center sm:items-stretch text-center sm:text-left transition-all hover:border-[#FF6B2C]/50 shadow-2xs">
-            <div className="w-full">
-              <div className="flex items-center justify-center sm:justify-between text-[9px] sm:text-xs font-mono font-bold uppercase tracking-wider text-[#7A7268] mb-1 sm:mb-1.5">
-                <span className="truncate">Medic</span>
-                <span className="text-xs sm:text-sm hidden sm:inline">🚑</span>
-              </div>
-              <div className="text-lg sm:text-2xl lg:text-3xl font-serif font-black text-[#1E1C1A] tracking-tight">
-                {emergencyNumbers.ambulance}
-              </div>
-            </div>
-            <a
-              href={`tel:${emergencyNumbers.ambulance.split('/')[0].trim()}`}
-              className="mt-2 sm:mt-3.5 w-full py-1.5 sm:py-2.5 px-1 sm:px-3 rounded-lg sm:rounded-xl bg-[#1E1C1A] text-white hover:bg-[#FF6B2C] active:scale-95 text-[11px] sm:text-xs font-bold font-sans flex items-center justify-center gap-1 sm:gap-1.5 transition-all shadow-2xs"
-            >
-              <PhoneCall className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              <span>Call</span>
-            </a>
-          </div>
-
-        </div>
+        <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-stone-900 mb-2">
+          Emergency Contacts
+        </h2>
+        <p className="text-sm text-stone-500 max-w-sm">
+          In an emergency, dial local services directly. Data provided by official local authorities.
+        </p>
       </div>
 
-      {/* SECTION 2: NEAREST EMBASSY / CONSULATE */}
-      <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#E6DFD5] p-4 sm:p-6 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#E6DFD5] pb-3 mb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#FAF6F0] border border-[#E6DFD5] flex items-center justify-center text-[#FF6B2C] shrink-0">
-              <Building2 className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="text-[9.5px] sm:text-[10px] font-mono uppercase tracking-widest text-[#7A7268] font-bold block">
-                Diplomatic Representation
+      {/* SECTION 1: LOCAL EMERGENCY NUMBERS */}
+      <div>
+        <div className="grid grid-cols-3 divide-x divide-stone-200 border-y border-stone-200">
+          {[
+            { label: 'Police', number: emergencyNumbers.police },
+            { label: 'Fire', number: emergencyNumbers.fire },
+            { label: 'Medical', number: emergencyNumbers.ambulance }
+          ].map((service, i) => (
+            <div key={i} className="py-6 px-2 flex flex-col items-center justify-center text-center group">
+              <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-stone-400 mb-3">
+                {service.label}
               </span>
-              <h3 className="text-base sm:text-lg font-serif font-black text-[#1E1C1A] leading-tight">
-                Nearest Embassy / Consulate
-              </h3>
+              <div className="text-3xl sm:text-4xl font-black text-stone-900 tracking-tighter mb-4">
+                {service.number}
+              </div>
+              <a
+                href={`tel:${service.number.split('/')[0].trim()}`}
+                className="font-mono text-[10px] font-bold tracking-widest uppercase text-stone-900 group-hover:text-[#FF5B1D] transition-colors border-b border-stone-900 group-hover:border-[#FF5B1D] pb-0.5"
+              >
+                Dial Now ↗
+              </a>
             </div>
-          </div>
+          ))}
+        </div>
+        {emergencyNumbers.note && (
+          <p className="text-center font-mono text-[10px] text-stone-400 mt-4 uppercase tracking-widest">
+            Note: {emergencyNumbers.note}
+          </p>
+        )}
+      </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            <span className="text-[11px] sm:text-xs font-mono text-[#7A7268] font-bold">Passport:</span>
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] sm:text-xs font-bold uppercase">
+      {/* SECTION 2: EMBASSY */}
+      <div>
+        <div className="flex items-end justify-between mb-4 px-1">
+          <h3 className="font-serif text-lg font-black tracking-tight text-stone-900">
+            Diplomatic Mission
+          </h3>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[9px] text-stone-400 uppercase tracking-widest">Passport:</span>
+            <span className="font-mono text-[10px] font-bold text-stone-900 uppercase">
               {passportNationality || 'Not Set'}
             </span>
-            <Link
-              href="/settings"
-              className="text-[11px] sm:text-xs text-[#FF6B2C] hover:underline font-bold ml-0.5"
-            >
+            <Link href="/settings" className="font-mono text-[9px] text-[#FF5B1D] uppercase tracking-widest hover:underline ml-1">
               Change
             </Link>
           </div>
         </div>
 
         {!passportNationality ? (
-          <div className="bg-[#FAF6F0] border border-[#E6DFD5] rounded-xl sm:rounded-2xl p-5 text-center flex flex-col items-center gap-2.5">
-            <Book className="w-7 h-7 text-[#FF6B2C]" />
-            <h4 className="font-serif font-bold text-sm sm:text-base text-[#1E1C1A]">Passport Nationality Missing</h4>
-            <p className="text-xs text-[#7A7268] max-w-md">
-              Please select your passport nationality in Settings to view your official diplomatic mission details in {destinationName}.
-            </p>
-            <Link
-              href="/settings"
-              className="mt-1 px-4 py-2 rounded-xl bg-[#1E1C1A] text-white text-xs font-bold hover:bg-[#FF6B2C] transition-colors"
-            >
-              Set Passport Nationality →
+          <div className="py-8 border-y border-stone-200 flex flex-col items-center text-center">
+            <p className="text-sm text-stone-500 mb-4">Set your passport nationality to view your official diplomatic mission details.</p>
+            <Link href="/settings" className="font-mono text-[10px] font-bold tracking-widest uppercase text-stone-900 border border-stone-200 px-6 py-2 hover:bg-stone-50 transition-colors">
+              Set Nationality
             </Link>
           </div>
         ) : !embassy.coverage ? (
-          <div className="bg-[#FFF9F5] border-l-4 border-[#FF6B2C] rounded-r-xl sm:rounded-r-2xl p-4 sm:p-5 text-left">
-            <h4 className="font-serif font-bold text-sm sm:text-base text-[#1E1C1A] mb-1">
-              Embassy Lookup Notice
-            </h4>
-            <p className="text-xs text-[#7A7268] leading-relaxed mb-3">
-              {embassy.message}
-            </p>
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${passportNationality} Embassy ${destinationName}`)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1E1C1A] text-white text-xs font-bold hover:bg-[#FF6B2C] transition-colors"
-            >
-              <span>Search {passportNationality} Mission via Maps</span>
-              <ExternalLink className="w-3.5 h-3.5" />
+          <div className="py-6 border-y border-stone-200 px-4">
+            <p className="text-sm text-stone-600 mb-4">{embassy.message}</p>
+            <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${passportNationality} Embassy ${destinationName}`)}`} target="_blank" rel="noopener noreferrer" className="font-mono text-[10px] font-bold tracking-widest uppercase text-[#FF5B1D] hover:text-stone-900 transition-colors flex items-center gap-2">
+              Search via Maps <ExternalLink className="w-3 h-3" />
             </a>
           </div>
         ) : (
-          <div className="bg-[#FAF6F0] border border-[#E6DFD5] rounded-xl sm:rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1.5 flex-1 min-w-0">
-              <h4 className="font-serif font-black text-base sm:text-lg text-[#1E1C1A] leading-snug">
+          <div className="border-y border-stone-200 flex flex-col sm:flex-row">
+            <div className="flex-1 py-5 pr-4 sm:border-r border-stone-200 sm:border-b-0 border-b">
+              <h4 className="font-black text-base text-stone-900 mb-2">
                 {embassy.data.name}
               </h4>
-              <p className="text-xs font-sans text-[#5F5E5A] flex items-start gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-[#FF6B2C] shrink-0 mt-0.5" />
-                <span className="leading-relaxed">{embassy.data.address}</span>
+              <p className="text-sm text-stone-500 mb-4 max-w-sm">
+                {embassy.data.address}
               </p>
               {embassy.data.phone && (
-                <p className="text-xs font-sans text-[#5F5E5A] flex items-center gap-1.5">
-                  <PhoneCall className="w-3.5 h-3.5 text-[#FF6B2C] shrink-0" />
-                  <a href={`tel:${embassy.data.phone.split('/')[0].trim()}`} className="font-bold text-[#1E1C1A] hover:text-[#FF6B2C] underline decoration-[#1E1C1A]/30">
-                    {embassy.data.phone}
-                  </a>
-                </p>
+                <a href={`tel:${embassy.data.phone.split('/')[0].trim()}`} className="font-mono text-[11px] font-bold tracking-widest uppercase text-stone-900 hover:text-[#FF5B1D] transition-colors block">
+                  Tel: {embassy.data.phone}
+                </a>
               )}
             </div>
-
-            <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex sm:items-center shrink-0">
+            <div className="flex sm:flex-col divide-x sm:divide-x-0 sm:divide-y divide-stone-200 min-w-[140px]">
               {embassy.data.website && (
-                <a
-                  href={embassy.data.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3.5 py-2 rounded-xl border border-[#E6DFD5] bg-white hover:bg-[#FAF6F0] text-xs font-bold text-[#1E1C1A] flex items-center justify-center gap-1.5 transition-all shadow-2xs"
-                >
-                  <span>Website</span>
-                  <ExternalLink className="w-3 h-3" />
+                <a href={embassy.data.website} target="_blank" rel="noopener noreferrer" className="flex-1 py-4 flex items-center justify-center gap-2 font-mono text-[10px] font-bold tracking-widest uppercase text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-colors">
+                  Website ↗
                 </a>
               )}
               {embassy.data.mapUrl && (
-                <a
-                  href={embassy.data.mapUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2 rounded-xl bg-[#1E1C1A] text-white hover:bg-[#FF6B2C] text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs"
-                >
-                  <Navigation className="w-3 h-3" />
-                  <span>Directions</span>
+                <a href={embassy.data.mapUrl} target="_blank" rel="noopener noreferrer" className="flex-1 py-4 flex items-center justify-center gap-2 font-mono text-[10px] font-bold tracking-widest uppercase text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-colors">
+                  Directions ↗
                 </a>
               )}
             </div>
@@ -334,128 +209,55 @@ export default function EmergencyInfoView({ destinationName, passportNationality
         )}
       </div>
 
-      {/* SECTION 3: NEAREST HOSPITALS & ER */}
-      <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#E6DFD5] p-4 sm:p-6 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-[#E6DFD5] pb-3 mb-3.5 sm:mb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#FAF6F0] border border-[#E6DFD5] flex items-center justify-center text-[#FF6B2C] shrink-0">
-              <Stethoscope className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="text-[9.5px] sm:text-[10px] font-mono uppercase tracking-widest text-[#7A7268] font-bold block">
-                Medical &amp; Healthcare Facilities
-              </span>
-              <h3 className="text-base sm:text-lg font-serif font-black text-[#1E1C1A] leading-tight">
-                Nearest Hospitals &amp; ER
-              </h3>
-            </div>
-          </div>
-
-          <button
-            onClick={requestLiveLocation}
-            disabled={geoLoading}
-            className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border text-[11px] sm:text-xs font-bold font-sans flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs self-start sm:self-auto ${
-              isLiveLocation
-                ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
-                : 'bg-[#FAF6F0] border-[#E6DFD5] hover:bg-white text-[#1E1C1A]'
-            }`}
-          >
-            {geoLoading ? (
-              <RefreshCw className="w-3 h-3 animate-spin text-[#FF6B2C]" />
-            ) : (
-              <Navigation className={`w-3 h-3 ${isLiveLocation ? 'text-emerald-600' : 'text-[#FF6B2C]'}`} />
-            )}
-            <span>{isLiveLocation ? 'Using Live GPS' : 'Use My Live Location'}</span>
+      {/* SECTION 3: HOSPITALS */}
+      <div>
+        <div className="flex items-end justify-between mb-4 px-1">
+          <h3 className="font-serif text-lg font-black tracking-tight text-stone-900">
+            Medical Facilities
+          </h3>
+          <button onClick={requestLiveLocation} disabled={geoLoading} className="font-mono text-[9px] font-bold tracking-widest uppercase flex items-center gap-1.5 transition-colors text-stone-400 hover:text-stone-900 cursor-pointer">
+            {geoLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Navigation className={`w-3 h-3 ${isLiveLocation ? 'text-emerald-500' : ''}`} />}
+            {isLiveLocation ? 'Live GPS Active' : 'Use GPS'}
           </button>
         </div>
 
-        {/* LOCATION PERMISSION NOTICE / CITY CENTER FALLBACK NOTE */}
         {!isLiveLocation && (
-          <div className="bg-[#FAF6F0] border border-[#E6DFD5] rounded-xl sm:rounded-2xl p-3 sm:p-3.5 mb-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] sm:text-xs text-[#7A7268]">
-            <div className="flex items-center gap-1.5">
-              <span>📍</span>
-              <p>
-                Showing facilities near <strong>{destinationName} Center</strong>.
-              </p>
-            </div>
-            <button
-              onClick={requestLiveLocation}
-              className="text-[#FF6B2C] hover:underline font-bold shrink-0 text-left cursor-pointer"
-            >
-              Enable GPS Location →
-            </button>
-          </div>
+          <p className="text-xs text-stone-400 mb-4 px-1">Showing facilities near {destinationName} center.</p>
         )}
-
         {geoError && (
-          <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-2.5 mb-3 text-xs font-semibold">
-            ⚠️ {geoError}
-          </div>
+          <p className="text-[10px] font-mono text-red-500 mb-4 px-1">{geoError}</p>
         )}
 
-        {/* HOSPITALS LIST */}
-        <div className="flex flex-col gap-2.5 sm:gap-3.5">
+        <div className="border-t border-stone-200 divide-y divide-stone-200">
           {hospitals.items.map((hosp, idx) => (
-            <div
-              key={idx}
-              className="p-3.5 sm:p-4.5 rounded-xl sm:rounded-2xl border border-[#E6DFD5] bg-[#FAF6F0] flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 hover:border-[#FF6B2C]/50 transition-colors shadow-2xs"
-            >
-              <div className="space-y-1 flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <h4 className="font-serif font-bold text-sm sm:text-base text-[#1E1C1A]">
+            <div key={idx} className="flex flex-col sm:flex-row py-5 gap-4">
+              <div className="flex-1 pr-4">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <h4 className="font-black text-sm text-stone-900">
                     {hosp.name}
                   </h4>
-                  {hosp.is24Hours && (
-                    <span className="px-2 py-px rounded-full bg-emerald-100 text-emerald-800 text-[9.5px] sm:text-[10px] font-bold font-mono uppercase">
-                      24/7 ER
-                    </span>
-                  )}
-                  {hosp.traumaCenter && (
-                    <span className="px-2 py-px rounded-full bg-[#FF6B2C]/15 text-[#FF6B2C] text-[9.5px] sm:text-[10px] font-bold font-mono uppercase">
-                      Trauma Center
-                    </span>
-                  )}
+                  {hosp.is24Hours && <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-1.5 py-0.5">24/7 ER</span>}
+                  {hosp.traumaCenter && <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-[#FF5B1D] bg-[#FF5B1D]/10 px-1.5 py-0.5">Trauma</span>}
                 </div>
-
-                <p className="text-[11px] sm:text-xs font-sans text-[#5F5E5A] flex items-start gap-1.5">
-                  <MapPin className="w-3 h-3 text-[#FF6B2C] shrink-0 mt-0.5" />
-                  <span className="leading-snug">{hosp.address}</span>
-                </p>
-
-                <div className="flex items-center gap-3 text-[10.5px] sm:text-xs text-[#7A7268] pt-0.5">
-                  <span>Phone: <strong className="text-[#1E1C1A]">{hosp.phone}</strong></span>
-                  <span>•</span>
-                  <span>Proximity: <strong className="text-[#1E1C1A]">{hosp.distanceStr}</strong></span>
+                <p className="text-[13px] text-stone-500 mb-2">{hosp.address}</p>
+                <div className="flex items-center gap-3 font-mono text-[10px] text-stone-400 uppercase tracking-widest">
+                  <span>Proximity: {hosp.distanceStr}</span>
                 </div>
               </div>
-
-              <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex sm:items-center shrink-0">
-                <a
-                  href={`tel:${hosp.phone.split('/')[0].trim()}`}
-                  className="px-3 py-2 rounded-xl border border-[#E6DFD5] bg-white hover:bg-[#FAF6F0] text-xs font-bold text-[#1E1C1A] flex items-center justify-center gap-1.5 transition-all shadow-2xs"
-                >
-                  <PhoneCall className="w-3 h-3 text-[#FF6B2C]" />
-                  <span>Call Hospital</span>
+              <div className="flex sm:flex-col gap-2 min-w-[120px]">
+                <a href={`tel:${hosp.phone.split('/')[0].trim()}`} className="flex-1 border border-stone-200 py-2.5 flex items-center justify-center font-mono text-[9px] font-bold uppercase tracking-widest text-stone-900 hover:border-stone-900 transition-colors">
+                  Call
                 </a>
-
                 {hosp.mapUrl && (
-                  <a
-                    href={hosp.mapUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3.5 py-2 rounded-xl bg-[#1E1C1A] text-white hover:bg-[#FF6B2C] text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs"
-                  >
-                    <Navigation className="w-3 h-3" />
-                    <span>Map Link</span>
+                  <a href={hosp.mapUrl} target="_blank" rel="noopener noreferrer" className="flex-1 border border-stone-200 py-2.5 flex items-center justify-center font-mono text-[9px] font-bold uppercase tracking-widest text-stone-900 hover:border-stone-900 transition-colors">
+                    Map
                   </a>
                 )}
               </div>
             </div>
           ))}
         </div>
-
       </div>
-
     </div>
   );
 }
