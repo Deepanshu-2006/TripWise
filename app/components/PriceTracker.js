@@ -1233,65 +1233,77 @@ export default function PriceTracker({
                 });
 
                 return (
-                  <div className="bg-white rounded-2xl border-2 border-[#FF6B2C] p-4 sm:p-5 shadow-sm space-y-3">
-                    {/* Top Badge & Flight Details */}
-                    <div>
-                      <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                        <span className="bg-[#FF6B2C] text-white text-[9.5px] uppercase font-black px-2 py-0.5 rounded">Selected Flight</span>
-                        <span className="text-sm font-bold text-[#1E1C1A]">{flight.airline}</span>
-                        <span className="text-[10.5px] font-mono text-[#7A7268] bg-[#F5F0E8] px-1.5 py-0.5 rounded">{flight.flightNumber}</span>
-                      </div>
-                      <div className="text-xs font-medium text-[#7A7268] flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                        <span className="font-semibold text-[#1E1C1A]">{flight.departureTime} – {flight.arrivalTime}</span>
-                        <span>&middot;</span>
-                        <span>{flight.duration}</span>
-                        <span>&middot;</span>
-                        <span className={flight.stops === 0 ? 'text-emerald-700 font-bold' : 'text-[#4A443E]'}>
-                          {flight.stops === 0 ? 'Nonstop' : `1 Stop ${flight.via ? `via ${flight.via}` : ''}`}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Price & Action Row */}
-                    <div className="pt-3 border-t border-[#E6DFD5] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                      <div>
-                        <div className="text-xl sm:text-2xl font-serif font-black text-[#1E1C1A]">
-                          {formatCurrency(convertCurrency(flight.price, 'USD', displayCurrency), displayCurrency)}
+                  <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-[#E6DFD5] flex flex-col gap-3 transition-all hover:shadow-md">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                      {/* Left: Flight Details */}
+                      <div className="flex-1">
+                        {/* Elegant minimal tag */}
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <div className="w-1.5 h-1.5 rounded-full bg-[#FF6B2C]" />
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-[#8C827A]">
+                            Selected Flight
+                          </span>
                         </div>
-                        <div className="text-[10px] text-[#7A7268] uppercase font-bold tracking-wider">Round Trip Total</div>
+                        
+                        <div className="flex items-baseline gap-2 mb-1">
+                          <h4 className="text-lg font-bold text-[#1E1C1A] leading-tight">{flight.airline}</h4>
+                          <span className="text-[10px] font-mono font-bold text-[#8C827A] uppercase tracking-wider bg-[#F5F0E8] px-1 rounded">{flight.flightNumber}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-3 text-sm font-bold text-[#1E1C1A]">
+                          <span>{flight.departureTime}</span>
+                          <div className="w-8 h-[1.5px] bg-[#E6DFD5] relative">
+                            <div className="absolute right-0 -top-1 w-2 h-2 border-t-[1.5px] border-r-[1.5px] border-[#E6DFD5] rotate-45" />
+                          </div>
+                          <span>{flight.arrivalTime}</span>
+                        </div>
+                        
+                        <div className="text-xs font-medium text-[#7A7268] flex items-center gap-1.5 mt-1">
+                          <span>{flight.duration}</span>
+                          <span className="w-1 h-1 rounded-full bg-[#D5CBBF]" />
+                          <span className={flight.stops === 0 ? 'text-emerald-700 font-bold' : 'text-[#7A7268]'}>
+                            {flight.stops === 0 ? 'Nonstop' : `1 Stop ${flight.via ? `via ${flight.via}` : ''}`}
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <button 
-                          onClick={() => handleClearSelection('flight')}
-                          className="px-3 py-2.5 rounded-xl border border-[#E6DFD5] text-xs font-bold text-[#7A7268] hover:text-[#1E1C1A] hover:bg-[#FAF6F0] transition-colors cursor-pointer"
-                        >
-                          Change
-                        </button>
-
-                        <button 
-                          onClick={() => handleRedirect('flight', flightLinkInfo)}
-                          disabled={redirectingType === 'flight'}
-                          className="flex-1 sm:flex-initial bg-[#1E1C1A] hover:bg-[#FF6B2C] text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer whitespace-nowrap"
-                        >
-                          {redirectingType === 'flight' ? (
-                            <>
+                      {/* Right: Price & Actions */}
+                      <div className="flex flex-col sm:items-end w-full sm:w-auto gap-3 border-t sm:border-t-0 sm:border-l border-[#E6DFD5] pt-3 sm:pt-0 sm:pl-5">
+                        <div className="flex flex-row sm:flex-col justify-between sm:justify-start items-center sm:items-end w-full">
+                          <div className="text-[9px] font-bold uppercase tracking-wider text-[#8C827A] sm:mb-0.5">Round Trip</div>
+                          <div className="text-xl sm:text-2xl font-black tracking-tight text-[#1E1C1A]">
+                            {formatCurrency(convertCurrency(flight.price, 'USD', displayCurrency), displayCurrency)}
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                          <button 
+                            onClick={() => handleClearSelection('flight')}
+                            className="px-4 py-2 rounded-xl text-xs font-bold text-[#7A7268] hover:text-[#1E1C1A] hover:bg-[#FAF6F0] transition-colors cursor-pointer shrink-0 border border-[#E6DFD5] sm:border-transparent"
+                          >
+                            Change
+                          </button>
+                          <button 
+                            onClick={() => handleRedirect('flight', flightLinkInfo)}
+                            disabled={redirectingType === 'flight'}
+                            className="flex-1 sm:flex-initial bg-black hover:bg-neutral-800 text-white px-5 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
+                          >
+                            {redirectingType === 'flight' ? (
                               <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
-                              <span>Refreshing...</span>
-                            </>
-                          ) : (
-                            <>
-                              <ExternalLink className="w-3.5 h-3.5 text-[#FF6B2C]" />
-                              <span>Book on Skyscanner</span>
-                            </>
-                          )}
-                        </button>
+                            ) : (
+                              <>
+                                <span>Book</span>
+                                <ExternalLink className="w-3 h-3 opacity-70" />
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
 
                     {flightLinkInfo.disclosureNote && (
-                      <div className="text-[10.5px] text-[#7A7268] font-medium flex items-center gap-1 pt-1">
-                        <AlertCircle className="w-3 h-3 text-amber-600 shrink-0" />
+                      <div className="pt-2 border-t border-[#E6DFD5]/50 text-[10px] text-[#8C827A] font-medium flex items-start gap-1.5">
+                        <AlertCircle className="w-3 h-3 text-[#FF6B2C] shrink-0 mt-0.5" />
                         <span>{flightLinkInfo.disclosureNote}</span>
                       </div>
                     )}
@@ -1630,35 +1642,52 @@ export default function PriceTracker({
                   const hotelLinkInfo = getBookingLinkInfo(destinationName, 'hotel', hotel, { startDate, endDate });
 
                   return (
-                    <div className="space-y-3">
-                      <div className="bg-white rounded-2xl border-2 border-[#FF6B2C] p-4 sm:p-5 shadow-sm space-y-3">
-                        <div className="flex items-start gap-3">
+                    <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-[#E6DFD5] flex flex-col gap-3 transition-all hover:shadow-md">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        
+                        {/* Left: Image & Info */}
+                        <div className="flex items-start gap-4 flex-1">
                           <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-[#FAF6F0] shrink-0 border border-[#E6DFD5]">
                             <Image src={hotel.image} alt={hotel.name} fill className="object-cover" />
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-[9.5px] font-mono font-bold text-[#FF6B2C] uppercase tracking-wider mb-0.5">
-                              Selected Basecamp Stay
+                          
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <div className="w-1.5 h-1.5 rounded-full bg-[#FF6B2C]" />
+                              <span className="text-[9px] font-bold uppercase tracking-wider text-[#8C827A]">
+                                Basecamp Stay
+                              </span>
                             </div>
-                            <h4 className="text-sm sm:text-base font-serif font-bold text-[#1E1C1A] truncate">{hotel.name}</h4>
-                            <p className="text-xs text-[#7A7268] mt-0.5">{hotel.distance} &middot; {hotel.rating} Stars</p>
+                            
+                            <h4 className="text-lg font-bold text-[#1E1C1A] leading-tight tracking-tight">{hotel.name}</h4>
+                            <div className="text-xs font-medium text-[#7A7268] flex items-center gap-1.5 flex-wrap">
+                              <span className="whitespace-nowrap">{hotel.distance}</span>
+                              <span className="w-1 h-1 rounded-full bg-[#D5CBBF] shrink-0" />
+                              <span className="flex items-center gap-1 text-[#1E1C1A] font-bold whitespace-nowrap">
+                                <Sparkles className="w-3 h-3 text-[#FF6B2C] shrink-0" /> {hotel.rating} Stars
+                              </span>
+                            </div>
                           </div>
                         </div>
 
-                        <div className="pt-3 border-t border-[#E6DFD5] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                          <div>
-                            <div className="text-xl sm:text-2xl font-serif font-black text-[#1E1C1A]">
-                              {formatCurrency(convertCurrency(hotel.price, 'USD', displayCurrency), displayCurrency)}<span className="text-xs text-[#7A7268] font-bold">/night</span>
-                            </div>
-                            <div className="text-[10.5px] text-[#7A7268]">
-                              {formatCurrency(convertCurrency(hotel.price * stayNights, 'USD', displayCurrency), displayCurrency)} total ({stayNights} nights)
+                        {/* Right: Price & Actions */}
+                        <div className="flex flex-col sm:items-end w-full sm:w-auto gap-3 border-t sm:border-t-0 sm:border-l border-[#E6DFD5] pt-3 sm:pt-0 sm:pl-5">
+                          <div className="flex flex-row sm:flex-col justify-between sm:justify-start items-center sm:items-end w-full">
+                            <div className="text-[9px] font-bold uppercase tracking-wider text-[#8C827A] sm:mb-0.5">Per Night</div>
+                            <div className="flex items-baseline gap-2 sm:gap-0 sm:flex-col sm:items-end">
+                              <div className="text-xl sm:text-2xl font-black tracking-tight text-[#1E1C1A]">
+                                {formatCurrency(convertCurrency(hotel.price, 'USD', displayCurrency), displayCurrency)}
+                              </div>
+                              <div className="text-[10px] font-bold text-[#8C827A]">
+                                {formatCurrency(convertCurrency(hotel.price * stayNights, 'USD', displayCurrency), displayCurrency)} Total
+                              </div>
                             </div>
                           </div>
-
-                          <div className="flex items-center gap-2">
+                          
+                          <div className="flex items-center gap-2 w-full sm:w-auto">
                             <button 
                               onClick={() => handleClearSelection('hotel')} 
-                              className="px-3 py-2.5 rounded-xl border border-[#E6DFD5] text-xs font-bold text-[#7A7268] hover:text-[#1E1C1A] hover:bg-[#FAF6F0] transition-colors cursor-pointer"
+                              className="px-4 py-2 rounded-xl text-xs font-bold text-[#7A7268] hover:text-[#1E1C1A] hover:bg-[#FAF6F0] transition-colors cursor-pointer shrink-0 border border-[#E6DFD5] sm:border-transparent"
                             >
                               Change
                             </button>
@@ -1666,19 +1695,22 @@ export default function PriceTracker({
                               href={hotelLinkInfo.url} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="flex-1 sm:flex-initial bg-[#1E1C1A] hover:bg-[#FF6B2C] text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-sm whitespace-nowrap"
+                              className="flex-1 sm:flex-initial bg-black hover:bg-neutral-800 text-white px-5 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
                             >
-                              <span>Book on {hotelLinkInfo.partnerName || 'Booking.com'}</span>
-                              <ExternalLink className="w-3.5 h-3.5" />
+                              <span>Book</span>
+                              <ExternalLink className="w-3 h-3 opacity-70" />
                             </a>
                           </div>
                         </div>
                       </div>
 
-                      {/* Re-optimize Button */}
-                      <div className="p-3.5 bg-white rounded-2xl border border-[#E6DFD5] flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xs">
-                        <div className="text-xs text-[#7A7268] text-center sm:text-left">
-                          Want your daily schedule centered around this hotel?
+                      {/* Re-optimize Action - Integrated Footer */}
+                      <div className="mt-1 -mx-4 -mb-4 sm:-mx-5 sm:-mb-5 px-4 py-3 sm:px-5 sm:py-3.5 bg-[#FAF6F0] border-t border-[#E6DFD5] flex flex-col sm:flex-row items-center justify-between gap-3 rounded-b-2xl">
+                        <div className="flex items-center gap-2 text-[10.5px] font-medium text-[#7A7268] text-center sm:text-left">
+                          <div className="hidden sm:flex w-6 h-6 rounded-full bg-white items-center justify-center shadow-sm border border-[#E6DFD5] shrink-0">
+                            <Sparkles className="w-3 h-3 text-[#FF6B2C]" />
+                          </div>
+                          <span>Build a smart daily itinerary anchored to this basecamp.</span>
                         </div>
                         <button
                           onClick={async () => {
@@ -1689,17 +1721,17 @@ export default function PriceTracker({
                             }
                           }}
                           disabled={isReoptimizing}
-                          className="w-full sm:w-auto bg-[#FF6B2C] hover:bg-[#e0591e] text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-75"
+                          className="w-full sm:w-auto bg-white hover:bg-[#1E1C1A] hover:text-white hover:border-[#1E1C1A] text-[#1E1C1A] border border-[#E6DFD5] px-4 py-2 rounded-xl text-[10px] font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                         >
                           {isReoptimizing ? (
                             <>
-                              <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                              <Loader2 className="w-3 h-3 animate-spin" />
                               <span>Re-optimizing...</span>
                             </>
                           ) : (
                             <>
-                              <Sparkles className="w-3.5 h-3.5" />
-                              <span>Re-optimize Itinerary</span>
+                              <Sparkles className="w-3 h-3 sm:hidden text-[#FF6B2C]" />
+                              <span>Auto-Schedule</span>
                             </>
                           )}
                         </button>
@@ -2245,30 +2277,30 @@ export default function PriceTracker({
       </div>
 
       {/* ── 5. Main Control Suite ── */}
-      <div className="relative z-10 space-y-3.5 sm:space-y-4 text-left mb-6 sm:mb-10 max-w-2xl mx-auto">
-        {/* Departure Terminal Card */}
+      <div className="relative z-10 space-y-6 sm:space-y-8 text-left mb-8 max-w-2xl mx-auto mt-6">
+        {/* Departure Terminal Section */}
         <motion.div 
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="relative z-50 bg-[#FFFFFF] border border-[#EAE3D9] rounded-2xl sm:rounded-[28px] p-3.5 sm:p-7 shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-black/[0.02] space-y-3.5 sm:space-y-4"
+          className="relative z-50 space-y-3"
         >
-          {/* Header */}
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-[10px] sm:text-[11px] font-sans font-bold text-[#FF6B2C] uppercase tracking-wider flex items-center gap-1.5">
-              <Plane className="w-3.5 h-3.5 text-[#FF6B2C]" />
+          {/* Header Row: Label + Detected Location */}
+          <div className="flex items-center justify-between px-2">
+            <span className="text-[10px] font-sans font-bold text-[#8C827A] uppercase tracking-widest flex items-center gap-1.5">
+              <Plane className="w-3 h-3" />
               <span>Departure Terminal</span>
             </span>
             
             {(() => {
               const confirmedAirport = getAirportDetails(config.origin);
               return (
-                <div className="flex items-center gap-1.5 text-xs font-sans text-[#1E1C1A] bg-[#FDFBF9] px-2.5 py-1 rounded-lg border border-[#F0EAE1]">
+                <div className="flex items-center gap-1.5 text-[10px] font-sans text-[#1E1C1A]">
                   <span className="relative flex h-1.5 w-1.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
                   </span>
-                  <span className="font-bold text-[11px] sm:text-xs">
+                  <span className="font-bold">
                     {confirmedAirport ? `${confirmedAirport.city}` : config.origin} ({config.origin})
                   </span>
                 </div>
@@ -2276,10 +2308,10 @@ export default function PriceTracker({
             })()}
           </div>
 
-          {/* Search Input Box */}
+          {/* Search Input Box (Elevated & Minimal) */}
           <div className="relative z-50">
-            <div className="relative group cursor-text" onClick={() => setIsAirportDropdownOpen(true)}>
-              <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A89F91] group-focus-within:text-[#FF6B2C] transition-colors pointer-events-none z-10" />
+            <div className="relative group cursor-text bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-[#EAE3D9] transition-all hover:border-[#FF6B2C]/40 hover:shadow-[0_8px_30px_rgba(255,107,44,0.08)] focus-within:border-[#FF6B2C] focus-within:shadow-[0_8px_30px_rgba(255,107,44,0.12)]" onClick={() => setIsAirportDropdownOpen(true)}>
+              <MapPin className="absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-[#A89F91] group-focus-within:text-[#FF6B2C] transition-colors pointer-events-none z-10" />
               <input 
                 type="text" 
                 value={airportSearchInput}
@@ -2288,7 +2320,7 @@ export default function PriceTracker({
                 onBlur={() => setTimeout(() => setIsAirportDropdownOpen(false), 240)}
                 onKeyDown={handleAirportKeyDown}
                 onChange={(e) => handleAirportInputChange(e.target.value)}
-                className="w-full pl-10 pr-10 py-3 bg-[#FAF8F5] rounded-xl border border-[#EAE3D9] focus:border-[#FF6B2C] focus:bg-white text-sm sm:text-base font-serif font-bold text-[#1E1C1A] focus:outline-none placeholder:text-[#B5AC9E] placeholder:font-sans placeholder:text-xs sm:placeholder:text-sm transition-all"
+                className="w-full pl-11 sm:pl-12 pr-12 py-4 sm:py-4.5 bg-transparent text-base sm:text-lg font-serif font-black text-[#1E1C1A] focus:outline-none placeholder:text-[#B5AC9E] placeholder:font-sans placeholder:font-medium placeholder:text-sm transition-all rounded-2xl"
                 placeholder="Search departure city or airport..."
               />
               
@@ -2301,9 +2333,9 @@ export default function PriceTracker({
                       setAirportSearchInput('');
                       setIsAirportDropdownOpen(true);
                     }}
-                    className="p-1 rounded-full text-[#8C827A] hover:text-[#1E1C1A] transition-colors cursor-pointer"
+                    className="p-1.5 rounded-full text-[#B5AC9E] hover:text-[#1E1C1A] hover:bg-[#F5F0E8] transition-colors cursor-pointer"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
@@ -2374,25 +2406,25 @@ export default function PriceTracker({
             </AnimatePresence>
           </div>
 
-          {/* Quick Hubs Switcher & Benchmark in 2 Clean Rows */}
-          <div className="pt-3 border-t border-[#F0EAE1] space-y-2.5">
-            {/* Row 1: Popular Hubs Tabs */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 hide-scrollbar">
-              <span className="text-[10px] font-sans font-bold text-[#A89F91] uppercase tracking-wider shrink-0">
+          {/* Contextual Data Row */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-2 pt-1">
+            {/* Quick Hubs */}
+            <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
+              <span className="text-[9px] font-sans font-bold text-[#A89F91] uppercase tracking-widest shrink-0">
                 Popular:
               </span>
-              <div className="flex items-center gap-1 bg-[#FDFBF9] p-0.5 rounded-lg border border-[#F0EAE1] shrink-0">
-                {['DEL', 'JFK', 'LHR', 'DXB', 'SIN', 'HND'].map((code) => {
+              <div className="flex items-center gap-3 shrink-0">
+                {['DEL', 'JFK', 'LHR', 'DXB'].map((code) => {
                   const isActive = config.origin === code;
                   return (
                     <button
                       key={code}
                       type="button"
                       onClick={() => handleSelectAirport({ code })}
-                      className={`relative px-2.5 py-1 rounded-md text-[10.5px] font-mono font-bold transition-all cursor-pointer ${
+                      className={`text-[10px] font-mono font-bold transition-all cursor-pointer border-b ${
                         isActive 
-                          ? 'bg-[#1E1C1A] text-white shadow-xs' 
-                          : 'text-[#8C827A] hover:text-[#1E1C1A]'
+                          ? 'text-[#1E1C1A] border-[#1E1C1A]' 
+                          : 'text-[#8C827A] border-transparent hover:text-[#1E1C1A]'
                       }`}
                     >
                       {code}
@@ -2402,27 +2434,33 @@ export default function PriceTracker({
               </div>
             </div>
 
-            {/* Row 2: Benchmark Typical & Low Price Chips */}
-            <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-sans text-[#7A7268] pt-1">
-              <span>
+            {/* Benchmark Price */}
+            <div className="flex items-center gap-2 text-[10px] font-sans">
+              <span className="text-[#8C827A]">
                 Typical: <strong className="font-mono font-bold text-[#1E1C1A]">{formatCurrency(convertCurrency(480, 'USD', displayCurrency), displayCurrency)}–{formatCurrency(convertCurrency(690, 'USD', displayCurrency), displayCurrency)}</strong>
               </span>
-              <span className="text-emerald-700 font-semibold flex items-center gap-1 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-md text-[11px]">
-                <TrendingDown className="w-3 h-3" /> Low: <strong className="font-mono font-bold">{formatCurrency(convertCurrency(410, 'USD', displayCurrency), displayCurrency)}</strong>
+              <span className="flex items-center gap-1.5 bg-emerald-50/80 border border-emerald-200/60 px-2.5 py-1 rounded-full shadow-[0_2px_8px_rgba(16,185,129,0.08)]">
+                <span className="flex items-center gap-1 text-emerald-700">
+                  <TrendingDown className="w-3 h-3" />
+                  <span className="text-[9px] font-sans font-bold uppercase tracking-widest">Low</span>
+                </span>
+                <span className="font-mono font-black text-emerald-900 text-[10px]">
+                  {formatCurrency(convertCurrency(410, 'USD', displayCurrency), displayCurrency)}
+                </span>
               </span>
             </div>
           </div>
         </motion.div>
 
         {/* Watchdog Configuration Toggles */}
-        <div className="bg-white/40 backdrop-blur-md rounded-[20px] border border-[#E6DFD5] overflow-hidden flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-[#E6DFD5] shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-2">
           {/* Flights Toggle */}
           <div 
             onClick={() => setConfig({ ...config, trackFlights: !config.trackFlights })}
-            className={`flex-1 flex items-center justify-between p-3.5 sm:p-4 cursor-pointer transition-colors duration-200 ${config.trackFlights ? 'bg-white/90' : 'hover:bg-white/60'}`}
+            className={`flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all border ${config.trackFlights ? 'bg-white border-[#1E1C1A] shadow-sm' : 'bg-[#FAF8F5]/50 border-[#EAE3D9] hover:bg-white'}`}
           >
-            <div className="flex items-center gap-3">
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${config.trackFlights ? 'bg-[#FFF5EE] text-[#FF6B2C]' : 'bg-[#F5F0E8] text-[#A89F91]'}`}>
+            <div className="flex items-center gap-3.5">
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${config.trackFlights ? 'bg-[#1E1C1A] text-white shadow-md' : 'bg-white text-[#A89F91] border border-[#EAE3D9]'}`}>
                 <Plane className="w-4 h-4" />
               </div>
               <div className="flex flex-col">
@@ -2431,18 +2469,18 @@ export default function PriceTracker({
               </div>
             </div>
             {/* Switch */}
-            <div className={`w-[38px] h-5 shrink-0 rounded-full transition-colors duration-200 relative ${config.trackFlights ? 'bg-[#1E1C1A]' : 'bg-[#D8D0C5]'}`}>
-              <div className={`absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full shadow-sm transition-transform duration-200 ${config.trackFlights ? 'translate-x-[18px]' : 'translate-x-0'}`} />
+            <div className={`w-8 h-4 shrink-0 rounded-full transition-colors duration-200 relative ${config.trackFlights ? 'bg-[#FF6B2C]' : 'bg-[#D8D0C5]'}`}>
+              <div className={`absolute top-[2px] left-[2px] bg-white w-3 h-3 rounded-full shadow-sm transition-transform duration-200 ${config.trackFlights ? 'translate-x-4' : 'translate-x-0'}`} />
             </div>
           </div>
 
           {/* Hotels Toggle */}
           <div 
             onClick={() => setConfig({ ...config, trackHotels: !config.trackHotels })}
-            className={`flex-1 flex items-center justify-between p-3.5 sm:p-4 cursor-pointer transition-colors duration-200 ${config.trackHotels ? 'bg-white/90' : 'hover:bg-white/60'}`}
+            className={`flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all border ${config.trackHotels ? 'bg-white border-[#1E1C1A] shadow-sm' : 'bg-[#FAF8F5]/50 border-[#EAE3D9] hover:bg-white'}`}
           >
-            <div className="flex items-center gap-3">
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${config.trackHotels ? 'bg-[#FFF5EE] text-[#FF6B2C]' : 'bg-[#F5F0E8] text-[#A89F91]'}`}>
+            <div className="flex items-center gap-3.5">
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${config.trackHotels ? 'bg-[#1E1C1A] text-white shadow-md' : 'bg-white text-[#A89F91] border border-[#EAE3D9]'}`}>
                 <Hotel className="w-4 h-4" />
               </div>
               <div className="flex flex-col">
@@ -2451,8 +2489,8 @@ export default function PriceTracker({
               </div>
             </div>
             {/* Switch */}
-            <div className={`w-[38px] h-5 shrink-0 rounded-full transition-colors duration-200 relative ${config.trackHotels ? 'bg-[#1E1C1A]' : 'bg-[#D8D0C5]'}`}>
-              <div className={`absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full shadow-sm transition-transform duration-200 ${config.trackHotels ? 'translate-x-[18px]' : 'translate-x-0'}`} />
+            <div className={`w-8 h-4 shrink-0 rounded-full transition-colors duration-200 relative ${config.trackHotels ? 'bg-[#FF6B2C]' : 'bg-[#D8D0C5]'}`}>
+              <div className={`absolute top-[2px] left-[2px] bg-white w-3 h-3 rounded-full shadow-sm transition-transform duration-200 ${config.trackHotels ? 'translate-x-4' : 'translate-x-0'}`} />
             </div>
           </div>
         </div>
@@ -2466,7 +2504,7 @@ export default function PriceTracker({
       )}
 
       {/* ── 6. Bespoke Tactile Obsidian Action Button with Dynamic Animated Flight Jetstream ── */}
-      <div className="relative z-10 w-full max-w-md mx-auto">
+      <div className="relative z-10 w-[calc(100%+2rem)] sm:w-full sm:max-w-md -mx-4 -mb-4 sm:mx-auto sm:mb-0 mt-8 sm:mt-0">
         <motion.button 
           type="button"
           whileHover={{ scale: 1.02, y: -2 }}
@@ -2474,7 +2512,7 @@ export default function PriceTracker({
           onClick={handleStartTracking}
           disabled={isActivating || (!config.trackFlights && !config.trackHotels)}
           data-clicked={isAnimatingStart}
-          className="group/btn relative w-full bg-[#181614] hover:bg-[#0D0C0B] active:bg-[#0D0C0B] data-[clicked=true]:bg-[#0D0C0B] text-white py-4 px-8 rounded-2xl shadow-[0_10px_25px_-5px_rgba(24,22,20,0.35)] hover:shadow-[0_16px_36px_-6px_rgba(255,107,44,0.3),0_4px_12px_rgba(0,0,0,0.5)] active:shadow-[0_16px_36px_-6px_rgba(255,107,44,0.3),0_4px_12px_rgba(0,0,0,0.5)] data-[clicked=true]:shadow-[0_16px_36px_-6px_rgba(255,107,44,0.3),0_4px_12px_rgba(0,0,0,0.5)] transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-3 cursor-pointer border-t border-white/22 border-x border-[#2E2A26] border-b border-black overflow-hidden font-sans font-bold text-sm tracking-wide"
+          className="group/btn relative w-full bg-[#181614] hover:bg-[#0D0C0B] active:bg-[#0D0C0B] data-[clicked=true]:bg-[#0D0C0B] text-white py-4.5 sm:py-4 px-8 rounded-b-[20px] sm:rounded-2xl sm:shadow-[0_10px_25px_-5px_rgba(24,22,20,0.35)] hover:shadow-[0_16px_36px_-6px_rgba(255,107,44,0.3),0_4px_12px_rgba(0,0,0,0.5)] active:shadow-[0_16px_36px_-6px_rgba(255,107,44,0.3),0_4px_12px_rgba(0,0,0,0.5)] data-[clicked=true]:shadow-[0_16px_36px_-6px_rgba(255,107,44,0.3),0_4px_12px_rgba(0,0,0,0.5)] transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-3 cursor-pointer sm:border-t sm:border-white/22 sm:border-x sm:border-[#2E2A26] sm:border-b sm:border-black overflow-hidden font-sans font-bold text-[15px] sm:text-sm tracking-wide"
         >
           {/* Subtle light sweep reflection across obsidian surface on hover */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.12] to-transparent -translate-x-full group-hover/btn:translate-x-full group-active/btn:translate-x-full group-data-[clicked=true]/btn:translate-x-full transition-transform duration-700 ease-out pointer-events-none" />
