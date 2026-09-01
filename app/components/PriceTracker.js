@@ -1118,58 +1118,78 @@ export default function PriceTracker({
 
     return (
       <div className="w-full max-w-4xl mx-auto space-y-6 relative pb-16">
-        {/* Requirement 2 & 3: PERSISTENT STICKY TRIP CONTEXT & LIVE BUDGET HEADER */}
-        <div className="relative sm:sticky sm:top-20 z-30 bg-white/95 backdrop-blur-md border border-[#E6DFD5] rounded-2xl p-4 shadow-sm transition-all mb-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-serif font-black text-lg text-[#1E1C1A]">{destShort} Trip</span>
-                <span className="text-xs font-mono bg-[#FAF6F0] border border-[#E6DFD5] px-2 py-0.5 rounded text-[#7A7268]">
-                  {startDate && endDate ? `${startDate} – ${endDate}` : 'Sep 4–6, 2026'}
-                </span>
-              </div>
-              <p className="text-xs text-[#7A7268] mt-0.5">
-                Tracking <strong className="text-[#1E1C1A]">{trackingState?.config?.origin || 'JFK'} → {destShort}</strong> &middot; Target Est. Budget: <strong className="text-[#1E1C1A]">{formatCurrency(convertCurrency(estBudget, 'USD', displayCurrency), displayCurrency)}</strong>
-              </p>
+        {/* HERO TRIP CONTEXT CARD */}
+        <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-[#E6DFD5] mb-8 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+          {/* Subtle decorative background element */}
+          <div className="absolute top-0 right-0 w-48 h-48 bg-[#FAF6F0] rounded-full blur-3xl -mr-16 -mt-16 opacity-60 pointer-events-none" />
+          
+          <div className="space-y-3 relative z-10">
+            <div className="flex items-center gap-2">
+               <div className="w-1.5 h-1.5 rounded-full bg-[#FF6B2C]" />
+               <span className="text-[10px] font-bold uppercase tracking-widest text-[#8C827A]">Trip Overview</span>
             </div>
-
-            {/* Live Budget Impact Tally & Instant Compare Trigger in Sticky Header */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-4 bg-[#FAF6F0] px-4 py-2 rounded-xl border border-[#E6DFD5] justify-between md:justify-end">
-                <div className="text-right">
-                  <div className="text-xs text-[#7A7268] font-bold">Selected so far</div>
-                  <div className="text-base font-serif font-black text-[#1E1C1A]">
-                    {formatCurrency(convertCurrency(totalSelectedPrice, 'USD', displayCurrency), displayCurrency)} <span className="text-xs font-normal text-[#7A7268]">of {formatCurrency(convertCurrency(parseFloat(estBudget.toString().replace(/[^0-9.]/g, '')) || 1450, 'USD', displayCurrency), displayCurrency)}</span>
-                  </div>
-                </div>
-
-                <div className="h-8 w-px bg-[#E6DFD5]" />
-
-                <div className="text-right">
-                  <div className="text-xs font-bold text-[#7A7268]">Remaining</div>
-                  <div className={`text-sm font-bold ${remainingBudget >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
-                    {remainingBudget >= 0 ? `${formatCurrency(convertCurrency(remainingBudget, 'USD', displayCurrency), displayCurrency)} left` : `${formatCurrency(convertCurrency(Math.abs(remainingBudget), 'USD', displayCurrency), displayCurrency)} over`}
-                  </div>
-                </div>
+            
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-black text-[#1E1C1A] tracking-tight font-serif leading-none mb-2.5">
+                {destShort}
+              </h1>
+              <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-[#7A7268]">
+                 <span className="text-[#1E1C1A] font-bold bg-[#FAF6F0] px-2 py-0.5 rounded border border-[#E6DFD5]/50">{trackingState?.config?.origin || 'JFK'}</span>
+                 <svg className="w-3.5 h-3.5 text-[#D5CBBF]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                 <span className="text-[#1E1C1A] font-bold bg-[#FAF6F0] px-2 py-0.5 rounded border border-[#E6DFD5]/50">{destShort}</span>
+                 
+                 <span className="w-1 h-1 rounded-full bg-[#D5CBBF] mx-1" />
+                 
+                 <span className="text-[#7A7268] font-bold">
+                   {startDate && endDate ? `${startDate} – ${endDate}` : 'Dates TBD'}
+                 </span>
               </div>
             </div>
           </div>
+
+          {/* Budget Dashboard */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5 lg:gap-6 bg-[#FAF6F0]/80 p-4 sm:p-5 rounded-2xl border border-[#E6DFD5]/50 relative z-10 w-full md:w-auto shadow-sm">
+             
+             <div className="flex justify-between sm:flex-col sm:items-end items-center">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-[#8C827A] sm:mb-1">Target Budget</div>
+                <div className="text-sm font-bold text-[#1E1C1A]">
+                  {formatCurrency(convertCurrency(estBudget, 'USD', displayCurrency), displayCurrency)}
+                </div>
+             </div>
+             
+             <div className="hidden sm:block w-px h-8 bg-[#E6DFD5]" />
+             
+             <div className="flex justify-between sm:flex-col sm:items-end items-center pt-3 border-t border-[#E6DFD5]/80 sm:pt-0 sm:border-0">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-[#8C827A] sm:mb-1">Selected Total</div>
+                <div className="text-base sm:text-lg font-black text-[#1E1C1A] leading-none tracking-tight">
+                  {formatCurrency(convertCurrency(totalSelectedPrice, 'USD', displayCurrency), displayCurrency)}
+                </div>
+             </div>
+             
+             <div className="hidden sm:block w-px h-8 bg-[#E6DFD5]" />
+             
+             <div className="flex justify-between sm:flex-col sm:items-end items-center pt-3 border-t border-[#E6DFD5]/80 sm:pt-0 sm:border-0">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-[#8C827A] sm:mb-1">Remaining</div>
+                <div className={`text-base sm:text-lg font-black leading-none tracking-tight ${remainingBudget >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                  {formatCurrency(convertCurrency(Math.abs(remainingBudget), 'USD', displayCurrency), displayCurrency)}
+                </div>
+             </div>
+          </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0">
+        {/* Dashboard Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-4 mt-10">
           <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-2xl font-serif font-black text-[#1E1C1A] tracking-tight">Active Price Tracking</h2>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
-                </span>
-                LIVE 24/7
+            <div className="flex items-center gap-2 mb-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
               </span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-emerald-600">Live Tracker Active</span>
             </div>
-            <p className="text-sm font-sans text-[#7A7268] mt-0.5">
-              Live updates & smart booking comparison tools
+            <h2 className="text-2xl sm:text-3xl font-serif font-black text-[#1E1C1A] tracking-tight">Price Monitor</h2>
+            <p className="text-sm font-medium text-[#7A7268] mt-1">
+              Real-time market updates & smart booking options for your itinerary.
             </p>
           </div>
           
@@ -2141,16 +2161,28 @@ export default function PriceTracker({
           stayNights={stayNights}
         />
 
-        <div className="flex items-start gap-2 bg-[#F5F0E8] rounded-xl p-4 mt-6">
-          <Bell className="w-5 h-5 text-[#FF6B2C] shrink-0 mt-0.5" />
-          <p className="text-sm text-[#4A443E] leading-relaxed">
-            <span className="font-bold text-[#1E1C1A]">Price Drop Alerts:</span> We're actively tracking your {trackingState.selectedFlight || trackingState.selectedHotel ? 'selected items' : 'route/city baseline'}. If prices drop by <span className="font-bold text-[#1E1C1A]">10%+</span>, we'll send you an immediate notification.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 text-xs text-[#7A7268] mt-4 ml-1">
-          <Clock className="w-3.5 h-3.5" />
-          <span>Last checked: Just now &middot; Next check in 22 hours</span>
+        <div className="mt-8 pt-5 border-t border-[#E6DFD5]/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-4">
+             <div className="flex items-center gap-1.5">
+                <Bell className="w-3 h-3 text-[#FF6B2C]" />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#1E1C1A]">Smart Alerts Active</span>
+             </div>
+             
+             <div className="hidden sm:block w-px h-3 bg-[#D5CBBF]" />
+             
+             <p className="text-[11px] font-medium text-[#7A7268]">
+                Monitoring {trackingState.selectedFlight || trackingState.selectedHotel ? 'selected itinerary' : 'baseline route'} for <strong className="text-[#1E1C1A]">10%+</strong> drop.
+             </p>
+          </div>
+          
+          <div className="flex items-center gap-2.5 text-[9px] font-bold uppercase tracking-wider text-[#8C827A]">
+             <div className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                <span>Last: <span className="text-[#1E1C1A]">Just Now</span></span>
+             </div>
+             <div className="w-px h-2.5 bg-[#D5CBBF]" />
+             <span>Next: <span className="text-[#1E1C1A]">22h</span></span>
+          </div>
         </div>
       </div>
     );

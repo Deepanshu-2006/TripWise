@@ -3048,21 +3048,6 @@ export default function ItineraryPage() {
                 );
               })() : activeDay === 'tracking' ? (
                 <section className="font-sans mb-12">
-                  {/* Live Price Monitor Active Header Banner */}
-                  <div className="bg-[#FAF6F0]/80 border-l-[3px] border-emerald-500 p-4 sm:p-5 rounded-r-2xl mb-8 flex items-start gap-3.5 shadow-sm">
-                    <div className="mt-1 relative flex h-2.5 w-2.5 shrink-0">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-                    </div>
-                    <div>
-                      <h3 className="text-[13px] sm:text-sm font-mono font-bold uppercase tracking-wider text-emerald-800 mb-1">
-                        Live Price &amp; Route Monitor Active
-                      </h3>
-                      <p className="text-xs font-sans font-medium text-[#7A7268] leading-relaxed">
-                        Real-time flight fares, hotel pricing, and anchor route optimization active for <strong className="text-emerald-900">{itinerary?.destinationName || 'your destination'}</strong>.
-                      </p>
-                    </div>
-                  </div>
 
                   <PriceTracker
                     tripId={itinerary?.id || itinerary?.db_id || activeTripId || 'shared-trip'}
@@ -4926,8 +4911,14 @@ export default function ItineraryPage() {
         itinerary={itinerary}
       />
 
-      <footer className="py-12 text-center text-xs font-serif italic text-[#7A7268] border-t border-[#E6DFD5] bg-white mt-auto">
-        TripWise Private Travel Concierge · Published Dossier Guide · Powered by Google Gemini
+      <footer className="py-6 pb-24 sm:pb-6 border-t border-[#E6DFD5] bg-transparent mt-auto">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-4 text-[9px] font-bold uppercase tracking-widest text-[#8C827A]">
+           <span>TripWise Private Travel Concierge</span>
+           <span className="hidden sm:block w-1 h-1 rounded-full bg-[#D5CBBF]" />
+           <span>Published Dossier</span>
+           <span className="hidden sm:block w-1 h-1 rounded-full bg-[#D5CBBF]" />
+           <span>Powered by Google Gemini</span>
+        </div>
       </footer>
     </div>
   );
