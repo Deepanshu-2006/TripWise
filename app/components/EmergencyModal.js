@@ -46,10 +46,10 @@ export default function EmergencyModal({ isOpen, onClose, destinationName, passp
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: '100%' }}
           transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-          className="relative w-full max-w-2xl h-[85dvh] sm:h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden z-10"
+          className="relative w-full max-w-2xl h-[85dvh] sm:h-[85vh] bg-[#FDFDFB] rounded-t-[32px] sm:rounded-[32px] shadow-[0_0_40px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden z-10"
         >
           {/* MODAL HEADER */}
-          <div className="flex items-center justify-between px-6 sm:px-8 py-6 border-b border-stone-100 bg-white shrink-0">
+          <div className="flex items-center justify-between px-6 sm:px-8 py-5 sm:py-6 border-b border-[#F0EFEB] bg-[#FDFDFB] shrink-0">
             <div>
               <h3 className="font-black text-lg sm:text-xl text-stone-900 tracking-tight leading-none">
                 Emergency &amp; Safety
