@@ -45,23 +45,41 @@ export default function EmergencyModal({ isOpen, onClose, destinationName, passp
           initial={{ opacity: 0, y: '100%' }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: '100%' }}
-          transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+          transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
+          drag="y"
+          dragDirectionLock
+          dragConstraints={{ top: 0, bottom: 0 }}
+          dragElastic={{ top: 0, bottom: 1 }}
+          dragMomentum={false}
+          onDragEnd={(e, info) => {
+            // Balanced thresholds: close gracefully on a moderate swipe
+            if (info.offset.y > 100 || info.velocity.y > 300) {
+              onClose();
+            }
+          }}
           className="relative w-full max-w-2xl h-[85dvh] sm:h-[85vh] bg-[#FDFDFB] rounded-t-[32px] sm:rounded-[32px] shadow-[0_0_40px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden z-10"
         >
-          {/* MODAL HEADER */}
-          <div className="flex items-center justify-between px-6 sm:px-8 py-5 sm:py-6 border-b border-[#F0EFEB] bg-[#FDFDFB] shrink-0">
-            <div>
-              <h3 className="font-black text-lg sm:text-xl text-stone-900 tracking-tight leading-none">
-                Emergency &amp; Safety
-              </h3>
+          {/* MODAL HEADER WITH DRAG HANDLE */}
+          <div className="flex flex-col border-b border-[#F0EFEB] bg-[#FDFDFB] shrink-0">
+            {/* DRAG HANDLE (Mobile only) */}
+            <div className="w-full flex justify-center pt-3 sm:hidden">
+              <div className="w-10 h-1.5 bg-[#EBE8E0] rounded-full" />
             </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="font-mono text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 transition-colors"
-            >
-              Close
-            </button>
+            
+            <div className="flex items-center justify-between px-6 sm:px-8 py-5 sm:py-6">
+              <div>
+                <h3 className="font-black text-lg sm:text-xl text-stone-900 tracking-tight leading-none">
+                  Emergency &amp; Safety
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="font-mono text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 transition-colors"
+              >
+                Close
+              </button>
+            </div>
           </div>
 
           {/* MODAL BODY CONTENT */}

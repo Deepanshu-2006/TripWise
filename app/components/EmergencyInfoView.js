@@ -240,8 +240,18 @@ export default function EmergencyInfoView({ destinationName, passportNationality
                   <h4 className="font-black text-[15px] text-[#1E1C1A] leading-tight">
                     {hosp.name}
                   </h4>
-                  {hosp.is24Hours && <span className="font-mono text-[8.5px] font-bold uppercase tracking-widest text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md">24/7 ER</span>}
-                  {hosp.traumaCenter && <span className="font-mono text-[8.5px] font-bold uppercase tracking-widest text-[#FF5B1D] bg-[#FF5B1D]/5 border border-[#FF5B1D]/10 px-2 py-0.5 rounded-md">Trauma Center</span>}
+                  {hosp.is24Hours && (
+                    <span className="inline-flex items-center gap-1.5 font-mono text-[8.5px] font-bold uppercase tracking-widest text-[#1E1C1A] bg-white border border-[#EBE8E0] px-2.5 py-0.5 rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      24/7 ER
+                    </span>
+                  )}
+                  {hosp.traumaCenter && (
+                    <span className="inline-flex items-center gap-1.5 font-mono text-[8.5px] font-bold uppercase tracking-widest text-[#1E1C1A] bg-white border border-[#EBE8E0] px-2.5 py-0.5 rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#FF5B1D]"></span>
+                      Trauma Center
+                    </span>
+                  )}
                 </div>
                 
                 <p className="text-[13px] text-[#8B8682] mb-3 flex items-start gap-1.5 leading-relaxed">

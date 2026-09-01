@@ -10,6 +10,7 @@ import InviteModal from '../components/InviteModal';
 import { generatePackingList } from '../../lib/packingListLogic';
 import { fetchVisaRequirements } from '../../lib/visaApi';
 import { updateTrip } from '../actions/trips';
+import { getPlaceDetails } from '../actions/hotels';
 const ExpenseTrackerView = dynamic(() => import('../components/ExpenseTrackerView'));
 import { useLiveAssistant } from '../hooks/useLiveAssistant';
 import LiveAssistantNudge from '../components/LiveAssistantNudge';
@@ -3048,17 +3049,18 @@ export default function ItineraryPage() {
               })() : activeDay === 'tracking' ? (
                 <section className="font-sans mb-12">
                   {/* Live Price Monitor Active Header Banner */}
-                  <div className="bg-[#FAF6F0] border-l-4 border-emerald-500 p-4 rounded-r-2xl mb-8 flex items-center justify-between shadow-2xs">
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 rounded-full bg-emerald-500 animate-ping shrink-0" />
-                      <div>
-                        <span className="text-xs font-mono font-bold uppercase tracking-widest text-emerald-700 block">
-                          Live Price &amp; Route Monitor Active
-                        </span>
-                        <p className="text-xs text-[#7A7268] mt-0.5">
-                          Real-time flight fares, hotel pricing, and anchor route optimization active for {itinerary?.destinationName || 'your destination'}.
-                        </p>
-                      </div>
+                  <div className="bg-[#FAF6F0]/80 border-l-[3px] border-emerald-500 p-4 sm:p-5 rounded-r-2xl mb-8 flex items-start gap-3.5 shadow-sm">
+                    <div className="mt-1 relative flex h-2.5 w-2.5 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-[13px] sm:text-sm font-mono font-bold uppercase tracking-wider text-emerald-800 mb-1">
+                        Live Price &amp; Route Monitor Active
+                      </h3>
+                      <p className="text-xs font-sans font-medium text-[#7A7268] leading-relaxed">
+                        Real-time flight fares, hotel pricing, and anchor route optimization active for <strong className="text-emerald-900">{itinerary?.destinationName || 'your destination'}</strong>.
+                      </p>
                     </div>
                   </div>
 
