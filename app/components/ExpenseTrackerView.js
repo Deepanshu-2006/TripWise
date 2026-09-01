@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, Camera, Trash2, Edit2, AlertCircle, CheckCircle2, 
   X, Eye, CloudOff, Download, Users, RefreshCw, Utensils, Car, ShoppingBag, Ticket, Hotel, CreditCard,
-  TrendingUp, TrendingDown, DollarSign, ChevronDown
+  TrendingUp, TrendingDown, DollarSign, ChevronDown, ChevronRight, ChevronLeft
 } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
 import { getTripCollaborators } from '../actions/trips';
@@ -127,6 +127,25 @@ export default function ExpenseTrackerView({
 }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
+
+  const ledgerTabsContainerRef = useRef(null);
+  const ledgerContainerRef = useRef(null);
+  const [canScrollLedgerRight, setCanScrollLedgerRight] = useState(true);
+  const [canScrollLedgerLeft, setCanScrollLedgerLeft] = useState(false);
+
+  const checkLedgerScroll = () => {
+    if (ledgerTabsContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = ledgerTabsContainerRef.current;
+      setCanScrollLedgerLeft(scrollLeft > 5);
+      setCanScrollLedgerRight(scrollLeft + clientWidth < scrollWidth - 5);
+    }
+  };
+
+  useEffect(() => {
+    checkLedgerScroll();
+    window.addEventListener('resize', checkLedgerScroll);
+    return () => window.removeEventListener('resize', checkLedgerScroll);
+  }, []);
 
   const [expenses, setExpenses] = useState([]);
   const [homeCurrency, setHomeCurrency] = useState(userCurrency || 'USD');
@@ -578,39 +597,36 @@ export default function ExpenseTrackerView({
 
   return (
     <div className="w-full space-y-4 sm:space-y-6 font-sans text-[#1E1C1A]">
-      {/* HEADER BAR */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-[#E6DFD5] pb-3.5 sm:pb-4">
-        <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-[#1E1C1A]">Expenses</h2>
+      {/* ── HEADER BAR ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6 border-b border-[#E6DFD5]/70 pb-5 sm:pb-6">
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-[#1E1C1A]">Expenses</h2>
             {isOffline && (
-              <span className="px-2 py-0.5 rounded-full bg-amber-100 border border-amber-300 text-amber-800 text-[10px] font-mono font-bold flex items-center gap-1">
-                <CloudOff className="w-3 h-3 text-amber-600" /> Offline Mode
+              <span className="px-2 py-0.5 rounded-full bg-stone-100 border border-stone-200 text-stone-600 text-[9px] font-mono font-bold uppercase tracking-widest flex items-center gap-1 shrink-0">
+                <CloudOff className="w-2.5 h-2.5" /> Offline
               </span>
             )}
             {pendingSyncCount > 0 && !isOffline && (
-              <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-900 text-[10px] font-mono font-bold flex items-center gap-1">
-                <RefreshCw className="w-3 h-3 animate-spin text-amber-600" /> {pendingSyncCount} pending sync
+              <span className="px-2 py-0.5 rounded-full bg-[#FAF6F0] border border-[#E6DFD5] text-[#7A7268] text-[9px] font-mono font-bold uppercase tracking-widest flex items-center gap-1 shrink-0">
+                <RefreshCw className="w-2.5 h-2.5 animate-spin" /> {pendingSyncCount} sync
               </span>
             )}
           </div>
-          <p className="text-[11px] sm:text-xs text-[#7A7268] mt-0.5">
+          <p className="text-xs font-sans text-[#7A7268] font-medium leading-relaxed max-w-md">
             Track daily spending, split group bills with {collaboratorFirstName}, and scan receipts.
           </p>
         </div>
 
-        {/* HEADER ACTION BUTTON STRIP WITH INTERACTIVE MICRO-ANIMATIONS */}
+        {/* ── HEADER ACTION BUTTON STRIP ── */}
         <motion.div 
           initial={{ opacity: 0, x: 15 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, delay: 0.15 }}
-          className="flex items-center gap-1.5 sm:gap-2 flex-wrap"
+          className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto"
         >
           {/* EXPORT BUTTON */}
-          <motion.button
-            whileHover={{ scale: 1.04, y: -1 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+          <button
             onClick={() => {
               const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(expenses, null, 2));
               const downloadAnchor = document.createElement('a');
@@ -620,36 +636,29 @@ export default function ExpenseTrackerView({
               downloadAnchor.click();
               downloadAnchor.remove();
             }}
-            className="group px-3 sm:px-4 py-2 rounded-full border border-[#E6DFD5] bg-white hover:bg-[#F5F0E8] text-[#1E1C1A] text-xs font-sans font-bold transition-all duration-200 flex items-center gap-1.5 cursor-pointer shadow-2xs select-none"
+            className="flex-1 sm:flex-none justify-center group px-2 py-2 sm:px-4 sm:py-2 rounded-full bg-white hover:bg-[#FAF6F0] border border-[#E6DFD5] text-[#1E1C1A] text-[9.5px] sm:text-[11px] font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5 cursor-pointer select-none whitespace-nowrap"
           >
-            <Download className="w-3.5 h-3.5 text-[#FF6B2C] group-hover:translate-y-0.5 transition-transform" />
+            <Download className="w-3.5 h-3.5 text-[#1E1C1A]" />
             <span>Export</span>
-          </motion.button>
+          </button>
 
           {/* ADD EXPENSE BUTTON */}
-          <motion.button
-            whileHover={{ scale: 1.04, y: -1, backgroundColor: "#1E1C1A", color: "#ffffff", boxShadow: "0 6px 16px rgba(30,28,26,0.2)" }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+          <button
             onClick={handleOpenAddModal}
-            className="group px-3.5 sm:px-4.5 py-2 rounded-full border border-[#1E1C1A] text-[#1E1C1A] text-xs font-sans font-bold transition-all duration-200 flex items-center gap-1.5 cursor-pointer select-none"
+            className="flex-1 sm:flex-none justify-center group px-2 py-2 sm:px-4 sm:py-2 rounded-full border border-[#1E1C1A] text-[#1E1C1A] text-[9.5px] sm:text-[11px] font-bold uppercase tracking-wider transition-colors hover:bg-[#1E1C1A] hover:text-white flex items-center gap-1.5 cursor-pointer select-none whitespace-nowrap"
           >
             <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-300" />
-            <span>Add Expense</span>
-          </motion.button>
+            <span>Add</span>
+          </button>
 
           {/* SCAN RECEIPT BUTTON */}
-          <motion.button
-            whileHover={{ scale: 1.05, y: -1, boxShadow: "0 8px 20px rgba(255, 107, 44, 0.4)" }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+          <button
             onClick={() => fileInputRef.current?.click()}
-            className="group relative px-4 sm:px-5 py-2 rounded-full bg-linear-to-r from-[#FF6B2C] to-[#E55A1C] text-white text-xs font-sans font-bold transition-all duration-200 flex items-center gap-1.5 cursor-pointer shadow-xs overflow-hidden select-none"
+            className="flex-1 sm:flex-none justify-center group px-2 py-2 sm:px-5 sm:py-2 rounded-full bg-[#1E1C1A] text-white text-[9.5px] sm:text-[11px] font-bold uppercase tracking-wider hover:bg-[#FF6B2C] transition-colors duration-300 flex items-center gap-1.5 cursor-pointer select-none whitespace-nowrap"
           >
-            <span className="absolute inset-0 bg-linear-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 pointer-events-none" />
-            <Camera className="w-3.5 h-3.5 group-hover:rotate-12 group-hover:scale-110 transition-transform duration-200" />
-            <span className="relative z-10">Scan Receipt</span>
-          </motion.button>
+            <Camera className="w-3.5 h-3.5" />
+            <span>Scan</span>
+          </button>
           
           <input 
             ref={fileInputRef}
@@ -661,228 +670,223 @@ export default function ExpenseTrackerView({
         </motion.div>
       </div>
 
-      {/* SUMMARY CARD WITH 1. ANIMATED CURRENCY TICKER, PROGRESS BAR & SPENDING PACE INDICATOR */}
+      {/* ── BUDGET DASHBOARD (SUMMARY CARD) ── */}
       <motion.div 
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.2 }}
-        className="bg-[#FAF6F0] rounded-2xl sm:rounded-3xl border border-[#E6DFD5] p-4 sm:p-6 flex flex-col gap-3.5 sm:gap-4 shadow-2xs"
+        className="flex flex-col gap-5 pt-2"
       >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
-          <div>
-            <span className="text-[10px] sm:text-[10.5px] font-mono uppercase tracking-wider text-[#7A7268] font-bold block">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 sm:gap-4">
+          
+          {/* Main Tally */}
+          <div className="flex flex-col gap-1">
+            <span className="text-[9px] font-bold uppercase tracking-widest text-[#8C827A]">
               Total Spent
             </span>
-            <div className="flex flex-wrap items-baseline gap-2 sm:gap-2.5 mt-1">
-              <div className="text-2xl sm:text-3xl font-black text-gray-900 font-serif">
+            <div className="flex items-baseline gap-2.5 sm:gap-3">
+              <div className="text-4xl sm:text-5xl font-black text-[#1E1C1A] font-serif tracking-tight">
                 <AnimatedCurrency value={totalSpentBase} currency={homeCurrency} />
               </div>
-              <div className="text-xs sm:text-sm text-gray-500 font-medium">
+              <div className="text-xs sm:text-sm font-sans font-medium text-[#7A7268]">
                 of {formatCurrency(budgetGoalBase, homeCurrency)} Budget
               </div>
             </div>
           </div>
 
-          <div className="text-left sm:text-right flex items-center sm:flex-col justify-between sm:justify-start gap-1">
-            <motion.span 
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-800 text-[11px] sm:text-xs font-mono font-bold inline-block shadow-2xs"
-            >
-              <AnimatedCurrency value={Math.max(0, budgetGoalBase - totalSpentBase)} currency={homeCurrency} /> Remaining
-            </motion.span>
-            <span className="text-[10.5px] sm:text-[11px] font-mono text-[#7A7268]">
-              {Math.min(100, (totalSpentBase / budgetGoalBase) * 100).toFixed(0)}% used
-            </span>
+          {/* Receipt-style Details */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 bg-[#FAF6F0] sm:bg-transparent p-4 sm:p-0 rounded-xl sm:rounded-none">
+            {/* Desktop vertical divider */}
+            <div className="hidden sm:block w-px h-10 bg-[#E6DFD5]" />
+            
+            <div className="flex sm:flex-col items-center sm:items-start justify-between gap-1">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-[#8C827A]">Used</span>
+              <span className="text-xs sm:text-sm font-bold text-[#1E1C1A] font-mono">
+                {Math.min(100, (totalSpentBase / budgetGoalBase) * 100).toFixed(0)}%
+              </span>
+            </div>
+            
+            <div className="h-px w-full bg-[#E6DFD5]/50 sm:hidden" />
+            
+            <div className="flex sm:flex-col items-center sm:items-start justify-between gap-1">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-[#8C827A]">Remaining</span>
+              <span className="text-xs sm:text-sm font-bold text-emerald-700 font-mono">
+                <AnimatedCurrency value={Math.max(0, budgetGoalBase - totalSpentBase)} currency={homeCurrency} />
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* PROGRESS TRACK ANIMATION */}
-        <div className="w-full h-2 sm:h-2.5 rounded-full bg-[#E6DFD5]/70 overflow-hidden">
+        {/* Ultra-thin Progress Track */}
+        <div className="w-full h-1 sm:h-1.5 rounded-full bg-[#E6DFD5] overflow-hidden">
           <motion.div 
             initial={{ width: 0 }}
             animate={{ width: `${Math.min(100, (totalSpentBase / budgetGoalBase) * 100)}%` }}
             transition={{ duration: 0.8, ease: "easeOut" }}
             className={`h-full rounded-full ${
-              Math.min(100, (totalSpentBase / budgetGoalBase) * 100) > 90 ? 'bg-red-500' : Math.min(100, (totalSpentBase / budgetGoalBase) * 100) > 70 ? 'bg-amber-500' : 'bg-[#FF6B2C]'
+              Math.min(100, (totalSpentBase / budgetGoalBase) * 100) > 90 ? 'bg-red-500' : Math.min(100, (totalSpentBase / budgetGoalBase) * 100) > 70 ? 'bg-amber-500' : 'bg-[#1E1C1A]'
             }`}
           />
         </div>
 
-        {/* SPENDING PACE INDICATOR NOTE */}
-        {projectedTotalBase > budgetGoalBase ? (
-            <div className="flex items-start gap-2.5 sm:gap-3 p-3 sm:p-4 bg-orange-50 border border-orange-200 rounded-xl">
-              <div className="p-1.5 sm:p-2 bg-orange-100 rounded-full shrink-0 mt-0.5">
-                <TrendingUp className="w-4 h-4 text-orange-600" />
-              </div>
-              <p className="text-xs sm:text-sm text-orange-800 leading-relaxed">
-                <strong>⚠️ Spending Pace Warning:</strong> At current pace (~{formatCurrency(dailyPaceBase, homeCurrency)}/day), projected total is <strong>{formatCurrency(projectedTotalBase, homeCurrency)}</strong> ({formatCurrency(paceDiffBase, homeCurrency)} over {formatCurrency(budgetGoalBase, homeCurrency)} budget).
-              </p>
-            </div>
+        {/* Minimal Spending Pace Indicator */}
+        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider">
+          {projectedTotalBase > budgetGoalBase ? (
+            <>
+              <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shrink-0" />
+              <span className="text-red-700 shrink-0">Pace Warning:</span>
+              <span className="text-[#8C827A] hidden sm:inline tracking-normal font-medium lowercase truncate">~{formatCurrency(dailyPaceBase, homeCurrency)}/day</span>
+              <span className="text-[#1E1C1A] truncate">Projected {formatCurrency(projectedTotalBase, homeCurrency)}</span>
+            </>
           ) : (
-            <div className="flex items-start gap-2.5 sm:gap-3 p-3 sm:p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
-              <div className="p-1.5 sm:p-2 bg-emerald-100 rounded-full shrink-0 mt-0.5">
-                <TrendingDown className="w-4 h-4 text-emerald-600" />
-              </div>
-              <p className="text-xs sm:text-sm text-emerald-800 leading-relaxed">
-                <strong>✓ Spending Pace On Track:</strong> Current pace (~{formatCurrency(dailyPaceBase, homeCurrency)}/day) is on track to stay within your {formatCurrency(budgetGoalBase, homeCurrency)} budget.
-              </p>
-            </div>
+            <>
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+              <span className="text-emerald-700 shrink-0">Pace On Track:</span>
+              <span className="text-[#8C827A] hidden sm:inline tracking-normal font-medium lowercase truncate">~{formatCurrency(dailyPaceBase, homeCurrency)}/day</span>
+              <span className="text-[#1E1C1A] truncate">Projected {formatCurrency(projectedTotalBase, homeCurrency)}</span>
+            </>
           )}
+        </div>
       </motion.div>
 
-      {/* REAL COLLABORATOR IDENTITY IN GROUP EXPENSE SETTLEMENT CARD */}
-      {(() => {
-        const totalGroupCost = expenses.reduce((acc, e) => acc + convertCurrency(e.amount, e.currency, homeCurrency), 0);
+      {/* ── GROUP SETTLEMENT & CATEGORY BREAKDOWN ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 pt-6">
         
-        // Members who are part of the settlement (everyone who paid + 'Me')
-        const activeMembers = tripMembers.filter(m => m !== 'Shared 50/50' && m !== 'Split Equally' && m !== 'Partner / Friend');
-        if (!activeMembers.includes('Me')) activeMembers.unshift('Me'); 
-        
-        // Treat 'Partner / Friend' alias as primary collaborator
-        const partnerAlias = primaryCollaborator.name !== 'Trip Creator' ? primaryCollaborator.name : 'Partner';
-        if (!activeMembers.includes(partnerAlias) && expenses.some(e => e.paidBy === 'Partner / Friend')) {
-            activeMembers.push(partnerAlias);
-        }
+        {/* GROUP SETTLEMENT */}
+        {(() => {
+          const totalGroupCost = expenses.reduce((acc, e) => acc + convertCurrency(e.amount, e.currency, homeCurrency), 0);
+          
+          const activeMembers = tripMembers.filter(m => m !== 'Shared 50/50' && m !== 'Split Equally' && m !== 'Partner / Friend');
+          if (!activeMembers.includes('Me')) activeMembers.unshift('Me'); 
+          
+          const partnerAlias = primaryCollaborator.name !== 'Trip Creator' ? primaryCollaborator.name : 'Partner';
+          if (!activeMembers.includes(partnerAlias) && expenses.some(e => e.paidBy === 'Partner / Friend')) {
+              activeMembers.push(partnerAlias);
+          }
 
-        const numMembers = Math.max(2, activeMembers.length); 
-        const fairShare = totalGroupCost / numMembers;
+          const numMembers = Math.max(2, activeMembers.length); 
+          const fairShare = totalGroupCost / numMembers;
 
-        // Calculate how much each person actually paid
-        const paidAmounts = {};
-        activeMembers.forEach(m => paidAmounts[m] = 0);
-        
-        expenses.forEach(e => {
-           let amount = convertCurrency(e.amount, e.currency, homeCurrency);
-           let payer = e.paidBy || 'Me';
-           if (payer === 'Shared 50/50' || payer === 'Split Equally') {
-               let splitAmount = amount / numMembers;
-               activeMembers.forEach(m => {
-                   paidAmounts[m] += splitAmount;
-               });
-           } else {
-               if (payer === 'Partner / Friend') payer = partnerAlias;
-               if (!paidAmounts[payer]) paidAmounts[payer] = 0;
-               paidAmounts[payer] += amount;
-           }
-        });
+          const paidAmounts = {};
+          activeMembers.forEach(m => paidAmounts[m] = 0);
+          
+          expenses.forEach(e => {
+             let amount = convertCurrency(e.amount, e.currency, homeCurrency);
+             let payer = e.paidBy || 'Me';
+             if (payer === 'Shared 50/50' || payer === 'Split Equally') {
+                 let splitAmount = amount / numMembers;
+                 activeMembers.forEach(m => {
+                     paidAmounts[m] += splitAmount;
+                 });
+             } else {
+                 if (payer === 'Partner / Friend') payer = partnerAlias;
+                 if (!paidAmounts[payer]) paidAmounts[payer] = 0;
+                 paidAmounts[payer] += amount;
+             }
+          });
 
-        const balances = activeMembers.map(m => {
-           const paid = paidAmounts[m] || 0;
-           const net = paid - fairShare;
-           return { name: m, paid, net };
-        });
+          const balances = activeMembers.map(m => {
+             const paid = paidAmounts[m] || 0;
+             const net = paid - fairShare;
+             return { name: m, paid, net };
+          });
 
-        balances.sort((a, b) => b.net - a.net);
+          balances.sort((a, b) => b.net - a.net);
 
-        return (
+          return (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.22 }}
+              className="flex flex-col gap-4"
+            >
+              <div className="flex items-center justify-between border-b border-[#E6DFD5]/70 pb-2">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#1E1C1A] flex items-center gap-1.5"><Users className="w-3 h-3 text-[#FF6B2C]" /> Group Settlement</span>
+                <span className="text-[10px] font-mono text-[#8C827A]">Total: <strong className="text-[#1E1C1A]">{formatCurrencyRounded(totalGroupCost, homeCurrency)}</strong></span>
+              </div>
+              <div className="flex flex-col gap-3">
+                {balances.map((b, idx) => (
+                  <div key={idx} className="flex items-center justify-between text-xs font-sans group">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-full bg-[#FAF6F0] flex items-center justify-center shrink-0">
+                        <span className="text-[10px] font-bold uppercase text-[#1E1C1A]">{b.name.substring(0,2)}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-[#1E1C1A] truncate max-w-[120px] sm:max-w-[160px]">{b.name}</span>
+                        <span className="text-[9px] uppercase tracking-wider text-[#8C827A]">Paid {formatCurrencyRounded(b.paid, homeCurrency)}</span>
+                      </div>
+                    </div>
+                    {b.net > 1 ? (
+                      <div className="text-right flex flex-col">
+                        <span className="font-bold text-[#1E1C1A]">+{formatCurrencyRounded(b.net, homeCurrency)}</span>
+                        <span className="text-[9px] uppercase tracking-widest text-emerald-600">Owed</span>
+                      </div>
+                    ) : b.net < -1 ? (
+                      <div className="text-right flex flex-col">
+                        <span className="font-bold text-[#1E1C1A]">{formatCurrencyRounded(Math.abs(b.net), homeCurrency)}</span>
+                        <span className="text-[9px] uppercase tracking-widest text-orange-600">Owes</span>
+                      </div>
+                    ) : (
+                      <span className="text-[10px] uppercase tracking-widest font-bold text-[#D5CBBF]">Settled</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          );
+        })()}
+
+        {/* CATEGORY BREAKDOWN */}
+        {totalSpentBase > 0 && (
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.22 }}
-            className="p-3.5 sm:p-5 rounded-2xl bg-white border border-[#E6DFD5] shadow-2xs flex flex-col gap-3 sm:gap-4"
+            transition={{ duration: 0.4, delay: 0.24 }}
+            className="flex flex-col gap-4"
           >
-            <div className="flex items-center gap-2.5 sm:gap-3 pb-2.5 sm:pb-3 border-b border-[#E6DFD5]">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+             <div className="flex items-center justify-between border-b border-[#E6DFD5]/70 pb-2">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#1E1C1A] flex items-center gap-1.5"><DollarSign className="w-3 h-3 text-[#FF6B2C]" /> Category Breakdown</span>
+                <span className="text-[10px] font-mono text-[#8C827A]"><strong className="text-[#1E1C1A]">{categoryTotalsBase.filter(c => c.total > 0).length}</strong> Active</span>
+             </div>
+             
+             <div className="w-full h-1.5 rounded-full bg-[#FAF6F0] overflow-hidden flex gap-0.5 my-1">
+               {categoryTotalsBase.map(cat => {
+                 if (cat.total <= 0) return null;
+                 const pct = (cat.total / totalSpentBase) * 100;
+                 const catConfig = CATEGORY_ICONS[cat.id] || CATEGORY_ICONS['Other'];
+                 return (
+                   <motion.div
+                     key={`bar-${cat.id}`}
+                     initial={{ width: 0 }}
+                     animate={{ width: `${pct}%` }}
+                     transition={{ duration: 0.6, ease: "easeOut" }}
+                     style={{ backgroundColor: catConfig.color }}
+                     className="h-full first:rounded-l-full last:rounded-r-full"
+                   />
+                 );
+               })}
+             </div>
+
+             <div className="grid grid-cols-2 gap-y-3 gap-x-4">
+               {categoryTotalsBase.map(cat => {
+                 if (cat.total <= 0) return null;
+                 const catConfig = CATEGORY_ICONS[cat.id] || CATEGORY_ICONS['Other'];
+                 return (
+                   <div key={`legend-${cat.id}`} className="flex items-center justify-between text-xs group">
+                     <div className="flex items-center gap-2">
+                       <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: `${catConfig.color}15` }}>
+                          <catConfig.icon className="w-2.5 h-2.5" style={{ color: catConfig.color }} />
+                       </div>
+                       <span className="text-[9px] font-bold uppercase tracking-wider text-[#1E1C1A] truncate">{cat.label}</span>
+                     </div>
+                     <span className="font-mono text-[10px] font-medium text-[#7A7268] group-hover:text-[#1E1C1A] transition-colors">{formatCurrencyRounded(cat.total, homeCurrency)}</span>
+                   </div>
+                 );
+               })}
               </div>
-              <div className="min-w-0">
-                <span className="text-sm font-serif font-black text-[#1E1C1A] block">
-                  Group Settlement
-                </span>
-                <span className="text-[11px] sm:text-xs font-sans text-[#7A7268] truncate block">
-                  Total: {formatCurrencyRounded(totalGroupCost, homeCurrency)} &middot; Split equally ({numMembers} people)
-                </span>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              {balances.map((b, idx) => (
-                <div key={idx} className="flex items-center justify-between text-xs sm:text-sm font-sans gap-2">
-                  <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                    <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-stone-300 shrink-0"></span>
-                    <span className="font-bold text-[#1E1C1A] truncate">{b.name}</span>
-                    <span className="text-[10px] sm:text-xs text-[#7A7268] shrink-0">(Paid: {formatCurrencyRounded(b.paid, homeCurrency)})</span>
-                  </div>
-                  
-                  {b.net > 1 ? (
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold text-[11px] sm:text-xs border border-emerald-100 shrink-0">
-                      is owed {formatCurrencyRounded(b.net, homeCurrency)}
-                    </span>
-                  ) : b.net < -1 ? (
-                    <span className="px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 font-bold text-[11px] sm:text-xs border border-orange-100 shrink-0">
-                      owes {formatCurrencyRounded(Math.abs(b.net), homeCurrency)}
-                    </span>
-                  ) : (
-                    <span className="px-2 py-0.5 rounded-full bg-stone-100 text-stone-500 font-bold text-[11px] sm:text-xs border border-stone-200 shrink-0">
-                      Settled Up
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        );
-      })()}
-
-      {/* VISUAL CATEGORY BREAKDOWN STACKED BAR CHART */}
-      {totalSpentBase > 0 && (
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.24 }}
-          className="bg-white rounded-2xl border border-[#E6DFD5] p-3.5 sm:p-4 shadow-2xs space-y-2.5 sm:space-y-3"
-        >
-          <div className="flex items-center justify-between text-xs">
-            <span className="font-bold text-[#1E1C1A] uppercase tracking-wider text-[10px] sm:text-[10.5px] font-mono flex items-center gap-1.5">
-              <DollarSign className="w-3.5 h-3.5 text-[#FF6B2C]" />
-              <span>Category Breakdown</span>
-            </span>
-            <span className="text-[#7A7268] text-[10.5px] sm:text-[11px] font-mono">
-              {categoryTotalsBase.filter(c => c.total > 0).length} Active Categories
-            </span>
-          </div>
-
-          {/* Multi-segment stacked bar */}
-          <div className="w-full h-3 sm:h-3.5 rounded-full bg-[#FAF6F0] overflow-hidden flex p-0.5 border border-[#E6DFD5]/70 gap-0.5">
-            {categoryTotalsBase.map(cat => {
-              if (cat.total <= 0) return null;
-              const pct = (cat.total / totalSpentBase) * 100;
-              const catConfig = CATEGORY_ICONS[cat.id] || CATEGORY_ICONS['Other'];
-              return (
-                <motion.div
-                  key={`bar-${cat.id}`}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${pct}%` }}
-                  transition={{ duration: 0.6, ease: "easeOut" }}
-                  style={{ backgroundColor: catConfig.color }}
-                  className="h-full rounded-xs first:rounded-l-full last:rounded-r-full relative group cursor-pointer"
-                  title={`${cat.label}: ${formatCurrencyRounded(cat.total, homeCurrency)} (${pct.toFixed(0)}%)`}
-                />
-              );
-            })}
-          </div>
-
-          {/* Legend chips */}
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-sans pt-0.5">
-            {categoryTotalsBase.map(cat => {
-              if (cat.total <= 0) return null;
-              const pct = (cat.total / totalSpentBase) * 100;
-              const catConfig = CATEGORY_ICONS[cat.id] || CATEGORY_ICONS['Other'];
-              return (
-                <div key={`legend-${cat.id}`} className="flex items-center gap-1.5 text-[#1E1C1A]">
-                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: catConfig.color }} />
-                  <span className="font-medium text-gray-700 text-[11px] sm:text-xs">{cat.label}:</span>
-                  <span className="font-bold font-mono text-[#1E1C1A] text-[11px] sm:text-xs">{formatCurrencyRounded(cat.total, homeCurrency)}</span>
-                  <span className="text-[9.5px] sm:text-[10px] text-gray-500 font-mono">({pct.toFixed(0)}%)</span>
-                </div>
-              );
-            })}
-          </div>
-        </motion.div>
-      )}
-
+           </motion.div>
+        )}
+      </div>
       {/* CATEGORY TILES GRID WITH MUTED ZERO-SPEND CARDS */}
       <motion.div 
         initial={{ opacity: 0, y: 15 }}
@@ -904,7 +908,14 @@ export default function ExpenseTrackerView({
               transition={{ duration: 0.3, delay: 0.25 + idx * 0.04 }}
               whileHover={{ scale: 1.03, y: -1 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => setSelectedCategoryFilter(isSelected ? 'All' : cat.id)}
+              onClick={() => {
+                setSelectedCategoryFilter(isSelected ? 'All' : cat.id);
+                if (!isSelected) {
+                  setTimeout(() => {
+                    ledgerContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 100);
+                }
+              }}
               className={`p-3 sm:p-3.5 rounded-xl sm:rounded-2xl border text-left transition-all cursor-pointer select-none relative overflow-hidden ${
                 isSelected 
                   ? 'bg-[#1E1C1A] text-white border-[#1E1C1A] shadow-xs' 
@@ -952,53 +963,78 @@ export default function ExpenseTrackerView({
         })}
       </motion.div>
 
-      {/* FILTER BAR & LOGGED EXPENSES FEED */}
-      <div className="space-y-3 sm:space-y-4 pt-1 sm:pt-2">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
-          <h3 className="font-serif text-lg sm:text-xl font-bold text-[#1E1C1A]">
-            Logged Expenses ({filteredExpenses.length})
+      {/* ── FILTER BAR & LOGGED EXPENSES FEED ── */}
+      <div ref={ledgerContainerRef} className="space-y-4 pt-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h3 className="font-serif text-2xl font-bold text-[#1E1C1A] tracking-tight">
+            Ledger
           </h3>
 
-          {/* DAY FILTER PILLS (Scrollable on mobile) */}
-          <div className="flex items-center gap-1 bg-[#FAF6F0] p-1 rounded-full border border-[#E6DFD5] overflow-x-auto max-w-full hide-scrollbar shrink-0">
-            <button
-              onClick={() => setSelectedDayFilter('All')}
-              className={`px-3 py-1 rounded-full text-xs font-sans font-bold transition-all cursor-pointer select-none shrink-0 ${
-                selectedDayFilter === 'All'
-                  ? 'bg-[#1E1C1A] text-white shadow-2xs' 
-                  : 'text-[#7A7268] hover:text-[#1E1C1A] hover:bg-white/60'
-              }`}
-            >
-              All ({expenses.length})
-            </button>
-            {availableDays.map(d => {
-              const count = expenses.filter(e => e.day === d.id).length;
-              const isActive = selectedDayFilter === d.id;
+          {/* DAY FILTER PILLS */}
+          <div className="relative flex-1 min-w-0 max-w-full overflow-hidden">
+            {/* Animated left scroll indicator */}
+            <div className={`absolute left-0 top-0 bottom-0 w-12 bg-linear-to-r from-[#FAF6F0] via-[#FAF6F0]/80 to-transparent pointer-events-none flex items-center justify-start pl-0.5 sm:hidden z-10 transition-opacity duration-300 ${canScrollLedgerLeft ? 'opacity-100' : 'opacity-0'}`}>
+              <motion.div
+                animate={{ x: [0, -3, 0] }}
+                transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+              >
+                <ChevronLeft className="w-3.5 h-3.5 text-[#FF6B2C]" />
+              </motion.div>
+            </div>
 
-              return (
-                <button
-                  key={d.id}
-                  onClick={() => setSelectedDayFilter(d.id)}
-                  className={`px-3 py-1 rounded-full text-xs font-sans font-bold transition-all cursor-pointer select-none shrink-0 ${
-                    isActive 
-                      ? 'bg-[#1E1C1A] text-white shadow-2xs' 
-                      : 'text-[#7A7268] hover:text-[#1E1C1A] hover:bg-white/60'
-                  }`}
-                >
-                  {d.label} ({count})
-                </button>
-              );
-            })}
+            <div 
+              ref={ledgerTabsContainerRef}
+              onScroll={checkLedgerScroll}
+              className="flex items-center gap-1 overflow-x-auto max-w-full pb-1 sm:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            >
+              <button
+                onClick={() => setSelectedDayFilter('All')}
+                className={`px-3.5 py-1.5 rounded-full text-[10px] uppercase tracking-wider font-bold transition-all cursor-pointer select-none shrink-0 border ${
+                  selectedDayFilter === 'All'
+                    ? 'bg-[#1E1C1A] border-[#1E1C1A] text-white' 
+                    : 'bg-transparent border-[#E6DFD5] text-[#8C827A] hover:border-[#1E1C1A] hover:text-[#1E1C1A]'
+                }`}
+              >
+                All
+              </button>
+              {availableDays.map(d => {
+                const isActive = selectedDayFilter === d.id;
+                return (
+                  <button
+                    key={d.id}
+                    onClick={() => setSelectedDayFilter(d.id)}
+                    className={`px-3.5 py-1.5 rounded-full text-[10px] uppercase tracking-wider font-bold transition-all cursor-pointer select-none shrink-0 border ${
+                      isActive 
+                        ? 'bg-[#1E1C1A] border-[#1E1C1A] text-white' 
+                        : 'bg-transparent border-[#E6DFD5] text-[#8C827A] hover:border-[#1E1C1A] hover:text-[#1E1C1A]'
+                    }`}
+                  >
+                    {d.label}
+                  </button>
+                );
+              })}
+            </div>
+            
+            {/* Animated right scroll indicator */}
+            <div className={`absolute right-0 top-0 bottom-0 w-12 bg-linear-to-l from-[#FAF6F0] via-[#FAF6F0]/80 to-transparent pointer-events-none flex items-center justify-end pr-0.5 sm:hidden z-10 transition-opacity duration-300 ${canScrollLedgerRight && availableDays.length > 2 ? 'opacity-100' : 'opacity-0'}`}>
+              <motion.div
+                animate={{ x: [0, 3, 0] }}
+                transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+              >
+                <ChevronRight className="w-3.5 h-3.5 text-[#FF6B2C]" />
+              </motion.div>
+            </div>
           </div>
         </div>
 
         {/* FEED ITEMS LIST */}
         {filteredExpenses.length === 0 ? (
-          <div className="p-6 sm:p-8 text-center bg-[#FAF6F0] rounded-2xl sm:rounded-3xl border border-dashed border-[#E6DFD5]">
-            <p className="text-xs sm:text-sm font-sans text-[#7A7268]">No expenses logged for this filter selection.</p>
+          <div className="py-12 border-t border-b border-[#E6DFD5]/50 flex flex-col items-center justify-center gap-2">
+             <span className="text-[10px] uppercase tracking-widest font-bold text-[#8C827A]">No records</span>
+             <span className="text-sm font-serif text-[#1E1C1A]">Clean slate for this filter.</span>
           </div>
         ) : (
-          <div className="flex flex-col gap-2.5 sm:gap-3">
+          <div className="flex flex-col border-t border-[#E6DFD5]/50 mt-2">
             <AnimatePresence>
               {filteredExpenses.map((exp) => {
                 const catConfig = CATEGORY_ICONS[exp.category] || CATEGORY_ICONS['Other'];
@@ -1010,98 +1046,85 @@ export default function ExpenseTrackerView({
                 return (
                   <motion.div
                     key={exp.id}
-                    initial={{ opacity: 0, scale: 0.98, y: 8 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.98, y: -8 }}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
                     transition={{ duration: 0.25 }}
-                    className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white border border-[#E6DFD5] shadow-2xs hover:shadow-xs transition-shadow flex items-center justify-between gap-2.5 sm:gap-3 group"
+                    className="group border-b border-[#E6DFD5]/50 py-3 sm:py-4 flex items-center justify-between gap-3 hover:bg-[#FAF6F0] -mx-4 px-4 transition-colors"
                   >
-                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-                      {/* Interactive Clickable Receipt Thumbnail if available */}
+                    <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                      {/* Thumbnail or Icon */}
                       {(() => {
                         const imgUrl = exp.receiptUrl || exp.receiptPhoto || exp.photoDataUrl;
                         if (imgUrl) {
                           return (
                             <div 
                               onClick={() => setPreviewPhotoUrl(imgUrl)}
-                              title="Click to view full receipt"
-                              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl border border-[#E6DFD5] overflow-hidden shrink-0 cursor-pointer relative group/thumb shadow-2xs hover:scale-105 transition-transform"
+                              className="w-10 h-10 rounded-full overflow-hidden shrink-0 cursor-pointer relative shadow-2xs border border-[#E6DFD5]"
                             >
-                              <img src={imgUrl} alt="Receipt" className="w-full h-full object-cover" />
-                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center text-white">
-                                <Eye className="w-3.5 h-3.5" />
-                              </div>
+                              <img src={imgUrl} alt="Receipt" className="w-full h-full object-cover grayscale-[30%] hover:grayscale-0 transition-all" />
                             </div>
                           );
                         }
                         return (
-                          <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl ${catConfig.bg} border ${catConfig.border} flex items-center justify-center shrink-0`}>
-                            <IconComp className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: catConfig.color }} />
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 border border-[#E6DFD5] bg-white group-hover:border-transparent transition-colors" style={{ backgroundColor: `${catConfig.color}08` }}>
+                            <IconComp className="w-4 h-4" style={{ color: catConfig.color }} />
                           </div>
                         );
                       })()}
 
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <h4 className="font-serif font-extrabold text-sm sm:text-base text-[#1E1C1A] truncate max-w-35 sm:max-w-none">{exp.merchant}</h4>
-                          <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-[#FAF6F0] border border-[#E6DFD5] text-[9.5px] sm:text-[10px] font-sans font-bold text-[#1E1C1A]">
-                            {exp.category}
-                          </span>
+                      <div className="min-w-0 flex-1 flex flex-col">
+                        <div className="flex items-center gap-2 max-w-full">
+                          <h4 className="font-serif font-bold text-sm sm:text-base text-[#1E1C1A] truncate">{exp.merchant}</h4>
                           {exp.day && (
-                            <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-[#FF6B2C]/10 border border-[#FF6B2C]/30 text-[9.5px] sm:text-[10px] font-mono font-bold text-[#FF6B2C]">
+                            <span className="text-[9px] uppercase tracking-widest text-[#8C827A] shrink-0">
                               {exp.day}
                             </span>
                           )}
                         </div>
 
-                        <div className="flex items-center gap-1.5 text-[10.5px] sm:text-[11px] font-sans text-gray-600 mt-0.5">
+                        <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-bold text-[#8C827A] mt-0.5">
                           <span>{exp.date || 'Today'}</span>
                           {exp.paidBy && exp.paidBy !== 'Me' && (
                             <>
                               <span>&middot;</span>
-                              <span className="font-bold text-[#FF6B2C]">By {exp.paidBy}</span>
+                              <span className="text-[#1E1C1A]">{exp.paidBy}</span>
                             </>
                           )}
                           {exp.syncStatus === 'pending' && (
-                            <span className="text-amber-600 font-bold flex items-center gap-1">
-                              &middot; <RefreshCw className="w-3 h-3 animate-spin" /> Syncing
+                            <span className="text-amber-600 flex items-center gap-1">
+                              &middot; <RefreshCw className="w-2.5 h-2.5 animate-spin" /> Syncing
                             </span>
                           )}
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                      <div className="text-right">
-                        <span className="text-sm sm:text-base font-serif font-black text-[#1E1C1A] block">
+                    <div className="flex items-center gap-4 shrink-0">
+                      <div className="text-right flex flex-col justify-center">
+                        <span className="text-sm sm:text-base font-mono font-bold text-[#1E1C1A] block">
                           {symbol}{parseFloat(exp.amount).toFixed(2)}
                         </span>
                         {isForeign && (
-                          <span className="text-[9.5px] sm:text-[11px] font-mono font-bold text-gray-500 block">
-                            (~{formatCurrency(usdEquiv, homeCurrency)})
+                          <span className="text-[9px] uppercase tracking-widest text-[#8C827A] block mt-0.5">
+                            {formatCurrencyRounded(usdEquiv, homeCurrency)}
                           </span>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-0.5 opacity-80 group-hover:opacity-100 transition-opacity">
-                        <motion.button
-                          whileHover={{ scale: 1.15 }}
-                          whileTap={{ scale: 0.9 }}
+                      <div className="flex items-center gap-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                        <button
                           onClick={() => handleEditClick(exp)}
-                          className="p-1 sm:p-1.5 rounded-lg text-gray-500 hover:text-[#1E1C1A] hover:bg-[#FAF6F0] transition-colors cursor-pointer"
-                          title="Edit Expense"
+                          className="p-2 rounded-full text-[#8C827A] hover:text-[#1E1C1A] transition-colors cursor-pointer"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.15 }}
-                          whileTap={{ scale: 0.9 }}
+                        </button>
+                        <button
                           onClick={() => handleDeleteExpense(exp.id)}
-                          className="p-1 sm:p-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                          title="Delete Expense"
+                          className="p-2 rounded-full text-[#8C827A] hover:text-red-600 transition-colors cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                        </motion.button>
+                        </button>
                       </div>
                     </div>
                   </motion.div>

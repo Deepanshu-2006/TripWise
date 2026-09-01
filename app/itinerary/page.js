@@ -1381,7 +1381,7 @@ export default function ItineraryPage() {
             <div 
               ref={tabsContainerRef}
               onScroll={checkTabsScroll}
-              className="flex items-center gap-0.5 sm:gap-1.5 overflow-x-auto w-full no-scrollbar pb-0 pr-4 lg:pr-12"
+              className="flex items-center gap-0.5 sm:gap-1.5 overflow-x-auto w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-0 pr-4 lg:pr-12"
             >
               {days.map((day, dIdx) => {
                 const dayNum = day.dayNumber || dIdx + 1;

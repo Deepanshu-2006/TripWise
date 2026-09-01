@@ -331,88 +331,91 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
                 </AnimatePresence>
                 </div>
 
-                {/* ── Event Filters ── */}
-                <div className="flex justify-center gap-2 flex-wrap">
-                  {[
-                    { key: 'sightseeing', label: 'Sightseeing', icon: <MapPin className="w-3.5 h-3.5" strokeWidth={2} />, value: includeSightseeing, setter: setIncludeSightseeing },
-                    { key: 'food', label: 'Dining', icon: <Utensils className="w-3.5 h-3.5" strokeWidth={2} />, value: includeFood, setter: setIncludeFood },
-                    { key: 'transport', label: 'Transport', icon: <Plane className="w-3.5 h-3.5" strokeWidth={2} />, value: includeTransport, setter: setIncludeTransport },
-                  ].map(filter => (
-                    <button
-                      key={filter.key}
-                      onClick={() => filter.setter(v => !v)}
-                      className={`relative flex items-center gap-1.5 px-3.5 py-2 rounded-full border transition-all duration-200 cursor-pointer overflow-hidden ${
-                        filter.value 
-                          ? 'bg-stone-900 border-stone-900 shadow-md' 
-                          : 'bg-white border-stone-200 hover:bg-stone-50 hover:border-stone-300'
-                      }`}
-                    >
-                      <div className={`transition-colors ${filter.value ? 'text-stone-300' : 'text-stone-400'}`}>
-                        {filter.value ? <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} /> : filter.icon}
-                      </div>
-                      <span className={`text-[12px] font-sans font-medium transition-colors ${filter.value ? 'text-white' : 'text-stone-600'}`}>
-                        {filter.label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
+                {!isSynced && (
+                  <>
+                    {/* ── Event Filters ── */}
+                    <div className="flex justify-center gap-2 flex-wrap mt-2">
+                      {[
+                        { key: 'sightseeing', label: 'Sightseeing', icon: <MapPin className="w-3.5 h-3.5" strokeWidth={2} />, value: includeSightseeing, setter: setIncludeSightseeing },
+                        { key: 'food', label: 'Dining', icon: <Utensils className="w-3.5 h-3.5" strokeWidth={2} />, value: includeFood, setter: setIncludeFood },
+                        { key: 'transport', label: 'Transport', icon: <Plane className="w-3.5 h-3.5" strokeWidth={2} />, value: includeTransport, setter: setIncludeTransport },
+                      ].map(filter => (
+                        <button
+                          key={filter.key}
+                          onClick={() => filter.setter(v => !v)}
+                          className={`relative flex items-center gap-1.5 px-3.5 py-2 rounded-full border transition-all duration-200 cursor-pointer overflow-hidden ${
+                            filter.value 
+                              ? 'bg-stone-900 border-stone-900 shadow-md' 
+                              : 'bg-white border-stone-200 hover:bg-stone-50 hover:border-stone-300'
+                          }`}
+                        >
+                          <div className={`transition-colors ${filter.value ? 'text-stone-300' : 'text-stone-400'}`}>
+                            {filter.value ? <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} /> : filter.icon}
+                          </div>
+                          <span className={`text-[12px] font-sans font-medium transition-colors ${filter.value ? 'text-white' : 'text-stone-600'}`}>
+                            {filter.label}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
 
-                {/* ── Event Preview Toggle ── */}
-                <div ref={previewRef} className="pt-2 border-t border-stone-100">
-                  <button
-                    onClick={() => {
-                      const opening = !showPreview;
-                      setShowPreview(v => !v);
-                      if (opening) {
-                        // Wait for height animation to complete before scrolling to prevent jank
-                        setTimeout(() => {
-                          if (previewRef.current && scrollContainerRef.current) {
-                            previewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    {/* ── Event Preview Toggle ── */}
+                    <div ref={previewRef} className="pt-2 border-t border-stone-100">
+                      <button
+                        onClick={() => {
+                          const opening = !showPreview;
+                          setShowPreview(v => !v);
+                          if (opening) {
+                            setTimeout(() => {
+                              if (previewRef.current && scrollContainerRef.current) {
+                                previewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                              }
+                            }, 300);
                           }
-                        }, 300);
-                      }
-                    }}
-                    className="w-full flex items-center justify-between py-2 transition-colors cursor-pointer group"
-                  >
-                    <span className="text-sm font-sans font-medium text-stone-800">
-                      View itinerary preview
-                    </span>
-                    <motion.div animate={{ rotate: showPreview ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                      <ChevronDown className="w-4 h-4 text-stone-400 group-hover:text-stone-700 transition-colors" />
-                    </motion.div>
-                  </button>
-
-                  <AnimatePresence>
-                    {showPreview && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25, ease: 'easeOut' }}
-                        className="overflow-hidden"
+                        }}
+                        className="w-full flex items-center justify-between py-2 transition-colors cursor-pointer group"
                       >
-                        <div className="pt-3 pb-1 space-y-1">
-                          {previewEvents.map((item, i) => (
-                            <EventPreviewItem key={i} activity={item.activity} dayNum={item.dayNum} />
-                          ))}
+                        <span className="text-sm font-sans font-medium text-stone-800">
+                          View itinerary preview
+                        </span>
+                        <motion.div animate={{ rotate: showPreview ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                          <ChevronDown className="w-4 h-4 text-stone-400 group-hover:text-stone-700 transition-colors" />
+                        </motion.div>
+                      </button>
 
-                          {previewEvents.length === 0 && (
-                            <p className="text-sm text-stone-500 font-sans py-4 text-center">
-                              No activities match the selected filters.
-                            </p>
-                          )}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                      <AnimatePresence>
+                        {showPreview && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.25, ease: 'easeOut' }}
+                            className="overflow-hidden"
+                          >
+                            <div className="pt-3 pb-1 space-y-1">
+                              {previewEvents.map((item, i) => (
+                                <EventPreviewItem key={i} activity={item.activity} dayNum={item.dayNum} />
+                              ))}
 
-                {/* ── Footer note ── */}
-                <div className="pt-2">
-                  <p className="text-xs text-stone-400 font-sans text-center leading-relaxed">
-                    Sync is offline. No data leaves your device.
-                  </p>
-                </div>
+                              {previewEvents.length === 0 && (
+                                <p className="text-sm text-stone-500 font-sans py-4 text-center">
+                                  No activities match the selected filters.
+                                </p>
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* ── Footer note ── */}
+                    <div className="pt-2">
+                      <p className="text-xs text-stone-400 font-sans text-center leading-relaxed">
+                        Sync is offline. No data leaves your device.
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
             </motion.div>
           </motion.div>
