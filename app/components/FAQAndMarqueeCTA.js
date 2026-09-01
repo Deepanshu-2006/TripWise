@@ -712,7 +712,7 @@ export default function FAQAndMarqueeCTA() {
                     ref={(el) => (noteRefs.current[i] = el)}
                     className={`sticky-note-card group relative cursor-pointer transition-shadow duration-300 rounded-2xl p-6 md:p-7 md:will-change-transform md:transform-gpu ${
                       isOpen 
-                        ? 'z-50 shadow-[0_30px_70px_-12px_rgba(255,91,29,0.3)] ring-2 ring-[#FF5B1D]' 
+                        ? 'z-50 shadow-[0_30px_70px_-12px_rgba(255,91,29,0.25)] ring-1 ring-[#FF5B1D]/40' 
                         : 'z-20 shadow-[0_12px_30px_-8px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)]'
                     }`}
                     style={{
@@ -754,7 +754,7 @@ export default function FAQAndMarqueeCTA() {
                     />
 
                     <div className="flex items-center justify-between gap-3 mb-4 select-none pt-1">
-                      <span className="font-mono text-[10px] font-bold tracking-widest text-stone-700/70 uppercase px-2 py-0.5 rounded bg-black/5 border border-black/5">
+                      <span className="font-mono text-[9px] font-semibold tracking-widest text-stone-600 uppercase">
                         #{note.num} • {note.tag}
                       </span>
                       <span className={`text-[10px] font-mono font-bold uppercase transition-colors ${
@@ -774,28 +774,28 @@ export default function FAQAndMarqueeCTA() {
                       ref={(el) => (contentRefs.current[i] = el)}
                       className="overflow-hidden h-0 opacity-0"
                     >
-                      <div className="pt-3 pb-1 border-t border-stone-800/10 text-stone-800 text-sm md:text-[15px] leading-relaxed font-medium mt-4">
-                        <p className="mb-3">{note.answer}</p>
+                      <div className="pt-5 pb-1 border-t border-stone-800/5 text-stone-800 text-sm md:text-[15px] leading-relaxed font-medium mt-5">
+                        <p className="mb-5 opacity-90 text-stone-900">{note.answer}</p>
                         
-                        <div className="takeaway-badge px-3 py-1.5 rounded-lg bg-black/5 border border-black/5 font-mono text-[11px] font-bold text-stone-900 flex items-center gap-2 mb-3">
-                          <span className="text-[#FF5B1D]">✦</span>
-                          <span>{note.highlight}</span>
+                        <div className="pl-4 border-l-[1.5px] border-[#FF5B1D]/40 mb-6 py-0.5">
+                          <span className="font-mono text-[9px] font-bold text-[#FF5B1D] uppercase tracking-widest block mb-1">Key Takeaway</span>
+                          <span className="text-[13px] font-semibold text-stone-800">{note.highlight}</span>
                         </div>
 
-                        <div className="stamp-seal-bar flex items-center justify-between pt-2 border-t border-stone-800/10 text-[10px] font-mono uppercase">
+                        <div className="flex items-center justify-between pt-4 border-t border-stone-800/5">
                           <button
                             onClick={(e) => handleHelpfulClick(e, i)}
-                            className={`helpful-btn px-2.5 py-1 rounded-md font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                            className={`font-mono text-[9px] uppercase tracking-widest font-bold flex items-center gap-1.5 transition-colors cursor-pointer ${
                               helpfulClicked[i]
-                                ? 'bg-[#FF5B1D] text-white shadow-xs'
-                                : 'bg-black/5 hover:bg-[#FF5B1D]/15 text-stone-700 hover:text-[#FF5B1D]'
+                                ? 'text-[#FF5B1D]'
+                                : 'text-stone-500 hover:text-stone-900'
                             }`}
                           >
-                            <span>{helpfulClicked[i] ? '👍 HELPFUL!' : '💡 HELPFUL?'}</span>
-                            <span className="font-sans font-black text-xs">({helpfulCounts[i]})</span>
+                            <span>{helpfulClicked[i] ? 'Helpful' : 'Helpful?'}</span>
+                            <span className="font-sans font-medium text-stone-400 tracking-normal">({helpfulCounts[i]})</span>
                           </button>
 
-                          <span className="text-stone-500 font-bold">{note.stamp}</span>
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-stone-400">{note.stamp}</span>
                         </div>
                       </div>
                     </div>

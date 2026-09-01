@@ -46,38 +46,28 @@ export default function EmergencyModal({ isOpen, onClose, destinationName, passp
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: '100%' }}
           transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-          className="relative w-full max-w-4xl h-[92vh] sm:h-[85vh] bg-[#FAF6F0] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[#E6DFD5] flex flex-col overflow-hidden z-10"
+          className="relative w-full max-w-2xl h-[85dvh] sm:h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden z-10"
         >
           {/* MODAL HEADER */}
-          <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-[#E6DFD5] bg-white shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#FF6B2C] text-white flex items-center justify-center shadow-xs shrink-0">
-                <ShieldAlert className="w-4 h-4 sm:w-5 sm:h-5" />
-              </div>
-              <div>
-                <h3 className="font-serif font-black text-base sm:text-lg text-[#1E1C1A] tracking-tight leading-tight">
-                  Emergency &amp; Safety Concierge
-                </h3>
-                <p className="text-[11px] sm:text-xs text-[#7A7268]">
-                  {destinationName || 'Destination'} Safety Directory
-                </p>
-              </div>
+          <div className="flex items-center justify-between px-6 sm:px-8 py-6 border-b border-stone-100 bg-white shrink-0">
+            <div>
+              <h3 className="font-black text-lg sm:text-xl text-stone-900 tracking-tight leading-none">
+                Emergency &amp; Safety
+              </h3>
             </div>
-
             <button
               type="button"
               onClick={onClose}
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#FAF6F0] hover:bg-[#E6DFD5] text-[#1E1C1A] flex items-center justify-center transition-colors cursor-pointer"
-              title="Close Emergency Info"
+              className="font-mono text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 transition-colors"
             >
-              <X className="w-4 h-4 sm:w-5 sm:h-5" />
+              Close
             </button>
           </div>
 
           {/* MODAL BODY CONTENT */}
           <div
             data-lenis-prevent="true"
-            className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 md:p-8"
+            className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-8"
           >
             <EmergencyInfoView
               destinationName={destinationName}
