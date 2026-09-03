@@ -176,7 +176,7 @@ export default function FigmaReveal({
     >
       <div
         ref={sheetRef}
-        className={`relative will-change-transform transform-gpu w-full ${
+        className={`relative w-full ${
           isDark ? 'bg-[#0A0A0A]' : 'bg-[#FFF8F5]'
         } ${
           isRight
@@ -184,9 +184,6 @@ export default function FigmaReveal({
             : 'rounded-t-[40px] md:rounded-t-[60px] border-t-2 border-[#FF5B1D]'
         } overflow-hidden`}
         style={{
-          backfaceVisibility: 'hidden',
-          WebkitBackfaceVisibility: 'hidden',
-          transformStyle: 'preserve-3d',
           boxShadow: isRight
             ? isDark
               ? '-35px -20px 85px -15px rgba(0,0,0,0.88), -10px 0 35px -5px rgba(0,0,0,0.7), -3px 0 20px rgba(255,91,29,0.7)'

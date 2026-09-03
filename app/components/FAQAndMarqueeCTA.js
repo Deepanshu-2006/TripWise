@@ -168,9 +168,8 @@ export default function FAQAndMarqueeCTA() {
 
   const getRotate = (idx) => (typeof window !== 'undefined' && window.innerWidth >= 1024) ? faqNotes[idx].defaultRotate : 0;
 
-  // ✦ Creative 3D Origami Paper Unfold & Stamped Dispatch Reveal ✦
+  // ✦ Fluid Origami Paper Unfold & Clean Accordion Expansion ✦
   const toggleStickyNote = (index) => {
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
     const isOpening = openIdx !== index;
     const prevIdx = openIdx;
 
@@ -179,42 +178,41 @@ export default function FAQAndMarqueeCTA() {
       gsap.to(contentRefs.current[prevIdx], {
         height: 0,
         opacity: 0,
-        rotateX: isMobile ? 0 : -45,
-        transformOrigin: 'top center',
-        duration: 0.28,
-        ease: "power2.in",
-        force3D: !isMobile,
+        duration: 0.25,
+        ease: "power2.inOut",
+        overwrite: 'auto',
       });
       if (noteRefs.current[prevIdx]) {
         gsap.to(noteRefs.current[prevIdx], {
           rotate: getRotate(prevIdx),
-          rotateX: 0,
           scale: 1,
           y: 0,
-          opacity: isOpening ? 0.4 : 1,
-          duration: 0.35,
+          opacity: 1,
+          duration: 0.3,
           ease: "power2.out",
-          force3D: !isMobile,
+          overwrite: 'auto',
         });
       }
     }
 
-    // 2. Open target note with 3D Origami Paper Unfold & Stamped Seal
+    // 2. Open target note with smooth fluid reveal
     if (isOpening) {
       setOpenIdx(index);
 
-      // Active card unpins & peels off corkboard towards camera
+      // Kill any conflicting animations
+      gsap.killTweensOf(noteRefs.current.filter(Boolean));
+
+      // Active card unpins & pops slightly forward
       const activeEl = noteRefs.current[index];
       if (activeEl) {
         gsap.to(activeEl, {
           rotate: 0,
-          rotateX: isMobile ? 0 : -5,
-          scale: isMobile ? 1.02 : 1.05,
-          y: isMobile ? -6 : -12,
+          scale: 1.015,
+          y: -4,
           opacity: 1,
-          duration: 0.45,
-          ease: "back.out(2.0)",
-          force3D: !isMobile,
+          duration: 0.3,
+          ease: "power2.out",
+          overwrite: 'auto',
         });
 
         // Pushpin Head Pulse
@@ -222,37 +220,42 @@ export default function FAQAndMarqueeCTA() {
         if (pinHead) {
           gsap.fromTo(pinHead,
             { scale: 1, y: 0 },
-            { scale: 1.35, y: -4, duration: 0.25, yoyo: true, repeat: 1, ease: 'back.out(2.5)' }
+            { scale: 1.3, y: -3, duration: 0.2, yoyo: true, repeat: 1, ease: 'power2.out' }
           );
         }
       }
 
-      // Background notes recede into 3D depth with subtle tilt
+      // Keep background notes crisp and fully visible — no screen dimming or flashing
       noteRefs.current.forEach((el, i) => {
         if (!el || i === index) return;
         gsap.to(el, {
-          scale: isMobile ? 0.98 : 0.94,
-          rotateX: isMobile ? 0 : 8,
-          y: isMobile ? 4 : 8,
-          opacity: isMobile ? 0.6 : 0.4,
-          duration: 0.4,
+          scale: 1,
+          y: 0,
+          opacity: 1,
+          duration: 0.3,
           ease: "power2.out",
-          force3D: !isMobile,
+          overwrite: 'auto',
         });
       });
 
-      // Answer Container 3D Origami Paper Unfold
+      // Target answer content: measure height cleanly without reflow snaps
       const target = contentRefs.current[index];
       if (target) {
+        target.style.height = 'auto';
+        const fullHeight = target.scrollHeight;
+        target.style.height = '0px';
+
         gsap.fromTo(target,
-          { height: isMobile ? 'auto' : 0, opacity: 0, rotateX: isMobile ? 0 : -65, transformOrigin: 'top center' },
+          { height: 0, opacity: 0 },
           {
-            height: 'auto',
+            height: fullHeight,
             opacity: 1,
-            rotateX: 0,
-            duration: 0.5,
-            ease: "back.out(1.8)",
-            force3D: !isMobile,
+            duration: 0.35,
+            ease: "power2.out",
+            overwrite: 'auto',
+            onComplete: () => {
+              target.style.height = 'auto';
+            }
           }
         );
 
@@ -262,39 +265,38 @@ export default function FAQAndMarqueeCTA() {
 
         if (takeaway) {
           gsap.fromTo(takeaway,
-            { x: -20, opacity: 0, scale: 0.9 },
-            { x: 0, opacity: 1, scale: 1, duration: 0.4, delay: 0.15, ease: "back.out(2)" }
+            { x: -16, opacity: 0 },
+            { x: 0, opacity: 1, duration: 0.3, delay: 0.1, ease: "power2.out" }
           );
         }
 
         if (stampBar) {
           gsap.fromTo(stampBar,
-            { scale: 1.3, opacity: 0, rotate: -3 },
-            { scale: 1, opacity: 1, rotate: 0, duration: 0.38, delay: 0.22, ease: "back.out(2.2)" }
+            { scale: 1.1, opacity: 0 },
+            { scale: 1, opacity: 1, duration: 0.3, delay: 0.15, ease: "power2.out" }
           );
         }
       }
     } else {
       setOpenIdx(null);
-      // Restore all notes to normal floating state on corkboard
+      // Restore all notes to normal state on corkboard
       noteRefs.current.forEach((el, i) => {
         if (!el) return;
         gsap.to(el, {
           rotate: getRotate(i),
-          rotateX: 0,
           scale: 1,
           y: 0,
           opacity: 1,
-          duration: 0.4,
-          ease: "back.out(1.5)",
-          force3D: !isMobile,
+          duration: 0.3,
+          ease: "power2.out",
+          overwrite: 'auto',
         });
       });
     }
   };
 
   const handleNoteHover = (index) => {
-    if (openIdx !== null && openIdx !== index) return;
+    if (openIdx !== null) return;
     const el = noteRefs.current[index];
     if (!el) return;
 
@@ -309,13 +311,13 @@ export default function FAQAndMarqueeCTA() {
   };
 
   const handleNoteLeave = (index) => {
-    if (openIdx !== null && openIdx !== index) return;
+    if (openIdx !== null) return;
     const el = noteRefs.current[index];
     if (!el) return;
 
     gsap.to(el, {
       rotate: getRotate(index),
-      scale: openIdx === index ? 1.03 : 1,
+      scale: 1,
       y: 0,
       duration: 0.35,
       ease: "power2.out",
@@ -401,27 +403,7 @@ export default function FAQAndMarqueeCTA() {
           ease: 'power3.out',
           force3D: true,
           onComplete: () => {
-            // ✦ Infinite Anti-Gravity Floating Levitation Loop ✦
-            if (window.innerWidth >= 1024) {
-                noteRefs.current.forEach((el, idx) => {
-                  if (!el) return;
-                  const floatDist = 5 + (idx % 3) * 3;
-                  const floatTime = 3.0 + (idx % 4) * 0.45;
-                  
-                  gsap.to(el, {
-                    y: `-=${floatDist}`,
-                    rotate: `+=${idx % 2 === 0 ? 1.2 : -1.2}`,
-                    duration: floatTime,
-                    repeat: -1,
-                    yoyo: true,
-                    ease: 'sine.inOut',
-                    delay: idx * 0.15,
-                    force3D: true,
-                  });
-                });
-            }
-
-            // Floating loop for Rome & Kyoto Figma Cards
+            // Floating loop for Rome & Kyoto Figma Showcase Cards only
             polaroidRefs.current.forEach((el, idx) => {
               if (!el) return;
               gsap.to(el, {
@@ -432,7 +414,6 @@ export default function FAQAndMarqueeCTA() {
                 yoyo: true,
                 ease: 'sine.inOut',
                 delay: 0.2,
-                force3D: true,
               });
             });
           }
@@ -443,9 +424,9 @@ export default function FAQAndMarqueeCTA() {
     return () => ctx.revert();
   }, []);
 
-  // Hardware-Accelerated Dynamic Mouse Parallax
+  // Hardware-Accelerated Dynamic Mouse Parallax (only when no note is opened)
   const handleBoardMouseMove = (e) => {
-    if (window.innerWidth < 1024) return;
+    if (window.innerWidth < 1024 || openIdx !== null) return;
     const section = faqSectionRef.current;
     if (!section) return;
     const rect = section.getBoundingClientRect();
@@ -453,16 +434,13 @@ export default function FAQAndMarqueeCTA() {
     const yRatio = (e.clientY - rect.top) / rect.height - 0.5;
 
     noteRefs.current.forEach((el, idx) => {
-      if (!el || openIdx === idx) return;
-      const depth = (idx % 3 + 1) * 5;
+      if (!el) return;
+      const depth = (idx % 3 + 1) * 3;
       gsap.to(el, {
         x: xRatio * depth,
         y: yRatio * depth,
-        rotateX: -yRatio * 6,
-        rotateY: xRatio * 6,
         duration: 0.3,
         ease: 'power2.out',
-        force3D: true,
         overwrite: 'auto'
       });
     });
@@ -470,29 +448,25 @@ export default function FAQAndMarqueeCTA() {
     polaroidRefs.current.forEach((el) => {
       if (!el) return;
       gsap.to(el, {
-        x: xRatio * 10,
-        y: yRatio * 10,
+        x: xRatio * 8,
+        y: yRatio * 8,
         duration: 0.35,
         ease: 'power2.out',
-        force3D: true,
         overwrite: 'auto'
       });
     });
   };
 
   const handleBoardMouseLeave = () => {
-    if (window.innerWidth < 1024) return;
+    if (window.innerWidth < 1024 || openIdx !== null) return;
     noteRefs.current.forEach((el, idx) => {
-      if (!el || openIdx === idx) return;
+      if (!el) return;
       gsap.to(el, {
         x: 0,
         y: 0,
-        rotateX: 0,
-        rotateY: 0,
         rotate: getRotate(idx),
-        duration: 0.5,
+        duration: 0.4,
         ease: 'power2.out',
-        force3D: true,
         overwrite: 'auto'
       });
     });
@@ -502,9 +476,8 @@ export default function FAQAndMarqueeCTA() {
       gsap.to(el, {
         x: 0,
         y: 0,
-        duration: 0.5,
+        duration: 0.4,
         ease: 'power2.out',
-        force3D: true,
         overwrite: 'auto'
       });
     });
@@ -583,7 +556,23 @@ export default function FAQAndMarqueeCTA() {
 
   return (
     <div className="w-full relative">
-      <FigmaReveal id="section-faq" index={2} variant="light" direction="bottom">
+      <div 
+        id="section-faq" 
+        className="relative z-20 w-full max-w-full overflow-x-clip mt-0 rounded-t-[40px] md:rounded-t-[60px] border-t-2 border-[#FF5B1D] bg-[#FFF8F5]"
+        style={{
+          boxShadow: '0 -28px 70px -15px rgba(0,0,0,0.18), 0 -10px 30px -5px rgba(0,0,0,0.12), 0 -2px 14px rgba(255,91,29,0.45), inset 0 1px 0 rgba(255,255,255,0.98)',
+        }}
+      >
+        {/* Top Luminous Laser Beam */}
+        <div
+          aria-hidden="true"
+          className="absolute top-0 inset-x-0 h-[3px] pointer-events-none z-50"
+          style={{
+            background: 'linear-gradient(90deg, transparent 0%, rgba(255,91,29,0.5) 10%, #FF5B1D 50%, rgba(255,91,29,0.5) 90%, transparent 100%)',
+            boxShadow: '0 0 22px 3.5px rgba(255, 91, 29, 0.9), 0 2px 28px 5px rgba(255, 91, 29, 0.55)',
+          }}
+        />
+
         <section 
           ref={faqSectionRef} 
           onMouseMove={handleBoardMouseMove}
@@ -710,7 +699,7 @@ export default function FAQAndMarqueeCTA() {
                   <div
                     key={note.id}
                     ref={(el) => (noteRefs.current[i] = el)}
-                    className={`sticky-note-card group relative cursor-pointer transition-shadow duration-300 rounded-2xl p-6 md:p-7 md:will-change-transform md:transform-gpu ${
+                    className={`sticky-note-card group relative cursor-pointer transition-shadow duration-300 rounded-2xl p-6 md:p-7 ${
                       isOpen 
                         ? 'z-50 shadow-[0_30px_70px_-12px_rgba(255,91,29,0.25)] ring-1 ring-[#FF5B1D]/40' 
                         : 'z-20 shadow-[0_12px_30px_-8px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)]'
@@ -719,8 +708,6 @@ export default function FAQAndMarqueeCTA() {
                       backgroundColor: note.bg,
                       border: `1.5px solid ${note.borderColor}`,
                       transformOrigin: 'top center',
-                      backfaceVisibility: 'hidden',
-                      WebkitBackfaceVisibility: 'hidden',
                     }}
                     onClick={() => toggleStickyNote(i)}
                     onMouseEnter={() => handleNoteHover(i)}
@@ -772,7 +759,8 @@ export default function FAQAndMarqueeCTA() {
 
                     <div
                       ref={(el) => (contentRefs.current[i] = el)}
-                      className="overflow-hidden h-0 opacity-0"
+                      className="overflow-hidden"
+                      style={{ overflowAnchor: 'none', height: 0, opacity: 0 }}
                     >
                       <div className="pt-5 pb-1 border-t border-stone-800/5 text-stone-800 text-sm md:text-[15px] leading-relaxed font-medium mt-5">
                         <p className="mb-5 opacity-90 text-stone-900">{note.answer}</p>
@@ -812,7 +800,7 @@ export default function FAQAndMarqueeCTA() {
             </div>
           </div>
         </section>
-      </FigmaReveal>
+      </div>
 
       <HorizonWarp />
 

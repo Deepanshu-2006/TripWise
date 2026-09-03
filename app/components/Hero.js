@@ -450,8 +450,8 @@ const Hero = () => {
                     className="absolute inset-0 w-full h-full z-0 pointer-events-none"
                 />
 
-                {/* Subtle Cinematic Vignette Overlay */}
-                <div className="absolute inset-0 bg-linear-to-t from-[#9D8574] via-transparent to-[#9D8574]/30 pointer-events-none z-1" />
+                {/* Subtle Cinematic Vignette Overlay (Phone only) */}
+                <div className="md:hidden absolute inset-0 bg-linear-to-t from-[#9D8574] via-transparent to-[#9D8574]/30 pointer-events-none z-1" />
 
 
 
