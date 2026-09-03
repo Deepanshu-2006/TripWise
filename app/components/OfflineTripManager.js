@@ -195,190 +195,228 @@ export default function OfflineTripManager({
       </div>
 
       {/* MODAL SHEET FOR OFFLINE DOWNLOAD / MANAGING PACK (Portal to document.body) */}
+      {/* MODAL SHEET FOR OFFLINE DOWNLOAD / MANAGING PACK (Portal to document.body) */}
       {isMounted && createPortal(
         <AnimatePresence>
           {showModal && (
-            <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-[100000] flex items-end sm:items-center justify-center p-0 sm:p-4">
               {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => !isDownloading && handleCloseModal()}
-              className="absolute inset-0 bg-black/40 backdrop-blur-xs"
-            />
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => !isDownloading && handleCloseModal()}
+                className="fixed inset-0 bg-[#1E1C1A]/40 backdrop-blur-xs"
+              />
 
-            {/* Dialog Card */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.92, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.92, y: 15 }}
-              transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-              className="relative w-full max-w-md bg-[#FAF6F0] rounded-3xl p-6 shadow-2xl border border-[#E6DFD5] text-[#1E1C1A] z-10 overflow-hidden"
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between pb-4 border-b border-[#E6DFD5]">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-2xl bg-[#FF6B2C]/15 flex items-center justify-center text-[#FF6B2C]">
-                    <CloudCheck className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-serif text-lg font-bold">Offline Availability</h3>
-                    <p className="text-xs text-gray-500 font-sans">TripWise Offline Dossier & Assets</p>
-                  </div>
+              {/* Dialog Card */}
+              <motion.div
+                initial={{ opacity: 0, y: 24, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 24, scale: 0.96 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                className="relative w-full sm:max-w-md bg-[#FAF6F0] rounded-t-3xl sm:rounded-3xl shadow-[0_24px_64px_rgba(0,0,0,0.2)] border border-[#E6DFD5] text-[#1E1C1A] z-10 overflow-hidden flex flex-col max-h-[90vh]"
+              >
+                {/* Mobile Drag Indicator */}
+                <div className="pt-3 pb-1 flex justify-center sm:hidden">
+                  <div className="w-10 h-1 rounded-full bg-[#D8D0C5]" />
                 </div>
 
-                {!isDownloading && (
-                  <button
-                    onClick={handleCloseModal}
-                    className="w-8 h-8 rounded-full bg-white border border-[#E6DFD5] flex items-center justify-center text-gray-500 hover:text-gray-900 transition-all cursor-pointer"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-
-              {/* Body */}
-              <div className="py-4 space-y-4 font-sans text-xs">
-                {/* Status Indicator */}
-                {isAvailable ? (
-                  <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-900 flex items-start gap-3">
-                    <CloudCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                {/* Header */}
+                <div className="px-6 pt-4 pb-4 flex items-center justify-between border-b border-[#E6DFD5]/70">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-[#1E1C1A] text-white flex items-center justify-center shadow-xs shrink-0">
+                      <CloudCheck className="w-4.5 h-4.5 text-[#FAF6F0]" strokeWidth={2} />
+                    </div>
                     <div>
-                      <p className="font-bold text-sm">Trip Cached & Ready Offline</p>
-                      <p className="text-[11px] text-emerald-800 mt-0.5">
-                        Last synced: {formatLastSynced()}
+                      <h3 className="font-serif text-lg sm:text-xl font-bold tracking-tight text-[#1E1C1A]">
+                        Offline Availability
+                      </h3>
+                      <p className="text-[11px] text-[#7A7268] font-sans">
+                        TripWise Dossier & Cached Assets
                       </p>
                     </div>
                   </div>
-                ) : (
-                  <div className="p-3.5 rounded-2xl bg-[#FF6B2C]/10 border border-[#FF6B2C]/30 text-[#1E1C1A] flex items-start gap-3">
-                    <HardDrive className="w-5 h-5 text-[#FF6B2C] shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-bold text-sm text-[#FF6B2C]">Estimated Storage Size</p>
-                      <p className="text-xs font-bold text-[#1E1C1A] mt-0.5">{sizeEstimate}</p>
-                    </div>
-                  </div>
-                )}
 
-                {/* Stale Warning Banner */}
-                {isStale && isAvailable && (
-                  <div className="p-3 rounded-xl bg-amber-500/15 border border-amber-400/50 text-amber-950 flex items-center gap-2.5">
-                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                    <span>Your offline copy may be outdated. Reconnect and refresh to update.</span>
-                  </div>
-                )}
-
-                {/* What Gets Cached Checklist */}
-                <div className="bg-white/80 rounded-2xl p-3.5 border border-[#E6DFD5] space-y-2">
-                  <p className="font-bold text-gray-700 text-xs tracking-wide uppercase text-[10px]">
-                    What Gets Cached for Offline Access
-                  </p>
-                  
-                  <div className="grid grid-cols-1 gap-2 text-[11px]">
-                    <div className="flex items-center gap-2 text-gray-800">
-                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                      <span>Full Itinerary (All days, activities, descriptions & AI insights)</span>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-gray-800">
-                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                      <span>Destination & Hotel Basecamp Photos</span>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-gray-800">
-                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                      <span>Offline Map Tiles (Viewed bounding box & stops)</span>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-gray-800">
-                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                      <span>Emergency Info & Embassy Directory (Critical)</span>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-gray-800">
-                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                      <span>Packing List & Visa Requirements</span>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-gray-400 line-through">
-                      <X className="w-3.5 h-3.5 text-red-400 shrink-0" />
-                      <span>Price Tracking & Live AI Generation (Requires Internet)</span>
-                    </div>
-                  </div>
+                  {!isDownloading && (
+                    <button
+                      type="button"
+                      onClick={handleCloseModal}
+                      className="w-8 h-8 rounded-full bg-white hover:bg-[#FAF6F0] border border-[#E6DFD5] flex items-center justify-center text-[#7A7268] hover:text-[#1E1C1A] transition-colors cursor-pointer select-none"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
 
-                {/* Download Progress Bar */}
-                {isDownloading && (
-                  <div className="space-y-2 pt-2">
-                    <div className="flex justify-between text-[11px] font-bold text-gray-700">
-                      <span>{currentStepText}</span>
-                      <span>{downloadProgress}%</span>
+                {/* Body Content */}
+                <div className="p-5 sm:p-6 space-y-4 overflow-y-auto">
+                  {/* Status & Footprint Card */}
+                  <div className="p-4 rounded-2xl bg-white border border-[#E6DFD5] shadow-xs flex items-center justify-between gap-4">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[9px] font-mono font-bold tracking-widest uppercase text-[#8C827A]">
+                        Storage Footprint
+                      </span>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="font-serif text-2xl font-bold text-[#1E1C1A] tracking-tight">
+                          {sizeEstimate.replace(/[^0-9.~]/g, '') || '~45'}
+                        </span>
+                        <span className="text-xs font-mono font-bold text-[#7A7268]">
+                          {sizeEstimate.replace(/[0-9.~]/g, '').trim() || 'MB'}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-[#8C827A] mt-0.5">
+                        Maps, high-res photos & dossier
+                      </span>
                     </div>
-                    <div className="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
-                      <motion.div
-                        className="h-full bg-gradient-to-r from-[#FF6B2C] to-amber-500 rounded-full"
-                        initial={{ width: '0%' }}
-                        animate={{ width: `${downloadProgress}%` }}
-                        transition={{ duration: 0.3 }}
-                      />
+
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      {isAvailable ? (
+                        <span className="px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[9px] font-mono font-bold uppercase tracking-wider flex items-center gap-1">
+                          <Check className="w-2.5 h-2.5 stroke-[2.5]" /> Cached Ready
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 rounded-full bg-[#FAF6F0] border border-[#E6DFD5] text-[#7A7268] text-[9px] font-mono font-bold uppercase tracking-wider">
+                          Ready to Pack
+                        </span>
+                      )}
+                      {isAvailable && formatLastSynced() && (
+                        <span className="text-[9px] font-mono text-[#8C827A]">
+                          Synced {formatLastSynced()}
+                        </span>
+                      )}
                     </div>
                   </div>
-                )}
-              </div>
 
-              {/* Action Footer */}
-              <div className="pt-3 border-t border-[#E6DFD5] flex items-center justify-between gap-3">
-                {isAvailable ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={handleRemoveOfflinePack}
-                      disabled={isDownloading}
-                      className="px-3.5 py-2 rounded-xl text-red-600 hover:bg-red-50 text-xs font-bold transition-all cursor-pointer"
-                    >
-                      Remove Offline Copy
-                    </button>
+                  {/* Stale Warning Banner */}
+                  {isStale && isAvailable && (
+                    <div className="p-3 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs flex items-center gap-2.5">
+                      <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                      <span className="leading-snug text-[11px]">
+                        Local dossier is over 24h old. Refresh to sync latest itinerary updates.
+                      </span>
+                    </div>
+                  )}
 
-                    <button
-                      type="button"
-                      onClick={handleStartDownload}
-                      disabled={isDownloading}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FF6B2C] hover:bg-[#E55A1C] text-white text-xs font-bold shadow-md transition-all cursor-pointer disabled:opacity-50"
-                    >
-                      <RefreshCw className={`w-3.5 h-3.5 ${isDownloading ? 'animate-spin' : ''}`} />
-                      <span>{isDownloading ? 'Downloading...' : 'Refresh Offline Data'}</span>
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => setShowModal(false)}
-                      disabled={isDownloading}
-                      className="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-200/50 text-xs font-bold transition-all cursor-pointer"
-                    >
-                      Cancel
-                    </button>
+                  {/* Checklist Card */}
+                  <div className="rounded-2xl bg-white border border-[#E6DFD5] p-4 space-y-3 shadow-xs">
+                    <div className="flex items-center justify-between border-b border-[#E6DFD5]/60 pb-2.5">
+                      <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#8C827A]">
+                        Included In Offline Pack
+                      </span>
+                      <span className="text-[9px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                        5 Assets Included
+                      </span>
+                    </div>
 
-                    <button
-                      type="button"
-                      onClick={handleStartDownload}
-                      disabled={isDownloading}
-                      className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-[#FF6B2C] hover:bg-[#E55A1C] text-white text-xs font-bold shadow-md transition-all cursor-pointer disabled:opacity-50"
-                    >
-                      <Download className={`w-4 h-4 ${isDownloading ? 'animate-bounce' : ''}`} />
-                      <span>{isDownloading ? 'Downloading...' : 'Start Download'}</span>
-                    </button>
-                  </>
-                )}
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>,
-      document.body
-    )}
+                    <div className="space-y-2.5 text-xs">
+                      {[
+                        { title: 'Full Itinerary Dossier', desc: 'All days, activities, notes & AI insights' },
+                        { title: 'Basecamp & Venue Photos', desc: 'Pre-cached high resolution media' },
+                        { title: 'Offline Vector Map Tiles', desc: 'Viewed bounding box, stops & coordinates' },
+                        { title: 'Emergency Directory', desc: 'Consulates, local emergency & police cards' },
+                        { title: 'Travel & Packing Lists', desc: 'Gear checklists & visa documentation' },
+                      ].map((item, idx) => (
+                        <div key={idx} className="flex items-start gap-2.5">
+                          <div className="w-4 h-4 rounded-full bg-emerald-500/10 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
+                            <Check className="w-2.5 h-2.5 stroke-[2.5]" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-medium text-[#1E1C1A] text-[11.5px] leading-tight">
+                              {item.title}
+                            </span>
+                            <span className="text-[10px] text-[#8C827A] leading-tight mt-0.5">
+                              {item.desc}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Excluded Note */}
+                    <div className="pt-2 border-t border-[#E6DFD5]/50 flex items-start gap-1.5 text-[10px] text-[#8C827A]">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-stone-300 shrink-0 mt-1" />
+                      <p className="leading-snug">
+                        Dynamic features (live AI generation & price tracking) require cellular data or Wi-Fi.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Download Progress State */}
+                  {isDownloading && (
+                    <div className="p-4 rounded-2xl bg-white border border-[#E6DFD5] space-y-2.5 shadow-xs">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-[11px] font-mono text-[#1E1C1A] font-bold animate-pulse">
+                          {currentStepText}
+                        </span>
+                        <span className="font-mono text-xs font-bold text-[#FF6B2C]">
+                          {downloadProgress}%
+                        </span>
+                      </div>
+                      <div className="w-full h-1.5 bg-[#FAF6F0] rounded-full overflow-hidden border border-[#E6DFD5]">
+                        <motion.div
+                          className="h-full bg-gradient-to-r from-[#FF6B2C] to-[#FFA057] rounded-full"
+                          initial={{ width: '0%' }}
+                          animate={{ width: `${downloadProgress}%` }}
+                          transition={{ duration: 0.3 }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Footer */}
+                <div className="px-6 py-4 border-t border-[#E6DFD5]/70 bg-white/50 flex items-center justify-between gap-3">
+                  {isAvailable ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleRemoveOfflinePack}
+                        disabled={isDownloading}
+                        className="text-[11px] font-bold text-red-600/80 hover:text-red-700 transition-colors cursor-pointer disabled:opacity-50 select-none"
+                      >
+                        Remove Local Copy
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleStartDownload}
+                        disabled={isDownloading}
+                        className="px-5 py-2.5 rounded-full bg-[#1E1C1A] hover:bg-[#FF6B2C] text-white text-[11px] font-bold uppercase tracking-wider transition-colors duration-300 flex items-center gap-2 cursor-pointer disabled:opacity-50 shadow-xs select-none"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${isDownloading ? 'animate-spin' : ''}`} />
+                        <span>{isDownloading ? 'Syncing...' : 'Update Pack'}</span>
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleCloseModal}
+                        disabled={isDownloading}
+                        className="px-4 py-2.5 rounded-full bg-white hover:bg-[#FAF6F0] border border-[#E6DFD5] text-[#7A7268] hover:text-[#1E1C1A] text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer select-none"
+                      >
+                        Cancel
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleStartDownload}
+                        disabled={isDownloading}
+                        className="flex-1 sm:flex-none px-6 py-2.5 rounded-full bg-[#1E1C1A] hover:bg-[#FF6B2C] text-white text-[11px] font-bold uppercase tracking-wider transition-colors duration-300 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shadow-xs select-none"
+                      >
+                        <Download className={`w-3.5 h-3.5 ${isDownloading ? 'animate-bounce' : ''}`} />
+                        <span>{isDownloading ? 'Downloading...' : 'Start Download'}</span>
+                      </button>
+                    </>
+                  )}
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </>
   );
 }
