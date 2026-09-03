@@ -45,10 +45,12 @@ export default function OfflineTripManager({
   const [isStale, setIsStale] = useState(false);
   const [sizeEstimate, setSizeEstimate] = useState('~45MB');
   const [currentStepText, setCurrentStepText] = useState('Initializing download...');
-  const [isMounted, setIsMounted] = useState(false);
+  const [portalTarget, setPortalTarget] = useState(null);
 
   useEffect(() => {
-    setIsMounted(true);
+    if (typeof document !== 'undefined' && document.body) {
+      setPortalTarget(document.body);
+    }
   }, []);
 
   // Sync external open state if controlled externally
@@ -131,6 +133,7 @@ export default function OfflineTripManager({
   };
 
   const isAvailable = Boolean(offlinePack && offlinePack.isAvailableOffline);
+  const mbFormatted = sizeEstimate.match(/~?\d+/)?.[0] || '~45';
 
   // Format last synced date string
   const formatLastSynced = () => {
@@ -195,11 +198,10 @@ export default function OfflineTripManager({
       </div>
 
       {/* MODAL SHEET FOR OFFLINE DOWNLOAD / MANAGING PACK (Portal to document.body) */}
-      {/* MODAL SHEET FOR OFFLINE DOWNLOAD / MANAGING PACK (Portal to document.body) */}
-      {isMounted && createPortal(
+      {portalTarget && createPortal(
         <AnimatePresence>
           {showModal && (
-            <div className="fixed inset-0 z-[100000] flex items-end sm:items-center justify-center p-0 sm:p-4">
+            <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4">
               {/* Backdrop */}
               <motion.div
                 initial={{ opacity: 0 }}
@@ -209,31 +211,26 @@ export default function OfflineTripManager({
                 className="fixed inset-0 bg-[#1E1C1A]/40 backdrop-blur-xs"
               />
 
-              {/* Dialog Card */}
+              {/* Compact Floating Dialog Card */}
               <motion.div
-                initial={{ opacity: 0, y: 24, scale: 0.96 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 24, scale: 0.96 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                className="relative w-full sm:max-w-md bg-[#FAF6F0] rounded-t-3xl sm:rounded-3xl shadow-[0_24px_64px_rgba(0,0,0,0.2)] border border-[#E6DFD5] text-[#1E1C1A] z-10 overflow-hidden flex flex-col max-h-[90vh]"
+                initial={{ opacity: 0, scale: 0.94, y: 12 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.94, y: 12 }}
+                transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                className="relative w-full max-w-[340px] bg-[#FAF6F0] rounded-[28px] shadow-[0_24px_60px_rgba(30,28,26,0.22)] border border-[#E6DFD5] text-[#1E1C1A] z-10 overflow-hidden flex flex-col"
               >
-                {/* Mobile Drag Indicator */}
-                <div className="pt-3 pb-1 flex justify-center sm:hidden">
-                  <div className="w-10 h-1 rounded-full bg-[#D8D0C5]" />
-                </div>
-
                 {/* Header */}
-                <div className="px-6 pt-4 pb-4 flex items-center justify-between border-b border-[#E6DFD5]/70">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-[#1E1C1A] text-white flex items-center justify-center shadow-xs shrink-0">
-                      <CloudCheck className="w-4.5 h-4.5 text-[#FAF6F0]" strokeWidth={2} />
+                <div className="px-5 pt-4.5 pb-3 flex items-center justify-between border-b border-[#E6DFD5]/60">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-[#1E1C1A] text-white flex items-center justify-center shadow-xs shrink-0">
+                      <CloudCheck className="w-4 h-4 text-[#FAF6F0]" strokeWidth={2} />
                     </div>
                     <div>
-                      <h3 className="font-serif text-lg sm:text-xl font-bold tracking-tight text-[#1E1C1A]">
-                        Offline Availability
+                      <h3 className="font-serif text-base font-bold tracking-tight text-[#1E1C1A] leading-none">
+                        Offline Dossier
                       </h3>
-                      <p className="text-[11px] text-[#7A7268] font-sans">
-                        TripWise Dossier & Cached Assets
+                      <p className="text-[10px] text-[#8C827A] font-mono uppercase tracking-wider mt-1">
+                        Trip Assets & Maps
                       </p>
                     </div>
                   </div>
@@ -242,111 +239,110 @@ export default function OfflineTripManager({
                     <button
                       type="button"
                       onClick={handleCloseModal}
-                      className="w-8 h-8 rounded-full bg-white hover:bg-[#FAF6F0] border border-[#E6DFD5] flex items-center justify-center text-[#7A7268] hover:text-[#1E1C1A] transition-colors cursor-pointer select-none"
+                      className="w-7 h-7 rounded-full bg-white hover:bg-[#FAF6F0] border border-[#E6DFD5] flex items-center justify-center text-[#7A7268] hover:text-[#1E1C1A] transition-colors cursor-pointer select-none"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>
 
                 {/* Body Content */}
-                <div className="p-5 sm:p-6 space-y-4 overflow-y-auto">
-                  {/* Status & Footprint Card */}
-                  <div className="p-4 rounded-2xl bg-white border border-[#E6DFD5] shadow-xs flex items-center justify-between gap-4">
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-[9px] font-mono font-bold tracking-widest uppercase text-[#8C827A]">
-                        Storage Footprint
-                      </span>
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="font-serif text-2xl font-bold text-[#1E1C1A] tracking-tight">
-                          {sizeEstimate.replace(/[^0-9.~]/g, '') || '~45'}
+                <div className="p-4 space-y-3">
+                  {/* Hero Metric: Storage & Status Card */}
+                  <div className="p-3.5 rounded-2xl bg-white border border-[#E6DFD5] shadow-2xs">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-baseline gap-1">
+                        <span className="font-serif text-2xl font-black text-[#1E1C1A] tracking-tight">
+                          {mbFormatted}
                         </span>
-                        <span className="text-xs font-mono font-bold text-[#7A7268]">
-                          {sizeEstimate.replace(/[0-9.~]/g, '').trim() || 'MB'}
+                        <span className="text-[11px] font-mono font-bold text-[#FF6B2C]">
+                          MB
+                        </span>
+                        <span className="text-[9px] font-mono uppercase text-[#8C827A] ml-2 tracking-wider">
+                          Package Size
                         </span>
                       </div>
-                      <span className="text-[10px] text-[#8C827A] mt-0.5">
-                        Maps, high-res photos & dossier
-                      </span>
+
+                      <div>
+                        {isAvailable ? (
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[9px] font-mono font-bold flex items-center gap-1">
+                            <Check className="w-2.5 h-2.5 stroke-[2.5]" /> Saved
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full bg-[#FAF6F0] border border-[#E6DFD5] text-[#8C827A] text-[9px] font-mono font-bold uppercase tracking-wider">
+                            Ready
+                          </span>
+                        )}
+                      </div>
                     </div>
 
-                    <div className="flex flex-col items-end gap-1 shrink-0">
-                      {isAvailable ? (
-                        <span className="px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[9px] font-mono font-bold uppercase tracking-wider flex items-center gap-1">
-                          <Check className="w-2.5 h-2.5 stroke-[2.5]" /> Cached Ready
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-1 rounded-full bg-[#FAF6F0] border border-[#E6DFD5] text-[#7A7268] text-[9px] font-mono font-bold uppercase tracking-wider">
-                          Ready to Pack
-                        </span>
-                      )}
-                      {isAvailable && formatLastSynced() && (
-                        <span className="text-[9px] font-mono text-[#8C827A]">
-                          Synced {formatLastSynced()}
-                        </span>
-                      )}
-                    </div>
+                    <p className="text-[10.5px] text-[#7A7268] font-sans mt-1 leading-snug">
+                      Cached vector maps, high-res photos & full itinerary stops.
+                    </p>
                   </div>
 
                   {/* Stale Warning Banner */}
                   {isStale && isAvailable && (
-                    <div className="p-3 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs flex items-center gap-2.5">
-                      <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                      <span className="leading-snug text-[11px]">
-                        Local dossier is over 24h old. Refresh to sync latest itinerary updates.
+                    <div className="px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[10.5px] flex items-center gap-2">
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      <span className="leading-tight">
+                        Local copy is &gt;24h old. Update recommended.
                       </span>
                     </div>
                   )}
 
-                  {/* Checklist Card */}
-                  <div className="rounded-2xl bg-white border border-[#E6DFD5] p-4 space-y-3 shadow-xs">
-                    <div className="flex items-center justify-between border-b border-[#E6DFD5]/60 pb-2.5">
-                      <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#8C827A]">
+                  {/* Curated Capabilities List */}
+                  <div className="rounded-2xl bg-white border border-[#E6DFD5] p-3 space-y-2 shadow-2xs">
+                    <div className="flex items-center justify-between border-b border-[#E6DFD5]/50 pb-1.5">
+                      <span className="text-[9.5px] font-mono font-bold uppercase tracking-wider text-[#8C827A]">
                         Included In Offline Pack
                       </span>
-                      <span className="text-[9px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-                        5 Assets Included
+                      <span className="text-[9.5px] font-mono text-[#A39B94] tracking-wide">
+                        4 Assets
                       </span>
                     </div>
 
-                    <div className="space-y-2.5 text-xs">
+                    <div className="space-y-2">
                       {[
-                        { title: 'Full Itinerary Dossier', desc: 'All days, activities, notes & AI insights' },
-                        { title: 'Basecamp & Venue Photos', desc: 'Pre-cached high resolution media' },
-                        { title: 'Offline Vector Map Tiles', desc: 'Viewed bounding box, stops & coordinates' },
-                        { title: 'Emergency Directory', desc: 'Consulates, local emergency & police cards' },
-                        { title: 'Travel & Packing Lists', desc: 'Gear checklists & visa documentation' },
+                        { icon: Map, title: 'Route Timeline & Stops', desc: 'All days, AI pacing & activities' },
+                        { icon: FileText, title: 'Offline Vector Maps', desc: 'Pre-rendered tiles & coordinates' },
+                        { icon: ImageIcon, title: 'Basecamp & Photos', desc: 'High-res venue & stay imagery' },
+                        { icon: ShieldAlert, title: 'Emergency Protocol', desc: 'Consulates, police & visa passes' },
                       ].map((item, idx) => (
-                        <div key={idx} className="flex items-start gap-2.5">
-                          <div className="w-4 h-4 rounded-full bg-emerald-500/10 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
-                            <Check className="w-2.5 h-2.5 stroke-[2.5]" />
+                        <div key={idx} className="flex items-center justify-between gap-2.5">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-5.5 h-5.5 rounded-md bg-[#FAF6F0] border border-[#E6DFD5] text-[#1E1C1A] flex items-center justify-center shrink-0">
+                              <item.icon className="w-3 h-3 text-[#FF6B2C]" />
+                            </div>
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-[11px] font-semibold text-[#1E1C1A] leading-none truncate">
+                                {item.title}
+                              </span>
+                              <span className="text-[9.5px] text-[#8C827A] leading-tight truncate mt-0.5">
+                                {item.desc}
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex flex-col">
-                            <span className="font-medium text-[#1E1C1A] text-[11.5px] leading-tight">
-                              {item.title}
-                            </span>
-                            <span className="text-[10px] text-[#8C827A] leading-tight mt-0.5">
-                              {item.desc}
-                            </span>
-                          </div>
+
+                          <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 stroke-[2.5]" />
                         </div>
                       ))}
                     </div>
 
                     {/* Excluded Note */}
-                    <div className="pt-2 border-t border-[#E6DFD5]/50 flex items-start gap-1.5 text-[10px] text-[#8C827A]">
-                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-stone-300 shrink-0 mt-1" />
-                      <p className="leading-snug">
-                        Dynamic features (live AI generation & price tracking) require cellular data or Wi-Fi.
-                      </p>
+                    <div className="pt-1.5 border-t border-[#E6DFD5]/40 flex items-center gap-1.5 text-[9.5px] text-[#8C827A]">
+                      <span className="inline-block w-1 h-1 rounded-full bg-stone-300 shrink-0" />
+                      <span className="leading-tight">
+                        Live AI re-generation & price tracking require cellular data.
+                      </span>
                     </div>
                   </div>
 
                   {/* Download Progress State */}
                   {isDownloading && (
-                    <div className="p-4 rounded-2xl bg-white border border-[#E6DFD5] space-y-2.5 shadow-xs">
+                    <div className="p-3 rounded-2xl bg-white border border-[#E6DFD5] space-y-2 shadow-2xs">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-[11px] font-mono text-[#1E1C1A] font-bold animate-pulse">
+                        <span className="text-[10.5px] font-mono text-[#1E1C1A] font-bold animate-pulse">
                           {currentStepText}
                         </span>
                         <span className="font-mono text-xs font-bold text-[#FF6B2C]">
@@ -366,25 +362,25 @@ export default function OfflineTripManager({
                 </div>
 
                 {/* Action Footer */}
-                <div className="px-6 py-4 border-t border-[#E6DFD5]/70 bg-white/50 flex items-center justify-between gap-3">
+                <div className="px-4 py-3 border-t border-[#E6DFD5]/70 bg-white/40 flex items-center justify-between gap-2">
                   {isAvailable ? (
                     <>
                       <button
                         type="button"
                         onClick={handleRemoveOfflinePack}
                         disabled={isDownloading}
-                        className="text-[11px] font-bold text-red-600/80 hover:text-red-700 transition-colors cursor-pointer disabled:opacity-50 select-none"
+                        className="text-[10.5px] font-bold text-red-600/80 hover:text-red-700 transition-colors cursor-pointer disabled:opacity-50 select-none px-2 py-1"
                       >
-                        Remove Local Copy
+                        Remove Copy
                       </button>
 
                       <button
                         type="button"
                         onClick={handleStartDownload}
                         disabled={isDownloading}
-                        className="px-5 py-2.5 rounded-full bg-[#1E1C1A] hover:bg-[#FF6B2C] text-white text-[11px] font-bold uppercase tracking-wider transition-colors duration-300 flex items-center gap-2 cursor-pointer disabled:opacity-50 shadow-xs select-none"
+                        className="px-4 py-2 rounded-full bg-[#1E1C1A] hover:bg-[#FF6B2C] text-white text-[10px] font-bold uppercase tracking-wider transition-colors duration-300 flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-xs select-none"
                       >
-                        <RefreshCw className={`w-3.5 h-3.5 ${isDownloading ? 'animate-spin' : ''}`} />
+                        <RefreshCw className={`w-3 h-3 ${isDownloading ? 'animate-spin' : ''}`} />
                         <span>{isDownloading ? 'Syncing...' : 'Update Pack'}</span>
                       </button>
                     </>
@@ -394,7 +390,7 @@ export default function OfflineTripManager({
                         type="button"
                         onClick={handleCloseModal}
                         disabled={isDownloading}
-                        className="px-4 py-2.5 rounded-full bg-white hover:bg-[#FAF6F0] border border-[#E6DFD5] text-[#7A7268] hover:text-[#1E1C1A] text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer select-none"
+                        className="px-3.5 py-1.5 rounded-full bg-white hover:bg-[#FAF6F0] border border-[#E6DFD5] text-[#7A7268] hover:text-[#1E1C1A] text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer select-none"
                       >
                         Cancel
                       </button>
@@ -403,10 +399,10 @@ export default function OfflineTripManager({
                         type="button"
                         onClick={handleStartDownload}
                         disabled={isDownloading}
-                        className="flex-1 sm:flex-none px-6 py-2.5 rounded-full bg-[#1E1C1A] hover:bg-[#FF6B2C] text-white text-[11px] font-bold uppercase tracking-wider transition-colors duration-300 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shadow-xs select-none"
+                        className="flex-1 px-4 py-2 rounded-full bg-[#1E1C1A] hover:bg-[#FF6B2C] text-white text-[10px] font-bold uppercase tracking-wider transition-colors duration-300 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-xs select-none"
                       >
                         <Download className={`w-3.5 h-3.5 ${isDownloading ? 'animate-bounce' : ''}`} />
-                        <span>{isDownloading ? 'Downloading...' : 'Start Download'}</span>
+                        <span>{isDownloading ? 'Downloading...' : 'Download Pack'}</span>
                       </button>
                     </>
                   )}
@@ -415,7 +411,7 @@ export default function OfflineTripManager({
             </div>
           )}
         </AnimatePresence>,
-        document.body
+        portalTarget
       )}
     </>
   );
