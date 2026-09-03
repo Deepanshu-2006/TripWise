@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useScroll, useSpring, useTransform, useMotionValue } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import Header from '../components/Header';
+import Intro from '../components/Intro';
 import ImageCarousel from '../components/ImageCarousel';
 import InviteModal from '../components/InviteModal';
 import { generatePackingList } from '../../lib/packingListLogic';
@@ -979,6 +980,7 @@ export default function ItineraryPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FAF6F0] text-[#1E1C1A] flex flex-col items-center justify-center font-serif">
+        <Intro />
         <div className="w-10 h-10 rounded-full border-2 border-[#FF6B2C] border-t-transparent animate-spin mb-4" />
         <p className="text-sm font-serif italic text-[#7A7268] tracking-wide">Assembling your custom Trip Dossier...</p>
       </div>
@@ -986,7 +988,12 @@ export default function ItineraryPage() {
   }
 
   if (!itinerary) {
-    return <NoDossierState />;
+    return (
+      <>
+        <Intro />
+        <NoDossierState />
+      </>
+    );
   }
 
   const rawDest = itinerary.destinationName || 'Your Custom Journey';
@@ -1083,6 +1090,7 @@ export default function ItineraryPage() {
 
   return (
     <div className="min-h-screen bg-[#FAF6F0] text-[#1E1C1A] flex flex-col font-sans selection:bg-[#FF6B2C]/15">
+      <Intro />
       <motion.div
         style={{ scaleX }}
         className="fixed top-0 left-0 right-0 h-0.75 bg-[#FF6B2C] origin-left z-60 pointer-events-none print:hidden"

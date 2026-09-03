@@ -21,7 +21,7 @@ const DESTINATION_IMAGES = [
 ];
 
 export default function MinimalLoader() {
-  const [mounted, setMounted] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   /* DOM Refs */
   const overlayRef     = useRef(null);
@@ -35,14 +35,26 @@ export default function MinimalLoader() {
 
   /* ── Teardown & Skip ────────────────────────────────────────── */
   const cleanAndExit = useCallback(() => {
-    sessionStorage.setItem('tw_intro_seen', '1');
+    try {
+      sessionStorage.setItem('tw_intro_seen', '1');
+    } catch (e) {}
     tlRef.current?.kill();
     document.body.style.overflow = '';
     setMounted(false);
   }, []);
 
-    useEffect(() => {
-    if (!overlayRef.current) return;
+  // Only mount intro if not previously seen in this browser session
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem('tw_intro_seen') === '1') {
+        return;
+      }
+    } catch (e) {}
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || !overlayRef.current) return;
 
     document.body.style.overflow = 'hidden';
 
@@ -181,7 +193,14 @@ export default function MinimalLoader() {
         const targetPlane = document.getElementById('navbar-plane');
 
         if (!sourceSvg || !targetSvg || !targetPlane) {
-            cleanAndExit();
+            if (overlayRef.current) {
+                overlayRef.current.style.transition = 'transform 0.65s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.65s ease';
+                overlayRef.current.style.transform = 'translate3d(0, -100%, 0)';
+                overlayRef.current.style.opacity = '0';
+                setTimeout(() => cleanAndExit(), 650);
+            } else {
+                cleanAndExit();
+            }
             return;
         }
 
@@ -273,7 +292,7 @@ export default function MinimalLoader() {
       tl.kill();
       document.body.style.overflow = '';
     };
-  }, [cleanAndExit]);
+  }, [mounted, cleanAndExit]);
 
   if (!mounted) return null;
 
