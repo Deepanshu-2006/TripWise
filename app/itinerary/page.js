@@ -170,6 +170,14 @@ export default function ItineraryPage() {
   const [isNotificationsPanelOpen, setIsNotificationsPanelOpen] = useState(false);
   const [ratingCardIndex, setRatingCardIndex] = useState(0);
   const [ratingDirection, setRatingDirection] = useState(1);
+  const [ratingAnimState, setRatingAnimState] = useState(null);
+  const ratingAdvanceTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (ratingAdvanceTimerRef.current) clearTimeout(ratingAdvanceTimerRef.current);
+    };
+  }, []);
 
   // Tab Scroll State
   const tabsContainerRef = useRef(null);
@@ -2671,48 +2679,134 @@ export default function ItineraryPage() {
                         { val: 5, short: 'Loved', long: 'Exceptional' },
                       ];
 
+                      const ratingMeta = {
+                        1: {
+                          short: 'Skip',
+                          sub: 'Not for me',
+                          badgeText: 'Passed • Not for me',
+                          icon: '✕',
+                          accent: '#8C827A',
+                          badgeBg: 'bg-[#181614]/95 border-stone-700/80 text-stone-300 shadow-xl shadow-black/40',
+                          btnActive: 'bg-stone-800/90 text-stone-100 border-stone-500/60 shadow-inner',
+                          indicatorColor: '#8C827A',
+                        },
+                        2: {
+                          short: 'Okay',
+                          sub: 'Alright',
+                          badgeText: 'Recorded • It was alright',
+                          icon: '—',
+                          accent: '#D4C3A3',
+                          badgeBg: 'bg-[#231F1B]/95 border-[#D4C3A3]/40 text-[#E8DFD1] shadow-xl shadow-black/40',
+                          btnActive: 'bg-[#2A2520] text-[#FAF6F0] border-[#D4C3A3]/60 shadow-md shadow-[#D4C3A3]/10',
+                          indicatorColor: '#D4C3A3',
+                        },
+                        3: {
+                          short: 'Good',
+                          sub: 'Enjoyed it',
+                          badgeText: 'Good stop • Enjoyed it',
+                          icon: '★',
+                          accent: '#F59E0B',
+                          badgeBg: 'bg-[#241A0B]/95 border-amber-500/50 text-amber-200 shadow-xl shadow-amber-950/50',
+                          btnActive: 'bg-amber-500/20 text-amber-100 border-amber-400 shadow-lg shadow-amber-500/20',
+                          indicatorColor: '#F59E0B',
+                        },
+                        4: {
+                          short: 'Great',
+                          sub: 'Would revisit',
+                          badgeText: 'Standout stop • Would revisit',
+                          icon: '✦',
+                          accent: '#FF6B2C',
+                          badgeBg: 'bg-[#2E1408]/95 border-[#FF6B2C]/70 text-[#FF9E6C] shadow-2xl shadow-orange-950/60 ring-1 ring-[#FF6B2C]/30',
+                          btnActive: 'bg-[#FF6B2C]/25 text-white border-[#FF6B2C] shadow-xl shadow-[#FF6B2C]/30',
+                          indicatorColor: '#FF6B2C',
+                        },
+                        5: {
+                          short: 'Loved',
+                          sub: 'Exceptional',
+                          badgeText: 'Exceptional favorite ♥',
+                          icon: '♥',
+                          accent: '#FF385C',
+                          badgeBg: 'bg-gradient-to-r from-[#380A15]/95 to-[#2E1205]/95 border-rose-500/70 text-rose-200 shadow-2xl shadow-rose-950/70 ring-1 ring-rose-500/40',
+                          btnActive: 'bg-gradient-to-br from-rose-500/30 to-amber-500/25 text-white border-rose-400 shadow-xl shadow-rose-500/35',
+                          indicatorColor: '#FF385C',
+                        },
+                      };
+
                       const goNext = () => {
+                        if (ratingAdvanceTimerRef.current) clearTimeout(ratingAdvanceTimerRef.current);
+                        setRatingAnimState(null);
                         if (safeIdx < totalCount - 1) { setRatingDirection(1); setRatingCardIndex(safeIdx + 1); }
                       };
                       const goPrev = () => {
+                        if (ratingAdvanceTimerRef.current) clearTimeout(ratingAdvanceTimerRef.current);
+                        setRatingAnimState(null);
                         if (safeIdx > 0) { setRatingDirection(-1); setRatingCardIndex(safeIdx - 1); }
                       };
 
+                      const handleRateClick = (val) => {
+                        if (ratingAdvanceTimerRef.current) clearTimeout(ratingAdvanceTimerRef.current);
+                        setRatingAnimState({ val, stopKey: current.stopKey, id: Date.now() });
+                        handleRatingChange(current.stopKey, current.act, val);
+                        ratingAdvanceTimerRef.current = setTimeout(() => {
+                          goNext();
+                        }, 950);
+                      };
+
                       const indexLabel = String(safeIdx + 1).padStart(2, '0');
+                      const isCurrentAnimating = ratingAnimState && ratingAnimState.stopKey === current?.stopKey;
+                      const activeDisplayRating = isCurrentAnimating ? ratingAnimState.val : currentRating;
 
                       return (
                         <div className="rounded-3xl border border-[#E6DFD5] overflow-hidden bg-white">
 
                           {/* Header row */}
-                          <div className="px-5 sm:px-6 pt-5 pb-4 flex items-center justify-between border-b border-[#E6DFD5]">
-                            <div>
-                              <p className="text-[9.5px] font-mono font-bold uppercase tracking-widest text-[#FF6B2C]">Epilogue</p>
-                              <h3 className="font-serif font-bold text-sm sm:text-base text-[#1E1C1A] mt-0.5 leading-tight">
-                                How did each stop land?
-                              </h3>
+                          <div className="px-5 sm:px-6 pt-4.5 pb-3.5 border-b border-[#E6DFD5] flex flex-col gap-2.5">
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[9px] font-mono font-bold uppercase tracking-widest text-[#FF6B2C]">Epilogue</p>
+                                <h3 className="font-serif font-bold text-sm sm:text-base text-[#1E1C1A] mt-0.5 leading-snug truncate">
+                                  How did each stop land?
+                                </h3>
+                              </div>
+                              {/* Counter pill */}
+                              <div className="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FAF6F0] border border-[#E6DFD5] text-[10px] font-mono font-bold text-[#7A7268]">
+                                <span className="text-[#1E1C1A]">{ratedCount}</span>
+                                <span className="text-[#A39B94]">/</span>
+                                <span>{totalCount}</span>
+                                <span className="text-[8.5px] uppercase tracking-wider text-[#8C827A] ml-0.5 hidden sm:inline">Rated</span>
+                              </div>
                             </div>
-                            {/* Progress segment bar */}
-                            <div className="flex items-center gap-1 shrink-0">
+
+                            {/* Full-width interactive progress segment track */}
+                            <div className="flex items-center gap-1 w-full pt-0.5">
                               {allActivities.map((item, idx) => {
                                 const r = activityRatings[item.stopKey]?.rating || 0;
                                 return (
                                   <button
                                     key={idx}
                                     type="button"
-                                    onClick={() => { setRatingDirection(idx > safeIdx ? 1 : -1); setRatingCardIndex(idx); }}
-                                    className={`h-[3px] rounded-full transition-all duration-300 cursor-pointer ${
-                                      idx === safeIdx ? 'bg-[#1E1C1A] w-5' : r > 0 ? 'bg-[#1E1C1A]/30 w-2' : 'bg-[#E6DFD5] w-2 hover:bg-[#C5B9A8]'
+                                    onClick={() => {
+                                      if (ratingAdvanceTimerRef.current) clearTimeout(ratingAdvanceTimerRef.current);
+                                      setRatingAnimState(null);
+                                      setRatingDirection(idx > safeIdx ? 1 : -1);
+                                      setRatingCardIndex(idx);
+                                    }}
+                                    className={`h-1 flex-1 rounded-full transition-all duration-300 cursor-pointer ${
+                                      idx === safeIdx
+                                        ? 'bg-[#1E1C1A] ring-1 ring-[#1E1C1A]'
+                                        : r > 0
+                                        ? 'bg-[#FF6B2C]'
+                                        : 'bg-[#E6DFD5] hover:bg-[#C5B9A8]'
                                     }`}
-                                    aria-label={`Activity ${idx + 1}`}
+                                    aria-label={`Go to activity ${idx + 1}`}
                                   />
                                 );
                               })}
-                              <span className="ml-2 text-[10px] font-mono font-bold text-[#8C827A]">{ratedCount}/{totalCount}</span>
                             </div>
                           </div>
 
                           {/* Card Stage */}
-                          <div className="relative overflow-hidden" style={{ minHeight: 300 }}>
+                          <div className="relative overflow-hidden" style={{ minHeight: 310 }}>
                             <AnimatePresence mode="wait" initial={false}>
                               {allRated ? (
                                 /* ── Done State ── */
@@ -2723,7 +2817,7 @@ export default function ItineraryPage() {
                                   exit={{ opacity: 0, y: -12 }}
                                   transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                                   className="bg-[#1E1C1A] p-8 sm:p-10 flex flex-col gap-6"
-                                  style={{ minHeight: 300 }}
+                                  style={{ minHeight: 310 }}
                                 >
                                   <div className="flex items-start justify-between gap-4">
                                     <div>
@@ -2744,6 +2838,7 @@ export default function ItineraryPage() {
                                       const cnt = allActivities.filter(a => (activityRatings[a.stopKey]?.rating || 0) === val).length;
                                       if (!cnt) return null;
                                       const pct = Math.round((cnt / totalCount) * 100);
+                                      const meta = ratingMeta[val];
                                       return (
                                         <div key={val} className="flex items-center gap-3">
                                           <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-white/40 w-8 shrink-0">{short}</span>
@@ -2752,7 +2847,8 @@ export default function ItineraryPage() {
                                               initial={{ width: 0 }}
                                               animate={{ width: `${pct}%` }}
                                               transition={{ delay: 0.2 + val * 0.05, duration: 0.5, ease: 'easeOut' }}
-                                              className="h-full bg-[#FF6B2C] rounded-full"
+                                              className="h-full rounded-full"
+                                              style={{ backgroundColor: meta?.indicatorColor || '#FF6B2C' }}
                                             />
                                           </div>
                                           <span className="text-[10px] font-mono font-bold text-white/50 w-5 text-right">{cnt}</span>
@@ -2765,13 +2861,72 @@ export default function ItineraryPage() {
                                 /* ── Activity Card ── */
                                 <motion.div
                                   key={safeIdx}
+                                  drag="x"
+                                  dragConstraints={{ left: 0, right: 0 }}
+                                  dragElastic={0.22}
+                                  onDragEnd={(_, { offset, velocity }) => {
+                                    const swipeThreshold = 45;
+                                    const velocityThreshold = 350;
+                                    if (offset.x < -swipeThreshold || velocity.x < -velocityThreshold) {
+                                      if (safeIdx < totalCount - 1) {
+                                        goNext();
+                                      }
+                                    } else if (offset.x > swipeThreshold || velocity.x > velocityThreshold) {
+                                      if (safeIdx > 0) {
+                                        goPrev();
+                                      }
+                                    }
+                                  }}
                                   initial={{ opacity: 0, x: ratingDirection * 48 }}
-                                  animate={{ opacity: 1, x: 0 }}
+                                  animate={{
+                                    opacity: 1,
+                                    x: isCurrentAnimating && ratingAnimState.val === 1 ? [0, -6, 4, 0] : 0,
+                                    y: isCurrentAnimating
+                                      ? (ratingAnimState.val === 5 ? [0, -8, 0] : ratingAnimState.val === 4 ? [0, -5, 0] : ratingAnimState.val === 3 ? [0, -3, 0] : 0)
+                                      : 0,
+                                    scale: isCurrentAnimating
+                                      ? (ratingAnimState.val === 5 ? [1, 1.02, 1] : ratingAnimState.val === 4 ? [1, 1.012, 1] : 1)
+                                      : 1,
+                                  }}
                                   exit={{ opacity: 0, x: ratingDirection * -48 }}
-                                  transition={{ type: 'spring', stiffness: 420, damping: 38 }}
-                                  className="bg-[#1E1C1A] p-6 sm:p-7 flex flex-col justify-between relative overflow-hidden"
-                                  style={{ minHeight: 300 }}
+                                  transition={{
+                                    x: isCurrentAnimating ? { duration: 0.35, ease: "easeInOut" } : { type: 'spring', stiffness: 420, damping: 38 },
+                                    y: { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
+                                    scale: { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
+                                    opacity: { duration: 0.25 },
+                                  }}
+                                  className="bg-[#1E1C1A] p-6 sm:p-7 flex flex-col justify-between relative overflow-hidden cursor-grab active:cursor-grabbing touch-pan-y select-none"
+                                  style={{ minHeight: 310 }}
                                 >
+                                  {/* Ambient Glow Aura responding to selection */}
+                                  <AnimatePresence>
+                                    {isCurrentAnimating && (
+                                      <motion.div
+                                        key={`glow-${ratingAnimState.id}`}
+                                        initial={{ opacity: 0, scale: 0.85 }}
+                                        animate={{ opacity: [0, 1, 1, 0] }}
+                                        transition={{
+                                          duration: 0.95,
+                                          times: [0, 0.18, 0.82, 1],
+                                          ease: "easeOut"
+                                        }}
+                                        className="absolute inset-0 pointer-events-none z-0"
+                                        style={{
+                                          background:
+                                            ratingAnimState.val === 5
+                                              ? 'radial-gradient(circle at 50% 90%, rgba(255, 56, 92, 0.38), rgba(255, 107, 44, 0.18) 45%, transparent 75%)'
+                                              : ratingAnimState.val === 4
+                                              ? 'radial-gradient(circle at 50% 90%, rgba(255, 107, 44, 0.35), transparent 70%)'
+                                              : ratingAnimState.val === 3
+                                              ? 'radial-gradient(circle at 50% 90%, rgba(245, 158, 11, 0.25), transparent 65%)'
+                                              : ratingAnimState.val === 2
+                                              ? 'radial-gradient(circle at 50% 90%, rgba(212, 195, 163, 0.15), transparent 60%)'
+                                              : 'radial-gradient(circle at 50% 90%, rgba(140, 130, 122, 0.15), transparent 60%)',
+                                        }}
+                                      />
+                                    )}
+                                  </AnimatePresence>
+
                                   {/* Ghost index number — editorial depth element */}
                                   <span
                                     className="absolute right-4 bottom-2 font-serif font-black text-[110px] leading-none text-white/[0.04] select-none pointer-events-none"
@@ -2792,10 +2947,21 @@ export default function ItineraryPage() {
                                         </span>
                                       )}
                                     </div>
-                                    {currentRating > 0 && (
-                                      <span className="text-[9px] font-mono font-bold text-[#FF6B2C] uppercase tracking-wide">
-                                        {ratingLabels[currentRating - 1]?.long}
-                                      </span>
+
+                                    {/* Sentiment badge in top right */}
+                                    {activeDisplayRating > 0 && (
+                                      <motion.span
+                                        key={`status-${activeDisplayRating}`}
+                                        initial={{ opacity: 0, y: -4, scale: 0.92 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        className="text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1.5"
+                                        style={{
+                                          color: ratingMeta[activeDisplayRating]?.indicatorColor || '#FF6B2C',
+                                        }}
+                                      >
+                                        <span>{ratingMeta[activeDisplayRating]?.icon}</span>
+                                        <span>{ratingMeta[activeDisplayRating]?.sub}</span>
+                                      </motion.span>
                                     )}
                                   </div>
 
@@ -2811,30 +2977,119 @@ export default function ItineraryPage() {
                                     )}
                                   </div>
 
-                                  {/* Rating strip — physical, no emojis */}
+                                  {/* Floating reaction stamp right above buttons with comfortable reading hold */}
+                                  <AnimatePresence>
+                                    {isCurrentAnimating && (
+                                      <motion.div
+                                        key={`stamp-${ratingAnimState.id}`}
+                                        initial={{ opacity: 0, y: 10, scale: 0.85 }}
+                                        animate={{
+                                          opacity: [0, 1, 1, 1, 0],
+                                          y: [10, -4, -4, -6, -18],
+                                          scale: [0.85, 1, 1, 1, 0.95],
+                                        }}
+                                        transition={{
+                                          duration: 0.95,
+                                          times: [0, 0.14, 0.72, 0.85, 1],
+                                          ease: [0.16, 1, 0.3, 1]
+                                        }}
+                                        className={`absolute bottom-20 left-1/2 -translate-x-1/2 z-30 pointer-events-none flex items-center gap-2.5 px-4.5 py-2 rounded-full border shadow-2xl backdrop-blur-md whitespace-nowrap ${
+                                          ratingMeta[ratingAnimState.val]?.badgeBg
+                                        }`}
+                                      >
+                                        <span className="text-sm font-mono font-black">{ratingMeta[ratingAnimState.val]?.icon}</span>
+                                        <span className="text-xs sm:text-[13px] font-sans font-semibold tracking-wide">{ratingMeta[ratingAnimState.val]?.badgeText}</span>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+
+                                  {/* Rating strip — physical, tailored animations */}
                                   <div className="relative z-10 flex items-stretch gap-1.5">
                                     {ratingLabels.map(({ val, short }) => {
-                                      const selected = currentRating === val;
+                                      const selected = (currentRating === val) || (ratingAnimState?.val === val && ratingAnimState?.stopKey === current.stopKey);
+                                      const isThisButtonAnimating = ratingAnimState?.val === val && ratingAnimState?.stopKey === current.stopKey;
+                                      const meta = ratingMeta[val];
+
                                       return (
                                         <motion.button
                                           key={val}
                                           type="button"
-                                          whileTap={{ scale: 0.93 }}
-                                          onClick={() => {
-                                            handleRatingChange(current.stopKey, current.act, val);
-                                            setTimeout(goNext, 280);
-                                          }}
-                                          className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl border transition-all duration-200 cursor-pointer select-none ${
+                                          whileTap={{ scale: 0.92 }}
+                                          animate={
+                                            isThisButtonAnimating
+                                              ? {
+                                                  scale: val === 5 ? [1, 1.25, 1.06] : val === 4 ? [1, 1.18, 1.04] : val === 3 ? [1, 1.12, 1] : [1, 0.92, 1],
+                                                  transition: { duration: 0.35, ease: [0.34, 1.56, 0.64, 1] }
+                                                }
+                                              : { scale: 1 }
+                                          }
+                                          onClick={() => handleRateClick(val)}
+                                          className={`flex-1 relative flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl border transition-all duration-200 cursor-pointer select-none overflow-visible ${
                                             selected
-                                              ? 'bg-white border-white text-[#1E1C1A]'
+                                              ? meta.btnActive
                                               : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:border-white/20 hover:text-white/70'
                                           }`}
                                         >
-                                          <span className={`text-[10px] font-mono font-bold uppercase tracking-widest transition-colors ${selected ? 'text-[#1E1C1A]' : ''}`}>
+                                          {/* Ripple shockwave on click */}
+                                          {isThisButtonAnimating && (
+                                            <motion.span
+                                              initial={{ scale: 0.8, opacity: 0.9 }}
+                                              animate={{ scale: 2.1, opacity: 0 }}
+                                              transition={{ duration: 0.45, ease: "easeOut" }}
+                                              className="absolute inset-0 rounded-xl pointer-events-none"
+                                              style={{
+                                                border: `2px solid ${meta.accent}`,
+                                                boxShadow: `0 0 14px ${meta.accent}`,
+                                              }}
+                                            />
+                                          )}
+
+                                          {/* Radiant sparks for tier 3, 4, 5 */}
+                                          {isThisButtonAnimating && val >= 3 && (
+                                            <div className="absolute inset-0 pointer-events-none overflow-visible flex items-center justify-center">
+                                              {Array.from({ length: val === 5 ? 12 : val === 4 ? 8 : 5 }).map((_, pIdx) => {
+                                                const count = val === 5 ? 12 : val === 4 ? 8 : 5;
+                                                const angle = ((pIdx / count) * 160 + 190) * (Math.PI / 180);
+                                                const dist = 28 + (pIdx % 3) * 16;
+                                                const x = Math.cos(angle) * dist;
+                                                const y = Math.sin(angle) * dist * 1.3;
+                                                const isSparkle = (pIdx % 2 === 0);
+                                                return (
+                                                  <motion.span
+                                                    key={pIdx}
+                                                    initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
+                                                    animate={{
+                                                      opacity: [1, 1, 0],
+                                                      scale: [0, 1.3, 0.2],
+                                                      x,
+                                                      y,
+                                                    }}
+                                                    transition={{
+                                                      duration: 0.52 + (pIdx % 3) * 0.1,
+                                                      ease: [0.16, 1, 0.3, 1],
+                                                    }}
+                                                    className="absolute flex items-center justify-center text-[10px] leading-none select-none"
+                                                    style={{
+                                                      color: val === 5 ? (pIdx % 3 === 0 ? '#FDE047' : '#FF385C') : val === 4 ? '#FF8A50' : '#FCD34D',
+                                                    }}
+                                                  >
+                                                    {val === 5 && isSparkle ? '✦' : '•'}
+                                                  </motion.span>
+                                                );
+                                              })}
+                                            </div>
+                                          )}
+
+                                          <span className={`text-[10px] font-mono font-bold uppercase tracking-widest transition-colors ${selected ? 'font-black' : ''}`}>
                                             {short}
                                           </span>
                                           {/* Active indicator bar */}
-                                          <div className={`h-[2px] w-4 rounded-full transition-all duration-200 ${selected ? 'bg-[#FF6B2C]' : 'bg-transparent'}`} />
+                                          <div
+                                            className={`h-[2px] w-4 rounded-full transition-all duration-200 ${
+                                              selected ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
+                                            }`}
+                                            style={{ backgroundColor: meta.indicatorColor }}
+                                          />
                                         </motion.button>
                                       );
                                     })}
