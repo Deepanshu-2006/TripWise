@@ -168,6 +168,8 @@ export default function ItineraryPage() {
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
   const [isTripSetupOpen, setIsTripSetupOpen] = useState(false);
   const [isNotificationsPanelOpen, setIsNotificationsPanelOpen] = useState(false);
+  const [ratingCardIndex, setRatingCardIndex] = useState(0);
+  const [ratingDirection, setRatingDirection] = useState(1);
 
   // Tab Scroll State
   const tabsContainerRef = useRef(null);
@@ -2645,51 +2647,249 @@ export default function ItineraryPage() {
                     </div>
 
                     {/* Post-Trip Activity Ratings */}
-                    <div className="bg-white p-4.5 sm:p-8 rounded-3xl border border-[#E6DFD5] shadow-xs">
-                      <div className="flex items-center gap-3 mb-4 sm:mb-6 border-b border-[#E6DFD5] pb-3.5 sm:pb-4">
-                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[#FF6B2C]/10 flex items-center justify-center text-[#FF6B2C] shrink-0">
-                          <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
+                    {(() => {
+                      const allActivities = itinerary?.days?.flatMap((day, dayIdx) =>
+                        (day.activities || []).map((act, stopIdx) => ({
+                          act, dayIdx, stopIdx,
+                          dayTitle: day.title || `Day ${dayIdx + 1}`,
+                          stopKey: `tw_day${dayIdx}_stop${stopIdx}`,
+                        }))
+                      ) || [];
+
+                      const totalCount = allActivities.length;
+                      const ratedCount = allActivities.filter(({ stopKey }) => (activityRatings[stopKey]?.rating || 0) > 0).length;
+                      const allRated = ratedCount === totalCount && totalCount > 0;
+                      const safeIdx = Math.min(ratingCardIndex, Math.max(totalCount - 1, 0));
+                      const current = totalCount > 0 ? allActivities[safeIdx] : null;
+                      const currentRating = current ? (activityRatings[current.stopKey]?.rating || 0) : 0;
+
+                      const ratingLabels = [
+                        { val: 1, short: 'Skip', long: 'Not for me' },
+                        { val: 2, short: 'Okay', long: 'It was alright' },
+                        { val: 3, short: 'Good', long: 'Enjoyed it' },
+                        { val: 4, short: 'Great', long: 'Would revisit' },
+                        { val: 5, short: 'Loved', long: 'Exceptional' },
+                      ];
+
+                      const goNext = () => {
+                        if (safeIdx < totalCount - 1) { setRatingDirection(1); setRatingCardIndex(safeIdx + 1); }
+                      };
+                      const goPrev = () => {
+                        if (safeIdx > 0) { setRatingDirection(-1); setRatingCardIndex(safeIdx - 1); }
+                      };
+
+                      const indexLabel = String(safeIdx + 1).padStart(2, '0');
+
+                      return (
+                        <div className="rounded-3xl border border-[#E6DFD5] overflow-hidden bg-white">
+
+                          {/* Header row */}
+                          <div className="px-5 sm:px-6 pt-5 pb-4 flex items-center justify-between border-b border-[#E6DFD5]">
+                            <div>
+                              <p className="text-[9.5px] font-mono font-bold uppercase tracking-widest text-[#FF6B2C]">Epilogue</p>
+                              <h3 className="font-serif font-bold text-sm sm:text-base text-[#1E1C1A] mt-0.5 leading-tight">
+                                How did each stop land?
+                              </h3>
+                            </div>
+                            {/* Progress segment bar */}
+                            <div className="flex items-center gap-1 shrink-0">
+                              {allActivities.map((item, idx) => {
+                                const r = activityRatings[item.stopKey]?.rating || 0;
+                                return (
+                                  <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => { setRatingDirection(idx > safeIdx ? 1 : -1); setRatingCardIndex(idx); }}
+                                    className={`h-[3px] rounded-full transition-all duration-300 cursor-pointer ${
+                                      idx === safeIdx ? 'bg-[#1E1C1A] w-5' : r > 0 ? 'bg-[#1E1C1A]/30 w-2' : 'bg-[#E6DFD5] w-2 hover:bg-[#C5B9A8]'
+                                    }`}
+                                    aria-label={`Activity ${idx + 1}`}
+                                  />
+                                );
+                              })}
+                              <span className="ml-2 text-[10px] font-mono font-bold text-[#8C827A]">{ratedCount}/{totalCount}</span>
+                            </div>
+                          </div>
+
+                          {/* Card Stage */}
+                          <div className="relative overflow-hidden" style={{ minHeight: 300 }}>
+                            <AnimatePresence mode="wait" initial={false}>
+                              {allRated ? (
+                                /* ── Done State ── */
+                                <motion.div
+                                  key="done"
+                                  initial={{ opacity: 0, y: 12 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -12 }}
+                                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                                  className="bg-[#1E1C1A] p-8 sm:p-10 flex flex-col gap-6"
+                                  style={{ minHeight: 300 }}
+                                >
+                                  <div className="flex items-start justify-between gap-4">
+                                    <div>
+                                      <p className="text-[9px] font-mono uppercase tracking-widest text-[#FF6B2C] font-bold mb-2">All done</p>
+                                      <h3 className="font-serif font-black text-2xl sm:text-3xl text-white leading-tight">
+                                        Ratings<br />captured.
+                                      </h3>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-[10px] font-mono text-white/30 uppercase tracking-widest">{totalCount} stops</p>
+                                      <p className="text-[10px] font-mono text-white/30">reviewed</p>
+                                    </div>
+                                  </div>
+
+                                  {/* Mini rating breakdown */}
+                                  <div className="space-y-2">
+                                    {ratingLabels.slice().reverse().map(({ val, short }) => {
+                                      const cnt = allActivities.filter(a => (activityRatings[a.stopKey]?.rating || 0) === val).length;
+                                      if (!cnt) return null;
+                                      const pct = Math.round((cnt / totalCount) * 100);
+                                      return (
+                                        <div key={val} className="flex items-center gap-3">
+                                          <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-white/40 w-8 shrink-0">{short}</span>
+                                          <div className="flex-1 h-[2px] bg-white/10 rounded-full overflow-hidden">
+                                            <motion.div
+                                              initial={{ width: 0 }}
+                                              animate={{ width: `${pct}%` }}
+                                              transition={{ delay: 0.2 + val * 0.05, duration: 0.5, ease: 'easeOut' }}
+                                              className="h-full bg-[#FF6B2C] rounded-full"
+                                            />
+                                          </div>
+                                          <span className="text-[10px] font-mono font-bold text-white/50 w-5 text-right">{cnt}</span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </motion.div>
+                              ) : current ? (
+                                /* ── Activity Card ── */
+                                <motion.div
+                                  key={safeIdx}
+                                  initial={{ opacity: 0, x: ratingDirection * 48 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  exit={{ opacity: 0, x: ratingDirection * -48 }}
+                                  transition={{ type: 'spring', stiffness: 420, damping: 38 }}
+                                  className="bg-[#1E1C1A] p-6 sm:p-7 flex flex-col justify-between relative overflow-hidden"
+                                  style={{ minHeight: 300 }}
+                                >
+                                  {/* Ghost index number — editorial depth element */}
+                                  <span
+                                    className="absolute right-4 bottom-2 font-serif font-black text-[110px] leading-none text-white/[0.04] select-none pointer-events-none"
+                                    aria-hidden="true"
+                                  >
+                                    {indexLabel}
+                                  </span>
+
+                                  {/* Top meta row */}
+                                  <div className="flex items-center justify-between gap-2 relative z-10">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="text-[8.5px] font-mono font-bold uppercase tracking-widest px-2 py-0.5 rounded-sm bg-white/10 text-white/60">
+                                        {current.dayTitle}
+                                      </span>
+                                      {current.act.category && (
+                                        <span className="text-[8.5px] font-mono uppercase tracking-wider text-white/30">
+                                          {current.act.category}
+                                        </span>
+                                      )}
+                                    </div>
+                                    {currentRating > 0 && (
+                                      <span className="text-[9px] font-mono font-bold text-[#FF6B2C] uppercase tracking-wide">
+                                        {ratingLabels[currentRating - 1]?.long}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* Activity title — large and proud */}
+                                  <div className="py-5 relative z-10">
+                                    <h3 className="font-serif font-black text-2xl sm:text-3xl text-white leading-tight">
+                                      {current.act.title}
+                                    </h3>
+                                    {current.act.description && (
+                                      <p className="text-xs sm:text-sm font-sans mt-2.5 leading-relaxed text-white/40 line-clamp-2">
+                                        {current.act.description}
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  {/* Rating strip — physical, no emojis */}
+                                  <div className="relative z-10 flex items-stretch gap-1.5">
+                                    {ratingLabels.map(({ val, short }) => {
+                                      const selected = currentRating === val;
+                                      return (
+                                        <motion.button
+                                          key={val}
+                                          type="button"
+                                          whileTap={{ scale: 0.93 }}
+                                          onClick={() => {
+                                            handleRatingChange(current.stopKey, current.act, val);
+                                            setTimeout(goNext, 280);
+                                          }}
+                                          className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl border transition-all duration-200 cursor-pointer select-none ${
+                                            selected
+                                              ? 'bg-white border-white text-[#1E1C1A]'
+                                              : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:border-white/20 hover:text-white/70'
+                                          }`}
+                                        >
+                                          <span className={`text-[10px] font-mono font-bold uppercase tracking-widest transition-colors ${selected ? 'text-[#1E1C1A]' : ''}`}>
+                                            {short}
+                                          </span>
+                                          {/* Active indicator bar */}
+                                          <div className={`h-[2px] w-4 rounded-full transition-all duration-200 ${selected ? 'bg-[#FF6B2C]' : 'bg-transparent'}`} />
+                                        </motion.button>
+                                      );
+                                    })}
+                                  </div>
+                                </motion.div>
+                              ) : null}
+                            </AnimatePresence>
+                          </div>
+
+                          {/* Navigation footer */}
+                          <div className="px-4 sm:px-5 py-3.5 flex items-center gap-2.5 border-t border-[#E6DFD5]">
+                            <button
+                              type="button"
+                              onClick={goPrev}
+                              disabled={safeIdx === 0}
+                              className="w-9 h-9 rounded-xl border border-[#E6DFD5] bg-white hover:bg-[#FAF6F0] text-[#7A7268] hover:text-[#1E1C1A] transition-all cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed flex items-center justify-center shrink-0 text-sm font-bold"
+                              aria-label="Previous"
+                            >
+                              ←
+                            </button>
+
+                            {allRated ? (
+                              <button
+                                onClick={handleCompleteTrip}
+                                className="flex-1 py-2.5 rounded-xl bg-[#1E1C1A] hover:bg-[#FF6B2C] text-white font-bold font-sans text-xs tracking-wider transition-all duration-300 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-2"
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span>Complete Trip &amp; Save</span>
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={goNext}
+                                disabled={safeIdx >= totalCount - 1}
+                                className="flex-1 py-2.5 rounded-xl border border-[#E6DFD5] bg-[#FAF6F0] hover:bg-white text-[#7A7268] font-bold font-sans text-xs tracking-wider transition-all cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
+                              >
+                                Skip →
+                              </button>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={goNext}
+                              disabled={safeIdx >= totalCount - 1}
+                              className="w-9 h-9 rounded-xl border border-[#E6DFD5] bg-white hover:bg-[#FAF6F0] text-[#7A7268] hover:text-[#1E1C1A] transition-all cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed flex items-center justify-center shrink-0 text-sm font-bold"
+                              aria-label="Next"
+                            >
+                              →
+                            </button>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-serif font-bold text-lg sm:text-xl text-[#1E1C1A]">Rate this Trip's Activities</h3>
-                          <p className="text-xs sm:text-sm font-sans text-[#7A7268]">Your ratings help TripWise learn your travel taste.</p>
-                        </div>
-                      </div>
-                      <div className="flex flex-col gap-2.5 max-h-80 sm:max-h-96 overflow-y-auto pr-1 sm:pr-2 mb-5 custom-scrollbar">
-                        {itinerary?.days?.flatMap((day, dayIdx) => 
-                          day.activities?.map((act, stopIdx) => {
-                            const stopKey = `tw_day${dayIdx}_stop${stopIdx}`;
-                            const rating = activityRatings[stopKey]?.rating || 0;
-                            return (
-                              <div key={stopKey} className="flex items-center justify-between gap-2 p-3 sm:p-3.5 rounded-2xl border border-[#FAF6F0] bg-[#FAF8F5] hover:bg-white transition-colors">
-                                <div className="min-w-0 flex-1 pr-2">
-                                  <strong className="block text-[#1E1C1A] font-serif text-xs sm:text-sm truncate">{act.title}</strong>
-                                  <span className="text-[9px] sm:text-[10px] text-[#7A7268] font-sans uppercase tracking-wider block truncate">{act.category || `Day ${dayIdx + 1}`}</span>
-                                </div>
-                                <div className="flex items-center gap-0.5 sm:gap-1 shrink-0 touch-manipulation">
-                                  {[1, 2, 3, 4, 5].map(star => (
-                                    <button
-                                      key={star}
-                                      onClick={() => handleRatingChange(stopKey, act, star)}
-                                      className={`p-1 text-xl sm:text-2xl active:scale-125 transition-transform cursor-pointer ${star <= rating ? 'text-amber-500' : 'text-[#E6DFD5]'}`}
-                                      aria-label={`${star} star`}
-                                    >
-                                      ★
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                            );
-                          }) || []
-                        )}
-                      </div>
-                      <button
-                        onClick={handleCompleteTrip}
-                        className="w-full py-3.5 sm:py-4 rounded-2xl bg-[#1E1C1A] hover:bg-[#FF6B2C] text-white font-bold font-sans text-xs sm:text-sm tracking-wide transition-all cursor-pointer shadow-md active:scale-[0.98]"
-                      >
-                        Complete Trip &amp; Update Preferences
-                      </button>
-                    </div>
+                      );
+                    })()}
+
+
 
                     {/* Closing signature and bottom page-turns */}
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 pt-6 sm:pt-8 border-t border-[#E6DFD5]">
