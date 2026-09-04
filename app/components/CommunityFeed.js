@@ -186,6 +186,16 @@ export default function CommunityFeed() {
   const [trips, setTrips] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSeeding, setIsSeeding] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const feedRef = useRef(null);
   const { scrollYProgress: rawFeedProgress } = useScroll({
     target: feedRef,
@@ -279,6 +289,22 @@ export default function CommunityFeed() {
     return matchFilter && matchDest;
   });
 
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [activeFilter, activeDestination]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowLeft') {
+        setActiveIndex(prev => Math.max(0, prev - 1));
+      } else if (e.key === 'ArrowRight') {
+        setActiveIndex(prev => Math.min(filteredTrips.length - 1, prev + 1));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [filteredTrips.length]);
+
   return (
     <div className="font-sans">
       <div className="w-full">
@@ -344,7 +370,7 @@ export default function CommunityFeed() {
           </div>
         </div>
 
-        {/* Grid */}
+        {/* Feed Showcase */}
         <div className="relative" ref={feedRef}>
           {isLoading ? (
             <motion.div 
@@ -384,9 +410,9 @@ export default function CommunityFeed() {
                 {isSeeding ? 'Seeding...' : 'Seed Sample Itineraries'}
               </button>
             </motion.div>
-          ) : (
+          ) : isMobile ? (
             <motion.div 
-              key="grid"
+              key="mobile-grid"
               className="relative w-full max-w-4xl mx-auto flex flex-col pb-32"
               style={{ perspective: 1200 }}
             >
@@ -413,6 +439,150 @@ export default function CommunityFeed() {
                 </StickyTripCard>
               ))}
             </motion.div>
+          ) : (
+            <div className="relative w-full py-4 select-none">
+              {/* Dynamic Ambient Glow Behind Active Card */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[340px] bg-linear-to-r from-[#F4703C]/20 via-[#E25C27]/15 to-amber-500/15 blur-3xl rounded-full pointer-events-none -z-10 animate-pulse" />
+
+              {/* Peek Carousel Track (Clipped cleanly within the column) */}
+              <div className="relative w-full overflow-hidden rounded-3xl py-2">
+                <div 
+                  className="relative w-full h-[430px] flex items-center justify-center select-none"
+                >
+                  {filteredTrips.map((trip, idx) => {
+                    const offset = idx - activeIndex;
+                    const isCenter = offset === 0;
+                    const isVisible = Math.abs(offset) <= 1;
+
+                    if (!isVisible) return null;
+
+                    // Clean separation with gap: no overlap inside center card!
+                    const x = isCenter ? '0%' : offset > 0 ? 'calc(100% + 24px)' : 'calc(-100% - 24px)';
+                    const scale = isCenter ? 1 : 0.94;
+                    const opacity = isCenter ? 1 : 0.55;
+                    const zIndex = isCenter ? 30 : 20;
+
+                    return (
+                      <motion.div
+                        key={trip.id}
+                        onClick={() => {
+                          if (!isCenter) setActiveIndex(idx);
+                        }}
+                        drag={isCenter ? "x" : false}
+                        dragConstraints={{ left: 0, right: 0 }}
+                        dragElastic={0.12}
+                        onDragEnd={(e, { offset: dragOffset, velocity }) => {
+                          if (dragOffset.x < -40 || velocity.x < -300) {
+                            if (activeIndex < filteredTrips.length - 1) setActiveIndex(prev => prev + 1);
+                          } else if (dragOffset.x > 40 || velocity.x > 300) {
+                            if (activeIndex > 0) setActiveIndex(prev => prev - 1);
+                          }
+                        }}
+                        animate={{ x, scale, opacity }}
+                        transition={{
+                          type: 'spring',
+                          stiffness: 420,
+                          damping: 34,
+                          mass: 0.5
+                        }}
+                        style={{ zIndex }}
+                        className={`absolute w-[78%] sm:w-[74%] max-w-[480px] cursor-pointer transition-shadow duration-300 ${
+                          isCenter ? 'pointer-events-auto cursor-grab active:cursor-grabbing' : 'pointer-events-auto hover:opacity-85'
+                        }`}
+                      >
+                        <TripCard
+                          authorName={trip.authorName}
+                          authorAvatar={trip.authorAvatar}
+                          destination={trip.destination}
+                          title={trip.title}
+                          duration={trip.duration}
+                          coverImage={trip.coverImage}
+                          tags={trip.tags}
+                          saveCount={trip.bookmarks || 0}
+                          upvoteCount={trip.upvotes}
+                          onSave={() => clonePublicTrip(trip.id)}
+                          onUnsave={(clonedTripId) => unsavePublicTrip(trip.id, clonedTripId)}
+                          variant="coverflow"
+                          isActive={isCenter}
+                        />
+                      </motion.div>
+                    );
+                  })}
+
+                  {/* Left Frosted Navigation Arrow */}
+                  {activeIndex > 0 && (
+                    <motion.button
+                      whileHover={{ scale: 1.12, x: -2 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => setActiveIndex(prev => Math.max(0, prev - 1))}
+                      className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-40 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-stone-900 shadow-[0_8px_25px_rgba(0,0,0,0.18)] border border-stone-200/80 flex items-center justify-center transition-shadow hover:shadow-[0_12px_30px_rgba(244,112,60,0.25)] cursor-pointer group"
+                      aria-label="Previous trip"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-0.5 transition-transform">
+                        <polyline points="15 18 9 12 15 6" />
+                      </svg>
+                    </motion.button>
+                  )}
+
+                  {/* Right Frosted Navigation Arrow */}
+                  {activeIndex < filteredTrips.length - 1 && (
+                    <motion.button
+                      whileHover={{ scale: 1.12, x: 2 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => setActiveIndex(prev => Math.min(filteredTrips.length - 1, prev + 1))}
+                      className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-40 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-stone-900 shadow-[0_8px_25px_rgba(0,0,0,0.18)] border border-stone-200/80 flex items-center justify-center transition-shadow hover:shadow-[0_12px_30px_rgba(244,112,60,0.25)] cursor-pointer group"
+                      aria-label="Next trip"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-0.5 transition-transform">
+                        <polyline points="9 18 15 12 9 6" />
+                      </svg>
+                    </motion.button>
+                  )}
+                </div>
+              </div>
+
+              {/* Bottom Pagination & Progress Controls */}
+              <div className="mt-8 flex items-center justify-between px-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-mono font-bold text-stone-400 uppercase tracking-widest">
+                    {String(activeIndex + 1).padStart(2, '0')} / {String(filteredTrips.length).padStart(2, '0')}
+                  </span>
+                  <span className="text-stone-300 font-mono">·</span>
+                  <span className="text-[11px] font-mono font-bold text-[#F4703C] uppercase tracking-wider">
+                    {filteredTrips[activeIndex]?.destination}
+                  </span>
+                </div>
+
+                {/* Morphing Dots / Pills */}
+                <div className="flex items-center gap-1.5 bg-stone-100/80 backdrop-blur-md p-1.5 rounded-full border border-stone-200/60">
+                  {filteredTrips.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setActiveIndex(i)}
+                      className="relative h-2 rounded-full cursor-pointer focus:outline-none transition-all"
+                      style={{ width: activeIndex === i ? '28px' : '8px' }}
+                      aria-label={`Go to slide ${i + 1}`}
+                    >
+                      <div className="w-full h-full rounded-full bg-stone-300/80 hover:bg-stone-400 transition-colors" />
+                      {activeIndex === i && (
+                        <motion.div
+                          layoutId="activeFeedPill"
+                          className="absolute inset-0 bg-[#F4703C] rounded-full shadow-[0_2px_8px_rgba(244,112,60,0.4)]"
+                          transition={{ type: "spring", stiffness: 350, damping: 28 }}
+                        />
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="hidden sm:flex items-center gap-1.5 text-stone-400 text-[10px] font-mono uppercase tracking-widest">
+                  <span>Use</span>
+                  <kbd className="px-1.5 py-0.5 bg-stone-100 border border-stone-200 rounded text-stone-600 font-bold">←</kbd>
+                  <kbd className="px-1.5 py-0.5 bg-stone-100 border border-stone-200 rounded text-stone-600 font-bold">→</kbd>
+                  <span>or drag</span>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>
