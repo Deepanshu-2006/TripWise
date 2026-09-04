@@ -65,6 +65,14 @@ export default function HiddenGemsWall() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSeeding, setIsSeeding] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   const feedRef = useRef(null);
   const { scrollYProgress: rawFeedProgress } = useScroll({
@@ -168,6 +176,21 @@ export default function HiddenGemsWall() {
     }
   };
 
+  const [activeGemIndex, setActiveGemIndex] = useState(0);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 'ArrowLeft') {
+        setActiveGemIndex(prev => Math.max(0, prev - 1));
+      } else if (e.key === 'ArrowRight') {
+        setActiveGemIndex(prev => Math.min(gems.length - 1, prev + 1));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gems.length]);
+
   return (
     <div className="py-16">
       {/* Header Area */}
@@ -183,7 +206,7 @@ export default function HiddenGemsWall() {
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="group relative inline-flex items-center gap-3 px-7 py-3.5 bg-linear-to-r from-[#F4703C] to-[#E25C27] text-white rounded-full overflow-hidden transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-[0_8px_20px_-6px_rgba(244,112,60,0.5)] hover:shadow-[0_14px_28px_-8px_rgba(244,112,60,0.6)] border border-white/10"
+          className="group relative inline-flex items-center gap-3 px-7 py-3.5 bg-linear-to-r from-[#F4703C] to-[#E25C27] text-white rounded-full overflow-hidden transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-[0_8px_20px_-6px_rgba(244,112,60,0.5)] hover:shadow-[0_14px_28px_-8px_rgba(244,112,60,0.6)] border border-white/10 cursor-pointer"
         >
           {/* Sweep Shine Effect */}
           <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-linear-to-r from-transparent via-white/20 to-transparent skew-x-12 transition-transform duration-1000 ease-in-out group-hover:translate-x-full" />
@@ -217,7 +240,7 @@ export default function HiddenGemsWall() {
             </button>
           </div>
         </div>
-      ) : (
+      ) : isMobile ? (
         <div className="relative w-full max-w-4xl mx-auto flex flex-col pb-32" style={{ perspective: 1200 }}>
           {gems.map((gem, idx) => (
             <StickyGemCard 
@@ -296,7 +319,199 @@ export default function HiddenGemsWall() {
               </motion.div>
             </StickyGemCard>
           ))}
+        </div>
+      ) : (
+        <div className="relative w-full py-4 select-none">
+          {/* Ambient Glow */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[340px] bg-linear-to-r from-[#F4703C]/20 via-[#E25C27]/15 to-rose-500/15 blur-3xl rounded-full pointer-events-none -z-10 animate-pulse" />
+
+          {/* Peek Carousel Track (Clipped cleanly within the column) */}
+          <div className="relative w-full overflow-hidden rounded-3xl py-2">
+            <div 
+              className="relative w-full h-[430px] flex items-center justify-center select-none"
+            >
+              {gems.map((gem, idx) => {
+                const offset = idx - activeGemIndex;
+                const isCenter = offset === 0;
+                const isVisible = Math.abs(offset) <= 1;
+
+                if (!isVisible) return null;
+
+                const x = isCenter ? '0%' : offset > 0 ? 'calc(100% + 24px)' : 'calc(-100% - 24px)';
+                const scale = isCenter ? 1 : 0.94;
+                const opacity = isCenter ? 1 : 0.55;
+                const zIndex = isCenter ? 30 : 20;
+
+                return (
+                  <motion.div
+                    key={gem.id}
+                    onClick={() => {
+                      if (!isCenter) setActiveGemIndex(idx);
+                    }}
+                    drag={isCenter ? "x" : false}
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={0.12}
+                    onDragEnd={(e, { offset: dragOffset, velocity }) => {
+                      if (dragOffset.x < -40 || velocity.x < -300) {
+                        if (activeGemIndex < gems.length - 1) setActiveGemIndex(prev => prev + 1);
+                      } else if (dragOffset.x > 40 || velocity.x > 300) {
+                        if (activeGemIndex > 0) setActiveGemIndex(prev => prev - 1);
+                      }
+                    }}
+                    animate={{ x, scale, opacity }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 420,
+                      damping: 34,
+                      mass: 0.5
+                    }}
+                    style={{ zIndex }}
+                    className={`absolute w-[78%] sm:w-[74%] max-w-[480px] h-[390px] sm:h-[410px] md:h-[420px] rounded-3xl overflow-hidden bg-stone-900 border border-stone-200/50 cursor-pointer ${
+                      isCenter 
+                        ? 'pointer-events-auto cursor-grab active:cursor-grabbing shadow-[0_16px_45px_-10px_rgba(0,0,0,0.18)] hover:shadow-[0_24px_55px_-10px_rgba(244,112,60,0.22)]' 
+                        : 'pointer-events-auto hover:opacity-85 shadow-none'
+                    }`}
+                  >
+                    <Image 
+                      src={gem.image_url || gem.imageUrl} 
+                      alt={gem.location || 'Hidden Gem'}
+                      fill
+                      className="object-cover transition-transform duration-700 ease-out hover:scale-105"
+                      sizes="(max-width: 768px) 100vw, 480px"
+                    />
+                    
+                    {/* Darkening Scrims */}
+                    <div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/45 to-black/20 opacity-90 z-10" />
+                    
+                    {/* Dimmer overlay on peek cards */}
+                    {!isCenter && (
+                      <div className="absolute inset-0 bg-black/40 backdrop-blur-[0.5px] z-15 transition-opacity" />
+                    )}
+                    
+                    {/* Top Bar */}
+                    <div className="absolute top-4 left-4 right-4 flex items-start justify-between z-20 gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-white/25 backdrop-blur-md border border-white/35 flex items-center justify-center text-white text-[10px] font-bold font-mono uppercase shadow-sm">
+                          {gem.submitter_name?.charAt(0)}
+                        </div>
+                        <span className="text-white/90 text-[10px] font-mono font-bold uppercase tracking-wider drop-shadow-sm">
+                          @{gem.submitter_name}
+                        </span>
+                      </div>
+                      
+                      {/* Upvote Pill */}
+                      <motion.button 
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => handleUpvote(e, gem.id)}
+                        className={`backdrop-blur-md border rounded-full px-3 py-1 transition-all duration-300 flex items-center gap-1.5 shadow-md cursor-pointer ${
+                          upvotedGems.has(gem.id) 
+                            ? 'bg-[#F4703C] border-[#F4703C] text-white shadow-[#F4703C]/40 ring-2 ring-[#F4703C]/30' 
+                            : 'bg-white/25 border-white/40 text-white hover:bg-[#F4703C] hover:border-[#F4703C]'
+                        }`}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-300 ${upvotedGems.has(gem.id) ? 'scale-110' : ''}`}>
+                          <path d="M12 19V5M5 12l7-7 7 7"/>
+                        </svg>
+                        <span className="text-[11px] font-bold font-mono mt-px">{gem.upvotes}</span>
+                      </motion.button>
+                    </div>
+                    
+                    {/* Bottom Content */}
+                    <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 flex flex-col justify-end z-20">
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white w-max mb-2.5 shadow-sm">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"></path>
+                          <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <span className="text-[9px] font-bold uppercase tracking-widest font-mono mt-px">
+                          {gem.location}
+                        </span>
+                      </div>
+                      
+                      <h4 className={`text-white font-serif text-xl sm:text-2xl leading-snug drop-shadow-md transition-all duration-300 ${
+                        isCenter ? 'opacity-100 max-h-24' : 'opacity-0 max-h-0 overflow-hidden pointer-events-none'
+                      }`}>
+                        "{gem.description}"
+                      </h4>
+                    </div>
+                  </motion.div>
+                );
+              })}
+
+              {/* Left Button */}
+              {activeGemIndex > 0 && (
+                <motion.button
+                  whileHover={{ scale: 1.12, x: -2 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setActiveGemIndex(prev => Math.max(0, prev - 1))}
+                  className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-40 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-stone-900 shadow-[0_8px_25px_rgba(0,0,0,0.18)] border border-stone-200/80 flex items-center justify-center transition-shadow hover:shadow-[0_12px_30px_rgba(244,112,60,0.25)] cursor-pointer group"
+                  aria-label="Previous gem"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-0.5 transition-transform">
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
+                </motion.button>
+              )}
+
+              {/* Right Button */}
+              {activeGemIndex < gems.length - 1 && (
+                <motion.button
+                  whileHover={{ scale: 1.12, x: 2 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setActiveGemIndex(prev => Math.min(gems.length - 1, prev + 1))}
+                  className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-40 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-stone-900 shadow-[0_8px_25px_rgba(0,0,0,0.18)] border border-stone-200/80 flex items-center justify-center transition-shadow hover:shadow-[0_12px_30px_rgba(244,112,60,0.25)] cursor-pointer group"
+                  aria-label="Next gem"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-0.5 transition-transform">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </motion.button>
+              )}
+            </div>
           </div>
+
+          {/* Bottom Pagination & Progress Controls */}
+          <div className="mt-8 flex items-center justify-between px-4">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-mono font-bold text-stone-400 uppercase tracking-widest">
+                {String(activeGemIndex + 1).padStart(2, '0')} / {String(gems.length).padStart(2, '0')}
+              </span>
+              <span className="text-stone-300 font-mono">·</span>
+              <span className="text-[11px] font-mono font-bold text-[#F4703C] uppercase tracking-wider">
+                {gems[activeGemIndex]?.location}
+              </span>
+            </div>
+
+            {/* Morphing Dots / Pills */}
+            <div className="flex items-center gap-1.5 bg-stone-100/80 backdrop-blur-md p-1.5 rounded-full border border-stone-200/60">
+              {gems.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveGemIndex(i)}
+                  className="relative h-2 rounded-full cursor-pointer focus:outline-none transition-all"
+                  style={{ width: activeGemIndex === i ? '28px' : '8px' }}
+                  aria-label={`Go to gem ${i + 1}`}
+                >
+                  <div className="w-full h-full rounded-full bg-stone-300/80 hover:bg-stone-400 transition-colors" />
+                  {activeGemIndex === i && (
+                    <motion.div
+                      layoutId="activeGemPill"
+                      className="absolute inset-0 bg-[#F4703C] rounded-full shadow-[0_2px_8px_rgba(244,112,60,0.4)]"
+                      transition={{ type: "spring", stiffness: 350, damping: 28 }}
+                    />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <div className="hidden sm:flex items-center gap-1.5 text-stone-400 text-[10px] font-mono uppercase tracking-widest">
+              <span>Use</span>
+              <kbd className="px-1.5 py-0.5 bg-stone-100 border border-stone-200 rounded text-stone-600 font-bold">←</kbd>
+              <kbd className="px-1.5 py-0.5 bg-stone-100 border border-stone-200 rounded text-stone-600 font-bold">→</kbd>
+              <span>or drag</span>
+            </div>
+          </div>
+        </div>
       )}
       </div>
 
