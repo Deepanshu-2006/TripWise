@@ -100,11 +100,16 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
   const days = itinerary?.days || [];
 
   const [isSynced, setIsSynced] = useState(false);
-  const syncStorageKey = `tw_calendar_synced_${itinerary?.id || 'default'}`;
+  const tripId = itinerary?.id || itinerary?.tripId || itinerary?._id || 'default';
+  const syncStorageKey = `tw_calendar_synced_${tripId}`;
 
   useEffect(() => {
     if (isOpen) {
-      setIsSynced(localStorage.getItem(syncStorageKey) === 'true');
+      try {
+        setIsSynced(localStorage.getItem(syncStorageKey) === 'true');
+      } catch {
+        setIsSynced(false);
+      }
     }
   }, [isOpen, syncStorageKey]);
 
@@ -147,11 +152,26 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
     }
     
     // Mark as synced locally
-    localStorage.setItem(syncStorageKey, 'true');
+    try {
+      localStorage.setItem(syncStorageKey, 'true');
+    } catch (e) {
+      console.error(e);
+    }
     setTimeout(() => {
       setDownloadedId(null);
       setIsSynced(true);
     }, 1500); // Show checkmark briefly before switching to success screen
+  };
+
+  const handleTryAgain = () => {
+    setIsSynced(false);
+    setDownloadedId(null);
+    try {
+      localStorage.removeItem(syncStorageKey);
+      localStorage.removeItem('tw_calendar_synced_default');
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   // Build preview events list
@@ -188,7 +208,6 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
 
           {/* Modal */}
           <motion.div
-            layout
             initial={{ opacity: 0, y: '100%' }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: '100%' }}
@@ -201,9 +220,9 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
                 onClose();
               }
             }}
-            className="fixed z-9999 inset-x-0 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:max-w-100 flex flex-col h-auto max-h-[90vh]"
+            className="fixed z-9999 inset-x-0 bottom-0 sm:inset-auto sm:top-24 sm:left-1/2 sm:-translate-x-1/2 sm:translate-y-0 w-full sm:max-w-100 flex flex-col h-auto max-h-[90vh] sm:max-h-[calc(100vh-7.5rem)]"
           >
-            <motion.div layout className="bg-white rounded-t-4xl sm:rounded-3xl shadow-[0_-12px_48px_rgba(0,0,0,0.1)] sm:shadow-[0_24px_64px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05)] flex flex-col h-auto max-h-full overflow-hidden">
+            <div className="bg-white rounded-t-4xl sm:rounded-3xl shadow-[0_-12px_48px_rgba(0,0,0,0.1)] sm:shadow-[0_24px_64px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05)] flex flex-col h-auto max-h-full overflow-hidden">
 
               {/* ── Header ── */}
               <div className="relative px-6 pt-5 pb-4 shrink-0 z-10 flex flex-col items-center border-b border-stone-100">
@@ -233,64 +252,163 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
               {/* ── Scrollable Body ── */}
               <div 
                 ref={scrollContainerRef}
-                className="p-5 sm:p-6 space-y-6 overflow-y-auto relative z-0 flex-1 overscroll-contain pb-safe-8 sm:pb-6"
+                className="p-5 sm:p-6 overflow-y-auto relative z-0 flex-1 overscroll-contain pb-safe-8 sm:pb-6"
                 onPointerDownCapture={(e) => e.stopPropagation()}
                 data-lenis-prevent="true"
               >
-                <div>
-                <AnimatePresence mode="wait">
+                <AnimatePresence mode="wait" initial={false}>
                   {!isSynced ? (
                     <motion.div
-                      key="options"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.2 }}
-                      className="grid grid-cols-2 gap-3"
+                      key="options-view"
+                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                      className="space-y-6"
                     >
-                      {PROVIDERS.map((provider) => {
-                        const isDone = downloadedId === provider.id;
-                        return (
+                      {/* Providers Grid */}
+                      <div className="grid grid-cols-2 gap-3">
+                        {PROVIDERS.map((provider) => {
+                          const isDone = downloadedId === provider.id;
+                          return (
+                            <button
+                              key={provider.id}
+                              onClick={() => handleAction(provider)}
+                              className="relative flex flex-col items-center justify-center gap-2.5 p-4 rounded-2xl bg-stone-50 hover:bg-stone-100 border border-transparent transition-colors cursor-pointer group"
+                            >
+                              <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center relative">
+                                {isDone ? (
+                                  <motion.div
+                                    initial={{ scale: 0.5, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    className="w-full h-full rounded-full bg-stone-900 flex items-center justify-center"
+                                  >
+                                    <Check className="w-4 h-4 text-white" strokeWidth={2.5} />
+                                  </motion.div>
+                                ) : (
+                                  <div className="text-stone-800 transition-transform group-hover:scale-105 duration-300">
+                                    {providerIcons[provider.id]}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="text-center">
+                                <p className="text-[13px] font-sans font-medium text-stone-800 leading-tight">
+                                  {provider.name}
+                                </p>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* ── Event Filters ── */}
+                      <div className="flex justify-center gap-2 flex-wrap mt-2">
+                        {[
+                          { key: 'sightseeing', label: 'Sightseeing', icon: <MapPin className="w-3.5 h-3.5" strokeWidth={2} />, value: includeSightseeing, setter: setIncludeSightseeing },
+                          { key: 'food', label: 'Dining', icon: <Utensils className="w-3.5 h-3.5" strokeWidth={2} />, value: includeFood, setter: setIncludeFood },
+                          { key: 'transport', label: 'Transport', icon: <Plane className="w-3.5 h-3.5" strokeWidth={2} />, value: includeTransport, setter: setIncludeTransport },
+                        ].map(filter => (
                           <button
-                            key={provider.id}
-                            onClick={() => handleAction(provider)}
-                            className="relative flex flex-col items-center justify-center gap-2.5 p-4 rounded-2xl bg-stone-50 hover:bg-stone-100 border border-transparent transition-colors cursor-pointer group"
+                            key={filter.key}
+                            onClick={() => filter.setter(v => !v)}
+                            className={`relative flex items-center gap-1.5 px-3.5 py-2 rounded-full border transition-all duration-200 cursor-pointer overflow-hidden ${
+                              filter.value 
+                                ? 'bg-stone-900 border-stone-900 shadow-md' 
+                                : 'bg-white border-stone-200 hover:bg-stone-50 hover:border-stone-300'
+                            }`}
                           >
-                            <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center relative">
-                              {isDone ? (
-                                <motion.div
-                                  initial={{ scale: 0.5, opacity: 0 }}
-                                  animate={{ scale: 1, opacity: 1 }}
-                                  className="w-full h-full rounded-full bg-stone-900 flex items-center justify-center"
-                                >
-                                  <Check className="w-4 h-4 text-white" strokeWidth={2.5} />
-                                </motion.div>
-                              ) : (
-                                <div className="text-stone-800 transition-transform group-hover:scale-105 duration-300">
-                                  {providerIcons[provider.id]}
-                                </div>
-                              )}
+                            <div className={`transition-colors ${filter.value ? 'text-stone-300' : 'text-stone-400'}`}>
+                              {filter.value ? <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} /> : filter.icon}
                             </div>
-                            <div className="text-center">
-                              <p className="text-[13px] font-sans font-medium text-stone-800 leading-tight">
-                                {provider.name}
-                              </p>
-                            </div>
+                            <span className={`text-[12px] font-sans font-medium transition-colors ${filter.value ? 'text-white' : 'text-stone-600'}`}>
+                              {filter.label}
+                            </span>
                           </button>
-                        );
-                      })}
+                        ))}
+                      </div>
+
+                      {/* ── Event Preview Toggle ── */}
+                      <div ref={previewRef} className="pt-2 border-t border-stone-100">
+                        <button
+                          onClick={() => {
+                            const opening = !showPreview;
+                            setShowPreview(v => !v);
+                            if (opening) {
+                              setTimeout(() => {
+                                if (previewRef.current && scrollContainerRef.current) {
+                                  const container = scrollContainerRef.current;
+                                  const target = previewRef.current;
+                                  const containerRect = container.getBoundingClientRect();
+                                  const targetRect = target.getBoundingClientRect();
+                                  const relativeTop = targetRect.top - containerRect.top + container.scrollTop;
+                                  container.scrollTo({
+                                    top: relativeTop - 8,
+                                    behavior: 'smooth',
+                                  });
+                                }
+                              }, 150);
+                            }
+                          }}
+                          className="w-full flex items-center justify-between py-2 transition-colors cursor-pointer group"
+                        >
+                          <span className="text-sm font-sans font-medium text-stone-800">
+                            View itinerary preview
+                          </span>
+                          <motion.div animate={{ rotate: showPreview ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                            <ChevronDown className="w-4 h-4 text-stone-400 group-hover:text-stone-700 transition-colors" />
+                          </motion.div>
+                        </button>
+
+                        <AnimatePresence>
+                          {showPreview && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.25, ease: 'easeOut' }}
+                              className="overflow-hidden"
+                            >
+                              <div className="pt-3 pb-1 space-y-1 max-h-60 sm:max-h-72 overflow-y-auto pr-1">
+                                {previewEvents.map((item, i) => (
+                                  <EventPreviewItem key={i} activity={item.activity} dayNum={item.dayNum} />
+                                ))}
+
+                                {previewEvents.length === 0 && (
+                                  <p className="text-sm text-stone-500 font-sans py-4 text-center">
+                                    No activities match the selected filters.
+                                  </p>
+                                )}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+
+                      {/* ── Footer note ── */}
+                      <div className="pt-2">
+                        <p className="text-xs text-stone-400 font-sans text-center leading-relaxed">
+                          Sync is offline. No data leaves your device.
+                        </p>
+                      </div>
                     </motion.div>
                   ) : (
                     <motion.div
-                      key="success"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.2 }}
+                      key="success-view"
+                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                       className="relative flex flex-col items-center justify-center py-8 px-6 bg-white border border-[#E6DFD5] shadow-sm rounded-3xl text-center overflow-hidden"
                     >
-                      {/* Subtle premium gradient accent (Green for success) */}
-                      <div className="absolute top-0 inset-x-0 h-1 bg-linear-to-r from-transparent via-emerald-500 to-transparent opacity-50" />
+                      {/* Animated rotating top green accent line */}
+                      <div className="absolute top-0 inset-x-0 h-1 overflow-hidden pointer-events-none">
+                        <div className="absolute inset-0 bg-emerald-500/15" />
+                        <motion.div
+                          animate={{ x: ['-100%', '100%'] }}
+                          transition={{ repeat: Infinity, duration: 2.4, ease: 'easeInOut', repeatType: 'mirror' }}
+                          className="w-full h-full bg-linear-to-r from-transparent via-emerald-500 to-transparent opacity-90 shadow-[0_0_8px_#10B981]"
+                        />
+                      </div>
                       
                       <div className="relative w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center mb-4 border border-emerald-100 shadow-xs">
                         <motion.svg
@@ -320,8 +438,8 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
                       </p>
                       
                       <button 
-                        onClick={() => setIsSynced(false)}
-                        className="group flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-widest text-[#7A7268] hover:text-[#FF6B2C] transition-colors cursor-pointer"
+                        onClick={handleTryAgain}
+                        className="group flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-widest text-[#7A7268] hover:text-[#FF6B2C] transition-colors cursor-pointer py-1 px-2.5 rounded-full hover:bg-stone-50"
                       >
                         <RefreshCw className="w-3.5 h-3.5 transition-transform group-hover:rotate-180 duration-500" />
                         <span>Try again</span>
@@ -329,95 +447,8 @@ export default function CalendarSyncModal({ isOpen, onClose, itinerary }) {
                     </motion.div>
                   )}
                 </AnimatePresence>
-                </div>
-
-                {!isSynced && (
-                  <>
-                    {/* ── Event Filters ── */}
-                    <div className="flex justify-center gap-2 flex-wrap mt-2">
-                      {[
-                        { key: 'sightseeing', label: 'Sightseeing', icon: <MapPin className="w-3.5 h-3.5" strokeWidth={2} />, value: includeSightseeing, setter: setIncludeSightseeing },
-                        { key: 'food', label: 'Dining', icon: <Utensils className="w-3.5 h-3.5" strokeWidth={2} />, value: includeFood, setter: setIncludeFood },
-                        { key: 'transport', label: 'Transport', icon: <Plane className="w-3.5 h-3.5" strokeWidth={2} />, value: includeTransport, setter: setIncludeTransport },
-                      ].map(filter => (
-                        <button
-                          key={filter.key}
-                          onClick={() => filter.setter(v => !v)}
-                          className={`relative flex items-center gap-1.5 px-3.5 py-2 rounded-full border transition-all duration-200 cursor-pointer overflow-hidden ${
-                            filter.value 
-                              ? 'bg-stone-900 border-stone-900 shadow-md' 
-                              : 'bg-white border-stone-200 hover:bg-stone-50 hover:border-stone-300'
-                          }`}
-                        >
-                          <div className={`transition-colors ${filter.value ? 'text-stone-300' : 'text-stone-400'}`}>
-                            {filter.value ? <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} /> : filter.icon}
-                          </div>
-                          <span className={`text-[12px] font-sans font-medium transition-colors ${filter.value ? 'text-white' : 'text-stone-600'}`}>
-                            {filter.label}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* ── Event Preview Toggle ── */}
-                    <div ref={previewRef} className="pt-2 border-t border-stone-100">
-                      <button
-                        onClick={() => {
-                          const opening = !showPreview;
-                          setShowPreview(v => !v);
-                          if (opening) {
-                            setTimeout(() => {
-                              if (previewRef.current && scrollContainerRef.current) {
-                                previewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                              }
-                            }, 300);
-                          }
-                        }}
-                        className="w-full flex items-center justify-between py-2 transition-colors cursor-pointer group"
-                      >
-                        <span className="text-sm font-sans font-medium text-stone-800">
-                          View itinerary preview
-                        </span>
-                        <motion.div animate={{ rotate: showPreview ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                          <ChevronDown className="w-4 h-4 text-stone-400 group-hover:text-stone-700 transition-colors" />
-                        </motion.div>
-                      </button>
-
-                      <AnimatePresence>
-                        {showPreview && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.25, ease: 'easeOut' }}
-                            className="overflow-hidden"
-                          >
-                            <div className="pt-3 pb-1 space-y-1">
-                              {previewEvents.map((item, i) => (
-                                <EventPreviewItem key={i} activity={item.activity} dayNum={item.dayNum} />
-                              ))}
-
-                              {previewEvents.length === 0 && (
-                                <p className="text-sm text-stone-500 font-sans py-4 text-center">
-                                  No activities match the selected filters.
-                                </p>
-                              )}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-
-                    {/* ── Footer note ── */}
-                    <div className="pt-2">
-                      <p className="text-xs text-stone-400 font-sans text-center leading-relaxed">
-                        Sync is offline. No data leaves your device.
-                      </p>
-                    </div>
-                  </>
-                )}
               </div>
-            </motion.div>
+            </div>
           </motion.div>
         </>
       )}
